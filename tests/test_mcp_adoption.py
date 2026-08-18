@@ -3,14 +3,32 @@
 The door (`scripts/mcp_spine_server.py`, 7 tools over 13 of the engine's 18 verbs) was
 built and merged completely unused: at the wave boundary, zero files under `skills/`
 mentioned it. This test pins the pre-authored Tier 1-5 invariant chain from the g4a-implement
-handoff -- the frozen list of files/fields that must now name a door tool as the DEFAULT
-path while the CLI (`scripts/checklist_engine.py`) stays the documented fallback.
+handoff -- the frozen list of files/fields that must name a door tool as the path an agent
+takes.
 
-Every assertion in this file is TWO-SIDED: a door tool is named AND the CLI marker for
-that same file/field is still present. A test that only checked "a door tool is named"
-would also pass an edit that deleted the CLI -- see the g4a-implement-implementer-result.md
-for the deliberate-deletion proof that this file's Tier1 assertions actually go RED when the
-CLI half is removed.
+**THE CLI HALF IS INVERTED, AND THIS IS THE GENERALIZATION OF A PRECEDENT ALREADY IN THIS
+FILE.** Every assertion here used to be TWO-SIDED: a door tool is named AND the CLI marker
+for that same file/field is still present, with failure messages reading "the CLI door must
+stay, never be removed or discouraged". Issue #559 ended that. The human ruling, verbatim:
+
+    "the agents should not know about the CLI. period."
+
+`TestTier2SpineAlreadyBoundForDispatchedCrews` below already asserted exactly that, for two
+files, and already carried that ruling. The change here is that precedent WIDENED: the
+CLI-presence half of Tier1, Tier2 and Tier4 is now an ABSENCE assertion, so the same rule
+covers every file this suite pins rather than two of them.
+
+Read this as continuity, not a reversal. The epic removes the CLI as an AGENT-FACING PATH,
+not as a tool -- `scripts/checklist_engine.py` still exists, still registers all 18 verbs,
+and is still what an operator or a debugging human runs. What no longer reaches an agent is
+the instruction to run it. `TestCLIStaysAvailableNotDeprecated` keeps that distinction
+explicit, and `tests/test_cli_retirement_guard.py` is the corpus-wide walk that enforces the
+absence everywhere, including files this suite never names.
+
+The two-sidedness that remains is the DOOR half: a door tool must be named affirmatively, in
+a real paragraph or field, and none of those assertions was weakened. A test that only
+checked "no CLI is named" would pass a file that says nothing at all about how to drive the
+engine, which is the failure the protected intent calls "leaving an agent stranded".
 
 Tier1 assertions read the JSON field itself (by field path), never the file's raw text --
 a file-level `"mcp__spine__" in text` assertion would pass an edit that added one sentence
@@ -37,41 +55,37 @@ to it later:
    in front. **They are deleted, and what that cost is written down at
    `TestCLIStaysAvailableNotDeprecated` rather than glossed.** The short version: at
    the DRIFT bar this file adopts they were roughly right, and they were deleted anyway
-   because their errors are not symmetric across authors. The doctrine sentence is now
-   pinned as a BYTE-FOR-BYTE equality (`CANONICAL_CLI_SENTENCE`) at the one path that
-   is its written authority — the one predicate a negation cannot satisfy and no
-   spelling can evade, over one sentence in one section of one file, where the deleted
-   predicate ran over all 100.
+   because their errors are not symmetric across authors.
+
+   **Rule 2 is why the #559 inversion is CHEAP rather than a new polarity problem.**
+   Every CLI assertion this file carried was a presence check that had to reason about
+   what the surrounding sentence MEANT. Their inverses do not: ABSENCE IS THE FACT.
+   There is no polarity to out-write, because the rule is "the text is not here", not
+   "the text is here and means the right thing" -- which is the same argument
+   `TestTier2SpineAlreadyBoundForDispatchedCrews` already made for its two files.
 
    `_asserts_the_default` and `_named_affirmatively` remain: both look for a
    prohibition immediately governing a named token, which is a much narrower and much
    more reliable question than "what is the polarity of this sentence about the CLI".
 
-   **What this suite therefore does NOT enforce, stated:** it catches an adoption pass
-   that DROPS the CLI; it does not catch an author determined to retire the CLI while
-   keeping the words. See `TestCLIStaysAvailableNotDeprecated` for why that is the
-   right trade -- in short, prose has no mechanical oracle, and the realistic failure
-   is drift, which removes things rather than composing sentences that satisfy a
-   checker while meaning the opposite.
-
 Audit of every assertion here against rule 2. Presence is enough ONLY where presence IS
 the fact, or where the thing pinned is an exact string:
 
   * PINS A PROPOSITION, PROHIBITION-CHECKED -- `test_field_names_door_tool_as_default`,
-    `test_field_still_carries_cli_fallback`, `TestTier1CommanderCoreAttachLine`'s two,
-    `_default_path_paragraph` (via `_asserts_the_default`),
+    `TestTier1CommanderCoreAttachLine::test_paragraph_names_door_tool`,
+    `_door_path_paragraph` (via `_named_affirmatively`),
     `test_names_door_tools_as_default`.
-  * PINS A PROPOSITION, BYTE EQUALITY -- `test_the_canonical_cli_sentence_is_present_verbatim`,
-    `test_door_section_itself_keeps_the_cli`.
   * PINS A ROUTING SENTENCE (a shape the negation cannot write, because the negation
-    routes the other way) -- `test_states_identity_trade_rule`,
-    `test_the_cli_only_rule_itself_is_present`,
-    `test_dispatched_crew_file_states_cli_for_own_plan`.
+    routes the other way) -- `test_the_cli_only_rule_itself_is_present`.
+  * ABSENCE IS THE FACT (the #559 half: the text is there or it is not, and no wording
+    satisfies a check for its absence) -- `test_field_no_longer_carries_a_cli_command_line`,
+    `TestTier1CommanderCoreAttachLine::test_paragraph_no_longer_carries_a_cli_command_line`,
+    `TestTier2SkillBodyDefaultPath`'s two, `TestTier4AuthoringTemplate`'s two,
+    `TestTier2SpineAlreadyBoundForDispatchedCrews::test_file_never_names_the_cli_at_all`.
   * PRESENCE IS THE FACT -- `test_spine_template_still_valid_json` (parses or does not),
     `test_verb_still_documented` (the verb name is in the section or it is not),
     `TestTier5DoNotTouch`'s two (a door tool name appears or it does not),
-    `test_the_walk_finds_the_whole_corpus`,
-    `test_default_path_paragraph_states_the_cli_is_still_available`.
+    `test_the_walk_finds_the_whole_corpus`.
   * A NEGATIVE ALREADY -- `test_no_instruction_pairs_a_cli_only_verb_with_a_door_tool`
     and `test_verb_never_routed_through_a_door_tool` fail ON the violating text, so
     they have no negation to be satisfied by. They assert a STRUCTURAL fact (this unit
@@ -144,10 +158,12 @@ CLI_ONLY_VERBS = ()
 #: the real list.
 _PREDICATE_SELFTEST_VERBS = ("skip", "reopen", "append", "amend", "flag-candidate")
 
-# The CLI marker used throughout the spine templates for "the engine, invoked as a command
-# line" -- resolved to an absolute `python .../checklist_engine.py ...` invocation at
-# instantiation time. Its literal presence in a field is what proves the CLI path was not
-# deleted.
+# The marker the spine templates USED to carry for "the engine, invoked as a command line".
+# `init_work_area.py` deliberately never resolved it, so every one that survived
+# instantiation reached an agent unresolved. Issue #559 swept it out of the corpus, and its
+# ABSENCE from an imperative field is now what is pinned -- the inverse of what this constant
+# was introduced for. It is kept, rather than inlined, because the assertions below are more
+# readable naming the thing they forbid.
 CLI_PLACEHOLDER = "<engine>"
 
 
@@ -692,15 +708,18 @@ class TestTheCorpusIsWalkedNotListed:
 # --------------------------------------------------------------------------- #
 
 TIER1_JSON_FIELDS = [
-    # (path, field_path_keys, expected_door_tool_substring, expected_cli_substring)
+    # (path, field_path_keys, expected_door_tool_substring, removed_cli_substring)
     #
-    # The CLI substring is the exact literal command line for THIS field's specific
-    # action, not the bare '<engine>' placeholder -- some imperative fields (e.g.
-    # COMMANDER_SPINE plan/archive) contain more than one engine verb in prose (a waive
-    # alongside an attach/release), so a generic '<engine>' substring check is a vacuous
-    # pass: it can be satisfied by an unrelated verb's CLI mention while the specific
-    # line this edit targets is deleted. Pinning the exact command line is what makes the
-    # two-sided proof (a deliberate deletion of THIS line) actually go RED.
+    # The fourth column is the exact literal command line issue #559 REMOVED from this
+    # field -- it is a record of what was swept, and its absence is what is now asserted.
+    # It was chosen as the exact line rather than the bare '<engine>' placeholder because
+    # some imperative fields (e.g. COMMANDER_SPINE plan/archive) carried more than one
+    # engine command in prose, so a generic placeholder check could be satisfied by an
+    # unrelated verb's mention while the specific line in question was untouched. That
+    # precision is worth exactly as much to the absence assertion as it was to the
+    # presence one, so the data is kept verbatim and only the assertion is inverted.
+    # The placeholder itself is forbidden field-wide alongside it, which is what catches
+    # a reworded command line that no longer matches the recorded literal.
     ("skills/commander/templates/COMMANDER_SPINE.template.json", ("tasks", "init", "imperative"),
      "spine_lease", "<engine> claim --session-id <commander-session-id>"),
     ("skills/commander/templates/COMMANDER_SPINE.template.json", ("tasks", "plan", "imperative"),
@@ -719,8 +738,16 @@ TIER1_JSON_FIELDS = [
 
 
 class TestTier1ImperativeFields:
-    """Each of these 7 imperative fields must name a door tool as the default, by JSON
-    field path, AND still carry that SAME action's exact CLI command line (two-sided)."""
+    """Each of these 7 imperative fields must name a door tool as the path an agent
+    takes, by JSON field path, AND must no longer carry that SAME action's engine
+    command line (issue #559).
+
+    The second half used to be its mirror image -- `test_field_still_carries_cli_fallback`,
+    failing with "the CLI door must stay, never be removed or discouraged". That
+    assertion is why the swept text grew back twice: a lane deleted the clauses, this
+    suite went red, and the lane restored them believing it had broken a rule. The
+    human ruling that settles it, verbatim: "the agents should not know about the CLI.
+    period." """
 
     @pytest.mark.parametrize("path,keys,door_substr,cli_substr", TIER1_JSON_FIELDS)
     def test_field_names_door_tool_as_default(self, path, keys, door_substr, cli_substr):
@@ -734,16 +761,25 @@ class TestTier1ImperativeFields:
         )
 
     @pytest.mark.parametrize("path,keys,door_substr,cli_substr", TIER1_JSON_FIELDS)
-    def test_field_still_carries_cli_fallback(self, path, keys, door_substr, cli_substr):
-        """Same standard on the CLI half: "do not run `<engine> claim ...`"
-        carries the command line and retires it in the same breath."""
+    def test_field_no_longer_carries_a_cli_command_line(self, path, keys, door_substr, cli_substr):
+        """ABSENCE IS THE FACT, so no prohibition check is needed or wanted here --
+        unlike the door half above, there is no polarity to out-write. "do not run
+        `<engine> claim ...`" retires the command line and hands it over in the same
+        breath, and this assertion is red on it either way, which is the point."""
         data = _load(path)
         field = _field(data, *keys)
-        assert _named_affirmatively(field, cli_substr), (
-            f"{path} .{'.'.join(keys)} lost its exact CLI command line {cli_substr!r} -- "
-            f"the CLI door must stay, never be removed or discouraged, and a generic "
-            f"'{CLI_PLACEHOLDER}' substring elsewhere in the field is not sufficient "
-            f"proof this specific action's fallback survived"
+        assert cli_substr not in field, (
+            f"{path} .{'.'.join(keys)} carries the engine command line {cli_substr!r} "
+            f"again. The ruling, verbatim: \"the agents should not know about the CLI. "
+            f"period.\" This text was deleted twice before and grew back twice, both "
+            f"times because this very assertion used to REQUIRE it."
+        )
+        assert CLI_PLACEHOLDER not in field, (
+            f"{path} .{'.'.join(keys)} carries the {CLI_PLACEHOLDER!r} placeholder -- a "
+            f"stand-in for an engine command line that init_work_area.py deliberately "
+            f"never resolves, so it reaches an agent unresolved. Checked alongside the "
+            f"exact line above because a REWORDED command line would not match that "
+            f"literal while still handing over the same second path."
         )
 
     @pytest.mark.parametrize("path", [
@@ -757,19 +793,27 @@ class TestTier1ImperativeFields:
 
 
 class TestTier1CommanderCoreAttachLine:
-    """commander-core.md:127's delegated-mode `attach` command line: text-based (this file
-    is markdown, no JSON field path exists), both halves required in the SAME paragraph."""
+    """commander-core.md's delegated-mode `attach` paragraph: text-based (this file is
+    markdown, no JSON field path exists), so the door tool must be named and the engine
+    command line must be gone in the SAME paragraph.
+
+    THE LOCATOR MOVED TO THE DOOR SIDE, and it had to. It used to find this paragraph by
+    requiring `'<engine> attach'` in it -- the very text issue #559 removes -- so after
+    the sweep it could not find the paragraph at all, and BOTH assertions here, including
+    the door-affirmative one that is not being weakened, would have died with an
+    unrelated "has the CLI line moved?" message. A locator keyed to what must be present
+    survives the sweep; one keyed to what must be absent cannot."""
 
     PATH = "skills/commander/references/commander-core.md"
 
     def _attach_paragraph(self) -> str:
         text = _text(self.PATH)
         for para in _paragraphs(text):
-            if "user-decision` checkpoints" in para and f"{CLI_PLACEHOLDER} attach" in para:
+            if "user-decision` checkpoints" in para and DOOR_TOOL_RE.search(para):
                 return para
         raise AssertionError(
-            f"{self.PATH} has no paragraph containing both the checkpoint prose and "
-            f"'{CLI_PLACEHOLDER} attach' -- has the CLI line moved or been deleted?"
+            f"{self.PATH} has no paragraph containing both the checkpoint prose and a door "
+            f"tool name -- has the delegated-mode attach instruction moved or been deleted?"
         )
 
     def test_paragraph_names_door_tool(self):
@@ -781,15 +825,26 @@ class TestTier1CommanderCoreAttachLine:
             f"as the door default (it must appear in a clause that is not forbidding it)"
         )
 
-    def test_paragraph_still_carries_cli_fallback(self):
+    def test_paragraph_no_longer_carries_a_cli_command_line(self):
         para = self._attach_paragraph()
-        assert _named_affirmatively(para, f"{CLI_PLACEHOLDER} attach")
+        assert CLI_PLACEHOLDER not in para, (
+            f"{self.PATH}'s delegated-mode attach paragraph carries the "
+            f"{CLI_PLACEHOLDER!r} placeholder again. The ruling, verbatim: \"the agents "
+            f"should not know about the CLI. period.\""
+        )
+        assert CLI_SCRIPT_MARKER not in para, (
+            f"{self.PATH}'s delegated-mode attach paragraph names "
+            f"{CLI_SCRIPT_MARKER!r} -- the placeholder is not the only spelling of the "
+            f"second path, and a rename-around that writes the script's own name is the "
+            f"form that survives deleting the placeholder"
+        )
 
 
 # --------------------------------------------------------------------------- #
-# Tier 2 -- default-path prose in SKILL bodies. Text-based, paragraph-scoped so a
+# Tier 2 -- the drive-path prose in SKILL bodies. Text-based, paragraph-scoped so a
 # door-tool mention anywhere in the file cannot satisfy this on its own: the SAME
-# paragraph must also still carry the checklist_engine.py CLI marker.
+# paragraph that tells an agent how to drive the engine must name a door tool and
+# must not hand over the CLI beside it (issue #559).
 # --------------------------------------------------------------------------- #
 
 #: `skills/implementer/SKILL.md` and `skills/reviewer/SKILL.md` are DELIBERATELY
@@ -800,9 +855,17 @@ class TestTier1CommanderCoreAttachLine:
 #: own plan" -- is no longer true for these two files, and the human ruling is
 #: "the agents should not know about the CLI. period." Their own,
 #: CLI-mentions-nothing invariant is `TestTier2SpineAlreadyBoundForDispatchedCrews`
-#: below, not this tier.
+#: below, not this tier -- and as of #559 this tier now holds every file on this
+#: list to that same standard.
+#:
+#: `skills/workbench/SKILL.md` came OFF this list with the inversion. It carries the
+#: swept text today and is owned by a different lane in the same wave, so an absence
+#: assertion here would go red on a file this change is fenced from. Coverage of its
+#: absence is not lost -- `tests/test_cli_retirement_guard.py` walks the whole corpus,
+#: `skills/workbench/**` included. What IS lost is this tier's paragraph-scoped DOOR
+#: assertion for that one file, which nothing else replaces; re-adding the entry once
+#: that lane merges restores it.
 TIER2_SKILL_FILES = [
-    "skills/workbench/SKILL.md",
     "skills/charter/SKILL.md",
     "skills/interrogator/SKILL.md",
     "skills/explorer/SKILL.md",
@@ -811,28 +874,81 @@ TIER2_SKILL_FILES = [
 CLI_SCRIPT_MARKER = "checklist_engine.py"
 
 
-def _default_path_paragraph(path: str) -> str:
+def _door_path_paragraph(path: str) -> str:
+    """The paragraph that tells an agent how to drive this skill's checklist.
+
+    Located by the DOOR half, which is what must be present. Two things changed
+    here with #559, and both are consequences of the sweep rather than choices:
+
+      * the CLI marker is no longer part of the locator, because it is no longer
+        in the corpus to locate by; and
+      * `_asserts_the_default` is no longer required, because "default" is
+        two-path vocabulary. A default implies an alternative, and for a bound
+        spine there is now exactly one path. Requiring the word would mean
+        writing it back into the very sentences this epic rewrote -- and in
+        `skills/interrogator/SKILL.md` it would be a lie, since a survey the
+        door is not bound to cannot be driven through the door at all.
+
+    What replaces it is not weaker in the way that matters: the door tool must
+    still be named AFFIRMATIVELY (prohibition-checked), in the paragraph that is
+    about driving the checklist, not merely somewhere in the file.
+    """
     text = _text(path)
     for para in _paragraphs(text):
-        if CLI_SCRIPT_MARKER in para and DOOR_TOOL_RE.search(para) and _asserts_the_default(para):
+        if DOOR_TOOL_RE.search(para) and any(
+            _named_affirmatively(para, name) for name in DOOR_TOOL_NAMES
+        ):
             return para
     raise AssertionError(
-        f"{path} has no single paragraph naming a door tool as the DEFAULT path while "
-        f"also still carrying the {CLI_SCRIPT_MARKER!r} CLI fallback"
+        f"{path} has no single paragraph naming a door tool affirmatively as the way its "
+        f"checklist is driven -- an agent reading this file has no path at all"
     )
 
 
 class TestTier2SkillBodyDefaultPath:
-    @pytest.mark.parametrize("path", TIER2_SKILL_FILES)
-    def test_default_path_paragraph_is_two_sided(self, path):
-        # Raises AssertionError (via _default_path_paragraph) if no such paragraph exists.
-        para = _default_path_paragraph(path)
-        assert DOOR_TOOL_RE.search(para)
-        assert CLI_SCRIPT_MARKER in para
+    """Was two-sided (a door tool AND the CLI marker in one paragraph). Issue #559
+    inverted the second half: the paragraph that names the door must not also hand
+    over the engine command line, and the file must not name it anywhere else
+    either. This is `TestTier2SpineAlreadyBoundForDispatchedCrews` widened from its
+    two files to this tier's."""
 
     @pytest.mark.parametrize("path", TIER2_SKILL_FILES)
-    def test_file_still_names_cli_at_all(self, path):
-        assert CLI_SCRIPT_MARKER in _text(path)
+    def test_door_path_paragraph_names_the_door_and_not_the_cli(self, path):
+        # Raises AssertionError (via _door_path_paragraph) if no such paragraph exists.
+        para = _door_path_paragraph(path)
+        assert DOOR_TOOL_RE.search(para)
+        assert CLI_SCRIPT_MARKER not in para, (
+            f"{path}'s drive-path paragraph names the door and then hands over "
+            f"{CLI_SCRIPT_MARKER!r} beside it. The ruling, verbatim: \"the agents should "
+            f"not know about the CLI. period.\""
+        )
+
+    @pytest.mark.parametrize("path", TIER2_SKILL_FILES)
+    def test_file_hands_over_no_second_path_anywhere(self, path):
+        """File-wide, so a clause pushed out of the drive-path paragraph into a
+        neighbouring one does not escape.
+
+        NOT `CLI_SCRIPT_MARKER not in text`, which is what
+        `TestTier2SpineAlreadyBoundForDispatchedCrews` asserts for its two files.
+        That standard is right there and wrong here: `skills/explorer/SKILL.md`
+        carries a scripts manifest -- "Scripts: `checklist_engine.py`,
+        `init_work_area.py`, `run_crew.py` ..." -- which names the engine as a
+        component of the skill and tells nobody to run it. The epic drew its line
+        between a command and a component mention, and `test_cli_retirement_guard.py`
+        pins BOTH directions of that line (`TestTheInvocationPredicateItself`); this
+        assertion sits on the same side of it.
+        """
+        text = _text(path)
+        assert CLI_PLACEHOLDER not in text, (
+            f"{path} carries the {CLI_PLACEHOLDER!r} placeholder -- an unresolved stand-in "
+            f"for an engine command line"
+        )
+        clause = re.search(r"CLI[\s-]+fallback", text, re.I)
+        assert clause is None, (
+            f"{path} carries a {clause.group(0)!r} clause again -- it hands an agent a "
+            f"second path to the engine beside the door. The ruling, verbatim: \"the "
+            f"agents should not know about the CLI. period.\""
+        )
 
 
 class TestTier2SpineAlreadyBoundForDispatchedCrews:
@@ -929,10 +1045,20 @@ def _tier3_door_section() -> str:
 
 
 class TestTier3ChecklistEngineReference:
-    """All section-scoped. FAILS IF: the `## MCP door` section is deleted,
-    emptied, or loses any of the four things it is the sole authority for --
-    the 7 tool names, the default rule, the identity trade, and the CLI's
-    survival. Prose elsewhere in the file cannot satisfy any of these."""
+    """Section-scoped. FAILS IF: the `## MCP door` section is deleted, emptied, or
+    stops naming the door tools and the rule that they are how a checklist is
+    driven. Prose elsewhere in the file cannot satisfy either.
+
+    THREE ASSERTIONS WERE DELETED HERE BY ISSUE #559, not inverted:
+    `test_still_names_cli_invocation`, `test_door_section_itself_keeps_the_cli` and
+    `test_states_identity_trade_rule`. All three REQUIRED this file to hand an agent
+    the CLI -- the last of them required a sentence routing a dispatched subagent to
+    it for its own plan, which `run_crew.py --spine` made false. They are deleted
+    rather than inverted because this file belongs to a different lane in the same
+    wave: it still carries the swept text today, and an absence assertion would go
+    red on a file this change is fenced from. `tests/test_cli_retirement_guard.py`
+    walks the whole corpus and asserts that absence, `skills/workbench/**` included,
+    so the coverage lands there instead."""
 
     def test_names_door_tools_as_default(self):
         section = _tier3_door_section()
@@ -945,76 +1071,6 @@ class TestTier3ChecklistEngineReference:
             f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer states the door "
             f"is the default path. Asked with the denial in front counted: 'the door is "
             f"NOT the default' contains the word 'default' and used to satisfy this."
-        )
-
-    def test_still_names_cli_invocation(self):
-        # Whole-file: the CLI reference page must document the CLI, obviously.
-        assert CLI_SCRIPT_MARKER in _text(TIER3_PATH)
-
-    def test_door_section_itself_keeps_the_cli(self):
-        """The section that makes the door the default must, in the same breath,
-        keep the CLI -- and it must do so in the exact sentence this suite pins.
-
-        This assertion once read `re.search("remove[sd]?|discourag\\w*", section)
-        and re.search("\\bCLI\\b", section)` -- a retirement word somewhere, and
-        the word CLI somewhere, joined by `and`. **A sentence that retires the
-        CLI supplies both words itself.** Replacing the real doctrine line with
-        "The CLI is removed. Every verb now goes through the door; nothing here
-        discourages that." left the whole file at 91 passed.
-
-        Its replacement was a pair of polarity predicates, and they are also
-        deleted -- but NOT because they were simply worse. At the adversarial bar
-        they were wrong 9/10 and 6/7; at the DRIFT bar this file argues is the
-        real one they caught 3 of 4. They went because 5 of 6 honest
-        CLI-affirming sentences fired them. The full accounting, both bars and
-        what the deletion cost, is at `TestCLIStaysAvailableNotDeprecated`.
-
-        What is asserted now: the CLI is named in the section, and the doctrine
-        sentence is present BYTE FOR BYTE
-        (`TestCLIStaysAvailableNotDeprecated::test_the_canonical_cli_sentence_is_present_verbatim`,
-        which is where the reasoning is written down). An equality cannot be
-        satisfied by a negation, cannot be out-spelled, and goes red on deletion
-        -- which is the failure mode an adoption pass actually produces.
-        """
-        section = _tier3_door_section()
-        assert CLI_SCRIPT_MARKER in section, (
-            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section makes the door the default "
-            f"without naming the {CLI_SCRIPT_MARKER} CLI at all"
-        )
-        assert CANONICAL_CLI_SENTENCE in section, (
-            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer carries "
-            f"{CANONICAL_CLI_SENTENCE!r} verbatim. 'The CLI door stays; F is additive' is "
-            f"the epic's hard constraint, and this section is where an agent reads it."
-        )
-
-    def test_states_identity_trade_rule(self):
-        """FAILS IF: the dispatched-subagent explanation is deleted. That
-        explanation is the whole reason a dispatched Implementer/Reviewer must
-        not call a door tool for its own plan, and it exists nowhere else in
-        this file."""
-        section = _tier3_door_section()
-        # The three word-presence checks this used to make -- `in-session|dispatch`,
-        # `MCP scope`, `own spine|own plan` -- are ALL supplied by the negation:
-        # "A dispatched subagent MAY drive its own plan through the door; MCP
-        # scope is per-subagent." So the rule is pinned as a single sentence that
-        # sends a dispatched subagent TO THE CLI for its own plan, which the
-        # negation cannot write.
-        routed = [
-            s for s in _sentences(section)
-            if re.search(r"in-session|dispatch\w*", s, re.I)
-            and re.search(r"own\b", s, re.I)
-            and (CLI_SCRIPT_MARKER in s or re.search(r"\bthe CLI\b", s, re.I))
-        ]
-        assert routed, (
-            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer says, in one "
-            f"sentence, that a dispatched subagent drives its OWN plan through the CLI. "
-            f"That sentence is the whole reason a dispatched Implementer/Reviewer must not "
-            f"call a door tool for its own plan, and it exists nowhere else in this file."
-        )
-        assert re.search(r"MCP scope", section, re.I), (
-            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer explains WHY "
-            f"(a Task subagent inherits its dispatcher's MCP scope, so the tools stay "
-            f"bound to the DISPATCHER's spine)"
         )
 
     def test_lease_section_carries_door_equivalent(self):
@@ -1122,15 +1178,31 @@ TIER4_TEMPLATE_FILES = [
 
 
 class TestTier4AuthoringTemplate:
-    @pytest.mark.parametrize("path", TIER4_TEMPLATE_FILES)
-    def test_default_path_paragraph_is_two_sided(self, path):
-        para = _default_path_paragraph(path)
-        assert DOOR_TOOL_RE.search(para)
-        assert CLI_SCRIPT_MARKER in para
+    """Same inversion as Tier2, and this tier is where it compounds: these two files
+    are what a NEW skill is authored from, so a CLI-fallback clause left here
+    propagates the second path into every skill minted after it."""
 
     @pytest.mark.parametrize("path", TIER4_TEMPLATE_FILES)
-    def test_file_still_names_cli_at_all(self, path):
-        assert CLI_SCRIPT_MARKER in _text(path)
+    def test_door_path_paragraph_names_the_door_and_not_the_cli(self, path):
+        para = _door_path_paragraph(path)
+        assert DOOR_TOOL_RE.search(para)
+        assert CLI_SCRIPT_MARKER not in para, (
+            f"{path}'s drive-path paragraph names the door and then hands over "
+            f"{CLI_SCRIPT_MARKER!r} beside it -- and this file is a template, so every "
+            f"skill authored from it inherits that second path"
+        )
+
+    @pytest.mark.parametrize("path", TIER4_TEMPLATE_FILES)
+    def test_file_never_names_the_cli_at_all(self, path):
+        """Whole-file, and stricter than Tier2's equivalent on purpose: an authoring
+        template has no scripts manifest and no reason to name the engine as a
+        component at all, so the bare-mention allowance Tier2 needs does not apply
+        here. A mention that survives in a template propagates into every skill
+        minted from it."""
+        assert CLI_SCRIPT_MARKER not in _text(path), (
+            f"{path} mentions {CLI_SCRIPT_MARKER!r} -- issue #559 removed the second path "
+            f"from the authoring templates so it stops propagating into new skills"
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -1145,6 +1217,16 @@ TIER5_UNTOUCHED_FILES = [
 
 
 class TestTier5DoNotTouch:
+    """UNCHANGED BY ISSUE #559, deliberately. This tier asserts only that these two
+    files still NAME `checklist_engine.py` as an artifact -- "the engine rail string
+    table (`checklist_engine.py`, #140)", "nothing enforces the execution-time half in
+    code -- `checklist_engine.py` does not". That is a bare prose mention of a component,
+    not an instruction to run it: no path, no interpreter, no flag, no verb beside it.
+    The sweep's own guard draws its line in exactly the same place and leaves these
+    mentions alone (`tests/test_cli_retirement_guard.py`, `TestTheInvocationPredicateItself`,
+    which pins both directions). Inverting this tier would therefore assert something
+    the epic did not decide, and would go red on two files nothing swept."""
+
     @pytest.mark.parametrize("path", TIER5_UNTOUCHED_FILES)
     def test_still_names_checklist_engine_as_artifact(self, path):
         assert CLI_SCRIPT_MARKER in _text(path)
@@ -1218,14 +1300,6 @@ class TestCLIOnlyVerbsAcrossEveryInstructionFile:
 #: generous denial set -- a false alarm there would flag correct prose.
 ANY_DENIAL = re.compile(r"\b(?:nothing|never|not|n't|nor|neither|none|without)\b", re.I)
 
-#: What "the CLI is still there" reads like when it is genuinely still there.
-CLI_AVAILABILITY = re.compile(r"\bfallback\b|\balways available\b|\bstill available\b|\bremains available\b", re.I)
-
-#: The doctrine sentence itself, byte for byte, at the one place that is the
-#: written authority for it: the `## MCP door` section of `checklist-engine.md`.
-#: `TestCLIStaysAvailableNotDeprecated` pins its literal presence.
-CANONICAL_CLI_SENTENCE = "Nothing here removes or discourages the CLI."
-
 
 #: A prohibition standing in front of a name turns "here is the tool to call"
 #: into "do not call it". A test that pins "this field names the door tool as
@@ -1266,7 +1340,30 @@ def _asserts_the_default(text: str) -> bool:
 
 
 class TestCLIStaysAvailableNotDeprecated:
-    """The Tier2/Tier4 availability check was `CLI_SCRIPT_MARKER in text` -- it
+    """**ISSUE #559 SUPERSEDED THE CONSTRAINT THIS CLASS DEFENDED, AND NARROWED IT TO
+    ITS TRUE HALF.** "The CLI door stays; F is additive" was read here as a claim about
+    the CORPUS: every drive-path paragraph had to go on telling an agent the CLI was
+    available. The human ruling ended that reading -- "the agents should not know about
+    the CLI. period." What survives is the claim about the TOOL: the engine was not
+    deprecated, deleted or reduced. It is still there, still complete, and still what an
+    operator or a debugging human runs. Only the instruction to run it left the corpus.
+
+    Two assertions were deleted here, both corpus-side:
+    `test_the_canonical_cli_sentence_is_present_verbatim` (a byte equality on
+    "Nothing here removes or discourages the CLI." inside another lane's file) and
+    `test_default_path_paragraph_states_the_cli_is_still_available` (which required the
+    word "fallback", or "always/still available", in every Tier2 and Tier4 drive-path
+    paragraph -- the exact clause the sweep removes). The single assertion below is what
+    is left, and it is deliberately about the tool rather than about any prose.
+
+    The account of the DELETED POLARITY PREDICATES that follows is kept verbatim,
+    because it is the measured record two other files cite -- including
+    `tests/test_cli_retirement_guard.py`, which names this class as the precedent for
+    refusing to build a predicate that reads English.
+
+    ----
+
+    The Tier2/Tier4 availability check was `CLI_SCRIPT_MARKER in text` -- it
     only asked whether the CLI was MENTIONED, so it could not tell "the CLI is
     your fallback" from "the legacy CLI is DEPRECATED". Both mention it.
 
@@ -1321,44 +1418,27 @@ class TestCLIStaysAvailableNotDeprecated:
     needed to model an adversary, and the only part that cannot.
     """
 
-    def test_the_canonical_cli_sentence_is_present_verbatim(self):
-        """The doctrine sentence, byte for byte, in the section that is its only
-        written authority.
+    def test_the_engine_survives_as_a_tool_even_though_no_instruction_names_it(self):
+        """The half of "the CLI door stays" that issue #559 did NOT overturn.
 
-        FAILS IF: the sentence is deleted, reworded, or moved out of the
-        `## MCP door` section. Equality, not a regex over its vocabulary --
-        there is nothing left to out-spell, and nothing that a differently
-        worded sentence can satisfy by accident.
+        The sweep removed an agent-facing PATH, not a program. If a later change
+        reads the sweep as licence to delete or gut the engine, an operator, a
+        debugging human and the door itself all lose their execution surface --
+        the door does not reimplement the engine, it drives it.
+
+        Read from the engine's own argparse registry rather than from a count
+        written here, for the reason `_engine_verbs` exists: a hand-typed list
+        drifts from what the program actually accepts, silently.
         """
-        section = _tier3_door_section()
-        assert CANONICAL_CLI_SENTENCE in section, (
-            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer contains, verbatim, "
-            f"{CANONICAL_CLI_SENTENCE!r}. That sentence is the written authority for the "
-            f"epic's hard constraint ('The CLI door stays; F is additive') and this is the "
-            f"section an agent reads it in. If it was deliberately reworded, change this "
-            f"constant in the same edit -- the point of an equality is that a rewrite has "
-            f"to be noticed, not that the words are sacred.\n"
-            f"Section: {section.strip()[:400]}"
+        engine = ROOT / "scripts" / "checklist_engine.py"
+        assert engine.is_file(), (
+            f"{engine} is gone. Issue #559 removed the CLI as an AGENT-FACING path -- "
+            f"'the agents should not know about the CLI. period.' -- and removed nothing "
+            f"else. The engine is what the door drives and what an operator runs."
         )
-
-    @pytest.mark.parametrize("path", TIER2_SKILL_FILES + TIER4_TEMPLATE_FILES)
-    def test_default_path_paragraph_states_the_cli_is_still_available(self, path):
-        """FAILS IF: the paragraph that makes the door the default stops
-        describing the CLI as available -- as the fallback, or as always/still
-        available.
-
-        Positive presence, and that is the whole claim: an adoption pass that
-        rewrites this paragraph around the door and drops the fallback clause
-        goes red here. An author who writes "the CLI is no longer the fallback"
-        does not, and that is the stated residual in this class's docstring, not
-        an oversight.
-        """
-        para = _default_path_paragraph(path)
-        assert CLI_AVAILABILITY.search(para), (
-            f"{path}'s default-path paragraph names the door as the default and names "
-            f"{CLI_SCRIPT_MARKER}, but no longer says the CLI is still available. "
-            f"'The CLI door stays; F is additive' is the epic's hard constraint -- a "
-            f"paragraph that mentions the CLI without keeping it is how that constraint "
-            f"gets lost while every mention-based check stays green.\n"
-            f"Paragraph: {para.strip()[:400]}"
+        verbs = _engine_verbs()
+        assert len(verbs) == 18, (
+            f"the engine registers {len(verbs)} verbs, not the 18 the corpus sweep was "
+            f"measured against: {sorted(verbs)}. The sweep took the CLI out of the "
+            f"instruction text; it was not supposed to reduce what the engine can do."
         )

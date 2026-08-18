@@ -1,0 +1,302 @@
+{
+  "work_id": "567-d1-g3-implementer-attempt-1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-implementer-spec",
+    "m2-reviewer-spec",
+    "m3-still-compiles",
+    "m4-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and settle the schema question",
+      "imperative": "Read the inherited global doctrine (skills/_shared/global-crew.md, skills/_shared/global-everyone.md), the handoff at .agent-work/567-d1/crew-handoffs/g3-implementer-handoff.md, both target specs, scripts/generate_spine.py (what consumes a spec), tests/test_cli_retirement_guard.py (the guard now walking specs/), _spine_bind and _rebind_refusal in scripts/mcp_spine_server.py (the measured refusal), and .agent-work/567-d1/notes-1.md section M1 (the fresh-process probe). Verify the handoff is complete. Settle the keys-vs-prose question against generate_spine.compile_spec's actual carried fields. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + generator + guard + door refusal + M1 probe loaded; handoff complete; keys-vs-prose question settled with a reason drawn from what compile_spec carries",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded: handoff (complete -- task, scope, exclusions, evidence, test mode, stop conditions, return format all present), both specs, scripts/generate_spine.py, tests/test_cli_retirement_guard.py, mcp_spine_server.py _rebind_refusal/_spine_bind, notes-1.md M1. SCHEMA QUESTION SETTLED: prose only, no new keys. Reason from the consumer, not from taste -- generate_spine._compile_gate builds each compiled task from a FIXED field list (id, title, imperative, preconditions, postconditions, constraints, directives, child_checklist, status, status_detail, result, finding, evidence, rework_count) and compile_spec builds the top level from a fixed list too, so any new spec key is silently DROPPED at compile; spec_shape_faults has no unknown-key fault, so it would not even refuse loudly. TOML comments are dropped the same way. The only authored text that reaches an agent is title, imperative, constraints, condition statement, and qualitative `because` (compile_condition folds it into the statement). Door vocabulary must therefore live in imperative + constraints to be read at all."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-implementer-spec": {
+      "id": "m1-implementer-spec",
+      "title": "Door vocabulary in specs/implementer.spine.toml",
+      "imperative": "Give specs/implementer.spine.toml door vocabulary that matches measured behaviour: the door is the interface for the spine this process was launched against, and a second checklist is not that spine because the door refuses to rebind while the process holds its own lease. Prose only, in fields compile_spec actually carries. The prose must not itself trip the guard: no <engine> token, no placeholder followed on the same line by an engine verb, no CLI-fallback clause in any spelling, no command-shaped engine-script reference. Do not write any of generate_spine._DISPATCH_MARKERS into an imperative or the spec refuses at spec-shape time.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded, handoff complete, schema question settled",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context closed: context loaded, handoff verified complete, keys-vs-prose settled as prose-only against _compile_gate's fixed field list."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "specs/implementer.spine.toml still parses as TOML, names the door, states the second-checklist truth and the one-door-drives-one-spine refusal, and the guard reports no violation at any specs/ address",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -c 'import tomllib;tomllib.load(open(\"specs/implementer.spine.toml\",\"rb\"))' && grep -qi 'door' specs/implementer.spine.toml && grep -qi 'second checklist' specs/implementer.spine.toml && grep -qi 'one door drives one spine' specs/implementer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-m1.log 2>&1 || true; } && ! grep -qE 'specs/[A-Za-z0-9_./-]+' /tmp/g3-m1.log"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-implementer-spec-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope is specs/** and nothing else",
+        "tests/test_cli_retirement_guard.py is fenced -- the guard is not mine to edit to make my prose pass",
+        "Do not promise a door path the measurement shows does not exist",
+        "Stop and return if the vocabulary genuinely needs to show a command line"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-implementer-spec-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -c 'import tomllib;tomllib.load(open(\"specs/implementer.spine.toml\",\"rb\"))' && grep -qi 'door' specs/implementer.spine.toml && grep -qi 'second checklist' specs/implementer.spine.toml && grep -qi 'one door drives one spine' specs/implementer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-m1.log 2>&1 || true; } && ! grep -qE 'specs/[A-Za-z0-9_./-]+' /tmp/g3-m1.log",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-reviewer-spec": {
+      "id": "m2-reviewer-spec",
+      "title": "Door vocabulary in specs/reviewer.spine.toml",
+      "imperative": "Same vocabulary for specs/reviewer.spine.toml, in the survey dialect: a survey plan's closing verbs reach the door through spine_survey_result, not spine_advance, so the reviewer's text must name its own tools rather than copy the gated ones. Same guard constraints.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the implementer spec's vocabulary is in and green, so the two files can be written as one consistent statement",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 closed with its command postcondition re-verified by the engine: implementer spec parses, names the door, states the second-checklist truth, guard reports no specs/ address."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "specs/reviewer.spine.toml still parses as TOML, names the door, states the second-checklist truth and the one-door-drives-one-spine refusal, and the guard reports no violation at any specs/ address",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -c 'import tomllib;tomllib.load(open(\"specs/reviewer.spine.toml\",\"rb\"))' && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist' specs/reviewer.spine.toml && grep -qi 'one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-m2.log 2>&1 || true; } && ! grep -qE 'specs/[A-Za-z0-9_./-]+' /tmp/g3-m2.log"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-reviewer-spec-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope is specs/** and nothing else",
+        "tests/test_cli_retirement_guard.py is fenced",
+        "Do not promise a door path the measurement shows does not exist"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-reviewer-spec-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 -c 'import tomllib;tomllib.load(open(\"specs/reviewer.spine.toml\",\"rb\"))' && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist' specs/reviewer.spine.toml && grep -qi 'one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-m2.log 2>&1 || true; } && ! grep -qE 'specs/[A-Za-z0-9_./-]+' /tmp/g3-m2.log",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-still-compiles": {
+      "id": "m3-still-compiles",
+      "title": "Both specs still compile clean through the generator",
+      "imperative": "Run scripts/generate_spine.py --check-only over both edited specs. This is what proves the prose choice: a spec's shape, probe and oracle layers all still pass, and the new text sits in fields compile_spec carries into the compiled spine rather than in a key the compiler would drop. Both compiled clean at baseline (measured before the edit), so a failure here is mine.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both specs edited and guard-green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both specs edited; both m1 and m2 command postconditions were re-verified by the engine at advance, each including a fresh guard run with no specs/ address."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "generate_spine.py --check-only exits 0 for both specs, and the compiled spine carries the new door vocabulary in its own task fields rather than dropping it",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 scripts/generate_spine.py specs/implementer.spine.toml --out /tmp/g3-impl.json --check-only && python3 scripts/generate_spine.py specs/reviewer.spine.toml --out /tmp/g3-rev.json --check-only && python3 scripts/generate_spine.py specs/implementer.spine.toml --out /tmp/g3-impl.json && python3 scripts/generate_spine.py specs/reviewer.spine.toml --out /tmp/g3-rev.json && grep -qi 'one door drives one spine' /tmp/g3-impl.json && grep -qi 'one door drives one spine' /tmp/g3-rev.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-still-compiles-1"
+        }
+      ],
+      "constraints": [
+        "The compiled output goes to /tmp, never into the repo -- allowed scope is specs/** only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-still-compiles-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && python3 scripts/generate_spine.py specs/implementer.spine.toml --out /tmp/g3-impl.json --check-only && python3 scripts/generate_spine.py specs/reviewer.spine.toml --out /tmp/g3-rev.json --check-only && python3 scripts/generate_spine.py specs/implementer.spine.toml --out /tmp/g3-impl.json && python3 scripts/generate_spine.py specs/reviewer.spine.toml --out /tmp/g3-rev.json && grep -qi 'one door drives one spine' /tmp/g3-impl.json && grep -qi 'one door drives one spine' /tmp/g3-rev.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-result": {
+      "id": "m4-result",
+      "title": "Write the IMPLEMENTER_RESULT with the required evidence",
+      "imperative": "Write .agent-work/567-d1/crew-handoffs/g3-implementer-result.md: before/after text for both files, the schema decision and its reasoning, the guard run showing no specs/ address, the dangling config_ref finding with evidence, the Workflow Feedback section, and Return status: complete. Also record the gate closing check's own false positive (its address grep matches the guard's census string .agent-work/templates/, so it cannot pass while lane D2's fenced files are still red) -- evidence for the Commander, not a fix.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both specs done, guard green at specs/, generator clean",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1, m2 and m3 all closed with their command postconditions re-verified by the engine: both specs parse, name the door, state the second-checklist truth; the guard reports no specs/ address; both specs compile clean through all five generator layers and the vocabulary is present in the compiled output."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists, carries Return status: complete, the config_ref finding and the schema decision",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -f .agent-work/567-d1/crew-handoffs/g3-implementer-result.md && grep -q 'Return status: complete' .agent-work/567-d1/crew-handoffs/g3-implementer-result.md && grep -q 'config_ref' .agent-work/567-d1/crew-handoffs/g3-implementer-result.md && grep -qi 'Workflow Feedback' .agent-work/567-d1/crew-handoffs/g3-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-result-1"
+        }
+      ],
+      "constraints": [
+        "File no issues; stage triage candidates under .agent-work/567-d1/triage-candidates/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -f .agent-work/567-d1/crew-handoffs/g3-implementer-result.md && grep -q 'Return status: complete' .agent-work/567-d1/crew-handoffs/g3-implementer-result.md && grep -q 'config_ref' .agent-work/567-d1/crew-handoffs/g3-implementer-result.md && grep -qi 'Workflow Feedback' .agent-work/567-d1/crew-handoffs/g3-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m4-result",
+      "statement": "The g3 gate's own closing check in the handoff cannot pass, for a reason unrelated to this gate's work. Its last clause is `! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | grep -qv '^skills/workbench/'`, but the guard's own failure message embeds a census line -- \"(101 under skills/, 2 under specs/, 113 under .agent-work/templates/)\" -- and `.agent-work/templates/` matches that address pattern while not starting with `skills/workbench/`. Measured on the UNMODIFIED tree before I touched anything: the filtered grep prints `.agent-work/templates/` twice (once per failing test) and exits 0, so the negated check is false at baseline. It only passes once the guard is entirely green, i.e. after lane D2's fenced files are swept -- which the handoff says is g5-final's job, not this gate's. Commander decision: narrow the address pattern (e.g. require a filename character after the final slash, or grep only `specs/[A-Za-z0-9_./-]+`, which is what the handoff's own Verification Commands section uses and which is clean), or accept the gate on the specs-only form."
+    },
+    {
+      "id": "tc2",
+      "from": "m4-result",
+      "statement": "specs/reviewer.spine.toml (type = survey) carries config_ref = \"docs/agents/engine-config.json\" while skills/explorer/templates/CYCLE.template.json -- also a survey -- deliberately DROPS the key, with tests/test_explorer_templates.py:242-247 pinning the reason (\"a survey never consults rework_cap ... the key is dropped rather than pointed at a file a fresh install won't have\"). Two shipped survey artifacts state opposite conventions. Separately, docs/CHECKLIST_SCHEMA.md:35-38 rules the missing file deliberately fine, so \"create the config\" is likely the wrong fix. Staged in full at .agent-work/567-d1/triage-candidates/engine-config-json-absent.md (g3 addendum). Not fixed here: half is free, half is a rework-cap defaults decision for a human."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/567-d1-g3-implementer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T20:46:40.827932+00:00",
+    "last_heartbeat": "2026-08-17T20:52:56.311350+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T20:52:59.512277+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The keys-vs-prose question is decided by what the compiler carries, not by preference: _compile_gate and compile_spec both construct their output dicts from fixed field lists, so a new spec key reaches no reader and spec_shape_faults would not refuse it -- a silent drop, the worst of both. Prose in imperative and constraints is the only text that reaches a dispatched role. Second finding from the same read: an UNBOUND door binds its own plan fine (I just did it, and the identity came from the spine's own work_id rather than from anything I supplied), so the honest doctrine is conditioned on holding a lease, not on the checklist being 'second'.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:47:00.928812+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-implementer-spec",
+      "why": "The vocabulary states both halves as one rule rather than as a capability plus an apology: the door reaches the spine you hold a lease on, and you hold exactly one, so a second checklist is out of reach BY the same rule that makes the door work at all. It also carries the case the handoff's premise missed and I measured first-hand this run -- an unbound door binds one spine and drives it identically, with the identity derived from the spine's own work id -- so the doctrine is conditioned on holding a lease, not on a checklist being 'second'. Where it landed is settled by the consumer: imperative and constraints are two of the five fields _compile_gate carries, and a header comment records why a new key was not the answer.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:48:14.279965+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-reviewer-spec",
+      "why": "The reviewer text is the same rule in the survey dialect, not a copy: a survey item closes through spine_survey_result and the engine literally refuses the gated verb (\"advance is for gated checklists; use record\", checklist_engine.py:2621), so naming spine_advance here would have handed a reviewer a verb it cannot use. It also points the \"what if these items are wrong\" case at r6-fowler's existing REPAIR PATH rather than inventing a second convention.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:48:50.071666+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-still-compiles",
+      "why": "The prose choice is now proven rather than argued. Both specs pass all five generator layers (tomllib, spec-shape, compile, probes, the validate_spine oracle) and write a spine; the new door vocabulary is present in the COMPILED tasks' own imperative and constraints, and the header comment that explains the decision is measured absent from both compiled files (0 occurrences) -- which is exactly the reason a new key would have been the wrong answer: it would have been dropped just as silently, with no fault to say so.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:49:10.046985+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-result",
+      "why": "The result carries what the handoff asked for (before/after for both files, the schema decision reasoned from _compile_gate's carried-field list, the guard run with no specs/ address, the config_ref finding with the CHECKLIST_SCHEMA.md ruling and the CYCLE.template.json precedent) plus two things the Commander needs before closing g3: the gate's own closing check is red at baseline because its address grep matches the guard's own census string, and the handoff's premise that dispatched crews cannot reach the door for their own plan is false -- this plan was driven end to end through the door from a spine:null dispatch, with the identity derived from the plan's work_id. The config_ref was deliberately not fixed: half of it is a defaults decision for a human and the schema doc blesses the current state in writing.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:52:56.311338+00:00"
+    }
+  ]
+}

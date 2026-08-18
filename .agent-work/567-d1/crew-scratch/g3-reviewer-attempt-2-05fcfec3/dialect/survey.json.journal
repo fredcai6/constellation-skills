@@ -1,0 +1,2 @@
+{"seq": 1, "ts": "2026-08-17T21:33:26.067025+00:00", "session_id": "constellation/567-d1-g3r2-dialect-s", "verb": "start", "task": "x1", "evidence_ids": [], "prev_hash": "", "hash": "d0db1d8354ad017d49ca46c8608a8890e5aabb8142918d125bff0463efb50d1c"}
+{"seq": 2, "ts": "2026-08-17T21:33:26.087827+00:00", "session_id": "constellation/567-d1-g3r2-dialect-s", "verb": "record", "task": "x1", "evidence_ids": [], "prev_hash": "d0db1d8354ad017d49ca46c8608a8890e5aabb8142918d125bff0463efb50d1c", "hash": "4ea4f39e32f65a9fb648e936855e360e6c27d4bc7238d1d64b115124f0740a80"}

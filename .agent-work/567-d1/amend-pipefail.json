@@ -1,0 +1,39 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "g1b-integrate",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log"
+    },
+    {
+      "op": "retext-check",
+      "id": "g2-integrate",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)\" && test -z \"$(grep -rn '<engine>' .agent-work/templates/ || true)\" && python3 -m pytest tests/test_mcp_adoption.py -q >/dev/null 2>&1"
+    },
+    {
+      "op": "retext-check",
+      "id": "g3-integrate",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | grep -qv '^skills/workbench/'"
+    },
+    {
+      "op": "retext-check",
+      "id": "g4-integrate",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | grep -qv '^skills/workbench/'"
+    },
+    {
+      "op": "retext-check",
+      "id": "g5-final",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q >/dev/null 2>&1"
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+{
+  "work_id": "567-d1",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-attack",
+    "r8-width",
+    "r9-overlay"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, GLOSSARY.md, the g1b reviewer handoff, the diff (git diff HEAD -- tests/test_cli_retirement_guard.py), g1b-implementer-result.md, g1-reviewer-result.md, and the bar the handoff names -- test_mcp_adoption.py:1268 TestCLIStaysAvailableNotDeprecated. No architecture packet exists (map_orient DEGRADED-UNPARSEABLE).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 5 close criteria met, each re-run by me with the exit code read. (1) git status over skills specs docs scripts episodes tests map .agent-work/templates is exactly one line, M tests/test_cli_retirement_guard.py; git diff --quiet HEAD -- tests/test_mcp_adoption.py exits 0 (untouched). (2) -k 'not TestNoSecondPathReachesAnAgent' -> 11 passed, 4 deselected, exit 0. (3) -k TestNoSecondPathReachesAnAgent -> 4 failed, 11 deselected, exit 1; 58 output lines address .agent-work/templates/. (4) Exception list length 0: no exclusion construct exists in any code path; _walk_dir has no filter. The two survivors are named ONLY in docstring prose (lines 75-76) as documentation of why the walk rule already excludes them, which is the same text g1 shipped and g1-review accepted; both verified out of GUARDED_FILES by my own independent walk. (5) Floors cover the new surface: OVERLAY_FILES >= 60 (113 measured) and GUARD_TEXTS >= 1800 (3098 measured), plus a new no-strays-under-.agent-work assertion. The overlay floor is well calibrated - the overlay is 57 visible + 56 .baseline mirrors, so losing EITHER half trips >=60. Gate closing check re-run verbatim under /bin/sh (dash): exit 0.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. git status --porcelain over skills specs docs scripts episodes tests map .agent-work/templates returns one line: M tests/test_cli_retirement_guard.py. Nothing under skills/, specs/, docs/, scripts/, episodes/, map/ or .agent-work/templates/ was written, so no lane-D2/E/F/H or Admiral fenced file was touched. tests/test_mcp_adoption.py is byte-identical to HEAD (git diff --quiet exits 0) and still 183 passed, 2 skipped. Nothing was swept - the guard is still RED, as the gate requires. I edited nothing; my own artifacts are confined to .agent-work/567-d1/g1b-review/ and /tmp.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claimed side-effect reproduced independently, exit codes read. collect-only -> 15, exit 0. -k 'not TestNoSecondPath...' -> 11 passed/4 deselected, exit 0. -k TestNoSecondPath... -> 4 failed/11 deselected, exit 1, 58 overlay lines. test_mcp_adoption.py -> 183 passed/2 skipped, exit 0, byte-identical to HEAD. Gate closing check verbatim under /bin/sh=dash -> exit 0. Census re-derived by MY OWN walk written from the stated rules, not by importing the guard: 3098 texts / 216 files / 101 skills + 2 specs + 113 overlay -- identical to the guard's. Pattern counts identical: placeholder 26 matches at 23 addresses, fallback 34, invocation 14, standin 26 at 23. WHOLE SUITE: my first run gave 7 failed, not the claimed 6. I traced the 7th (test_gauge_chain_writer_to_trip.py::test_chain_ambiguous_binding...) to its assertion at line 604, _snapshot_repo_agent_work() == before, which snapshots size+mtime of EVERY file under the repo .agent-work/ -- my own concurrent engine records broke it. Re-ran the suite with no engine activity: 6 failed, 3362 passed, 5 skipped, 1219 subtests, matching the implementer exactly. The two non-guard failures are in files this diff does not touch and which do not import the modified file; I proved the crew_launcher one by controlled experiment rather than by stashing -- it fails with CREW_SCRATCH_DIR set (exit 1) and passes with 'env -u CREW_SCRATCH_DIR' (exit 0), and that variable IS set in my environment. The implementer's mechanism claim is exactly right.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FINDING: _ENGINE_VERBS is missing an engine verb, and both pattern 3 and the new pattern 4 rest on it. The engine's own argparse enumerates 18 subcommands (python3 scripts/checklist_engine.py --help): current, claim, heartbeat, release, start, advance, record, consolidate, skip, block, RESUME, reopen, append, amend, attest, waive, attach, flag-candidate. _ENGINE_VERBS (line 229) lists 17 -- 'resume' is absent. Consequence, reproduced: 'Second path: <cli> resume g1 --reason unblocked.' passes ALL FOUR patterns clean, which is exactly the class this gate exists to close, using a verb the engine really has. This violates a documented repo standard verbatim -- CREW_CONTEXT.md Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list. A list of characters, filenames or call sites drifts from the predicate the code actually applies, and the gap is silent.' The list has already drifted, and the docstring's stated invariant ('a stand-in, IMMEDIATELY followed on the SAME LINE by an engine verb') is broader than the implementation. Measured cost of the fix: adding 'resume' yields ZERO new addresses for the stand-in pattern and ZERO for the invocation pattern over all 3098 texts, so it is free. Other inherited rules PASS: corpus walked never listed (no exclusion construct exists); every loop asserts what it looped over (4 floors + a census in every message); numbers pinned to a revision (8ba1334c, which is the g1 review's own recommendation taken); assert against behaviour not text (every documented decision is pinned by an assertion -- PROSE_ONLY, STAND_IN_COMMANDS, NOT_A_STAND_IN_COMMAND); a check that cannot fail (the guard is demonstrably red against the real corpus).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture map exists (map_orient -> DEGRADED-UNPARSEABLE), so there is no structural baseline to diverge from. The implementer's Map Impact notes check out against the diff: the inbound dependency really did widen from two imported names to three (INSTRUCTION_FILES, INSTRUCTION_SUFFIXES, _instruction_texts at lines 148-152), and the claimed failure mode is accurate -- if g2's inversion renames any of them the guard dies at collection, which pytest reports as an error, never as a pass. The new guarded surface claim is true and I verified its premise independently: all 113 overlay files are tracked in git (git ls-files .agent-work/templates -> 113, not git-ignored). Three items the Commander must carry into g2: (1) the sweep is 10 overlay files, not 5 -- the .baseline/ mirrors double every target; (2) both <engine> tokens on COMMANDER_SPINE.template.json's archive imperative, in all four copies; (3) skills/write-a-skill/SKILL.md:20 is a real sweep target the guard deliberately will not flag. Three triage candidates flagged separately.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/567-d1/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-d1/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from 567-d1 alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/567-d1/g1b-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/567-d1/g1b-review/FOWLER_PASS.json (path moved off the template's fixed convention through the engine's sanctioned amend/retext-check repair path, because the fixed path already held the g1 review's record). Rail exits 0: smells=12, flagged=['duplicated-code','primitive-obsession','shotgun-surgery'], overridden=['feature-envy','data-clumps','speculative-generality','comments-as-deodorant']. The load-bearing flag is primitive-obsession: _ENGINE_VERBS is a pipe-joined regex STRING rather than a collection, which is precisely why the missing 'resume' verb was invisible and why nothing can pin it against the engine's own parser. That is the design root of this review's blocking finding, not a separate cosmetic point. duplicated-code and shotgun-surgery are one observation seen twice: the two-width-decisions argument and its figures are written out three times, so re-measuring at a later revision touches about eight sites.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/567-d1/g1b-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-attack": {
+      "id": "r7-attack",
+      "title": "Attack the widened pattern",
+      "imperative": "Write plausible regrowth against ENGINE_STANDIN_COMMAND_RE and report every miss with the exact string. Judge each miss: declared limit (observation) or defeat of the guard's stated purpose (finding).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "22 regrowth strings run against all four patterns; 8 missed. ONE IS A FINDING, the rest are declared limits or acceptable residuals. FINDING -- an engine verb the enumeration does not know: \"Second path: <cli> resume g1 --reason unblocked.\" passes all four patterns clean. resume is a real subcommand of scripts/checklist_engine.py (verified against its own --help). This is not inside any declared limit and it is the exact class pattern 4 exists to close; recorded in full on r4-quality. DECLARED LIMITS, correctly pinned as must-not-match, reported as observations: the verb on the NEXT line, and a code span wrapping the whole command -- both are caught in my probes only because they still spell <engine>; respelled as <cli> they would walk through, so the two pinned loosenings are load-bearing exactly as the implementer argues. RESIDUALS worth recording but NOT findings: three placeholder dialects outside the five alternatives all walk through -- [engine] claim --session-id <id>, __ENGINE__ claim --session-id <id>, and the shell command-substitution form. I measured the cost of adding all three: ZERO new addresses over 3098 texts, so they are free to add. Unlike resume there is no oracle that says which dialects belong, so this is a judgment call and I report it rather than demand it. Also missed and correctly so: a command introduced by a word with no stand-in at all (\"run the engine with claim --session-id <id>\") hands an agent no program name, and a capitalized verb. WHAT THE PATTERN GETS RIGHT, measured not assumed: a colon after the stand-in, double-space and tab separators, a global flag before the verb, and all three g1-verified respellings plus the <script>/{engine}/%ENGINE% residuals are all caught. One caveat: \"<cli> --file <checklist.json> current\" is caught only INCIDENTALLY, via the second stand-in <checklist.json> sitting before the verb, not via the program name.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-width": {
+      "id": "r8-width",
+      "title": "Judge the width in BOTH directions, re-measured",
+      "imperative": "Re-derive the implementer's two headline claims -- false-alarm rate 0/3098 on honest text, and the widening adds zero new addresses -- and verify the two rejected loosenings cost what is claimed. Judge against test_mcp_adoption.py:1268.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "BOTH HEADLINE CLAIMS RE-DERIVED AND BOTH HOLD, measured with my own walk written from the stated rules rather than by importing the guard. (1) \"The widening adds zero new addresses\": confirmed exactly. The stand-in pattern reports 26 matches at 23 addresses; the union of the three g1 patterns covers 36 addresses; set difference standin-minus-g1 is EMPTY. Stronger than claimed, and I checked the stronger form the implementer actually asserted: standin addresses minus <engine>-alone addresses is also EMPTY, so every site it reports is one the single token already reported. (2) \"False-alarm rate on honest text 0/3098\": confirmed. No site the stand-in pattern reports is honest text; all 23 are genuine second-path sites already under the other patterns. (3) The FIRST width decision -- not requiring the stand-in to spell engine or cli -- I re-measured the narrow alternative myself: on this tree it reports the identical 26 matches at the identical 23 addresses, so the implementer is right that measurement alone cannot separate them and the choice had to be made on the argument. The argument is right: requiring the token to spell engine or cli rebuilds the same defect one level up, and I verified the consequence by probe -- \"<script> claim --session-id <id>\" walks straight through the narrow form and is caught by the shipped one. (4) The SECOND width decision -- separator is horizontal whitespace only. The claimed \\s false alarm EXISTS EXACTLY WHERE CLAIMED: loosening [ \\t] to \\s adds precisely one match, at skills/workbench/references/checklist-engine.md:92, where \"heartbeat --session-id <id>\" ends a usage-block line and \"release --session-id <id>\" opens the next. Verified verbatim. The trailing-backtick loosening adds ZERO on today's corpus, which matches the implementer's own careful phrasing that its three prose shapes are writable tomorrow rather than present today; that is an honest claim, not an inflated one. JUDGED AGAINST THE BAR at test_mcp_adoption.py:1268: this pattern is not the class TestCLIStaysAvailableNotDeprecated deleted. That predicate fired on 5 of 6 planted HONEST affirmatives, punishing authors doing the right thing; this one fires on zero honest texts out of 3098 and every site it names is a real target. ONE QUALIFICATION on the durability argument, observation not blocker: the docstring rests the safety case on Markdown code spans -- \"a stand-in carrying its own closing backtick is a noun, not a program name\". I measured how far that carries. The corpus contains 40 sites where a stand-in is followed by horizontal whitespace and an ordinary English word, and ZERO of the 40 are code-spanned -- they are bare, e.g. \"<work-id> alone\", \"<work-id> in\", \"<id> or\", \"<commander-session-id> on\", \"<repo-root> rev-parse\", \"<N> rule\". 13 of the 40 sit inside JSON template imperatives, where backticks are not the house habit and the code-span argument gives no protection at all. So the measured 0/3098 is real, but what actually holds it at zero is that none of those 40 following words happens to be one of the 17 verbs -- several of which (record, block, append, start, current, release) are common English. The residual is accepted correctly; the docstring should just say the code-span argument covers Markdown and not JSON leaves, so a later author does not over-trust it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-overlay": {
+      "id": "r9-overlay",
+      "title": "Verify the overlay walk's scope rule and census",
+      "imperative": "Confirm .agent-work/<work-id>/** is structurally unreachable from the walk, no lane-D2 file enters it, and the 16-tokens census g2 depends on.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "ALL THREE CONFIRMED, one with a correction to the stated census. (1) SCOPE RULE, verified structurally rather than by reading the code's intent: the rglob is rooted at ROOT/\".agent-work/templates\", and .agent-work/567-d1 is a SIBLING of that root, not a descendant -- so this run's own launch order, notes, handoffs and crew results are never reachable, not reached-and-filtered. That is why the exception list can stay at zero: there is nothing to name. I also checked for a symlink escape out of the overlay and found none. The measured value of the decision: a rule rooted at .agent-work/ instead would have dragged in 9107 additional .md/.json files, every one of them a record of what was said. The new test_the_overlay_rule_does_not_reach_a_live_runs_own_artifacts assertion puts that rule in the assertion path, which is the right place for it. (2) NO LANE-D2 FILE ENTERS THE WALK. I re-ran the implementer's measurement myself over .agent-work/templates/.baseline/constellation-workbench/: 4 files, 20 texts, and every one is clean of all four patterns. The widening creates no fenced-file dependency. (3) CENSUS -- the load-bearing figure for g2, and the number is RIGHT with one attribution correction. 16 <engine> occurrences in the overlay: confirmed exactly. But they live across SIX files, not the ten the handoff and the implementer result both state: ADMIRAL_SPINE 2, COMMANDER_SPINE 4, EXPLORER_SPINE 2, and each of those three mirrored under .baseline/. The ten is the count of overlay files carrying ANY sweep target -- the other four are the gated-engine and survey SKILL templates and their mirrors, which carry CLI-fallback clauses and checklist_engine.py invocations but no <engine> token at all. So \"16 tokens across 10 files\" conflates two different counts. The g2-actionable content is unharmed and I confirm it: 10 overlay files need sweeping, the .baseline/ mirrors double every target, and a sweep of the five visible copies alone leaves this guard red. Also confirmed independently: overlay CLI-fallback matches are 18 as claimed, and all 113 overlay files are tracked in git (git ls-files -> 113, not ignored), which is the premise the whole extension rests on.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r4-quality: FINDING: _ENGINE_VERBS is missing an engine verb, and both pattern 3 and the new pattern 4 rest on it. The engine's own argparse enumerates 18 subcommands (python3 scripts/checklist_engine.py --help): current, claim, heartbeat, release, start, advance, record, consolidate, skip, block, RESUME, reopen, append, amend, attest, waive, attach, flag-candidate. _ENGINE_VERBS (line 229) lists 17 -- 'resume' is absent. Consequence, reproduced: 'Second path: <cli> resume g1 --reason unblocked.' passes ALL FOUR patterns clean, which is exactly the class this gate exists to close, using a verb the engine really has. This violates a documented repo standard verbatim -- CREW_CONTEXT.md Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list. A list of characters, filenames or call sites drifts from the predicate the code actually applies, and the gap is silent.' The list has already drifted, and the docstring's stated invariant ('a stand-in, IMMEDIATELY followed on the SAME LINE by an engine verb') is broader than the implementation. Measured cost of the fix: adding 'resume' yields ZERO new addresses for the stand-in pattern and ZERO for the invocation pattern over all 3098 texts, so it is free. Other inherited rules PASS: corpus walked never listed (no exclusion construct exists); every loop asserts what it looped over (4 floors + a census in every message); numbers pinned to a revision (8ba1334c, which is the g1 review's own recommendation taken); assert against behaviour not text (every documented decision is pinned by an assertion -- PROSE_ONLY, STAND_IN_COMMANDS, NOT_A_STAND_IN_COMMAND); a check that cannot fail (the guard is demonstrably red against the real corpus).",
+      "r7-attack: 22 regrowth strings run against all four patterns; 8 missed. ONE IS A FINDING, the rest are declared limits or acceptable residuals. FINDING -- an engine verb the enumeration does not know: \"Second path: <cli> resume g1 --reason unblocked.\" passes all four patterns clean. resume is a real subcommand of scripts/checklist_engine.py (verified against its own --help). This is not inside any declared limit and it is the exact class pattern 4 exists to close; recorded in full on r4-quality. DECLARED LIMITS, correctly pinned as must-not-match, reported as observations: the verb on the NEXT line, and a code span wrapping the whole command -- both are caught in my probes only because they still spell <engine>; respelled as <cli> they would walk through, so the two pinned loosenings are load-bearing exactly as the implementer argues. RESIDUALS worth recording but NOT findings: three placeholder dialects outside the five alternatives all walk through -- [engine] claim --session-id <id>, __ENGINE__ claim --session-id <id>, and the shell command-substitution form. I measured the cost of adding all three: ZERO new addresses over 3098 texts, so they are free to add. Unlike resume there is no oracle that says which dialects belong, so this is a judgment call and I report it rather than demand it. Also missed and correctly so: a command introduced by a word with no stand-in at all (\"run the engine with claim --session-id <id>\") hands an agent no program name, and a capitalized verb. WHAT THE PATTERN GETS RIGHT, measured not assumed: a colon after the stand-in, double-space and tab separators, a global flag before the verb, and all three g1-verified respellings plus the <script>/{engine}/%ENGINE% residuals are all caught. One caveat: \"<cli> --file <checklist.json> current\" is caught only INCIDENTALLY, via the second stand-in <checklist.json> sitting before the verb, not via the program name."
+    ],
+    "summary": "BLOCK on one finding, recorded fail on r4-quality and r7-attack. Everything else in this gate verifies correct, and I re-derived it rather than accepting it: all 5 close criteria met, the census reproduced exactly by an independent walk (3098 texts / 216 files / 101+2+113), both headline claims confirmed (the widening adds ZERO new addresses; false-alarm rate 0/3098 on honest text), the claimed \\s false alarm found verbatim at skills/workbench/references/checklist-engine.md:92, the overlay scope rule confirmed structurally, no lane-D2 dependency created, and the whole-suite figure reproduced at 6 failed / 3362 passed once I stopped writing to .agent-work/ during the run.\n\nTHE FINDING: _ENGINE_VERBS enumerates 17 verbs; scripts/checklist_engine.py's own argparse defines 18. \"resume\" is missing, so \"Second path: <cli> resume g1 --reason unblocked.\" passes all four patterns clean. That is the precise class this gate exists to close, using a verb the engine really has, and it is not inside any of the docstring's declared limits. It also violates a documented repo standard verbatim -- CREW_CONTEXT.md: \"Define a guard by its consumer's behaviour, not by a hand-maintained list ... and the gap is silent.\" The list has already drifted, and the same string feeds BOTH pattern 3 and the new pattern 4, so the gap is doubled.\n\nWHY BLOCK RATHER THAN APPROVE WITH AN OVERRIDE: the fix is one token and I measured it free -- adding \"resume\" yields zero new addresses for either pattern over all 3098 texts -- and this gate exists at all because the g1 review found the class resting on a single literal. Shipping a widening whose stated invariant is broader than its implementation, with a named and costless hole, repeats the shape the gate was opened to remove. Rework is one token in _ENGINE_VERBS plus one pinned fixture in STAND_IN_COMMANDS. I did not ask for the guard to be made green and did not propose an exception list; it must stay RED for g2."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "The whole-suite evidence command is unsafe to run concurrently with engine drive. tests/test_gauge_chain_writer_to_trip.py:604 asserts _snapshot_repo_agent_work() == before, comparing size+mtime of EVERY file under the repo .agent-work/. Any crew that runs 'pytest tests/ -q' as evidence while recording its own survey through the engine sees a 7th failure it did not cause. Reproduced both ways in this review: 7 failed with concurrent records, 6 failed when quiet. Either fence the snapshot to the fixture's own subtree or state the quiescence requirement where crews are told to run the suite."
+    },
+    {
+      "id": "tc2",
+      "from": "r4-quality",
+      "statement": "Derive _ENGINE_VERBS from the engine's own argparse instead of hand-listing it. scripts/checklist_engine.py's parser already enumerates all 18 subcommands, so the guard could assert set-equality against that oracle and never drift again -- which is what CREW_CONTEXT.md's 'define a guard by its consumer's behaviour, not by a hand-maintained list' actually asks for. The immediate fix for this gate is the one-token addition of 'resume'; this is the durable fix, and it is a design call above crew latitude because it adds a tests -> scripts import."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g1b/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T18:55:50.089953+00:00",
+    "last_heartbeat": "2026-08-17T19:10:32.886809+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T19:12:43.817966+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T19:08:04.520003+00:00",
+      "reason": "The template's fixed path .agent-work/567-d1/FOWLER_PASS.json already holds the g1 review's Fowler record; writing mine there would destroy that gate's audit evidence. Moved to this gate's own survey directory, which is the REPAIR PATH the r6-fowler imperative sanctions.",
+      "authority": "constellation/567-d1/lane-d1/commander-delegated",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

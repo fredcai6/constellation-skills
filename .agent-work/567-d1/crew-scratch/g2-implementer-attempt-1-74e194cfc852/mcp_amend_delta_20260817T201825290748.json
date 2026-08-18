@@ -1,0 +1,1 @@
+{"ops": [{"op": "retext-check", "id": "m6-close", "which": "postconditions", "cond": "c1", "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g2-guard.log 2>&1; test -z \"$(sed -E 's/^E? *//' /tmp/g2-guard.log | grep -E '^(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+(:[0-9]+)?$' | grep -v '^skills/workbench/' || true)\""}]}

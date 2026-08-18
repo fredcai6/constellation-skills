@@ -1,0 +1,21 @@
+Confirmed — and I'm going to stop rather than follow that imperative, because it addresses a role I don't hold.
+
+**What the hook is reading:** `.agent-work/567-d1/spine.json`, whose `execute` gate is open under an active lease held by `constellation/567-d1/lane-d1/commander-delegated` — my **parent**.
+
+**What I own:** `.agent-work/567-d1/g4-review/review.json` — `DONE: no open items`, consolidated `APPROVE`, lease released. `SPINE_FILE` is unset in my environment (only `SPINE_PARENT` is set), so no spine is bound to me.
+
+Driving that spine would be wrong on four counts:
+
+1. **It isn't mine.** The workbench engine reference is explicit: a dispatched crew drives its own plan or survey, never the dispatcher's — "the door is a pass-through to whichever file its own environment named, and that file is the parent's."
+2. **The lease is another session's.** Every mutating verb requires the active lease's session id. I'd have to `--force` a takeover of my own Commander's lease and record my parent as displaced.
+3. **Advancing `execute` would assert something false.** The gate is open *correctly* — `g5-final` hasn't run, and `execute` was waiting on the artifact I just delivered. Closing it would be the exact "record a verdict the work doesn't support" failure the engine exists to refuse.
+4. **The hook's sanctioned exits don't fit.** `spine_halt block` and `waive` are for the agent that owns the spine and is stuck. I'm not stuck — I'm finished, and blocking my parent's gate from a crew session would inject a false blocker.
+
+The reviewer dispatch is complete and its deliverables exist:
+
+- `.agent-work/567-d1/crew-handoffs/g4-reviewer-result.md` — full `REVIEW_RESULT`, `Verdict: APPROVE`, with the `Workflow Feedback` section filled
+- `.agent-work/567-d1/g4-review/review.json` — 11 items all `pass`, consolidated, lease released last
+- `.agent-work/567-d1/g4-review/FOWLER_PASS.json` — 12 smells, verifier exit 0
+- `.agent-work/567-d1/triage-candidates/doctrine-asserts-spine-postconditions-with-no-tie.md`
+
+The open `execute` gate is the Commander's to advance, now that its reviewer artifact has landed. If you intended this session to *be* the Commander rather than the g4 reviewer crew, say so and I'll reload `constellation-commander` and pick the spine up properly — but I won't take that lease on a hook's say-so while my parent still holds it.

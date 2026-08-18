@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "files": [],
+  "repo_rev": {
+    "commit": "47dd5e4794a87c1add5a7c9216c8d88d136bedbc"
+  },
+  "run": {
+    "work_id": "567-d1",
+    "generated_at": "2026-08-17T22:24:38Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard"
+    }
+  }
+}

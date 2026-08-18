@@ -1,0 +1,243 @@
+{
+  "work_id": "567-d1",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-attack",
+    "r8-predicate-line",
+    "r9-census"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the reviewer handoff, IMPLEMENTER_RESULT, the diff (tests/test_cli_retirement_guard.py), notes-1.md baseline, and both map anchors in tests/test_mcp_adoption.py (838 precedent; 415-478 walk definition).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Close criteria 1-5 all confirmed by re-run, not by the report. Guard collects 9 tests (exit 0); pytest exits 1 with 3 failed / 6 passed; every failure message carries the census 'scanned 1007 texts across 103 files (101 under skills/, 2 under specs/)'; floors >=60 skills files / >=1 spec / >=600 texts are asserted in TestTheWalkIsNotVacuous; zero per-file exclusions anywhere in the file; tests/test_mcp_adoption.py is imported and unchanged vs HEAD; git status over skills specs docs scripts episodes tests map is exactly one line. The gate's stated close condition (RED for the right reason) is met.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. Working tree outside .agent-work/ holds exactly one entry: ?? tests/test_cli_retirement_guard.py. git diff HEAD over the repo minus .agent-work is empty, and tests/test_mcp_adoption.py is byte-identical to HEAD -- the named exclusion was imported, never edited. Nothing under skills/, specs/, docs/, scripts/, episodes/ or map/ was touched, so no lane-D2 fenced file was written.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claimed side-effect reproduced independently. collect-only = 9 collected (exit 0); pytest = exit 1, 3 failed / 6 passed; tests/test_mcp_adoption.py alone = 183 passed, 2 skipped (exit 0) -- the implementer's '189 passed' is its COMBINED run (183 + the guard's 6), and the reviewer handoff's evidence list repeats that figure as if it were the adoption suite alone; the underlying claim (the imported-from suite is untouched and green) holds. The gate's closing shell check re-run by hand: exit 0. All ten <engine> sites and all sixteen CLI-fallback sites re-derived from scratch with my own walk (not the guard's code): identical addresses and counts. Spot-checked real lines: COMMANDER_SPINE.template.json:123, checklist-engine.md:5 and :45, charter/SKILL.md:12, explorer/SKILL.md:31, interrogator/SKILL.md:26, workbench/SKILL.md:37, both write-a-skill templates -- every reported site exists at the reported line/JSON path.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets the inherited rules that bite here. CREW_CONTEXT Verification Discipline: (a) 'a check that cannot fail is indistinguishable from one that passed' -- the guard is red on the real corpus now, which is the whole reason the gate ordered it authored before the sweep, and I additionally red-proofed TestTheInvocationPredicateItself in memory: widening the trailing-arg arm to a bare '--' immediately flags the fleet-doctrine em-dash prose, and dropping the path/trailing-arg arms misses 6 of 6 command shapes, so both directions really are in the assertion path; (b) 'any guard that loops must assert what it looped over' -- three floors plus a census in every message; (c) 'define a guard by its consumer's behaviour, not a hand-maintained list' -- the WALK obeys this (imported from test_mcp_adoption, one definition in the repo), the three PATTERNS are necessarily hand-authored literals, which is inherent to a text guard. Handoff constraint 3 respected: no exception list proposed, nothing asked to be made green. Interpreter re-checked per CREW_CONTEXT 'Python Invocation' before trusting any run: py, python and python3 all report pytest 9.1.1 on this host.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact checks out against the diff; nothing here needs Commander reconciliation beyond what is already surfaced. map_orient is DEGRADED-UNPARSEABLE, so the anchors are the two named test modules. The claimed hard inbound dependency is real and visible at tests/test_cli_retirement_guard.py:92-93 (sys.path insert + 'from test_mcp_adoption import INSTRUCTION_FILES, _instruction_texts'), and the claimed failure mode is accurate: if g2's inversion deletes or renames either symbol the guard dies at COLLECTION, which pytest reports as an error rather than a pass, so the coupling fails loudly as claimed. The capability claim -- the ruling pinned for 2 files by TestTier2SpineAlreadyBoundForDispatchedCrews, now pinned across 103 files / 1007 texts -- is reproduced by my own count. The decision candidate (where the invocation line sits) is surfaced to the Commander rather than settled by the crew, which is the right routing. Two things the Commander should carry forward into g2: both <engine> tokens on COMMANDER_SPINE.template.json:123 must be edited, not one; and the guard's walk stops at skills/ + specs/*.toml, so the tracked .agent-work/templates/ overlay is not covered by it (tc1). The guard walking skills/workbench/** is known and expected per handoff constraint 4 and is not raised here.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/567-d1/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-d1/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from 567-d1 alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/567-d1/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/567-d1/FOWLER_PASS.json; rail exits 0 (smells=12, flagged=['comments-as-deodorant'], overridden=['duplicated-code','feature-envy','data-clumps','speculative-generality']). One flag, observation-level: the docstring and the three floor messages carry measured numbers (101 files, 1007 texts, 10 caught / 6 left alone) bound only to 'when this guard was written', where global-everyone 'Pin a claim to the revision you read it at' asks for the revision -- and this file more than most, since its job is to outlive the sweep. Four overrides, each with the standard logged: the rglob duplication (the handoff forbids editing the module that would absorb it), the private-symbol import (the house idiom at test_mcp_imperative_equivalence.py:72, verified), the 4-tuple (matches the imported module's own tuple convention), and the one-element SPEC_SUFFIXES (CREW_CONTEXT forbids the file list that would replace it). No blocker from this pass.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/567-d1/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-attack": {
+      "id": "r7-attack",
+      "title": "Attack the pattern",
+      "imperative": " write plausible regrowth and find what it misses:Write regrowth text a future agent restoring this doctrine would actually write, run it against ENGINE_PLACEHOLDER_RE / CLI_FALLBACK_RE / ENGINE_INVOCATION_RE, and report every miss with the exact string. Judge each miss as a declared limit (observation) or a defeat of the guard's stated purpose (finding).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "27 regrowth strings run against all three patterns; 13 missed. One miss is NOT inside a declared limit and is the finding: a spine-template command line written with any stand-in other than <engine>. 'Second path: <cli> claim --session-id <commander-session-id> --claimed-by commander.' and 'If the door is down: <engine-cli> advance g1 --why ...' and 'Fallback command line: {{engine}} release --session-id <work-id>.' all pass clean. The class matters because a template command line never contains the literal checklist_engine.py, so ENGINE_INVOCATION_RE cannot reach it and the entire class hangs on one 8-char literal; init_work_area.py:24's own comment lists <engine> beside <date>, <N>, <path> as generic prose placeholders it never resolves, so a differently-spelled stand-in is a natural thing for a restoring author to write. Remaining 12 misses fall inside or beside the docstring's declared limits: bare script mention with the verb separated by a blank line or a sentence ('The engine script is checklist_engine.py. To close a gate, advance g1.'); the -m module form ('python3 -m scripts.checklist_engine --file spine.json current'); alias USE where the definition is elsewhere ('Then run $ENGINE claim --session-id <id>'); and command-free paraphrase ('If the door refuses, drive the checklist from a shell with the engine script instead'). Credit where measured: the adjacent-next-line verb form IS caught, Windows backslash paths are caught, absolute installed paths, ./ paths, case and hyphen respellings are caught, and the engine's argparse defines NO short options, so requiring --[A-Za-z] gives up nothing runnable.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-predicate-line": {
+      "id": "r8-predicate-line",
+      "title": "Judge the invocation predicate's line and whether the test pins it",
+      "imperative": "Read at least two of the six prose mentions the predicate leaves alone, say whether the line between 'run this from a shell' and 'this file is the engine' is drawn defensibly, and red-proof that TestTheInvocationPredicateItself genuinely pins both directions.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The line is defensible and the test really pins it, with one gap worth naming. Read in full: skills/_shared/global-everyone.md:70 ('The engine's why-capture and refresh primitives (checklist_engine.py, #179)'), :178 ('the engine rail string table (checklist_engine.py, #140)'), :254 ('Nothing enforces the execution-time half in code -- checklist_engine.py does not parse these tags'), and skills/admiral/references/fleet-doctrine.md:234 ('an epic that rewrites checklist_engine.py -- the very engine driving it'). Every one of these names the engine as the COMPONENT that implements or fails to implement a rule; none tells a reader to run anything, and deleting the name from them would make the doctrine unable to say which module it is talking about. Drawing the line at 'tells an agent how to run it' is the right place. Red-proof, done in memory without editing the file: widening the trailing-arg arm from --[A-Za-z] to a bare -- immediately flags the fleet-doctrine em-dash sentence, and dropping the path and trailing-arg arms misses 6 of 6 command shapes -- so both directions genuinely fail when the pattern moves. Independently re-measured on this tree: 16 literal checklist_engine.py occurrences in the walk, 10 caught, 6 left alone, exactly as reported. THE GAP: the closest-to-the-boundary shape in the corpus is not in PROSE_ONLY -- skills/write-a-skill/SKILL.md:20's archetype cell 'a templates/*.json checklist driven through checklist_engine.py', which asserts the DRIVE PATH is the script and is precisely the belief #559 wants removed, yet is left alone (verified) and unpinned. PROSE_ONLY's four strings mirror the rail-table, em-dash, scripts-manifest and does-not-parse shapes and skip this one, so a future widening that starts flagging archetype tables would not be caught by the pin. Where the line sits is the Commander's doctrine call; I report only that the drawn line holds and that its pin has this one hole.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-census": {
+      "id": "r9-census",
+      "title": "Re-measure the two reported census discrepancies",
+      "imperative": "Independently re-measure <engine> (10 vs baseline 9) and CLI fallback (16 vs baseline 15) rather than accepting the implementer's arithmetic, and judge whether accepting the CLI-fallback false-alarm class is the right call.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both discrepancies re-measured with my own walk, not the guard's code, and both explanations hold. <engine>: 10 occurrences at 9 addresses. COMMANDER_SPINE.template.json tasks.archive.imperative carries exactly 2 tokens, and sed -n '123p' on that file returns 2 matches, so the baseline's 9 was a LINE count and the extra occurrence is real -- the sweep must edit BOTH tokens on line 123 ('<engine> waive archive --cond c4' and 'CLI fallback: <engine> release'), and a one-edit-per-line sweep leaves one behind. CLI fallback: 16 with the [\\\\s-] separator, and exactly 15 with a space-only separator -- the delta is one site, skills/workbench/references/checklist-engine.md:45, 'There is no CLI-fallback table below this one', a sentence that forbids the thing while quoting it. My arithmetic reproduces the baseline's 15 exactly, so the baseline was not wrong; the pattern is strictly wider. Accepting that false-alarm class is the right call: a hyphen respelling is the cheapest way to defeat a space-only pattern, so narrowing to duck this one site would trade a real evasion route for one cosmetic red, and the alternative -- a polarity predicate that tries to tell a prohibition from an instruction -- is far more failure-prone than a human reading one line. The site is also lane D2's file, deleted by that lane before g5-final.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r7-attack: 27 regrowth strings run against all three patterns; 13 missed. One miss is NOT inside a declared limit and is the finding: a spine-template command line written with any stand-in other than <engine>. 'Second path: <cli> claim --session-id <commander-session-id> --claimed-by commander.' and 'If the door is down: <engine-cli> advance g1 --why ...' and 'Fallback command line: {{engine}} release --session-id <work-id>.' all pass clean. The class matters because a template command line never contains the literal checklist_engine.py, so ENGINE_INVOCATION_RE cannot reach it and the entire class hangs on one 8-char literal; init_work_area.py:24's own comment lists <engine> beside <date>, <N>, <path> as generic prose placeholders it never resolves, so a differently-spelled stand-in is a natural thing for a restoring author to write. Remaining 12 misses fall inside or beside the docstring's declared limits: bare script mention with the verb separated by a blank line or a sentence ('The engine script is checklist_engine.py. To close a gate, advance g1.'); the -m module form ('python3 -m scripts.checklist_engine --file spine.json current'); alias USE where the definition is elsewhere ('Then run $ENGINE claim --session-id <id>'); and command-free paraphrase ('If the door refuses, drive the checklist from a shell with the engine script instead'). Credit where measured: the adjacent-next-line verb form IS caught, Windows backslash paths are caught, absolute installed paths, ./ paths, case and hyphen respellings are caught, and the engine's argparse defines NO short options, so requiring --[A-Za-z] gives up nothing runnable."
+    ],
+    "summary": "APPROVE. The guard collects cleanly (9 tests), exits 1 with 3 failed / 6 passed, and every failure names real sites at real lines with the census attached -- all re-run by me, exit codes read, not accepted from the report. Close criteria 1-5 confirmed: zero exclusions anywhere, three vacuity floors, tests/test_mcp_adoption.py imported and byte-identical to HEAD, one line in git status. Both reported census discrepancies re-measured from scratch and both hold: <engine> is 10 occurrences on 9 lines because COMMANDER_SPINE.template.json:123 carries two tokens (so the sweep must edit both), and CLI fallback is 16 because the loosened separator also catches the hyphenated prohibition at checklist-engine.md:45 -- my space-only count is exactly the baseline's 15, so the pattern is strictly wider, not wrong. The invocation predicate's line is drawn in the right place and is genuinely pinned: widening the trailing-arg arm to a bare -- flags the fleet-doctrine em-dash sentence, dropping the path arm misses 6 of 6 command shapes. One recorded fail, r7-attack, carries the review's real yield: a spine-template command line written with any stand-in other than <engine> ('Second path: <cli> claim --session-id ...') passes all three patterns, and that class is not inside any of the docstring's three declared limits. It does not bar this gate -- see the override reason.",
+    "override_reason": "r7-attack is recorded fail because the attack found a miss outside the guard's declared limits, and that finding must not be softened to get a verdict through. It does not bar this change. The gate's stated close condition is the guard being RED for the right reason, and it is; every close criterion is met; the miss is a WIDENING of the placeholder pattern, which is a doctrine and scope call the handoff reserves to the Commander ('where the line ought to sit is a doctrine call the Commander owns'), and acting on it here would mean editing the guard, which constraint 2 forbids a reviewer. Routed to g2 as a decision with the exact evasion strings and three triage candidates, so nothing is lost by approving now."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r7-attack",
+      "statement": "The tracked project template overlay is agent-facing text no guard walks: .agent-work/templates/{COMMANDER,ADMIRAL,EXPLORER}_SPINE.template.json carry 7 <engine> tokens and .agent-work/templates/{gated-engine,survey}-SKILL.template.md carry 2 CLI-fallback clauses, while workbench doctrine tells an agent to PREFER that overlay over the bundled skills/ copy. After the sweep the guard goes green on skills/ while the copy an agent in this repo actually instantiates still hands over the second path."
+    },
+    {
+      "id": "tc2",
+      "from": "r7-attack",
+      "statement": "scripts/mcp_spine_server.py:123 carries a CLI-fallback sentence outside every instruction walk (prose that forbids while quoting, but in a file no guard reads)."
+    },
+    {
+      "id": "tc3",
+      "from": "r7-attack",
+      "statement": "docs/agents/CREW_CONTEXT.md 'Python Invocation' records a measurement from 2026-08-10 that no longer holds: py, python AND python3 all report pytest 9.1.1 on this host today. Independently confirms the implementer's observation 1."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g1/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T18:17:38.122335+00:00",
+    "last_heartbeat": "2026-08-17T18:26:43.459116+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T18:28:15.006157+00:00"
+  }
+}

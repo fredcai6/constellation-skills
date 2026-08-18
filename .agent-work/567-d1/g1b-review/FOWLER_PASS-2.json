@@ -1,0 +1,92 @@
+{
+  "work_id": "567-d1",
+  "diff_ref": "8ba1334c..4df66479 -- tests/test_cli_retirement_guard.py (the g1b widening plus its rework: verb set derived from the engine, TestTheVerbSetIsTheEnginesOwn, the resume fixture, docstring scoping). Re-review after a BLOCK; round 1's record is at FOWLER_PASS.json alongside this file.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Record Stores Are Never Hand-Edited), docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md, tests/test_mcp_adoption.py:1268 TestCLIStaysAvailableNotDeprecated",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The `resume` story is now told FOUR times in one file: the module docstring's 'WHAT COUNTS AS AN ENGINE VERB' paragraph (lines 40-48), the `#:` block above `_ENGINE_VERBS` (259-279), `TestTheVerbSetIsTheEnginesOwn`'s class docstring (522-541), and the comment on the pinned fixture (612-617). Each telling repeats the same four facts -- 17 vs 18, the missing verb, the blocker line, the CREW_CONTEXT rule. Round 1's review already flagged this shape and the rework ADDED a telling rather than consolidating. Not a blocker: this file's stated convention is to carry its reason inline because the lane may not write docs/agents/*, and each of the four sites has a different reader. But a fifth telling is the point at which they start disagreeing with each other, and one of them (the docstring's list of common-English verbs) already omits `resume`, `advance` and `amend` -- the drift has begun.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "The guard now imports four names from `tests/test_mcp_adoption.py` (INSTRUCTION_FILES, INSTRUCTION_SUFFIXES, _instruction_texts, _engine_verbs) and does almost nothing with data of its own -- the walk, the suffixes, the text extractor and now the verb oracle all belong to the other module.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list. A list of characters, filenames or call sites drifts from the predicate the code actually applies, and the gap is silent.'",
+        "reason": "The envy is the point, not a defect: every borrowed name is a definition the repo must have exactly ONE of. Re-deriving any of them locally is what the standard forbids, and the fourth borrow is precisely the fix for the blocker this review re-examined -- a hand-typed copy of the verb set had already drifted on day one. The failure mode of the coupling is loud, not silent: a rename kills the file at collection, which pytest reports as an error and never as a pass. Verified: the guard collects under a bare env and shows no ordering dependency in either direction against the five suites that share these definitions."
+      }
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "The 4-tuple `(path, where, text, is_whole_file)` is built in `_guard_texts` and destructured identically in `_sites` and `_census`, and my own re-derivation scripts had to destructure it a fourth time. A named record would read better than positional unpacking at three sites.",
+      "override": {
+        "repo_standard": "The same one-definition rule as above, applied to shape rather than to values: `_instruction_texts` in `tests/test_mcp_adoption.py` is the imported source of these rows, and this file mirrors its shape rather than wrapping it.",
+        "reason": "Introducing a local record type here would create a second definition of 'an addressable instruction text' that agrees with the adoption suite today and drifts from it later -- the exact failure this file exists to avoid, one level down. The clump is three destructurings inside one 719-line module, all within sight of each other, and the cost of the alternative is the drift the whole file is built to prevent."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "flagged",
+      "finding": "Round 1's load-bearing flag was that `_ENGINE_VERBS` was a pipe-joined regex STRING and not a collection, so nothing could compare it against the engine's real verb set -- which is why the missing `resume` was invisible. The rework fixes that: the string is now built from a sorted, re.escaped set, and `ENGINE_VERBS` is a frozenset recovered from it. A sliver of the same smell survives in the recovery itself -- `frozenset(re.sub(r'\\\\(.)', r'\\1', t) for t in _ENGINE_VERBS.split('|'))` round-trips a string through split-and-unescape rather than keeping the set. Measured: the round-trip is exact for a verb carrying `.`, a space, or the hyphen `flag-candidate` already has, and breaks for exactly one character, a literal `|` in a verb name. When it breaks it FAILS SAFE -- the tie assertion goes red and names the difference, which I confirmed by probe -- so this is a readability residual, not a hole. Raised because the previous round's flag is what produced the fix, and a reader should know the last sliver was measured rather than missed.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Re-measuring this corpus still touches many sites in one file, and the rework increased the count rather than reducing it. `3098` appears in the module docstring, the `#:` block on ENGINE_STANDIN_COMMAND_RE, the class docstring and the GUARD_TEXTS floor message; the 26/34/14/16/18/40/27/31 census figures are spread across three docstrings and one comment; `8ba1334c` is now cited at four sites, several of which describe numbers I have just re-measured on a LATER revision (4df66479) and found unchanged. So the citations are accurate today but they pin a revision the file has moved past. Against this file's own instruction -- 'Re-measure before you repeat one, and repeat the unit with it' -- the honest fix is a single measured-figures block that every other site points at, not a fifth restatement.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "overridden",
+      "finding": "`_walk_dir` returns `[]` when its directory is absent, with a docstring justifying it by 'a consumer repo without the overlay' -- generality for a repo that does not exist yet, in a file whose whole subject is this tree.",
+      "override": {
+        "repo_standard": "references/global-crew.md fail-visibly posture, as implemented by this file's own `TestTheWalkIsNotVacuous`: 'a guard that loops must assert what it looped over' (docs/agents/CREW_CONTEXT.md, Verification Discipline).",
+        "reason": "The generality is not what carries the risk, because the risk is answered elsewhere and answered loudly. A silent `[]` is dangerous only if nothing notices; the OVERLAY_FILES >= 60 floor makes a vanished overlay HERE fail with a message naming the cause, while the empty-list return keeps a consumer repo collecting instead of erroring at import. I measured the floor's calibration: the overlay is 57 visible files plus 56 .baseline mirrors, so losing either half trips the floor. Generality plus a floor is the sanctioned shape; generality alone would not be."
+      }
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The file is roughly half prose: a 150-line module docstring, `#:` blocks of 10-25 lines above four constants, and class docstrings that argue rather than describe. On the usual reading that much comment is a smell -- explanation standing in for code that should explain itself.",
+      "override": {
+        "repo_standard": "The lane constraint recorded in the file's own closing paragraph and in the implementer result's 'Docs/contracts touched': this lane may not write `docs/agents/*` and files no issue, so any pointer this guard could offer would dangle.",
+        "reason": "The prose is not covering for unclear code -- the code is four regexes and a directory walk, and it is clear. The prose carries the REASON: the human ruling verbatim, the measured cost of each width decision, and the named alternatives that were rejected and why. Deleting the guard then also deletes its justification, which is the property a dangling pointer loses. The rework's own additions are the strongest case for this: scoping the code-span argument to Markdown and pricing it at 27-of-40-in-JSON is knowledge that exists nowhere else in the repo, and it is what stops a later author over-trusting the safety argument. The check on this override is that the prose must stay TRUE -- and it is the reason I flagged duplicated-code and shotgun-surgery above rather than overriding them too."
+      }
+    }
+  ],
+  "rail_exception": null
+}

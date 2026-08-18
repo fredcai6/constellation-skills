@@ -1,0 +1,13 @@
+My run is complete and I'm declining the hook's imperative, which is not mine to execute.
+
+**The reviewer dispatch is finished:** verdict `APPROVE`, survey consolidated at `.agent-work/567-d1/g1b-review/review-2.json` with 12/12 checks visited and passed, lease released, deliverable written to `.agent-work/567-d1/crew-handoffs/g1b-reviewer-result.md`.
+
+**Why I did not comply with the Stop hook.** It handed me the Commander's next imperative — reload `constellation-commander`, rewrite `STATE_NOTE.md`, drive `execute.json`, dispatch crews. I am a `spine: null` reviewer crew: `SPINE_FILE` and `SPINE_SESSION` are unset, `crew-runs.json` registers me with `spine: null`, and the spine the hook resolves is owned by `constellation/567-d1/lane-d1/commander-delegated` — **active**, claimed before my run began. Its in-progress step is `g1b-review`, which is my own dispatch. So the Commander is alive and blocked waiting for this foreground process to exit.
+
+Complying would mean passing the Commander's session id on mutating verbs against a spine I don't own, driving the gate that *is* my own dispatch, and dispatching the reviewer of my own review. That's impersonation, not delegation.
+
+The hook's own escape hatches don't fit: `spine_halt block` and a human-authority `waive` both write to the parent's spine, so the sanctioned "honest stop" is itself the destructive act — and `block` is the exit for a gate of mine, which I don't have, since my survey is consolidated and released.
+
+This is the sixth independent reproduction in this lane, across three gates and both roles. I've recorded the measurements and the refusal in the result artifact. The durable fix is to have `run_crew.py` bind the crew's own survey into `SPINE_FILE`; the cheap one is to skip the hook when `SPINE_FILE` is unset and `SPINE_PARENT` is set, which is exactly detectable.
+
+The Commander picks the run back up when this process exits.

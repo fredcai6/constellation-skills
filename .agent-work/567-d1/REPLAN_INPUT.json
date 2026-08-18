@@ -1,0 +1,316 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #567 \u2014 the door is the interface, wave 2, lane D1",
+      "spec_path": ".agent-work/567-d1/LAUNCH_ORDER.md",
+      "intent_and_why": "Issue #559: remove the CLI as an agent-facing second path from every instruction file the corpus ships, and land a guard that fails if it grows back. The text has been deleted twice and regrown twice, so the deliverable is the mechanism that makes the third deletion stick, not the deletion. Co-travelers #596 (CONSTELLATION_FEEDBACK.md still mandated after the switch to the episode ledger) and #526 (stock close criteria cite a nonexistent build script; no survey-reuse convention) are the same kind of work in the same files."
+    },
+    "definition_of_done": [
+      "No CLI fallback clause and no agent-facing <engine> token survives in this lane's files.",
+      "A guard exists that fails if either comes back, red-proofed against a reintroduction and green on a legitimate historical mention.",
+      "specs/*.spine.toml carry door vocabulary matching measured behaviour.",
+      "#596 and #526 each have an evidenced disposition.",
+      "The full suite is green on Linux in a clean detached worktree of the branch, MapTreeFreshnessTests excepted."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Assert against the text's absence, never against a description of the rule; a guard that loops asserts what it looped over and states the count.",
+      "sufficient_evidence": "Targeted automated tests plus the relevant broader suite (ORCHESTRATOR_CONTEXT, 'Workflow mechanisms and verifiers'), and engine/door behaviour validated in a fresh process with explicit paths.",
+      "appetite": "One extended session; the guard is worth more of the budget than the deletions are."
+    },
+    "hard_constraints": [
+      "File no issues; stage triage candidates as files under .agent-work/567-d1/triage-candidates/.",
+      "Promote no observation into docs/agents/* \u2014 the human's call.",
+      "docs/superpowers/** and episodes/** are historical records; editing one to make a count come out right falsifies the record.",
+      "map/INDEX.md is Admiral-owned; MapTreeFreshnessTests may fail and nothing else may.",
+      "Fenced this wave: skills/workbench/** and docs/agents/CREW_CONTEXT.md (lane D2), scripts/mcp_spine_server.py and episodes/** (lane E), scripts/run_crew.py (lane F), scripts/checklist_engine.py (lane H).",
+      "This lane merges LAST, so the guard is proven against a tree where every other lane has landed."
+    ],
+    "fixed_decisions": [
+      "decision:complete-sweep \u2014 settled/human: sweep all the clauses in this lane's files, not all-but-one.",
+      "decision:guard-is-the-deliverable \u2014 settled/doctrine: a deletion with no failing-guard demonstration does not close #559.",
+      "decision:two-engine-sites-are-not-targets \u2014 settled/doctrine: the historical plan record and the init_work_area.py placeholder comment survive.",
+      "decision:the-cli-still-exists-for-operators \u2014 settled/doctrine: the epic removes the CLI as an agent-facing path, not as a tool.",
+      "decision:guard-scope-is-the-existing-corpus-walk \u2014 settled/measured: reuse INSTRUCTION_FILES rather than inventing a scope or listing exceptions; exception list length zero.",
+      "decision:second-checklist-clauses-are-reworded-not-deleted \u2014 Admiral-ruled at F-1: sweep all 13, reword the 3 the door provably cannot reach.",
+      "decision:guard-is-authored-first-against-the-dirty-tree \u2014 settled/measured: the guard lands before the sweep so its RED comes from the real corpus.",
+      "Launched identities remain stable: lane D1 keeps its worktree, branch and spine across the two Commander attempts."
+    ],
+    "current_wave": {
+      "objective": "Deliver the complete doctrine sweep and the regrowth guard for #559, with #596 and #526 disposed.",
+      "exit_criteria": [
+        "Every gate in execute.json closed with integrated crew evidence.",
+        "The guard green over the whole corpus on the rebased tree.",
+        "Full suite green in a clean detached worktree, MapTreeFreshnessTests excepted.",
+        "lane-d1-RETURN.md written and the PR opened."
+      ],
+      "issues": [
+        {
+          "id": "559",
+          "title": "the door is the interface, not a second path \u2014 remove the CLI fallback for agents",
+          "desired_outcome": "No agent-facing CLI second path survives, and a guard fails if one returns.",
+          "useful_now": "It is the epic's headline issue and the reason wave 1 removed the blocker.",
+          "appetite": "One extended session",
+          "acceptance_or_falsification_evidence": "The guard goes RED on a reintroduced clause at a reworded site and GREEN on the reworded text itself.",
+          "implementation_latitude": "Replacement wording, the guard's mechanism and scope expression, and how specs express door vocabulary are all this lane's.",
+          "hard_constraints_no_gos": [
+            "No exception list in the guard.",
+            "Do not delete an agent's only path and leave it with nothing."
+          ],
+          "local_unknowns": [
+            "How the guard expresses 'agent-facing' without exempting the corpus or catching historical records \u2014 the wave's load-bearing unknown."
+          ],
+          "anchors": [
+            "tests/test_cli_retirement_guard.py",
+            "tests/test_mcp_adoption.py",
+            "skills/commander/templates/COMMANDER_SPINE.template.json",
+            "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+            "skills/explorer/templates/EXPLORER_SPINE.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "596",
+          "title": "CONSTELLATION_FEEDBACK.md is still mandated in several places after the switch to the episode ledger",
+          "desired_outcome": "Every live mandate in this lane's files is reconciled with the episode ledger.",
+          "useful_now": "It is the same kind of work in the same files as #559.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "A disposition file quoting the grep output that establishes it.",
+          "implementation_latitude": "Replacement wording is this lane's.",
+          "hard_constraints_no_gos": [
+            "docs/agents/ORCHESTRATOR_CONTEXT.md's Retired Learning Playbook is the governing doctrine and may not be edited by this lane."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "skills/admiral/SKILL.md",
+            "skills/admiral/references/fleet-doctrine.md",
+            "skills/commander-delegated/SKILL.md",
+            "skills/commander/templates/COMMANDER_SPINE.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "526",
+          "title": "Commander skill: stock close criteria cite a nonexistent build script; no survey-reuse convention",
+          "desired_outcome": "An evidenced disposition \u2014 a fix, or a measured 'no longer reproduces'.",
+          "useful_now": "It is in this lane's files and the Admiral flagged it as possibly stale.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "The grep output that establishes each disposition, including a negative one.",
+          "implementation_latitude": "This lane's, inside its own files.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [
+            "Whether #526 still reproduces at all."
+          ],
+          "anchors": [
+            "skills/commander/templates/COMMANDER_SPINE.template.json",
+            "skills/reviewer/SKILL.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Epic closeout pairs each staged triage candidate onto an open issue or records it as an episode",
+        "why_likely": "decision:no-issue-filing-mid-run defers every candidate to that boundary",
+        "entry_conditions": [
+          "All five wave-2 lanes merged"
+        ]
+      },
+      {
+        "outcome": "A durable home for the human ruling in docs/agents/*",
+        "why_likely": "The Admiral put the question to the human at F-3 and held it there",
+        "entry_conditions": [
+          "The human rules on promotion"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the guard's widened pattern red-lights honest text",
+        "affects": "Whether the guard survives its first tripping author",
+        "settle_by": "g1b-review",
+        "current_evidence": "test_mcp_adoption.py deleted its own polarity predicates for exactly this reason, with the measurement recorded in TestCLIStaysAvailableNotDeprecated's docstring",
+        "next_probe": "Measure the false-alarm delta over the whole walk site by site"
+      },
+      {
+        "unknown": "Whether lane D2's deletion of skills/workbench/** lands before this lane's final gate",
+        "affects": "Whether the guard can be green over the whole corpus",
+        "settle_by": "g5-final, after the rebase on merged main",
+        "current_evidence": "origin/main at 0dbc6eaf still carries skills/workbench/SKILL.md and references/checklist-engine.md with their 2 clauses; lanes F and H have merged, D2 and E have not",
+        "next_probe": "git fetch and re-measure before the rebase"
+      }
+    ],
+    "parked_possibilities": [
+      "Bringing scripts/mcp_spine_server.py's own prose inside an instruction walk",
+      "Widening the guard to catch a command-free paraphrase that hands an agent no runnable path"
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "The regrowth of #559's text has a mechanism, and it is a test.",
+      "expected": "A deletion against a green suite.",
+      "observed": "tests/test_mcp_adoption.py mandates the text across NINE assertions (lines 737, 784, 834, 950, 954, 1132, 1149, 1324, 1345), one of which fails with 'the CLI door must stay, never be removed or discouraged.' The sweep is an inversion of an existing test, not an addition to a green suite.",
+      "source": "tests/test_mcp_adoption.py, read at commit af797c93"
+    },
+    {
+      "claim": "The door cannot drive a second checklist -- but the boundary is narrower than this lane first stated, and the correction is measured.",
+      "expected": "The door reaches every agent-facing case, per decision:complete-sweep.",
+      "observed": "Fresh-process probe, re-measured independently by the g3 reviewer in three processes WITH A POSITIVE CONTROL: spine_bind to a second checklist while holding your own lease is REFUSED ('one door drives one spine at a time'), and the IDENTICAL call SUCCEEDS after releasing -- so the refusal is conditioned on holding your own lease and on nothing else. The correction: an UNBOUND door binds and drives fine, with the session identity derived from the spine's own work_id. A crew dispatched with no --spine therefore has an unbound door and CAN drive its own plan through it. The blocked case is an IN-SESSION agent -- a Commander's execute.json, an Interrogator's interrogation.json, an in-session crew member's plan beside the spine it was launched for -- not a dispatched crew's own plan.",
+      "source": "notes-1.md M1; re-measured with a positive control in .agent-work/567-d1/crew-handoffs/g3-reviewer-result.md"
+    },
+    {
+      "claim": "The guard's scope needs no exception list.",
+      "expected": "An exception-list-shaped answer decaying toward the sibling guard's 11 entries.",
+      "observed": "The repo's own INSTRUCTION_FILES walk puts all 10 target files IN and both pre-ruled survivors OUT by the structural rule alone. Exception list length ZERO, measured.",
+      "source": "tests/test_mcp_adoption.py:424-432; guard census reproduced independently by the g1 reviewer"
+    },
+    {
+      "claim": "The guard as authored at g1 catches the observed regrowth route but not the route a fresh author would take.",
+      "expected": "Three patterns sufficient for the behaviour.",
+      "observed": "A spine-template command line never contains the literal checklist_engine.py, so the whole class rested on the single token '<engine>'. '<cli> claim --session-id ...', '<engine-cli> advance ...' and '{{engine}} release ...' all pass clean. Verified by the g1 reviewer with 27 crafted regrowth strings, 13 missed, 12 of them inside a declared limit.",
+      "source": ".agent-work/567-d1/crew-handoffs/g1-reviewer-result.md"
+    },
+    {
+      "claim": "A skills/-only sweep does not close #559 in this repo.",
+      "expected": "skills/** is the whole agent-facing surface.",
+      "observed": ".agent-work/templates/ is a TRACKED overlay that workbench doctrine tells agents to PREFER when instantiating. It carries 7 <engine> occurrences and 2 CLI fallback clauses, mirrored again under .baseline/, and all five files are byte-identical to their skills/ sources today. The launch order's own acceptance test \u2014 instantiate a fresh spine and read its imperatives \u2014 fails on a skills/-only sweep.",
+      "source": "Commander measurement at g1-integrate; g1 reviewer triage candidate tc1"
+    },
+    {
+      "claim": "#526 defect 1 no longer reproduces; defect 2 does.",
+      "expected": "Possibly stale (the Admiral grepped skills/commander/ and found no match).",
+      "observed": "PRELIMINARY, to be confirmed at g4: 'scripts/code_map/build.py' and 'code_map/check.py' appear nowhere under skills/, docs/ or specs/ \u2014 only docs/CONSTELLATION_OVERVIEW.md names the scripts/code_map package correctly. But the survey-reuse convention is still undocumented: skills/reviewer/SKILL.md:30 documents --override-reason and the BLOCK/APPROVE asymmetry, and nothing documents appending a recheck item as a sibling and re-consolidating across rounds.",
+      "source": "Commander grep at g1, to be re-established by the g4 crew"
+    },
+    {
+      "claim": "The widened stand-in pattern is earned, not over-eager.",
+      "expected": "A widening either misses the route or red-lights honest text; the repo's own measured argument is that the second kind gets deleted by the next author who trips it.",
+      "observed": "The g1b reviewer re-derived the census with its OWN walk, written from the stated rules rather than by importing the guard, and matched the guard figure for figure: 3098 texts across 216 files, standin 26 matches at 23 addresses. New addresses the widening adds: ZERO. False alarms on honest text: 0 of 3098, against the deleted polarity predicate's 5 of 6 planted honest affirmatives.",
+      "source": ".agent-work/567-d1/crew-handoffs/g1b-reviewer-result.md, independent re-derivation"
+    },
+    {
+      "claim": "A hand-maintained list inside the guard had already drifted from its oracle on day one.",
+      "expected": "Four patterns sufficient once widened.",
+      "observed": "_ENGINE_VERBS enumerated 17 verbs where checklist_engine.py's argparse defines 18: 'resume' was missing, so 'Second path: <cli> resume g1 --reason ...' passed all four patterns clean. The reviewer BLOCKed on it, proving the verb set against the engine's --help rather than against a document. It breaks CREW_CONTEXT.md's Verification Discipline verbatim: 'define a guard by its consumer's behaviour, not by a hand-maintained list ... the gap is silent.'",
+      "source": "g1b-review BLOCK; scripts/checklist_engine.py --help"
+    },
+    {
+      "claim": "Every command postcondition in this plan could not pass.",
+      "expected": "The cold critic's repair for 'a check that cannot fail' -- prefix set -o pipefail -- made the checks sound.",
+      "observed": "The engine runs command checks through _find_posix_shell(), which on POSIX returns shutil.which('sh'); /bin/sh here is dash, which rejects 'set -o pipefail' with 'Illegal option', exit 2, before the check's own logic runs. Five checks affected. The repair for a check that cannot FAIL produced five that cannot PASS, and neither the plan author, the critic, nor the Commander who later rescoped three of them noticed -- a crew that tried to run one found it.",
+      "source": "g1b implementer; reproduced directly by the Commander against /bin/sh"
+    },
+    {
+      "claim": "The standard whole-suite evidence command is unsafe while driving the engine.",
+      "expected": "A crew running pytest tests/ -q measures the tree, not itself.",
+      "observed": "tests/test_gauge_chain_writer_to_trip.py:604 snapshots size+mtime of every file under the repo's .agent-work/ and asserts it unchanged. The g1b reviewer measured 7 failed while recording survey checks and 6 failed when quiet; the 7th was its own write. It nearly reported its own side effect as a defect in someone else's work.",
+      "source": "g1b-reviewer-result.md, reproduced in both directions"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D1",
+      "signal": "g3-integrate and g4-integrate carried a postcondition that could not pass: both required the whole-corpus guard green, but the guard walks skills/workbench/**, which lane D2 owns, deletes, and has not merged.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Two gates of this lane's own execute.json could not have been closed as written.",
+      "evidence": "origin/main at 0dbc6eaf still carries skills/workbench/SKILL.md and skills/workbench/references/checklist-engine.md with their 2 clauses; the guard reports them. This is the cold plan critic's F5 surviving into the revision at two gates F5 did not name.",
+      "reason": "Repaired in place through the engine's amend verb rather than by hand-editing the plan: both checks now assert no violation outside skills/workbench/, verified failing on today's dirty tree naming 10 real sites, and g5-final keeps the unfiltered whole-corpus run on the rebased tree. No issue is warranted \u2014 it is this lane's own plan, repaired inside this lane."
+    },
+    {
+      "id": "D2",
+      "signal": "The .agent-work/templates/ overlay \u2014 the copy an agent in this repo actually instantiates \u2014 is in no lane's sole-writer list and no lane's fence table, and the sweep is incomplete without it.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Whether #559 is actually closed, as against a grep over skills/ coming out clean.",
+      "evidence": "7 <engine> occurrences and 2 CLI fallback clauses in the overlay, mirrored under .baseline/; all five files byte-identical to their skills/ sources. The launch order's own acceptance test demands instantiating a fresh spine and reading its imperatives.",
+      "reason": "Proceeding and floating to the Admiral, non-blocking, on the F-2 precedent (where the identical ownership gap on tests/test_mcp_adoption.py was granted). No other lane owns it, so there is no collision risk, and every .baseline/constellation-workbench/ file is already clean so widening adds no fenced-file dependency."
+    },
+    {
+      "id": "D3",
+      "signal": "The g1 crew and the g1 reviewer each reported, independently, that the implementer/reviewer skills present a run_crew.py-dispatched crew as having its spine bound before it starts, and that theirs was not.",
+      "classification": "evidence_only",
+      "affects": "Crew-dispatch doctrine, not this lane's deliverable.",
+      "evidence": "Both crews' Workflow Feedback. run_crew.py registered each run with spine: null; their environment carried only SPINE_PARENT. Each took the skill's other branch \u2014 authored its own plan/survey and claimed the lease as its first command \u2014 and both said so unprompted.",
+      "reason": "For this dispatch shape the skill's stated norm is the exception. Two independent reports of the same gap is worth more than either alone, but it is doctrine belonging to the Commander/crew skills, and this lane may not promote an observation into docs/agents/*."
+    },
+    {
+      "id": "D4",
+      "signal": "The first g1 implementer dispatch died at launch with a bare 'Execution error', 0 bytes of work, no result artifact.",
+      "classification": "evidence_only",
+      "affects": "Crew-dispatch reliability.",
+      "evidence": "crew-runs registry entry constellation/567-d1/g1/implementer/attempt-1, stdout 15 bytes; PID 2330638 dead. The predecessor Commander recorded the same failure mode in the Admiral addendum's hazard list.",
+      "reason": "Recovered mechanically \u2014 abandoned through run_crew.py --abandon and relaunched as attempt-2, which completed. Recorded because it is the second occurrence in this lane, and because the launching environment had to be sanitized (env -u SPINE_FILE -u SPINE_SESSION -u CREW_SCRATCH_DIR) to stop a no---spine crew inheriting this lane's own spine."
+    },
+    {
+      "id": "D5",
+      "signal": "docs/agents/CREW_CONTEXT.md's 'Python Invocation' section records a stale measurement: it says python3 has no pytest on this host, and all three interpreters report pytest 9.1.1 today.",
+      "classification": "later_only",
+      "affects": "A future crew that trusts the recorded measurement rather than re-running it.",
+      "evidence": "Measured independently by both g1 crews, 2026-08-17, against a recorded measurement dated 2026-08-10.",
+      "reason": "The file is lane D2's this wave, so this lane may not touch it. Staged as a triage candidate; a forecast amendment at epic closeout is sufficient."
+    },
+    {
+      "id": "D6",
+      "signal": "g1b-review returned BLOCK: the guard's verb list omitted the engine verb 'resume', so a stood-in-for command line using it passed all four patterns.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The deliverable itself -- the guard that closes #559.",
+      "evidence": "scripts/checklist_engine.py --help lists 18 subcommands; tests/test_cli_retirement_guard.py:229 listed 17. Fix cost measured at zero new addresses over 3098 texts.",
+      "reason": "Reworked rather than overridden: shipping a widening whose stated invariant is broader than its implementation repeats the exact shape the gate was opened to remove. g1b-implement reopened through the engine (rework 1/3) with the durable fix ruled in -- derive the verb set from tests/test_mcp_adoption.py's _engine_verbs(), which reads the engine's own argparse -- rather than the one-token patch the reviewer proposed. No issue is warranted; it is this lane's own deliverable, repaired inside this lane."
+    },
+    {
+      "id": "D7",
+      "signal": "Every command postcondition in this lane's execute.json opened with 'set -o pipefail' and therefore could not pass under the shell the engine runs checks in.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "Five gate closures across g1b, g2, g3, g4 and g5-final.",
+      "evidence": "/bin/sh -c 'set -o pipefail; echo reached' -> '/bin/sh: 1: set: Illegal option -o pipefail', exit 2. checklist_engine._find_posix_shell() returns shutil.which('sh') on POSIX.",
+      "reason": "Corrected in place through the engine's retext-check verb and re-verified under dash in all three directions. The class -- nothing enforces the POSIX-form rule that global-everyone.md already states -- is staged as a triage candidate, since scripts/checklist_engine.py is lane H's and doctrine promotion is the human's call."
+    },
+    {
+      "id": "D8",
+      "signal": "Two supporting statements this lane repeated about the second-checklist case were imprecise, and its own crews corrected it twice.",
+      "classification": "evidence_only",
+      "affects": "The stated REASON behind decision:second-checklist-clauses-are-reworded-not-deleted, not the ruling itself.",
+      "evidence": "(1) 'Every child plan in this system is driven off-door' (Admiral addendum F-1, repeated by me in the g2 and g3 handoffs) is wrong for a DISPATCHED crew: its door is unbound, so it binds its own plan directly. The g3 implementer refused my handoff's premise on this and measured it first-hand; the g3 reviewer reproduced the correction and was itself the live case. (2) 'Releasing the lease to escape fails the ARCHIVE PROVENANCE CHECK' -- the phrase 'archive gate' appears nowhere in skills/; the Commander archive gate's only lease postcondition is c3 'engine session lease released' with check:null; spine_lifecycle.py refuses in the OPPOSITE direction; the real rule is the 'terminal provenance check' named in the role skills' own prose, mechanically enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template has a closeout gate at all.",
+      "reason": "The RULING stands and the shipped wording is right: the g2 sweep's replacement text says 'an IN-SESSION crew member driving its own plan beside the spine it was launched for', which is exactly the blocked case, and the Interrogator text says it runs in the invoking agent's own context. What was imprecise was this lane's own summary language, mine included, and it is corrected here rather than left standing. Floated to the Admiral because F-1's supporting sentence about dispatched crews is wrong on the record even though its conclusion is right."
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "559",
+    "596",
+    "526"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "U-durable-home-for-the-ruling",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "U-mcp-spine-server-prose-unwalked",
+      "kind": "parked"
+    },
+    {
+      "id": "U-command-free-paraphrase",
+      "kind": "parked"
+    },
+    {
+      "id": "U-epic-closeout-triage-pairing",
+      "kind": "forecast"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "tests/test_cli_retirement_guard.py",
+      "tests/test_mcp_adoption.py",
+      "skills/commander/templates/COMMANDER_SPINE.template.json",
+      "specs/implementer.spine.toml",
+      "specs/reviewer.spine.toml",
+      ".agent-work/templates/"
+    ],
+    "map_status": "No architecture map. map_orient returns DEGRADED-UNPARSEABLE: no docs/architecture packet map, map/INDEX.md carries no citable anchor id, map/ids.jsonl is empty. The mission frame is authored against five hash-pinned substitutes and the gap is escalated to the Admiral, not fixed here (map/INDEX.md is Admiral-owned, #544)."
+  }
+}

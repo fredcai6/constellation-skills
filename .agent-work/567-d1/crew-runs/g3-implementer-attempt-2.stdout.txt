@@ -1,0 +1,5 @@
+My dispatch is complete and I'm stopping here.
+
+**Delivered:** the one-clause repair in `specs/implementer.spine.toml` and `specs/reviewer.spine.toml` (byte-identical in both), plus a second inaccuracy the BLOCK didn't name — the specs quoted the door as `release it first` where it says `Release it first`. 67 executable checks back every assertion left standing, all green, with a red-proof. Result artifact written, `Return status: complete`, and the Commander has already advanced `g3-implement` to `complete` on the strength of it.
+
+**On the Stop hook:** refused, and recorded in §8 of the result with the measurement. It fired at a crew whose plan is terminal, whose lease was released, and whose gate the parent had already closed 22 seconds earlier while holding a live lease. Obeying meant binding a second checklist from this process and driving my Commander's spine — the exact prohibition this gate's prose states, which I measured the door refusing this run. Sixth occurrence in the repo, third in this gate; the durable fix is a lease-ownership check in the hook, since the hook doesn't read the crew skills that keep getting more prose about it.

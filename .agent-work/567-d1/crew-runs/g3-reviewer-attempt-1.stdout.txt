@@ -1,0 +1,14 @@
+The refusal is recorded in the result artifact (§12), which is the channel the Commander reads.
+
+**My dispatch is complete.** The g3 reviewer crew delivered:
+
+- `.agent-work/567-d1/crew-handoffs/g3-reviewer-result.md` — full `REVIEW_RESULT`, verdict **BLOCK**
+- `.agent-work/567-d1/g3-review/review.json` — survey, 7/7 items visited, consolidated, lease released
+- `.agent-work/567-d1/g3-review/FOWLER_PASS.json` — Fowler record, rail exit 0
+- 3 triage candidates flagged through the door
+
+**On the hook itself:** all three of its sanctioned exits are destructive from where I stand. `spine_halt block` on my own spine would mark a completed, released survey blocked — false state, and its consolidation is already delivered. Pointed at `execute.json`, it would first require binding my parent's spine from this process, then write a blocker into a run that is not blocked; the Commander is waiting for exactly the artifact that now exists. `waive` needs human authority, and there is no human on this dispatch — inventing one is the specific failure the reviewer skill names.
+
+This is the fifth run in this repo to hit the misfit and the second in this gate; the g3 implementer recorded the same refusal as its §9 hours ago. The durable fix is a **lease-ownership check in the hook** — fire only when the running session holds the lease — not more prose in the crew skills.
+
+Worth flagging to you directly: the hook instructed me to bind and drive a second checklist from this process, which is precisely what the doctrine under review forbids and what I measured the door refusing. My finding is that the specs' *stated reason* for that prohibition is wrong — the **rule** is right, and the hook is a live demonstration of why it earns its place.

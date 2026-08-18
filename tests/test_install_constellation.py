@@ -341,15 +341,18 @@ class InstallConstellationTests(unittest.TestCase):
                 map_build_text,
             )
 
-            workbench_root = target_root / "constellation-workbench"
-            reference_text = (
-                workbench_root / "references" / "checklist-engine.md"
-            ).read_text(encoding="utf-8")
-            self.assertNotIn("<skill-dir>", reference_text)
-            self.assertIn(
-                (workbench_root / "scripts" / "checklist_engine.py").as_posix(),
-                reference_text,
-            )
+            # workbench/references/checklist-engine.md's `<skill-dir>/scripts/checklist_engine.py`
+            # absolute-path assertion was DELETED here, not just relaxed, by issue #559's
+            # residual sweep (epic-567-door, lane D1 addendum 2): that sentence was the CLI
+            # invocation line itself -- exactly the agent-facing "second path" #559 retires --
+            # and a resolved absolute path to the script is still a path to the script.
+            # `tests/test_cli_retirement_guard.py` now asserts this file carries no such
+            # path (ENGINE_INVOCATION_RE matches ANY `/checklist_engine.py`, resolved or not),
+            # so keeping this assertion would pin the two tests against each other permanently.
+            # The absolute-path-rewrite MECHANISM this test exists to cover is still exercised
+            # above via the Commander spine and cartographer map-build assertions, which check
+            # real command postconditions the engine executes -- not doc prose instructing an
+            # agent to shell out.
 
     def test_there_is_no_os_name_interpreter_fallback_left(self):
         """Replaces test_platform_interpreter_maps_os_name (#539 owner ruling).

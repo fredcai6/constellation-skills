@@ -1,0 +1,25 @@
+ADDRESSES REPORTED BEFORE THIS GATE: 18
+ADDRESSES REPORTED AFTER  THIS GATE: 36
+
+=== the 18 addresses added, every one of them in the overlay ===
+  .agent-work/templates/.baseline/constellation-admiral/ADMIRAL_SPINE.template.json.tasks.closeout.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/.baseline/constellation-admiral/ADMIRAL_SPINE.template.json.tasks.init.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/.baseline/constellation-commander/COMMANDER_SPINE.template.json.tasks.archive.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/.baseline/constellation-commander/COMMANDER_SPINE.template.json.tasks.init.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/.baseline/constellation-commander/COMMANDER_SPINE.template.json.tasks.plan.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/.baseline/constellation-explorer/EXPLORER_SPINE.template.json.tasks.init.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/.baseline/constellation-explorer/EXPLORER_SPINE.template.json.tasks.route.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/.baseline/constellation-write-a-skill/gated-engine-SKILL.template.md:15   patterns=['fallback', 'invocation']
+  .agent-work/templates/.baseline/constellation-write-a-skill/survey-SKILL.template.md:11   patterns=['fallback', 'invocation']
+  .agent-work/templates/ADMIRAL_SPINE.template.json.tasks.closeout.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/ADMIRAL_SPINE.template.json.tasks.init.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/COMMANDER_SPINE.template.json.tasks.archive.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/COMMANDER_SPINE.template.json.tasks.init.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/COMMANDER_SPINE.template.json.tasks.plan.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/EXPLORER_SPINE.template.json.tasks.init.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/EXPLORER_SPINE.template.json.tasks.route.imperative   patterns=['fallback', 'placeholder', 'standin']
+  .agent-work/templates/gated-engine-SKILL.template.md:15   patterns=['fallback', 'invocation']
+  .agent-work/templates/survey-SKILL.template.md:11   patterns=['fallback', 'invocation']
+
+=== addresses added by the WIDENED PREDICATE alone (old surface) ===
+  NONE -- zero false alarms

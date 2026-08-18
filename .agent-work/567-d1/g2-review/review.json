@@ -1,0 +1,249 @@
+{
+  "work_id": "567-d1",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-wording",
+    "r4b-deletions",
+    "r4c-constraints"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g2 reviewer handoff, the full commit aeba10ae diff over skills/ .agent-work/templates/ tests/, and tests/test_cli_retirement_guard.py (the specification the sweep was written against).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 8 close criteria re-run and green in my hands. (1)(2) grep 'CLI fallback' and '<engine>' over skills/ --exclude-dir=workbench: both exit 1, no output. (3) same two greps over .agent-work/templates/: both exit 1; grep proven to reach .baseline/ (13 of 56 baseline files match a control word). (4) pytest tests/test_mcp_adoption.py -q -> 172 passed, 2 skipped, exit 0 (under py AND python3). (5) guard exit 1 with only skills/workbench/{SKILL.md,references/checklist-engine.md} named; census non-vacuous: 3098 texts across 216 files (101 skills/, 2 specs/, 113 overlay). (6) all five edited templates byte-identical across skills/ source, .agent-work/templates/ overlay and .baseline/ mirror (sha256, 56-row manifest walk). (7) scripts/init_work_area.py and docs/superpowers/ untouched by HEAD and by commit aeba10ae. (8) 41 JSON files parse. Three halves delivered: sweep, mandate inversion, specificity proof.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope held. 23 files in commit aeba10ae over the reviewed paths: 11 under skills/, 10 under .agent-work/templates/, 2 under tests/ -- matches the claim exactly. tests/test_cli_retirement_guard.py is NOT in the diff (constraint 3 respected). Both pre-ruled survivors untouched. No file under skills/workbench/ edited, so lane D2's fence held. The only edit outside skills/ and the overlay is the two test files the implementer floated an ownership gap on (test_mcp_adoption.py, tests/data/store_mentions.approved.txt), which the sweep is impossible without.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every claimed side-effect independently reproduced. (a) 183->172 RECONCILES EXACTLY: built a detached worktree at aeba10ae^, collected node ids both sides -- 185 collected before (183 passed + 2 skipped), 174 after (172 + 2); 30 ids removed, 19 added, net -11. Per-group: Tier1 field 7->7, commander-core 1->1, Tier2 two_sided 4->3 and file_names_cli 4->3 (workbench off the list, -2), Tier3 three deletions (-3), Tier4 2->2 and 2->2, CLIStaysAvailable 7->1 (-6). -2 -3 -6 = -11. Nothing silently lost. (b) NO DOOR-AFFIRMATIVE HALF WEAKENED, proved structurally: of 75 functions present in both revisions, exactly ONE body differs -- _attach_paragraph, whose locator had to move off the deleted text or both its assertions would have died. test_field_names_door_tool_as_default, test_paragraph_names_door_tool, test_names_door_tools_as_default, test_no_door_tool_name_introduced are byte-identical. (c) WALKED NOT LISTED holds: INSTRUCTION_FILES/INSTRUCTION_SUFFIXES untouched; only TIER1_JSON_FIELDS comments (data identical by literal_eval) and one TIER2_SKILL_FILES entry changed; guard census unchanged at 3098 texts/216 files with its >=60/>=1800 floors intact. (d) SPECIFICITY PROOF REPRODUCED IN MY HANDS: reinserted the clause into skills/interrogator/SKILL.md line 28 (asserted the anchor matched exactly once), guard exit 1 naming skills/interrogator/SKILL.md:28 under BOTH patterns; git checkout restored blob dc78419a byte-identical; guard back to workbench-only sites, git status --porcelain shows no source edit. (e) store_mentions.approved.txt is a REAL regeneration: re-derived the census through verify_retirement.store_mention_sites over git ls-files/is_shipped -- 64 generated vs 64 approved, zero difference in either direction, and both swept spine imperatives match through normalize() byte-for-byte. (f) The F-1 measured truth re-measured myself in a fresh git-backed process: spine_bind to a second checklist while holding own lease -> REFUSED 'one door drives one spine at a time'; after spine_lease release -> succeeds. (g) An unbound door refuses spine_lease claim visibly and names spine_bind/spine_open.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "One real finding, recorded at r4a-wording: the 10 bound-spine replacements state a door binding that is not yet true at Explorer/Charter/Admiral init, and the corpus outside lane D2's file names neither spine_bind nor spine_open. Not a stranding (the unbound door refuses visibly and names both calls, measured) and not a close-criterion failure, so it does not bar this change -- see the consolidation override and the triage candidate. Everything else at this check passes: constraints obeyed (r4c), deletions accounted for including the one outside the stated rule (r4b), evidence reproduced (r3).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture map exists (map_orient -> DEGRADED-UNPARSEABLE), so there is no recorded structure to diverge from and no Cartographer packet to reconcile against. The change is doctrine text plus its test mandate; it introduces no module, seam or dependency. Two durable-context items belong to Commander rather than to this diff, both raised as triage candidates: the undocumented spine_bind binding moment, and the fourth copy of template truth (TEMPLATES_MANIFEST.json sha256) that the sweep left stale.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/567-d1/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-d1/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from 567-d1 alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/567-d1/g2-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full 12-smell pass recorded at .agent-work/567-d1/g2-review/FOWLER_PASS.json (path corrected through the engine's amend/retext-check, authority the dispatching Commander). verify_fowler_pass.py exits 0: smells=12, flagged=['duplicated-code','comments-as-deodorant'], overridden=['large-class','shotgun-surgery'], each override carrying the documented standard that wins plus why it subordinates the smell. Both flags are observations, not blockers: (1) the adoption suite re-implements the guard's CLI_FALLBACK_RE inline, two definitions of one predicate, with the import direction forbidding the obvious fix; (2) prose grew 278/-198 while the test count fell 11, and _door_path_paragraph's docstring asserts a locator property nothing mechanically holds -- a file with two door paragraphs would have the clean one selected, with corpus-wide coverage landing in the guard instead.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/567-d1/g2-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-wording": {
+      "id": "r4a-wording",
+      "title": "r4a-wording",
+      "imperative": "Judge each replacement clause in place, as an agent would: is it true, does it strand anyone, does the two-path grammar survive",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "TWO OF THREE QUESTIONS PASS; ONE FINDING. Two-path grammar: GONE, claim verified against the diff -- every 'by default ... otherwise the CLI fallback' framing at the 13 sites is now a single-path sentence, and the only surviving 'fallback' words in skills/ (excl workbench) are unrelated (fail-visibly doctrine, harness permission classifier, cmd-fallback shell marker, map_orient probe order). Stranding: the three F-1 second-checklist sites state the MEASURED truth, not an avoidance of the banned phrase -- I reproduced the refusal myself in a fresh git-backed process (spine_bind while holding own lease -> 'one door drives one spine at a time'; after release -> succeeds), which is exactly what interrogator/SKILL.md:28 and both write-a-skill templates now assert. FINDING (truth, 10 bound-spine sites): the replacements assert the door 'reads its own spine and session from the process environment' AT init -- but at Explorer/Charter/Admiral init the spine does not exist until init_work_area.py runs inside that same imperative, so SPINE_FILE cannot have named it at server start and the door is provably unbound at the moment the sentence is read. Measured: an unbound door returns 'REFUSED: no spine is bound to this door ... Call spine_bind ... or spine_open ...'. So no agent is silently stranded -- the failure is visible and self-describing, which satisfies global-everyone 'fail visibly, no hidden fallback' -- but the corpus no longer carries the first move. grep spine_open/spine_bind over skills/ excluding workbench: ZERO hits; the single corpus mention is workbench/references/checklist-engine.md:34 (lane D2's file), and it names only spine_open (mint), never spine_bind (adopt existing), which is the case these sites are actually in. The deleted CLI clause is what used to carry that moment.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-deletions": {
+      "id": "r4b-deletions",
+      "title": "r4b-deletions",
+      "imperative": "Verify every inverted-or-deleted assertion against the stated lane-D2 rule and flag any deletion the rule does not cover",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ledger audited row by row against the collected node ids. Rows 5,6,7,8,11 (workbench off TIER2_SKILL_FILES; test_still_names_cli_invocation; test_door_section_itself_keeps_the_cli; test_states_identity_trade_rule -- the tenth, correctly found and correctly classed; test_the_canonical_cli_sentence_is_present_verbatim) all target skills/workbench/**: TIER3_PATH is skills/workbench/references/checklist-engine.md and the canonical-sentence equality reads _tier3_door_section() of that same file. The lane-D2 rule covers all five, and their absence half is genuinely re-covered by test_cli_retirement_guard.py, which I confirmed walks skills/workbench/** (it is the only place it still reports sites). ONE DELETION IS NOT COVERED BY THAT RULE, and I flag it as asked: test_default_path_paragraph_states_the_cli_is_still_available (6 params) -- 5 of its 6 targets are THIS lane's files (charter, interrogator, explorer, both write-a-skill templates). Its stated reason is different and sound: it required the literal words 'fallback' / 'always available' / 'still available' in every drive-path paragraph, which IS the mandate #559 removes, so it cannot be inverted into anything the new absence assertions do not already say. The implementer disclosed this reason in ledger row 12 rather than filing it under the D2 rule. Not a defect. The stated real loss -- workbench/SKILL.md's paragraph-scoped DOOR assertion, which nothing replaces until D2 merges -- is written into the code comment, not just the report.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-constraints": {
+      "id": "r4c-constraints",
+      "title": "r4c-constraints",
+      "imperative": "Verify the handoff's seven constraints on the reviewer were obeyed",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All seven obeyed. (1) Every verification command re-run by me with its exit code read, none pasted from the report. (2) No file edited: the one sanctioned scratch edit (the specificity proof the handoff ordered) was reverted with git checkout and the blob hash verified byte-identical (dc78419a), git status --porcelain shows no source change. (3) tests/test_cli_retirement_guard.py untouched and no widening proposed. (4) The guard's two failures on skills/workbench/{SKILL.md,references/checklist-engine.md} treated as known and expected, not as a defect. (5) All shell authored POSIX; no 'set -o pipefail'. (6) The whole suite was NOT run -- only test_mcp_adoption.py, test_cli_retirement_guard.py and test_retirement_guard.py; the pre-change comparison ran in a throwaway detached worktree at /tmp so this worktree's .agent-work was never a subject. (7) Fowler record written to .agent-work/567-d1/g2-review/FOWLER_PASS.json, not the work-id root, via an engine amend of this item's postcondition rather than a hand edit.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r4-quality: One real finding, recorded at r4a-wording: the 10 bound-spine replacements state a door binding that is not yet true at Explorer/Charter/Admiral init, and the corpus outside lane D2's file names neither spine_bind nor spine_open. Not a stranding (the unbound door refuses visibly and names both calls, measured) and not a close-criterion failure, so it does not bar this change -- see the consolidation override and the triage candidate. Everything else at this check passes: constraints obeyed (r4c), deletions accounted for including the one outside the stated rule (r4b), evidence reproduced (r3).",
+      "r4a-wording: TWO OF THREE QUESTIONS PASS; ONE FINDING. Two-path grammar: GONE, claim verified against the diff -- every 'by default ... otherwise the CLI fallback' framing at the 13 sites is now a single-path sentence, and the only surviving 'fallback' words in skills/ (excl workbench) are unrelated (fail-visibly doctrine, harness permission classifier, cmd-fallback shell marker, map_orient probe order). Stranding: the three F-1 second-checklist sites state the MEASURED truth, not an avoidance of the banned phrase -- I reproduced the refusal myself in a fresh git-backed process (spine_bind while holding own lease -> 'one door drives one spine at a time'; after release -> succeeds), which is exactly what interrogator/SKILL.md:28 and both write-a-skill templates now assert. FINDING (truth, 10 bound-spine sites): the replacements assert the door 'reads its own spine and session from the process environment' AT init -- but at Explorer/Charter/Admiral init the spine does not exist until init_work_area.py runs inside that same imperative, so SPINE_FILE cannot have named it at server start and the door is provably unbound at the moment the sentence is read. Measured: an unbound door returns 'REFUSED: no spine is bound to this door ... Call spine_bind ... or spine_open ...'. So no agent is silently stranded -- the failure is visible and self-describing, which satisfies global-everyone 'fail visibly, no hidden fallback' -- but the corpus no longer carries the first move. grep spine_open/spine_bind over skills/ excluding workbench: ZERO hits; the single corpus mention is workbench/references/checklist-engine.md:34 (lane D2's file), and it names only spine_open (mint), never spine_bind (adopt existing), which is the case these sites are actually in. The deleted CLI clause is what used to carry that moment."
+    ],
+    "summary": "APPROVE. All 8 close criteria re-run and green in my hands, with non-vacuity proved for both absence greps. The 183->172 count reconciles exactly (30 node ids out, 19 in, net -11) and no door-affirmative half was weakened -- of 75 functions present in both revisions exactly one body differs, and it is the locator that had to move off the deleted text. The specificity proof reproduces (guard RED naming interrogator/SKILL.md:28 under both patterns, revert byte-identical, tree clean), store_mentions.approved.txt is a genuine regeneration (64 == 64, zero delta both directions), and the F-1 'one door drives one spine at a time' refusal reproduces in a fresh git-backed process. One recorded fail (r4a-wording), overridden below, plus four observations and two triage candidates.",
+    "override_reason": "r4a-wording is a real finding and is stated in full in the result, not softened: the ten bound-spine replacements assert a door binding that is not yet true at Explorer/Charter/Admiral init, and no file under skills/ outside lane D2's checklist-engine.md names spine_bind or spine_open. It does not bar this change for three measured reasons. (1) It is not a stranding and so does not meet the handoff's stop condition: a fresh unbound door returns 'REFUSED: no spine is bound to this door ... Call spine_bind ... or spine_open ...', which is fail-visibly-with-the-remedy, not a hidden fallback. (2) It breaks no close criterion; all eight pass. (3) Half the fix belongs in skills/workbench/references/checklist-engine.md, which lane D2 owns and this lane is fenced from, so it cannot be completed here. Filed as triage candidate tc1 for the Commander rather than dropped."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4a-wording",
+      "statement": "Name the door's binding call at the cold-start orchestrator sites. Explorer/Charter/Admiral init tell an agent to claim the lease through the door, but the spine is created by init_work_area.py inside that same imperative, so the door is unbound at that moment and spine_lease refuses. The remedy exists (spine_bind for work that already exists, spine_open to mint) and the refusal names both, but no file under skills/ outside lane D2's checklist-engine.md names either, and that file documents only spine_open. Add the binding call to the three init imperatives, and add spine_bind to workbench's 'where the binding comes from' section (lane D2)."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "The template overlay has a FOURTH copy of truth the sweep did not update: .agent-work/templates/TEMPLATES_MANIFEST.json records a sha256 per template, and the five edited ones now mismatch it. Inert today (check_skill_freshness recomputes hashes from files and no test reads the field), but check_skill_freshness.py --project . --skills-root ~/.claude/skills now exits 1 with '5 template(s) need reconciliation' where it exited 0 before -- I verified the pre-change baselines matched upstream exactly. It clears on the next install/--update-baseline. The guard's own docstring says 'a sweep must edit all three copies'; there are four."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g2/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T20:24:09.480556+00:00",
+    "last_heartbeat": "2026-08-17T20:39:12.854450+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T20:39:19.903061+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T20:36:27.818460+00:00",
+      "reason": "The reviewer handoff directs the Fowler record to .agent-work/567-d1/g2-review/FOWLER_PASS.json because the work-id-root default already holds another gate's record; the script path is resolved to the installed reviewer skill because this survey is driven from a worktree of the skill-source repo.",
+      "authority": "constellation/567-d1/lane-d1/commander-delegated",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

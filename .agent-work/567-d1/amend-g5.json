@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "g5-final",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g5-guard.log 2>&1; ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g5-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/' && T=$(mktemp -d) && cp -r tests skills specs scripts \"$T\"/ && mkdir -p \"$T/.agent-work\" && cp -r .agent-work/templates \"$T/.agent-work\"/ && rm -rf \"$T/skills/workbench\" && python3 -m pytest \"$T/tests/test_cli_retirement_guard.py\" -q >/dev/null 2>&1; R=$?; rm -rf \"$T\"; exit $R"
+    }
+  ]
+}

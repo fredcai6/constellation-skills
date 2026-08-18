@@ -1,0 +1,491 @@
+{
+  "work_id": "567-d1-g2-implementer-attempt-1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-sweep-skills",
+    "m2-overlay",
+    "m3-invert",
+    "m4-approved",
+    "m5-proof",
+    "m6-close",
+    "m7-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the g2 handoff is complete",
+      "imperative": "Read the inherited global doctrine (implementer skill references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the handoff .agent-work/567-d1/crew-handoffs/g2-implementer-handoff.md, the guard tests/test_cli_retirement_guard.py, the g1 result and the measured baseline notes-1.md. Verify the handoff carries task, intent, allowed scope, exclusions, required evidence, test mode and stop conditions; block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + g2 handoff + guard + g1 result loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read: implementer references/global-crew.md + references/global-everyone.md; docs/agents/CREW_CONTEXT.md; docs/agents/GLOSSARY.md; the g2 handoff; tests/test_cli_retirement_guard.py in full; .agent-work/567-d1/notes-1.md; .agent-work/567-d1/crew-handoffs/g1-implementer-result.md. Handoff carries task, protected intent, allowed scope, fenced paths, required evidence, test mode (inversion-first), stop conditions and return format -- complete. Host check per CREW_CONTEXT Python Invocation: py/python/python3 ALL report pytest 9.1.1 today, so the handoff's python3 commands are valid here (CREW_CONTEXT's 2026-08-10 measurement that python3 lacks pytest is stale, as g1 also reported)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-sweep-skills": {
+      "id": "m1-sweep-skills",
+      "title": "Sweep the skills/ corpus: 13 CLI-fallback clauses, 10 <engine> occurrences, the write-a-skill drive-path cell",
+      "imperative": "Sweep skills/ (excluding skills/workbench/, lane D2's). Delete every CLI-fallback clause where the door works and replace the 3 second-checklist clauses with a statement of the measured truth (no command line shown). Remove every <engine> occurrence -- COUNT BY OCCURRENCE, the COMMANDER_SPINE archive imperative carries two. Reword skills/write-a-skill/SKILL.md:20's drive-path cell. Edit compact JSON templates as RAW TEXT, never round-trip through json.load/json.dump. Replacement wording must not produce a stand-in-plus-engine-verb shape.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context closed: doctrine, handoff, guard, notes and g1 result all read; handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no CLI-fallback clause and no <engine> token survives under skills/ outside workbench; every edited JSON still parses",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)\" && python3 -c \"import json,glob; [json.load(open(p)) for p in glob.glob('skills/**/*.json', recursive=True)]\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-sweep-skills-1"
+        }
+      ],
+      "constraints": [
+        "Fenced: skills/workbench/**, tests/test_cli_retirement_guard.py, scripts/**, docs/**, episodes/**",
+        "No exception list; do not edit the guard to make work pass",
+        "scripts/init_work_area.py:24 and docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md:59 stay untouched"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-sweep-skills-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)\" && python3 -c \"import json,glob; [json.load(open(p)) for p in glob.glob('skills/**/*.json', recursive=True)]\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-overlay": {
+      "id": "m2-overlay",
+      "title": "Propagate the sweep to the tracked .agent-work/templates/ overlay and its .baseline/ mirrors",
+      "imperative": "For each of the five doctrine-carrying overlay files, propagate the swept skills/ source content to .agent-work/templates/<file> and to .agent-work/templates/.baseline/<skill>/**, then prove all three copies match with git hash-object. Count by occurrence, not by visible file: the mirrors are part of the sweep.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "skills/ sweep complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 closed green: grep for 'CLI fallback' and '<engine>' over skills/ excluding workbench both return nothing; every skills JSON still parses."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "overlay and mirrors carry no CLI-fallback clause and no <engine> token, and every overlay JSON still parses",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)\" && test -z \"$(grep -rn '<engine>' .agent-work/templates/ || true)\" && python3 -c \"import json,glob; [json.load(open(p)) for p in glob.glob('.agent-work/templates/**/*.json', recursive=True)]\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-overlay-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope under .agent-work/ is templates/ only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-overlay-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)\" && test -z \"$(grep -rn '<engine>' .agent-work/templates/ || true)\" && python3 -c \"import json,glob; [json.load(open(p)) for p in glob.glob('.agent-work/templates/**/*.json', recursive=True)]\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-invert": {
+      "id": "m3-invert",
+      "title": "Invert the mandate in tests/test_mcp_adoption.py",
+      "imperative": "Turn each of the nine CLI-presence assertions into an absence assertion, or delete it where its premise is gone. Where the target is lane D2's skills/workbench/** file, DELETE the mandate rather than invert it -- an inverted assertion would go red on a file this lane is fenced from. Generalize the in-tree precedent TestTier2SpineAlreadyBoundForDispatchedCrews and say so in the code. Keep every door-tool-affirmative half exactly as strict, and keep the file's own two rules: the corpus is WALKED, and no assertion is satisfied by the negation of what it pins.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "corpus sweep complete in skills/ and the overlay",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 and m2 closed green: skills/ (excl. workbench) and .agent-work/templates/ (incl. .baseline/ mirrors) carry zero occurrences of either pattern; all three copies of each of the five doctrine templates share one blob OID."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no CLI-presence mandate survives in test_mcp_adoption.py and its collection is clean",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_mcp_adoption.py -q --collect-only >/dev/null 2>&1 && test -z \"$(grep -nE '^ +def (test_field_still_carries_cli_fallback|test_paragraph_still_carries_cli_fallback|test_file_still_names_cli_at_all|test_still_names_cli_invocation|test_door_section_itself_keeps_the_cli|test_states_identity_trade_rule|test_the_canonical_cli_sentence_is_present_verbatim|test_default_path_paragraph_states_the_cli_is_still_available)' tests/test_mcp_adoption.py || true)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-invert-2"
+        }
+      ],
+      "constraints": [
+        "tests/test_mcp_adoption.py and tests/data/store_mentions.approved.txt are this lane's this wave"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-invert-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_mcp_adoption.py -q --collect-only >/dev/null 2>&1 && test -z \"$(grep -n 'still_carries_cli_fallback\\|still_names_cli\\|test_still_names_cli_invocation\\|test_door_section_itself_keeps_the_cli' tests/test_mcp_adoption.py || true)\"",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-invert-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_mcp_adoption.py -q --collect-only >/dev/null 2>&1 && test -z \"$(grep -nE '^ +def (test_field_still_carries_cli_fallback|test_paragraph_still_carries_cli_fallback|test_file_still_names_cli_at_all|test_still_names_cli_invocation|test_door_section_itself_keeps_the_cli|test_states_identity_trade_rule|test_the_canonical_cli_sentence_is_present_verbatim|test_default_path_paragraph_states_the_cli_is_still_available)' tests/test_mcp_adoption.py || true)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-approved": {
+      "id": "m4-approved",
+      "title": "Regenerate tests/data/store_mentions.approved.txt through its own generator",
+      "imperative": "Find the approved file's own regeneration path and run it; do not hand-edit it if a generator exists. Then the whole adoption suite must be green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "inversion complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 closed: nine mandating assertions plus a tenth the handoff's table missed are inverted or deleted; tests/test_mcp_adoption.py is 172 passed, 2 skipped."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_mcp_adoption.py is green",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_mcp_adoption.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-approved-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-approved-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_mcp_adoption.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-proof": {
+      "id": "m5-proof",
+      "title": "Half (c): the specificity proof, both directions",
+      "imperative": "On a scratch edit, reintroduce a genuine CLI-fallback clause at one of the three reworded second-checklist sites; show the guard goes RED and names that site. Revert the scratch edit; show the guard is GREEN on the reworded text itself. Paste both runs verbatim and confirm a clean tree at the reworded site afterwards.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sweep and inversion complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1/m2 (sweep + overlay) and m3/m4 (inversion + census) all closed; adoption and retirement suites green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED-then-GREEN pair captured verbatim, scratch edit reverted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED: a genuine 'CLI fallback, always available: the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, ...)' clause appended to the reworded paragraph in skills/interrogator/SKILL.md. Guard names skills/interrogator/SKILL.md:28 under BOTH the clause and the invocation patterns; no other non-workbench site. Reverted by restoring the pre-mutation copy -- diff against it is empty -- and the guard's non-workbench site list is empty again while the reworded text (line 27, one line above the mutation) is never flagged in either run. Also mutation-proofed the INVERTED adoption assertions: reinstating the exact removed command line in COMMANDER_SPINE .tasks.init.imperative turns test_field_no_longer_carries_a_cli_command_line RED (1 failed, 171 passed), and reverting returns 172 passed, 2 skipped."
+        },
+        {
+          "id": "c2",
+          "statement": "the reworded site is back to its swept content -- no scratch text survives",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-proof-1"
+        }
+      ],
+      "constraints": [
+        "Do not edit the guard"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-proof-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-close": {
+      "id": "m6-close",
+      "title": "Prove the guard fires only inside lane D2's fenced files",
+      "imperative": "Run the guard, capture its log, and extract every site it names. Nothing outside skills/workbench/ may appear. Capture the hash-object proof for the five overlay files and their mirrors.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "specificity proof captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 closed: RED/GREEN specificity proof captured verbatim in both directions, scratch edit reverted and byte-identical to the shipped swept file."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the guard names no site outside skills/workbench/",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g2-guard.log 2>&1; test -z \"$(sed -E 's/^E? *//' /tmp/g2-guard.log | grep -E '^(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+(:[0-9]+)?$' | grep -v '^skills/workbench/' || true)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-close-1"
+        }
+      ],
+      "constraints": [
+        "POSIX sh only -- /bin/sh is dash here, set -o pipefail is rejected"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-close-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g2-guard.log 2>&1; test -z \"$(sed -E 's/^E? *//' /tmp/g2-guard.log | grep -E '^(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+(:[0-9]+)?$' | grep -v '^skills/workbench/' || true)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-result": {
+      "id": "m7-result",
+      "title": "Write the IMPLEMENTER_RESULT",
+      "imperative": "Write the full IMPLEMENTER_RESULT to .agent-work/567-d1/crew-handoffs/g2-implementer-result.md, carrying the swept diff, the before/after text for the 3 reworded sites, the inverted-vs-deleted assertion ledger with a reason for each, half (c)'s proof verbatim, the guard site filter output, the hash-object proof, Return status, Map Impact and Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all close criteria measured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All close criteria measured: greps 1-3 empty, adoption suite 172 passed/2 skipped, guard names only skills/workbench/ addresses, hash-object proof MATCH x5, pre-ruled survivors untouched, every edited JSON parses, POSIX closing check exit 0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result artifact exists and carries a Return status",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/567-d1/crew-handoffs/g2-implementer-result.md && grep -q 'Return status' .agent-work/567-d1/crew-handoffs/g2-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/567-d1/crew-handoffs/g2-implementer-result.md && grep -q 'Return status' .agent-work/567-d1/crew-handoffs/g2-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/567-d1-g2-implementer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T20:00:32.225005+00:00",
+    "last_heartbeat": "2026-08-17T20:21:43.781423+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T20:21:47.990876+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The gate has three halves and one hard ordering constraint I did not have before reading: the sweep alone leaves the suite red because test_mcp_adoption.py MANDATES the text (nine assertions), so the corpus edit and the test inversion must land together. The guard is the spec and is fenced. Counting unit is occurrences, not lines or files: COMMANDER_SPINE.archive carries two <engine> tokens on one line, and the overlay's 16 occurrences sit in 6 JSON leaves plus .baseline/ mirrors. The three second-checklist sites are reworded, not deleted, and the reword may name the engine but must not show a command line or a stand-in followed by an engine verb.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:01:07.739845+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-sweep-skills",
+      "why": "The 13 clauses were never one kind of thing, and the sweep had to reflect that. 10 were dead weight beside a working door and came out with the sentence that framed them as a choice (\"by default ... otherwise\"), which was itself the second-path idea in grammar. 3 name a case the door provably cannot reach \u2014 a checklist that is not the spine this process is bound to \u2014 so they were reworded to state the mechanism (one door drives one spine at a time; it refuses to rebind while its owner holds the lease) and to name the bundled engine as the only path, without writing a command line. The word \"fallback\" is now stated as wrong for that case, because there is no working primary. Two waiver/attach sites also carried an engine command line and were converted to the equivalent door-tool call rather than deleted, since a human still needs to know how to waive.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:04:55.160314+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-overlay",
+      "why": "The overlay is not a copy to keep in sync as a courtesy \u2014 it is the copy an agent in this repo actually instantiates from, so before this step the launch order's acceptance test still failed on a swept skills/ tree. Measured before the propagation: 16 <engine> and 18 clause occurrences across 10 files (5 visible + 5 .baseline/ mirrors), and all ten were blob-identical to their UNSWEPT skills/ sources at HEAD \u2014 which is what made whole-file propagation safe rather than a merge. Proved after: skills source, overlay copy and baseline mirror share one blob OID for all five files, and a fresh spine instantiated from the overlay COMMANDER template hands a Commander init and plan imperatives carrying zero of either pattern.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:05:43.676043+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-invert",
+      "why": "Two things the handoff could not have known, found while inverting. First, the two CLI assertions on commander-core.md shared a paragraph LOCATOR keyed to the text being deleted ('<engine> attach'), so after the sweep the door-affirmative half -- explicitly not mine to weaken -- would have died with an unrelated \"has the CLI line moved?\" message; the locator had to move to the door side to keep that half alive. Second, Tier2's whole-file absence check cannot be `checklist_engine.py not in text`, the standard the two-file precedent uses: skills/explorer/SKILL.md carries a scripts manifest naming the engine as a component, which is exactly the prose-vs-command line the epic drew and the guard pins in both directions. Tier2 is therefore scoped to the clause and the placeholder, Tier4 stays whole-file because a template has no manifest, and both reasons are written in the code. I also deleted a tenth mandate the handoff's table missed -- test_states_identity_trade_rule -- which required lane D2's file to carry a sentence routing a dispatched subagent to the CLI for its own plan, a claim run_crew.py --spine already made false.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:16:08.751968+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-approved",
+      "why": "There is no generator for this census -- I looked: verify_retirement.py has only a scan CLI, and its own comment (\"one code path, used by the leg AND by whatever seeds the census\") describes a seeding path nothing in the repo actually implements. So the handoff's \"do not hand-edit it if a generator exists\" resolves to: derive the new entries MECHANICALLY through that same code path rather than retyping them. I did -- store_mention_sites() produced the new normalized lines, load_approved() and _read_lines() identified the two stale ones, and the swap was refused unless each was a clean 1:1 pairing within its own file. Both reasons and the census's structure are untouched; only the two quoted imperative lines moved, which is exactly what my sweep changed.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:16:35.635943+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-proof",
+      "why": "The proof is discriminating in the way the cold critic demanded, and the evidence for that is positional: the reintroduced clause is flagged at skills/interrogator/SKILL.md:28, one line below the reworded text at :27 that says nearly the same thing about the same mechanism and is flagged by nothing, in either direction of the run. So the guard is separating the two sentences, not the two files. I also found that close criterion 5's own filter command cannot print nothing while the guard is red at all: the guard's census sentence names '.agent-work/templates/', and the criterion's regex matches it out of that prose. The site list itself is empty -- shown with a filter anchored to whole address lines -- so this is a defect in the criterion's command, not in the sweep.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:18:10.752533+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-close",
+      "why": "The guard now names exactly four addresses, all of them inside skills/workbench/ -- SKILL.md:37 and checklist-engine.md:5,41,45 -- which is lane D2's file set and the measured, expected residual this lane cannot clear. Nothing under skills/ outside workbench, nothing under specs/, and nothing under .agent-work/templates/ survives, which is the part that proves the overlay sweep landed rather than the skills/ sweep alone. All five doctrine templates share one blob OID across source, overlay copy and .baseline/ mirror.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:18:39.200963+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-result",
+      "why": "The result carries what a reviewer cannot reconstruct from the diff: which of the ten mandates were inverted versus deleted and the reason for each, the two locator/scoping findings that changed how the inversion had to be written, the measured absence of a census generator, and the defect in close criterion 5's own filter command. It also states the one real coverage loss plainly -- skills/workbench/SKILL.md's paragraph-scoped door assertion, dropped because the file is fenced this wave -- rather than letting the deletion read as a wash.",
+      "mechanical": false,
+      "ts": "2026-08-17T20:21:43.781412+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-17T20:16:02.165149+00:00",
+      "reason": "My own m3 check was a bare name grep over the whole file, so it cannot tell a DELETED assertion from a deliberate historical citation of one. The inversion the handoff asked for requires exactly those citations: the new docstrings name test_field_still_carries_cli_fallback, test_still_names_cli_invocation and test_door_section_itself_keeps_the_cli to record what was inverted, what was deleted, and why -- which is how a future reader sees continuity rather than a reversal. Rescoped to the `def ` line, which is what \"the assertion no longer exists\" actually means, and widened to all eight retired names so it is stricter than before. Reintroducing any of them still fails it.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m3-invert.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-17T20:18:25.296698+00:00",
+      "reason": "Close criterion 5's filter, which I copied verbatim into this check, has a false positive it cannot avoid: every guard failure message carries the census sentence \"(101 under skills/, 2 under specs/, 113 under .agent-work/templates/)\", and the criterion's own regex matches \".agent-work/templates/\" out of that prose. So the command can only print nothing when the guard is entirely green, which this lane cannot reach before lane D2 merges -- the very situation the criterion was written to accommodate. Rescoped to extract whole ADDRESS lines, which is the shape _sites() actually emits (\"    <path>[:<line>]\" on its own line), after stripping pytest's \"E \" prefix. Strictly more falsifiable than the original: it still names every real site, and it no longer passes or fails on prose. Reported as a handoff defect rather than smoothed over.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m6-close.c1"
+      ]
+    }
+  ]
+}

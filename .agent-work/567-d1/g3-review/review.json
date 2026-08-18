@@ -1,0 +1,201 @@
+{
+  "work_id": "567-d1",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md (bundled), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g3 reviewer handoff, the specs/ diff (81 insertions across 2 files), and the full IMPLEMENTER_RESULT. Note for later items: CREW_CONTEXT \"Verification Discipline\" supplies the exact standard the handoff's section 3 invokes -- \"Any guard that loops must assert what it looped over\" -- and \"Two Engines Are Alive In Your Session\" mandates fresh-process validation with explicit paths, which is how the second-checklist refusal must be re-measured here.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All six close criteria were performed, and I re-ran 1-4 and 6 myself rather than trusting the report. (1) Both specs name the door: `grep -i door` hits both; the `spine_*` tool vocabulary is in both `imperative`s and in new `constraints` arrays. (2) Both state the second-checklist rule. (3) The guard reports no `specs/` address: the non-workbench site filter over /tmp/g3r.log printed nothing; the only sites are 5 in `skills/workbench/**`, which the handoff fences to lane D2 and g5-final. (4) TOML parses: `tomllib.load` on both, exit 0. (5) Schema question settled with reasoning (judged separately at r4). (6) `config_ref` recorded (judged separately at r5). The implementer also correctly refused the handoff's own premise that a dispatched crew has no door path to its own plan, and measured the correction first-hand -- I reproduced that correction independently at r3.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. `git status --porcelain` filtered of `.agent-work/` shows exactly two modified paths: `specs/implementer.spine.toml` and `specs/reviewer.spine.toml`. The diff is +81 lines, zero deletions, and the pre-existing gate text is untouched -- the additions append to `m0-context`/`r0-context` imperatives and add `constraints` keys. The three fenced surfaces were respected: `scripts/mcp_spine_server.py` is byte-identical to main on this branch and carries no working-tree modification (lane E's); `tests/test_cli_retirement_guard.py` is unmodified in the working tree (its +718 lines are gate g1's committed work, not this gate's); `skills/**` is untouched by this gate. No new postconditions were added, so `spec-all-qualitative-postconditions` is not engaged, and none of `_DISPATCH_MARKERS` (`run_crew.py`, `constellation-implementer`, `constellation-reviewer`) appears in either new imperative.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "TWO of the three claims reproduce; the THIRD is false at the site it names, and shipped with no evidence behind it.\n\nREPRODUCED (fresh processes, explicit paths, per docs/agents/ORCHESTRATOR_CONTEXT.md s.Dogfooding and CREW_CONTEXT \"Two Engines Are Alive In Your Session\"). Probe: .agent-work/567-d1/crew-scratch/g3-reviewer-attempt-1-74e194cfc852/door_probe.py, three separate `python3` invocations against unmodified scripts/mcp_spine_server.py.\n  (a) \"with your own lease held, binding a second checklist is REFUSED\" -- case bound-then-rebind: bound to spine A via SPINE_FILE/SPINE_SESSION, claimed A's lease, then spine_bind B returned isError=True, \"REFUSED: this door still holds an active lease on '...probe-a.json' as 'constellation/567-d1-g3r-probe-a', and one door drives one spine at a time. Rebinding this door now would leave that lease held by nobody. Release it first (`spine_lease` with action 'release'), then call `spine_bind` again.\" The specs' quoted fragment is verbatim. spine_status afterwards still showed A, so the refusal is total, not partial.\n      POSITIVE CONTROL (the refusal is not vacuous and is scoped exactly as the prose says): case released-then-rebind runs the IDENTICAL spine_bind B call after releasing A's lease, and it SUCCEEDS. So the refusal is conditioned on holding your own lease and on nothing else -- which is precisely the condition the prose states.\n  (b) \"A role dispatched WITHOUT a spine of its own holds no lease, and an unbound door binds one spine and then drives it identically -- the identity comes from that spine's own work id, never from a string you supply\" -- case unbound-then-bind: with SPINE_FILE/SPINE_SESSION unset, spine_status REFUSED (\"no spine is bound to this door\"), spine_bind B SUCCEEDED returning SPINE_SESSION \"constellation/567-d1-g3r-probe-b\" derived from the spine's own work_id, and spine_lease claim/spine_status/release all worked. I am also the live case: this survey was dispatched with only SPINE_PARENT set, and I bound and claimed it exactly this way. The prose therefore leaves no role without a path, satisfying global-everyone.md \"Fail visibly ... no hidden fallback\".\n\nFALSE AS STATED. Both files assert: \"the escape that refusal names is barred for you, because THE ARCHIVE GATE requires the lease to cover every journaled action, so releasing it to reach a second checklist fails YOUR OWN CLOSEOUT.\" Measured:\n  1. The archive gate exists only on the Commander spine (.agent-work/templates/COMMANDER_SPINE.template.json, gate `archive`). Its only lease-related postcondition is c3 \"engine session lease released\" with check=null -- a qualitative attest that requires the lease to be RELEASED and says nothing about journal coverage. Its other conditions are c1 episode-captured, c2/c2b branch+PR, c4 git-change-policy. None reads a journal.\n  2. scripts/spine_lifecycle.py refuses closeout in the OPPOSITE direction: \"close refused: the lease is still active\" when engine_session.status != \"released\".\n  3. The real lease-window enforcement is evals/euler-*/checks/spine_completed.py::journal_consistent (\"journal entry seq N follows the lease release\"), invoked from that file's own main() over an eval run directory. Nothing in the archive gate, spine_lifecycle.close_work, checklist_engine, run_crew.py or verify_iterative_role_artifacts.py calls it. grep for `spine_completed` across live specs/templates hits only archived work areas.\n  4. Worst of all for the reader: NEITHER crew plan has a closeout gate at all. IMPLEMENTER_PLAN.template.json is ['m0-context','m1']; REVIEW_SURVEY.template.json is ['r0-context'..'r6-fowler']. The role told \"it fails your own closeout\" has no closeout.\n  Provenance of the error: the inherited skills/reviewer/SKILL.md:17 and skills/implementer/SKILL.md:17 both say \"fails the TERMINAL PROVENANCE CHECK -- the lease must cover every journaled action\", which is accurate. The phrase \"archive gate\" appears nowhere in skills/. The implementer paraphrased a correctly-named check into a differently-named, real gate that does not do this. The IMPLEMENTER_RESULT offers no measurement for this clause -- s.5b measures only the bind/lease half.\n  Why it matters rather than being pedantry: the clause sits inside a sentence advertising itself as \"a measured refusal rather than an oversight\", in the two files the result's own Map Impact calls \"the corpus's statement of what the door is for a role\". The handoff states the reason exists so a future author cannot \"fix\" the rule; a future author who checks this reason finds no archive gate in their own plan and is entitled to discount the whole paragraph -- the exact opposite of its purpose. CREW_CONTEXT \"Assert against behaviour, never against text that describes it\" is the standard missed. The remedy is one clause in two files: quote the inherited \"terminal provenance check\" wording instead of renaming it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "THE SCHEMA DECISION HOLDS, and I re-derived it from scripts/generate_spine.py rather than from the result's summary. `_compile_gate` (:669-684) returns a dict LITERAL over a fixed field list -- id, title, imperative, preconditions, postconditions, constraints, directives, child_checklist, status, status_detail, result, finding, evidence, rework_count -- and `compile_spec` (:704-713) does the same at top level over work_id, type, config_ref, items, tasks, consolidation, triage_candidates, blockers. Any other authored key is not copied. `spec_shape_faults` carries no unknown-key fault (its \"unknown\" faults are spec-unknown-check-kind, the dispatch-parent refusal, and probe-script-unknown-flag -- none is a key allowlist), so nothing would refuse the drop either. Answering the handoff's question directly: a new key would have had NO consumer, and giving it one means editing generate_spine.py, which the implementer's handoff named as a stop condition. So prose-only is not under-delivering; a new key would have been dead weight that the spec author could see and the dispatched role never could. Measured by me, not quoted: compiling both specs to /tmp, the header comment is ABSENT from the compiled JSON (\"so a new spec key reaches no reader\" -> False in both) while \"one door drives one spine at a time\" is PRESENT in both compiled imperatives, with 2 and 3 constraints carried. That is the implementer's claim reproduced exactly.\n\nTHE GUARD'S SILENCE ON specs/ IS REAL, NOT VACUOUS. Three independent legs. (i) Census: the failure message reports \"2 under specs/\", and SPEC_FILES is exactly ['specs/implementer.spine.toml','specs/reviewer.spine.toml']. (ii) Floors: all five TestTheWalkIsNotVacuous tests PASSED by name, including test_the_walk_reaches_the_spec_corpus and test_the_walk_yields_texts_not_just_paths. (iii) The strong leg, which the census alone does not buy -- I imported the guard module and confirmed each spec contributes a whole-file text chunk (7109 and 7687 chars, byte-identical to the file on disk, comments included) and that the NEW prose is inside it (\"THE DOOR IS HOW YOU DRIVE\" and \"one door drives one spine at a time\" both True). Then the positive control CREW_CONTEXT demands: I injected a CLI-fallback clause plus `python scripts/checklist_engine.py ... current` into an in-memory copy of that same text, asserted the mutation applied, and re-ran the guard's own CLI_FALLBACK_RE and ENGINE_INVOCATION_RE -- 1 hit each, per file. Against the shipped text: 0 hits, both patterns, both files. So a violation in this exact prose WOULD be caught, and the absence is a measured absence. No file was edited to prove this.\n\nHANDOFF CONSTRAINTS ON THE IMPLEMENTER HELD. No `<engine>` token, no CLI spelling, no checklist_engine.py reference, no placeholder-plus-verb shape (the new text contains no bracket/brace/$/% placeholder at all). No fenced file touched. Both specs still compile clean through generate_spine.py.\n\nNOT counted again here: the archive-gate misattribution is a truth defect and is recorded once, at r3-evidence, rather than double-counted.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CONFIG_REF: what was recorded is accurate, every leg re-verified at source, and leaving it was right. (i) `find . -name engine-config.json` returns nothing anywhere in the repo -- the reference is genuinely dangling. (ii) docs/CHECKLIST_SCHEMA.md:35-38 says verbatim what the record quotes: a missing path falls through to `{}` and is harmless, \"which is why every shipped template's nonexistent docs/agents/engine-config.json is fine\", while a config_ref pointing at a real non-JSON file raises an unhandled JSONDecodeError. So creating the file converts a documented no-op into a live crash surface -- the absence is ruled deliberate, not an oversight to tidy. (iii) The counter-precedent is real: skills/explorer/templates/CYCLE.template.json is type=survey and has NO config_ref key, and tests/test_explorer_templates.py:242-247 pins that choice with its reasoning (\"a survey never consults rework_cap ... the key is dropped rather than pointed at a file a fresh install won't have\"). specs/reviewer.spine.toml is type=survey and does carry it, so two shipped survey artifacts state opposite conventions -- exactly as recorded. (iv) The candidate at .agent-work/567-d1/triage-candidates/engine-config-json-absent.md was updated in place with a g3 addendum rather than duplicated, and it correctly splits one vague \"fix it\" into two separable decisions: the survey key (free, but one leg of a two-leg change) and the gated key (a rework-cap defaults question owned by a human). Leaving it was right on both the handoff's \"free and obviously right\" bar and on the wider rule that a doctrine-vocabulary gate should not silently reverse a written schema ruling. One thing the record understates, now flagged as its own candidate: the contradiction is wider than specs/ -- REVIEW_SURVEY.template.json, which is what a reviewer actually instantiates (I instantiated this very survey from it), carries the same dangling config_ref, and so does its .agent-work/templates/ overlay copy.\n\nMAP IMPACT: accurate against the diff. No architecture map exists (map_orient -> DEGRADED-UNPARSEABLE), and the notes are correctly written as a note for whoever builds one. The claim that the two specs are now the corpus's statement of what the door is for a role matches the diff. The observation that generate_spine._compile_gate's carried-field list \"is a doctrine surface, not just a compiler detail\" is the sharpest thing in the result and I confirmed it at r4. \"No structural, capability or dependency change\" is correct -- two prose additions and one comment, no runtime behaviour.\n\nRECONCILIATION THE COMMANDER MUST CARRY UP, and it is why I am not treating this as a purely local docs edit: the implementer's s.5b contradicts .agent-work/567-d1/notes-1.md s.M1 and, through it, an epic premise. M1 concluded the door \"provably cannot\" reach the three second-checklist sites and that the CLI is \"the only path\" for them. I measured otherwise and independently of the implementer: a crew dispatched with no SPINE_FILE binds and drives its own plan through the door, identity derived from the spine's own work_id (r3, case unbound-then-bind; and this survey is itself that case). M1's conclusion holds only for a process ALREADY holding a lease. Since g5-final is meant to lock the sweep wording, this belongs in front of the Admiral before then, not after. Flagged as a candidate; not filed as an issue, per the handoff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/567-d1/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-d1/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from 567-d1 alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/567-d1/g3-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass run over the 81-line specs/ diff; record at .agent-work/567-d1/g3-review/FOWLER_PASS.json (path moved off the template's work-id-root convention through the engine's own REPAIR PATH -- amend retext-check on c1, authority Commander 567-d1 -- because .agent-work/567-d1/FOWLER_PASS.json already holds a prior gate's record and writing there would have destroyed it). Rail: `python scripts/verify_fowler_pass.py .agent-work/567-d1/g3-review/FOWLER_PASS.json` exits 0 -- \"smells=12, flagged=['long-method','duplicated-code','feature-envy'], overridden=['long-parameter-list','shotgun-surgery','divergent-change']\".\n\nAll 12 baseline smells visited, read against their prose analogues since the artifact is authored doctrine in TOML rather than code (an `imperative` is the unit handed to a role; a spec file is the role's whole plan).\n\nFLAGGED 3. (1) long-method -- the context-load imperative went from 5 lines to ~35 and now does two jobs, so its title \"Load baseline context\" no longer describes it; observation only, since `_compile_gate` carries just five reader-visible fields and there is no cheap split. (2) duplicated-code -- the second added paragraph is near-verbatim across both files and constraint 1 is byte-identical; the IMPLEMENTER_RESULT s.1b's \"not a copy\" defence is true of the FIRST paragraph only. Flagged rather than overridden because it is biting NOW: the r3 BLOCK finding sits inside the duplicated paragraph, so its fix is a two-site edit. Deduplication is explicitly NOT the remedy (no include in TOML, comments dropped, a new key reaches no reader) -- the actionable output is that this paragraph is a linked pair. (3) feature-envy -- both crew specs justify their own rule via a gate belonging to the Commander spine; the same defect as r3, and the lens explains why it happened.\n\nOVERRIDDEN 3, each with the standard that wins and why. long-parameter-list (8-tool inventory in one sentence) -> \"Agent-facing. Dense by design.\" in both global doctrine files, plus checklist-engine.md's own verb inventory; an agent needs the whole tool surface before its first call. shotgun-surgery (the one-spine rule now restated on six surfaces) -> epic #567's chosen architecture plus g1's guard that walks every surface, and CREW_CONTEXT's \"any guard that loops must assert what it looped over\"; doctrine not restated per surface does not reach the role at all, which I measured at r4. divergent-change -> checklist-engine.md \"One agent, one plan\"; the file's axis is the role, so convergence is the design.\n\nABSENT 6, two of them non-trivially. speculative-generality is absent because the change actively refused it -- the new spec key was declined on the measured ground that it would reach no consumer. comments-as-deodorant was tested rather than waved through, since the diff adds a 10-line header comment to each file: it records an external, invisible compiler property that nothing in the file could otherwise expose, and I verified it is absent from the compiled spine, so it addresses the next spec author and never competes with what an agent is handed.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/567-d1/g3-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: TWO of the three claims reproduce; the THIRD is false at the site it names, and shipped with no evidence behind it.\n\nREPRODUCED (fresh processes, explicit paths, per docs/agents/ORCHESTRATOR_CONTEXT.md s.Dogfooding and CREW_CONTEXT \"Two Engines Are Alive In Your Session\"). Probe: .agent-work/567-d1/crew-scratch/g3-reviewer-attempt-1-74e194cfc852/door_probe.py, three separate `python3` invocations against unmodified scripts/mcp_spine_server.py.\n  (a) \"with your own lease held, binding a second checklist is REFUSED\" -- case bound-then-rebind: bound to spine A via SPINE_FILE/SPINE_SESSION, claimed A's lease, then spine_bind B returned isError=True, \"REFUSED: this door still holds an active lease on '...probe-a.json' as 'constellation/567-d1-g3r-probe-a', and one door drives one spine at a time. Rebinding this door now would leave that lease held by nobody. Release it first (`spine_lease` with action 'release'), then call `spine_bind` again.\" The specs' quoted fragment is verbatim. spine_status afterwards still showed A, so the refusal is total, not partial.\n      POSITIVE CONTROL (the refusal is not vacuous and is scoped exactly as the prose says): case released-then-rebind runs the IDENTICAL spine_bind B call after releasing A's lease, and it SUCCEEDS. So the refusal is conditioned on holding your own lease and on nothing else -- which is precisely the condition the prose states.\n  (b) \"A role dispatched WITHOUT a spine of its own holds no lease, and an unbound door binds one spine and then drives it identically -- the identity comes from that spine's own work id, never from a string you supply\" -- case unbound-then-bind: with SPINE_FILE/SPINE_SESSION unset, spine_status REFUSED (\"no spine is bound to this door\"), spine_bind B SUCCEEDED returning SPINE_SESSION \"constellation/567-d1-g3r-probe-b\" derived from the spine's own work_id, and spine_lease claim/spine_status/release all worked. I am also the live case: this survey was dispatched with only SPINE_PARENT set, and I bound and claimed it exactly this way. The prose therefore leaves no role without a path, satisfying global-everyone.md \"Fail visibly ... no hidden fallback\".\n\nFALSE AS STATED. Both files assert: \"the escape that refusal names is barred for you, because THE ARCHIVE GATE requires the lease to cover every journaled action, so releasing it to reach a second checklist fails YOUR OWN CLOSEOUT.\" Measured:\n  1. The archive gate exists only on the Commander spine (.agent-work/templates/COMMANDER_SPINE.template.json, gate `archive`). Its only lease-related postcondition is c3 \"engine session lease released\" with check=null -- a qualitative attest that requires the lease to be RELEASED and says nothing about journal coverage. Its other conditions are c1 episode-captured, c2/c2b branch+PR, c4 git-change-policy. None reads a journal.\n  2. scripts/spine_lifecycle.py refuses closeout in the OPPOSITE direction: \"close refused: the lease is still active\" when engine_session.status != \"released\".\n  3. The real lease-window enforcement is evals/euler-*/checks/spine_completed.py::journal_consistent (\"journal entry seq N follows the lease release\"), invoked from that file's own main() over an eval run directory. Nothing in the archive gate, spine_lifecycle.close_work, checklist_engine, run_crew.py or verify_iterative_role_artifacts.py calls it. grep for `spine_completed` across live specs/templates hits only archived work areas.\n  4. Worst of all for the reader: NEITHER crew plan has a closeout gate at all. IMPLEMENTER_PLAN.template.json is ['m0-context','m1']; REVIEW_SURVEY.template.json is ['r0-context'..'r6-fowler']. The role told \"it fails your own closeout\" has no closeout.\n  Provenance of the error: the inherited skills/reviewer/SKILL.md:17 and skills/implementer/SKILL.md:17 both say \"fails the TERMINAL PROVENANCE CHECK -- the lease must cover every journaled action\", which is accurate. The phrase \"archive gate\" appears nowhere in skills/. The implementer paraphrased a correctly-named check into a differently-named, real gate that does not do this. The IMPLEMENTER_RESULT offers no measurement for this clause -- s.5b measures only the bind/lease half.\n  Why it matters rather than being pedantry: the clause sits inside a sentence advertising itself as \"a measured refusal rather than an oversight\", in the two files the result's own Map Impact calls \"the corpus's statement of what the door is for a role\". The handoff states the reason exists so a future author cannot \"fix\" the rule; a future author who checks this reason finds no archive gate in their own plan and is entitled to discount the whole paragraph -- the exact opposite of its purpose. CREW_CONTEXT \"Assert against behaviour, never against text that describes it\" is the standard missed. The remedy is one clause in two files: quote the inherited \"terminal provenance check\" wording instead of renaming it."
+    ],
+    "summary": "BLOCK on one clause, in two files. Six of seven items pass; r3-evidence fails.\n\nThe gate's own question was \"is the vocabulary TRUE?\", and two of its three factual claims are true and now measured independently, in fresh processes with explicit paths as ORCHESTRATOR_CONTEXT s.Dogfooding requires: (a) with your own lease held, spine_bind to a second checklist is REFUSED with the exact text the specs quote, and a positive control proves the refusal is scoped to precisely that condition -- the identical call SUCCEEDS once the lease is released; (b) a role dispatched with no spine of its own binds and drives one through the door, identity derived from the spine's own work id, which this survey is itself a live instance of. So the vocabulary neither promises a path that does not exist nor strands a role without one.\n\nThe third claim does not survive. Both files state that \"the archive gate requires the lease to cover every journaled action, so releasing it to reach a second checklist fails your own closeout\". The archive gate is a Commander-spine gate whose only lease-related postcondition is c3 \"engine session lease released\" with check=null; spine_lifecycle.close_work refuses in the opposite direction (while the lease is still ACTIVE); the real lease-window enforcement lives in evals/euler-*/checks/spine_completed.py::journal_consistent and runs only under the eval harness; and neither crew plan has a closeout gate at all. The inherited SKILL.md wording the implementer paraphrased -- \"the terminal provenance check\" -- was accurate; \"archive gate\" appears nowhere in skills/. The IMPLEMENTER_RESULT offers no measurement for this clause.\n\nThis is worth a BLOCK rather than an override because of where it sits: inside a sentence that advertises itself as \"a measured refusal rather than an oversight\", in the two files this change makes the corpus's statement of what the door is for a role. The handoff is explicit that the REASON exists so a future author cannot \"fix\" the rule; a future author who checks this reason finds no archive gate in their own plan and is entitled to discount the whole paragraph. The remedy is one clause in two files -- quote the inherited \"terminal provenance check\" wording instead of renaming it -- and the Fowler pass flags that the paragraph is duplicated near-verbatim, so the repair must land in both.\n\nEverything else holds and was re-run, not trusted: TOML parses (exit 0); the guard reports no specs/ address, and its silence there is non-vacuous by census, by all five walk floors passing, and by a positive control that injected a CLI clause into an in-memory copy of the same guarded text and watched both patterns fire; the schema decision (prose only, no new keys) is correct, re-derived from _compile_gate's fixed field list, and confirmed by compiling both specs and observing the comment dropped while the prose survives; the config_ref record is accurate at every leg and leaving it was right. Three triage candidates flagged, one of which (tc3) should reach the Admiral before g5-final locks the sweep wording: notes-1.md s.M1's \"the door provably cannot / the CLI is the only path\" holds only for a process already holding a lease, not for the dispatched-crew case it was mostly about."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r3-evidence",
+      "statement": "\"The lease must cover every journaled action\" is stated as binding doctrine in skills/reviewer/SKILL.md:17 and skills/implementer/SKILL.md:17, but its only enforcement is evals/euler-*/checks/spine_completed.py::journal_consistent, which runs from that file's own main() over an eval RUN DIRECTORY. No production path enforces it: not the Commander archive gate (postcondition c3 is \"engine session lease released\", check=null), not spine_lifecycle.close_work (which refuses only while the lease is still ACTIVE), not checklist_engine, not run_crew.py, not verify_iterative_role_artifacts.py. So every crew is told a rule that holds only under the eval harness. Either the rule should be enforced on a real run or the doctrine should say where it bites. Out of scope for g3 (skills/** is fenced from this lane) and it is the upstream cause of the g3 BLOCK finding, so fixing the specs' clause does not close this."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "The dangling config_ref contradiction is wider than specs/ and the existing candidate (.agent-work/567-d1/triage-candidates/engine-config-json-absent.md) scopes it to the two spec files only. skills/reviewer/templates/REVIEW_SURVEY.template.json and its .agent-work/templates/ overlay copy -- the file a reviewer actually instantiates from, and the one this survey was built from -- carry the same config_ref = \"docs/agents/engine-config.json\" while being type=survey, against the pinned CYCLE.template.json precedent (tests/test_explorer_templates.py:242-247: a survey never consults rework_cap, so the key is dropped rather than pointed at a file a fresh install won't have). Whoever settles the survey half must sweep the templates, not just specs/reviewer.spine.toml, or the two halves drift again."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "FLOAT TO THE ADMIRAL BEFORE g5-final LOCKS THE SWEEP WORDING. .agent-work/567-d1/notes-1.md s.M1 concluded the door \"provably cannot\" reach the three second-checklist sites and that the CLI is \"the only path\" for them. Measured independently in this review (fresh process, door_probe.py case unbound-then-bind) and true of this survey itself: a crew dispatched with no SPINE_FILE holds no lease, binds its own plan or survey through spine_bind, and drives it entirely through the door -- identity derived from the spine's own work_id, never supplied. M1's conclusion holds only for a process that ALREADY holds a lease, which is not the state most dispatched crews are in. The epic thesis \"the door is the interface, not a second path\" is strengthened by this, not weakened, but any g5 wording built on M1's stronger claim would be built on a premise the measurement does not support."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "constellation/567-d1",
+    "status": "released",
+    "claimed_at": "2026-08-17T20:56:02.843005+00:00",
+    "last_heartbeat": "2026-08-17T21:07:12.377483+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T21:08:55.184246+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-17T21:04:42.524205+00:00",
+      "reason": "The template's fixed convention resolves this check to .agent-work/567-d1/FOWLER_PASS.json, but that path already holds a prior gate's Fowler record in this work area (dated 2026-08-17 11:26, from an earlier gate), and constraint 7 of my g3 reviewer handoff directs this gate's record to .agent-work/567-d1/g3-review/FOWLER_PASS.json instead -- the per-gate convention the sibling g1-review, g1b-review and g2-review directories already follow. Writing to the work-id root would overwrite another gate's evidence. This is the REPAIR PATH the r6-fowler imperative names for exactly this case, taken through the engine rather than by hand-editing the survey.",
+      "authority": "Commander 567-d1 (constellation/567-d1/lane-d1/commander-delegated), the dispatching Commander named in the g3 reviewer handoff, under Admiral launch order cmdr-567-d1",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

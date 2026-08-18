@@ -11,6 +11,16 @@ parent     = "<parent>"
 # stand-in example: it IS this gate's own carried-over cleanup (turn the dead
 # `_RESOLVER_OWNED_TOKEN_RE` import into a real assertion), so its postcondition
 # points at a test that genuinely collects and passes on this repo right now.
+#
+# Door vocabulary lives in `imperative` and `constraints`, and this comment does
+# not. That is not a style choice: generate_spine._compile_gate builds every
+# compiled task from a FIXED field list, and compile_spec builds the top level
+# the same way, so a new spec key reaches no reader and spec_shape_faults has no
+# unknown-key fault to refuse it with -- it would be dropped silently. Comments
+# are dropped too. Authored text an agent actually reads is `title`,
+# `imperative`, `constraints`, a condition `statement`, and a qualitative
+# `because` (compile_condition folds it into the statement). Doctrine put
+# anywhere else in this file is doctrine nobody is handed.
 
 [[gate]]
 id    = "m0-context"
@@ -22,7 +32,38 @@ docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the
 relevant packet. Verify the handoff is complete (task, intent, scope,
 exclusions, required evidence, test mode, stop conditions); if incomplete,
 block and return. Attest c1.
+
+THE DOOR IS HOW YOU DRIVE THIS PLAN, and these gates are the plan -- there is
+nothing else to drive. A role dispatched with a spine of its own starts with
+SPINE_FILE and SPINE_SESSION already in its environment, so the door resolves
+to that spine by itself and no session id is passed anywhere: spine_status
+reads where you are, spine_start opens a gate, spine_advance closes one,
+spine_evidence attests or attaches, spine_lease claims and gives back the
+working lease, spine_capture appends an item or flags a triage candidate,
+spine_halt blocks, and spine_amend re-plans under a named authority. A role
+dispatched WITHOUT a spine of its own holds no lease, and an unbound door binds
+one spine and then drives it identically -- the identity comes from that
+spine's own work id, never from a string you supply.
+
+WHAT YOU MAY NOT DO IS DRIVE A SECOND CHECKLIST FROM THIS PROCESS, and the
+reason is a measured refusal rather than an oversight. One door drives one
+spine at a time (`decision:one-spine-per-process-stands`). Measured in a fresh
+process: with your own lease held, binding a second checklist is REFUSED --
+"one door drives one spine at a time ... Release it first" -- and that
+escape is not yours to take: your role skill holds the lease open until
+your last action, because the lease must cover every journaled action, and
+releasing it early fails the terminal provenance check. Dispatched without
+a spine of your own you arrive holding no lease -- nothing to release, and
+the escape never arises. Read the two halves together and the rule is
+one rule, not a limitation: the door reaches the spine you hold a lease on, and
+you hold a lease on exactly one. So do not author a plan of your own beside
+this one. If these gates are wrong for the work, that is what spine_amend and
+spine_halt are for.
 """
+constraints = [
+  "The door is this role's whole interface to its spine -- no session id is passed to it, because this process is already bound to exactly one spine",
+  "Author no second checklist beside these gates: one door drives one spine at a time, and while you hold your own lease the door refuses to bind another -- measured, not assumed",
+]
 
   [[gate.postconditions]]
   id        = "c1"

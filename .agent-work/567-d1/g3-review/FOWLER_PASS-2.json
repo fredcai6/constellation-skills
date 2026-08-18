@@ -1,0 +1,83 @@
+{
+  "work_id": "567-d1",
+  "diff_ref": "commit 05fcfec3, specs/implementer.spine.toml (+41) and specs/reviewer.spine.toml (+44) -- prose-only door vocabulary in two typed role specs; g3-review rework round 1 of 3",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "The first gate's imperative grew from ~5 lines to ~35 in both specs and now does two jobs: load baseline context, and teach the door. The gate is still titled 'Load baseline context', which no longer describes it. Round 1 flagged this and the rework added six more lines, so it is slightly worse, not better. Observation only, and I am not asking for a split: a role reads its first imperative before it has anywhere else to put doctrine, and there is no cheaper site -- a new key reaches no reader (measured below under speculative-generality). The actionable form is the title, not the length.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The second added paragraph is byte-identical across both specs -- md5 c826f819cd61cdd176742a75c18fd6f7, len 488, after whitespace normalisation. It bit during this very gate: closing round 1's BLOCK required the same edit at two sites. Deduplication is not the remedy and I am not asking for it -- TOML has no include, comments are dropped from the compiled output, and a new key reaches no reader, all measured -- so each spec must stay self-contained. But the mitigation the implementer offered is weaker than stated. Its result says 'the duplication stays; silent divergence cannot', on the strength of verify_claims.py extracting and comparing the clause from both files. I checked where that script lives: .agent-work/567-d1/crew-scratch/g3-implementer-attempt-2-74e194cfc852/verify_claims.py, and grep over tests/ and scripts/ for 'verify_claims' returns nothing. It is scratch-only, archived at closeout, and no repo suite re-runs it. So the pair is checked once, by the run that wrote it, not durably. The linked-pair fact belongs in the map note (the implementer put it there) and the durable check belongs in tests/ -- out of scope here, since this gate was confined to specs/**.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "Round 1 flagged this: both crew specs justified their own rule by reaching for a gate belonging to the Commander spine. The rework removed exactly that reach -- 'archive gate' now appears nowhere in specs/ or skills/ (grep exit 1), and the clause cites the role's own skill (skills/{reviewer,implementer}/SKILL.md:17) instead. The smell is gone because its cause was fixed.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "overridden",
+      "finding": "Each spec's first paragraph names eight or nine door tools with their verbs in a single sentence, which reads as an inventory rather than prose.",
+      "override": {
+        "repo_standard": "references/global-everyone.md, line 8: 'Agent-facing. Dense by design.' -- the inherited standard for doctrine an agent reads, which docs/agents/CREW_CONTEXT.md restates for the crew tier by carrying only deltas rather than prose.",
+        "reason": "The reader is an agent loading its whole interface once, at the only moment it can act on it. Breaking the inventory into separate sentences would add length without adding a reader-visible distinction, and the density is the sanctioned form here, not an accident. I verified the inventory is also correct rather than merely dense: all ten assertions it makes about door tools check out against the door's own TOOLS, and zero of the twelve tools take a session id."
+      }
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "The one-door-one-spine rule now lives on several surfaces at once, and this pass found the smell actually biting rather than merely latent. Round 1 overrode it on the grounds that epic #567 chose that architecture and g1's guard walks every surface. That override does not survive contact with the measurement: skills/reviewer/templates/REVIEW_SURVEY.template.json and skills/implementer/templates/IMPLEMENTER_PLAN.template.json contain ZERO occurrences of 'door' anywhere in the file, and nothing links them to the specs -- generate_spine.py emits to an --out path, no test asserts a compiled spec equals a shipped template, and the specs' own header comment claims only that intent 'matches' the template. So the sweep reached the spec surface and missed the template surface, which is the one an unbound crew instantiates from, and which built this very survey. That is the definition of the smell: one conceptual change, N sites, and N was not enumerated. Flagged rather than overridden because the guard cited as the mitigation does not close it -- the guard forbids a CLI second path, it does not require the door rule to be present. Out of scope for this gate (skills/** fenced, scope specs/** only); recorded as triage candidate tc1, no issue filed.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "Each spec changes along one axis -- its own role's checklist doctrine. This edit is that axis.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Absent because the change actively refused it, and I re-derived the refusal rather than accepting it. The open schema question was whether to add a spec key for doctrine; the answer was prose only. Measured directly against scripts/generate_spine.py: injecting a top-level key and a gate key into both specs, neither survives compile_spec (compiled top level is a fixed 8-key set, compiled task a fixed 14-key set), and spec_shape_faults returns 0 faults both clean and with two invented keys, so nothing would refuse the silent drop. A new key would have had no consumer, and giving it one means editing generate_spine.py, which was a stop condition on this gate. Prose-only is therefore not under-delivering.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "The diff adds a ten-line header comment to each spec. It is not deodorant: it records an external, invisible compiler property that no amount of clearer code in this file could expose -- that authored doctrine outside title/imperative/constraints/statement/because is silently dropped. I tested its claims rather than reading them: a new key does not survive compile, spec_shape_faults carries no unknown-key fault (0 vs 0), the comment's own text is ABSENT from the compiled spine, while 'one door drives one spine at a time' and 'terminal provenance check' are both PRESENT in it. So the comment is true, and it is addressed to the spec author, who is the only reader who can act on it.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

@@ -157,19 +157,23 @@ the worktree — a headless `claude -p` launch pointed at it, or a plain subproc
 with the env var set for the non-agent (pure-function) paths — never a fixture
 that hand-injects the value under test.
 
-**Harvest before you sweep — a required precondition of removal.** A worktree can
-carry durable learning the shared root does not yet hold: its
-`CONSTELLATION_FEEDBACK.md` exports. A **fenced** Commander stages that export
-worktree-locally under `.agent-work/staged-feedback/<work-id>/` with a `FENCE.md`
-launch-order citation; that staging dir is your harvest source. Just as you
-confirm a Commander dead before touching its worktree, you harvest the export
-into the shared durable `.agent-work/` at the main checkout **before**
-`git worktree remove` — removal is not permitted until it is collected, because a
-swept worktree's learning is unrecoverable. The run's **episodes** are the
+**Collect before you sweep, where there is anything to collect.** A worktree can
+carry durable learning the shared root does not yet hold: a
+`CONSTELLATION_FEEDBACK.md` export, the cross-project channel
+`scripts/collect_feedback.py` sweeps. No Commander gate writes one — the
+`feedback` gate's single postcondition is the episode capture — so most worktrees
+carry no export, and an absent one is the ordinary case rather than a lost
+record. Where one does exist, collect it into the shared durable `.agent-work/`
+at the main checkout **before** `git worktree remove`, and look in both places:
+the worktree's own `.agent-work/` root, and
+`.agent-work/staged-feedback/<work-id>/`, where a **fenced** Commander stages it
+with a `FENCE.md` launch-order citation. Just as you confirm a Commander dead
+before touching its worktree, you look before you sweep, because a swept
+worktree's learning is unrecoverable. The run's **episodes** are the
 exception and need no harvesting: `episodes/` is a tracked repo-root path, so a
 committed episode already survives the sweep and lands in a fresh clone.
 Git-common-dir resolution points the durable root at one shared root, so the
-harvest is **mostly automatic**; the manual harvest above remains the fallback for
+collection is **mostly automatic**; the manual step above remains the fallback for
 consuming projects on older scripts, or any hand reconciliation.
 
 ## Windows shell hazards (command-checks)

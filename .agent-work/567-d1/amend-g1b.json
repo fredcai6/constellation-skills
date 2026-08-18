@@ -1,0 +1,94 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "g1b-implement",
+      "after": "g1-integrate",
+      "title": "Widen the guard: placeholder-agnostic command lines, and the tracked template overlay: implement",
+      "imperative": "The g1 reviewer found a real regrowth route the guard misses, and measured a whole surface no walk reads. Close both BEFORE the sweep, so the widened guard is still the specification the sweep is written against. (a) PLACEHOLDER-AGNOSTIC COMMAND LINES. A spine-template command line NEVER contains the literal 'checklist_engine.py' -- a placeholder stands in for it -- so the entire 'engine command line inside a JSON spine template' class currently rests on one 8-character literal, '<engine>'. Verified misses: '<cli> claim --session-id <commander-session-id>', 'If the door is down: <engine-cli> advance g1 --why ...', 'Fallback command line: {{engine}} release --session-id <work-id>'. And scripts/init_work_area.py:24 documents '<engine>' beside '<date>', '<N>', '<path>' as generic prose placeholders the resolver never touches, so a future author has no reason to reuse that exact token. Generalize the pattern from the TOKEN to the SHAPE: a placeholder-ish stand-in (angle-bracketed, brace-templated, or a shell variable) immediately followed by an engine verb, optionally followed by a flag. Pin every one of the three verified misses in TestTheInvocationPredicateItself (or a sibling), in the assertion path, so a later narrowing cannot quietly reopen the route. (b) THE TRACKED TEMPLATE OVERLAY. .agent-work/templates/ is a TRACKED overlay of the skills templates, and workbench doctrine tells an agent to PREFER it over the bundled skills/ copy when instantiating -- so after a skills/-only sweep the guard goes green while the copy an agent in THIS repo actually instantiates still hands over the second path. Measured: 7 '<engine>' tokens (COMMANDER_SPINE x3, ADMIRAL_SPINE x2, EXPLORER_SPINE x2) and 2 'CLI fallback' clauses (gated-engine-SKILL, survey-SKILL), each mirrored again under .agent-work/templates/.baseline/. This is exactly what the launch order's own acceptance test demands -- 'instantiate a fresh spine from your edited template and read its init and plan imperatives' -- so it is inside the mission. Extend the walk to it by a SUFFIX/DIRECTORY RULE, never a file list, and confirm no lane-D2 file enters the walk (measured: every .baseline/constellation-workbench/* file is clean). DO NOT SWEEP ANYTHING; g2 sweeps. The guard must remain RED, and its RED must now name overlay sites too.",
+      "preconditions": [
+        {"id": "p1", "statement": "g1-integrate closed: the guard exists, is RED for the right reason, and the review's finding is on record", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)", "check": {"kind": "artifact", "evidence_type": "implementer-result", "match": {"status": "complete"}}, "satisfied": false}
+      ],
+      "constraints": [
+        "Edit ONLY tests/test_cli_retirement_guard.py; sweep no instruction file and do not edit tests/test_mcp_adoption.py",
+        "NO exception list -- widen and exclude by a rule the walk applies, never by naming a file",
+        "The three verified misses become pinned assertions, so the route cannot silently reopen",
+        "Both pre-ruled survivors must STILL be out by the structural rule alone: docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md:59 and scripts/init_work_area.py:24",
+        "Measure the false-alarm cost of the widened pattern over the whole walk and report it; a widening that red-lights honest text is a finding, not a success"
+      ]
+    },
+    {
+      "op": "add",
+      "id": "g1b-review",
+      "after": "g1b-implement",
+      "title": "Widen the guard: placeholder-agnostic command lines, and the tracked template overlay: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from this gate's plan and the returned IMPLEMENTER_RESULT. Dispatch a constellation-reviewer crew, and give it the SAME adversarial charge that produced this gate: attack the widened pattern and try to write a regrowth it still misses. It must also judge the widening's cost -- re-measure the false alarms over the whole walk in its own hands -- because a pattern widened until it red-lights honest text gets deleted by the next author who trips it, which is the failure mode that leaves no check at all. Attach the returned REVIEW_RESULT as review-result with verdict.",
+      "preconditions": [
+        {"id": "p1", "statement": "g1b-implement returned complete", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "REVIEW_RESULT returned with an APPROVE verdict", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [
+        "The reviewer re-runs the verification command itself and reads its exit code; a pasted summary is a pointer to evidence, never the evidence"
+      ]
+    },
+    {
+      "op": "add",
+      "id": "g1b-integrate",
+      "after": "g1b-review",
+      "title": "Widen the guard: placeholder-agnostic command lines, and the tracked template overlay: integrate",
+      "imperative": "Check the verdict. Verify the crew's side-effects against the world yourself: re-run this gate's verification command in your own hands and read its exit code. On APPROVE, advance. On BLOCK, return for rework. Log out-of-scope finds as triage candidates under .agent-work/567-d1/triage-candidates/. Harvest the crew's Workflow Feedback into the run's lesson pool.",
+      "preconditions": [
+        {"id": "p1", "statement": "g1b-review returned a verdict", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "the review verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c2", "statement": "the guard's own predicate/floor tests PASS (so the widening did not break them and the three verified misses are now caught), the corpus assertions still FAIL (nothing was swept), and the RED names a .agent-work/templates/ overlay site (so the walk genuinely reached it)", "check": {"kind": "command", "command": "set -o pipefail; python3 -m pytest tests/test_cli_retirement_guard.py -q -k 'not TestNoSecondPathReachesAnAgent' >/dev/null 2>&1 && ! python3 -m pytest tests/test_cli_retirement_guard.py -q -k TestNoSecondPathReachesAnAgent > /tmp/g1b-guard.log 2>&1 && grep -q '.agent-work/templates/' /tmp/g1b-guard.log"}, "satisfied": false}
+      ],
+      "constraints": []
+    },
+    {
+      "op": "rescope",
+      "id": "g2-implement",
+      "title": "Sweep the corpus and the tracked overlay, and invert the mandate: implement",
+      "imperative": "THREE HALVES OF ONE GATE -- (a) and (b) because doing either alone leaves the suite red, and (c) because it is the only proof in this plan that a wrong pattern would fail. (a) SWEEP: remove all 13 'CLI fallback' clauses and all 10 agent-facing '<engine>' occurrences from skills/** (NOT skills/workbench/**, which lane D2 owns and deletes outright), AND the same text from the tracked .agent-work/templates/ overlay and its .baseline/ mirrors -- 7 '<engine>' plus 2 clauses on each side, measured. The overlay is what an agent in THIS repo actually instantiates, and the launch order's own acceptance test is to instantiate a fresh spine and read its imperatives, so a skills/-only sweep does not close #559. NOTE the occurrence/line trap: COMMANDER_SPINE.template.json tasks.archive.imperative carries TWO '<engine>' tokens on ONE line; edit both. For the 10 bound-spine clauses, replace with wording naming the real agent path -- a dispatched crew is launched with its spine bound (run_crew.py --backend cli --spine); the Agent-tool path binds nothing and is refused (#432) -- rather than deleting a sentence and leaving a reader with no answer. For the 3 second-checklist clauses (skills/interrogator/SKILL.md, skills/write-a-skill/templates/gated-engine-SKILL.template.md, skills/write-a-skill/templates/survey-SKILL.template.md) the door PROVABLY cannot reach the path -- measured: it refuses to rebind while the agent holds its own lease, 'one door drives one spine at a time', and releasing the lease to escape that fails the archive provenance check. Confirmed independently three times: lanes F and H each drove their execute.json under a hand-supplied CLI session id, and lane E's implementer drove its IMPLEMENTER_PLAN.json the same way. Reword those three to state that measured truth so no 'fallback' framing survives and no agent is stranded -- 'CLI fallback' is the wrong word because a fallback implies a working primary, and there is no primary here. (b) INVERT THE MANDATE: tests/test_mcp_adoption.py currently REQUIRES the text, across a measured NINE assertions at lines 737, 784, 834, 950, 954, 1132, 1149, 1324 and 1345 -- that is why #559's text regrew twice, and it is the mechanism, not the symptom. Turn each CLI-presence assertion into an absence assertion, generalizing the precedent ALREADY IN TREE at line 838 (TestTier2SpineAlreadyBoundForDispatchedCrews, which asserts absence for 2 files and pins the same human ruling verbatim). Where the target is a lane-D2 file (rows 950, 954, 1324, and the skills/workbench/SKILL.md entry in TIER2_SKILL_FILES) DELETE the mandate rather than inverting it: those files still carry the text, lane D2 has not merged, and an inverted assertion would go red on a file this lane is fenced from -- coverage is not lost, because the guard already asserts absence over the whole corpus. Keep every door-tool-named-affirmatively half exactly as strict. Then regenerate tests/data/store_mentions.approved.txt. (c) THE SPECIFICITY PROOF: reintroduce a genuine fallback clause AT ONE OF THE 3 REWORDED SITES and show the guard goes RED naming that site; revert, and show the reworded text itself stays GREEN. The reworded text and a reintroduction live in the same file saying nearly the same thing, so only a correct pattern passes both. Paste both runs verbatim and confirm a clean tree after the revert.",
+      "constraints": [
+        "Edit shipped compact-format JSON templates as RAW TEXT; never round-trip through json.load/json.dump; re-validate with json.load after",
+        "Do NOT touch skills/workbench/**, scripts/mcp_spine_server.py, episodes/**, scripts/run_crew.py, scripts/checklist_engine.py, map/INDEX.md, docs/agents/CREW_CONTEXT.md",
+        "Do NOT edit tests/test_cli_retirement_guard.py -- if the guard fires on text you believe is legitimate, that is a finding to report, never a pattern to widen",
+        "Do NOT edit docs/superpowers/** or episodes/** to make a count come out right",
+        "scripts/init_work_area.py:24 and docs/superpowers/plans/2026-06-27-delegated-autonomous-commander.md:59 MUST survive",
+        "Keep test_mcp_adoption.py's own two rules intact: the corpus is WALKED not listed; no assertion may be satisfied by the negation of what it pins",
+        "The .agent-work/templates/ overlay and its .baseline/ mirrors must end IDENTICAL in doctrine to their skills/ sources -- a swept source beside an unswept overlay is the drift this gate exists to remove"
+      ]
+    },
+    {
+      "op": "rescope",
+      "id": "g2-integrate",
+      "postconditions": [
+        {"id": "c1", "statement": "the review verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c2", "statement": "no CLI fallback clause and no <engine> token survives in this lane's skills/ files OR in the tracked template overlay, and the inverted adoption suite is green -- checked on EXIT CODE, no pipe swallows it", "check": {"kind": "command", "command": "set -o pipefail; test -z \"$(grep -rn -i 'CLI fallback' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn '<engine>' skills/ --exclude-dir=workbench || true)\" && test -z \"$(grep -rn -i 'CLI fallback' .agent-work/templates/ || true)\" && test -z \"$(grep -rn '<engine>' .agent-work/templates/ || true)\" && python3 -m pytest tests/test_mcp_adoption.py -q >/dev/null 2>&1"}, "satisfied": false}
+      ]
+    },
+    {
+      "op": "rescope",
+      "id": "g3-integrate",
+      "postconditions": [
+        {"id": "c1", "statement": "the review verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c2", "statement": "both specs name the door AND name the second-checklist truth, and the guard reports NO violation anywhere outside lane D2's fenced skills/workbench/ files -- the whole-corpus green is g5-final's, after the rebase", "check": {"kind": "command", "command": "set -o pipefail; grep -qi 'door' specs/implementer.spine.toml && grep -qi 'door' specs/reviewer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/implementer.spine.toml && grep -qi 'second checklist\\|own lease\\|one door drives one spine' specs/reviewer.spine.toml && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g3-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g3-guard.log | grep -qv '^skills/workbench/'"}, "satisfied": false}
+      ]
+    },
+    {
+      "op": "rescope",
+      "id": "g4-integrate",
+      "postconditions": [
+        {"id": "c1", "statement": "the review verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
+        {"id": "c2", "statement": "both dispositions exist and are non-empty, and the guard reports NO violation anywhere outside lane D2's fenced skills/workbench/ files", "check": {"kind": "command", "command": "set -o pipefail; test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | grep -qv '^skills/workbench/'"}, "satisfied": false}
+      ]
+    }
+  ]
+}

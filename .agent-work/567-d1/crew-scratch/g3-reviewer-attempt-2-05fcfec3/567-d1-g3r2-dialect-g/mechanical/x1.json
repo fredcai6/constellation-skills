@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "x1",
+  "mechanical": {
+    "run": "567-d1-g3r2-dialect-g",
+    "project": "constellation-skills",
+    "role": "r",
+    "refusals": 0,
+    "spine-step": "x1",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-d1-g3r2-dialect-g-x1@798350cd7d85832a31bf54258b1addc149b1a6a8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d1-g3r2-dialect-g",
+    "generated_at": "2026-08-17T21:33:26Z"
+  }
+}

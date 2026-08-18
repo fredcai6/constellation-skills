@@ -1,0 +1,286 @@
+{
+  "work_id": "567-d1",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d1",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-d1-feedback@befb8b5a9b5b70a9ce9120f3d5e6efa3483bbe87",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "tests/test_mcp_adoption.py",
+          "tests/test_cli_retirement_guard.py",
+          ".agent-work/567-d1/notes-1.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The lane was sent to delete every CLI-fallback clause and agent-facing <engine> token from the instruction corpus, text that issue #559 records as having been deleted twice and having grown back twice."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A deletion against a green suite, with the difficulty lying in the replacement wording rather than in the removal."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "tests/test_mcp_adoption.py REQUIRED the text, across nine assertions, one of which failed with the message 'the CLI door must stay, never be removed or discouraged'. That is why the text returned twice: a lane deleted the clauses, the suite went red on a test whose own message said the CLI must stay, and the lane restored the text believing it had broken a rule. The regrowth had a mechanism and the mechanism was a test."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The gate plan was restructured before any sweeping: the sweep and the mandate inversion became two halves of one gate, because doing either alone leaves the suite red, and the guard was authored FIRST against the still-dirty tree so its failure census came from the real corpus rather than from a scratch string its own author had chosen."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The nine mandating assertions were inverted to absence assertions, or deleted where the target was a fenced lane's file, generalizing an in-tree precedent at tests/test_mcp_adoption.py:838 that already asserted absence for two files."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d1",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-d1-feedback@befb8b5a9b5b70a9ce9120f3d5e6efa3483bbe87",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-d1/execute.json",
+          "scripts/checklist_engine.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Five command postconditions in this run's execute.json were authored to check exit codes rather than swallow them in a pipeline, after a cold plan critic found one that could not fail."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The critic's suggested repair -- dropping the pipe, or prefixing 'set -o pipefail' -- was expected to make the checks sound."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Every one of the five could not PASS. The engine runs a command check through _find_posix_shell(), which on POSIX returns shutil.which('sh'); /bin/sh on this host is dash, which rejects the option outright with '/bin/sh: 1: set: Illegal option -o pipefail' and exit 2, before the check's own logic runs. The repair for a check that cannot fail had produced five checks that cannot pass, and neither the plan author, the critic, nor the Commander who later rescoped three of the same checks noticed it. A crew that tried to run one found it."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One gate advance was refused on a shell-dialect error rather than on its subject, and five postconditions had to be corrected mid-run through the engine's retext-check verb."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "All five were rewritten in POSIX form and re-verified under dash in both directions. A separate defect of the same shape was found later in two of the same checks, which matched the guard's own census line as if it were a violation."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d1",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-d1-feedback@befb8b5a9b5b70a9ce9120f3d5e6efa3483bbe87",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/567-d1/triage-candidates/dispatched-crew-spine-is-not-bound.md",
+          "scripts/run_crew.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "A reviewer crew was dispatched through run_crew.py with a handoff and no --spine, and it drove its own review survey through the engine before ending its turn."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A dispatched crew was expected to finish its survey, write its result artifact, and exit."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The crew completed its work and was then refused permission to end its turn by the Stop hook, which resolves a spine from disk when SPINE_FILE is unset. What it found was the DISPATCHER's spine -- the Commander's -- whose active lease was held and whose in-progress step was the crew's own dispatch. Complying would have meant passing the Commander's session id on mutating verbs, closing the gate that was its own dispatch, and dispatching the reviewer of its own review. The crew refused, calling it impersonation rather than delegation. The hook's sanctioned escapes, block and waive, both write to the parent's spine, so the prescribed honest stop was itself the destructive act."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The crew's run exited without its result artifact at the dispatcher's expected path, and the dispatcher had to locate the result and reconcile the registry by hand. Six independent reproductions of the underlying mismatch were recorded across three gates and both crew roles in this run."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The dispatcher launched every crew with SPINE_FILE, SPINE_SESSION and CREW_SCRATCH_DIR stripped from the launching environment, which stops a no---spine crew inheriting the dispatcher's own spine binding, and staged the hazard as a triage candidate rather than patching hook code owned by another lane."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d1",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-d1-feedback@befb8b5a9b5b70a9ce9120f3d5e6efa3483bbe87",
+        "refusals": 0,
+        "reopens": 1,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "tests/test_cli_retirement_guard.py",
+          ".agent-work/567-d1/crew-handoffs/g1b-reviewer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "A regrowth guard was widened so that an engine command line written behind any placeholder, not only the literal <engine> token, would be caught."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A pattern matching a placeholder-shaped stand-in followed by an engine verb was expected to cover the class, since the verb list was taken from the file's existing enumeration."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The reviewer proved against the engine's own argparse output that the enumeration held 17 verbs where checklist_engine.py defines 18: 'resume' was absent, so a command line using it passed all four patterns clean. The hand-maintained list had drifted from its oracle on the very first day it existed, and the repo's own written standard says a guard is defined by its consumer's behaviour rather than by a hand-maintained list, because the gap is silent."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One gate was reopened for rework, costing one implementer and one reviewer dispatch."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The verb set was rebuilt from tests/test_mcp_adoption._engine_verbs(), which reads the engine's argparse choices, and the tie was pinned by recovering the set from the compiled alternation itself, so the assertion still holds if a later author replaces the derivation with a literal that agrees today. The measured cost of the added verb was zero new addresses over 3098 texts."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d1",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-d1-feedback@befb8b5a9b5b70a9ce9120f3d5e6efa3483bbe87",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/templates/COMMANDER_SPINE.template.json",
+          "tests/test_cli_retirement_guard.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The sweep targeted every agent-facing instruction file under skills/, per a file census taken from the issue and re-measured at the lane's base commit."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The skills/ tree was expected to be the whole agent-facing surface, so a clean grep over it would mean the sweep was complete."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "A tracked overlay at .agent-work/templates/ carried the same doctrine, byte-identical to its skills/ sources and mirrored again under .baseline/, and workbench doctrine tells an agent to PREFER that overlay over the bundled copy when instantiating. It held 16 <engine> occurrences and 18 clause matches across 10 files, and no walk in the repository read it. A skills/-only sweep would have reported success while the copy an agent actually instantiates still handed over the second path."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The gate plan was amended mid-run to add a gate widening the guard's walk and to rescope the sweep, and the file census grew from 5 visible files to 10 once the .baseline/ mirrors were counted."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The guard's walk was extended by a directory rule rooted AT the overlay, so a live run's own artifacts were never reachable rather than reached-and-filtered, keeping the exception list at length zero. The dispatching Admiral granted ownership of the overlay independently and mid-run, having reached the same conclusion."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d1",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-d1-feedback@befb8b5a9b5b70a9ce9120f3d5e6efa3483bbe87",
+        "refusals": 0,
+        "reopens": 1,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "specs/implementer.spine.toml",
+          "specs/reviewer.spine.toml",
+          ".agent-work/567-d1/crew-handoffs/g3-reviewer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Two typed role specs were given door vocabulary stating both what the door reaches and what it does not, with the reason stated so a later author could not quietly reverse the rule."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The reason given -- that releasing a lease to reach a second checklist fails the archive gate's requirement that the lease cover every journaled action -- was expected to be verifiable in the spine templates."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The phrase 'archive gate' appeared nowhere in skills/. The Commander archive gate's only lease postcondition was 'engine session lease released' with a null check, silent on journal coverage; scripts/spine_lifecycle.py refuses in the opposite direction, requiring the lease to be released; the journal-coverage rule was real but lived in the role skills' own prose as the 'terminal provenance check', enforced only by an eval-run checker nothing in the live path calls; and neither crew plan template had a closeout gate at all, so the role being told its closeout would fail had no closeout."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One gate was reopened for rework, costing one implementer and one reviewer dispatch. A related imprecision had already propagated into two of this run's own crew handoffs before it was caught."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The clause was replaced with the inherited name for the real check and, more usefully, scoped to its reader: a role dispatched without a spine of its own holds no lease, so nothing is there to release and the escape never arises. The dispatcher corrected its own notes and replanning packet rather than leaving the earlier version standing."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-d1",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-d1-feedback@befb8b5a9b5b70a9ce9120f3d5e6efa3483bbe87",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-d1/triage-candidates/whole-suite-evidence-is-unsafe-during-engine-drive.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "A reviewer crew ran the whole test suite as evidence while driving its own review survey through the engine, to check an implementer's reported failure tally."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The suite was expected to measure the tree, returning the same six failures the implementer had reported."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The suite returned seven failures. The seventh was tests/test_gauge_chain_writer_to_trip.py, which snapshots the size and modification time of every file under the repository's .agent-work/ directory and asserts nothing moved during the test; the reviewer's own engine records had mutated that directory inside the test's containment window. Re-running with no engine activity returned exactly six, matching the implementer."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One extra suite run of roughly 140 seconds. The reviewer recorded that it had nearly reported its own side effect as a discrepancy in someone else's work, which would have blocked a gate wrongly."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The reviewer traced the seventh failure to its own assertion rather than to the implementer's claim, and every later crew handoff in the run carried a note that the whole-suite evidence command is unsafe to run concurrently with engine drive."
+        }
+      }
+    }
+  ]
+}

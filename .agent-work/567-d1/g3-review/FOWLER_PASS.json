@@ -1,0 +1,89 @@
+{
+  "work_id": "567-d1",
+  "diff_ref": "gate g3-implement, working-tree diff vs HEAD over specs/ only: specs/implementer.spine.toml (+39) and specs/reviewer.spine.toml (+42), 81 insertions, 0 deletions. Door vocabulary appended to the m0-context/r0-context imperatives, new `constraints` arrays, and a header comment recording the schema decision. The artifact under test is authored doctrine prose inside TOML, not executable code, so each smell is read against its prose analogue: an `imperative` is the unit handed to a role, a spec file is the role's whole plan, and a `constraints` entry is a named rule.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/ORCHESTRATOR_CONTEXT.md, docs/CHECKLIST_SCHEMA.md, skills/workbench/references/checklist-engine.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "The context-load imperative now does two jobs. `r0-context` was 5 lines titled \"Load baseline context\" and said: read your doctrine, the handoff, the diff, record pass. It is now ~35 lines, and the added ~30 are a self-contained treatise on the door that has nothing to do with loading context. Same shape in `m0-context`. The title no longer describes the item, which is the classic tell. This is an OBSERVATION, not a blocker: the door genuinely is baseline context, and `_compile_gate` carries only five fields an agent reads, so there is no cheap place to split it to. But if either spec grows a third concern, the honest move is a dedicated gate whose title names the doctrine, not a fourth paragraph appended to the item that is supposed to be about reading files.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "Neither spec is oversized. implementer.spine.toml is 7109 chars over 2 gates; reviewer.spine.toml is 7687 chars over 7 items. Both remain one role's one plan.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The second added paragraph (\"WHAT YOU MAY NOT DO IS DRIVE A SECOND CHECKLIST FROM THIS PROCESS...\") is near-verbatim in both files -- ~11 lines differing only in plan/survey and the closing sentence -- and constraint 1 is byte-identical in both. The IMPLEMENTER_RESULT s.1b argues the reviewer text \"is not a copy\", and that is true of the FIRST paragraph, which correctly diverges into the survey dialect. It is not true of the second. I am flagging rather than overriding because the smell is biting right now, not theoretically: the r3-evidence BLOCK finding (the misattributed \"archive gate\" clause) sits inside this duplicated paragraph, so its fix is a two-site edit that must land identically in both files or the corpus ends up stating two versions of the same rule. Deduplication is NOT the remedy -- TOML specs have no include, comments are dropped at compile time, and a new key would reach no reader (verified at r4) -- so each spec must stay self-contained. The actionable output is the awareness: this paragraph is a linked pair, and whoever repairs it must edit both.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "flagged",
+      "finding": "Both crew specs justify their own rule by reaching into a DIFFERENT plan's structure, owned by a different tier: \"the archive gate requires the lease to cover every journaled action, so releasing it ... fails your own closeout\". The archive gate is a gate on the Commander spine (COMMANDER_SPINE.template.json), not on either crew plan -- and neither crew plan has any closeout gate at all (m0-context/m1; r0-context..r6-fowler). This is the r3-evidence BLOCK finding seen through the refactoring lens, and the lens explains why the mistake was easy to make: a module that explains itself in terms of another module's internals will drift when that other module changes, and here it was already wrong on the day it was written. The correctly-scoped version is available and already inherited -- skills/reviewer/SKILL.md:17 and skills/implementer/SKILL.md:17 name the \"terminal provenance check\", which is a property of the role's own run rather than of somebody else's gate.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "SPINE_FILE and SPINE_SESSION always travel together in the new prose, but that is faithful to the mechanism -- mcp_spine_server binds both from the environment at server start, as one act. A clump that mirrors a real invariant is not a clump.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "No types, values or signatures are introduced. The diff adds prose to two existing string fields and one existing-shaped array field.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "overridden",
+      "finding": "specs/implementer.spine.toml enumerates eight door tools in a single sentence (spine_status / spine_start / spine_advance / spine_evidence / spine_lease / spine_capture / spine_halt / spine_amend), each with its gloss. As a list handed to a reader in one breath this is long.",
+      "override": {
+        "repo_standard": "references/global-everyone.md and references/global-crew.md both carry the standing header \"Agent-facing. Dense by design.\", and skills/workbench/references/checklist-engine.md s.Verb loop presents the engine's verbs as exactly this kind of single enumerated inventory.",
+        "reason": "The reader is an agent that needs the whole tool surface before its first call, not a human scanning for one entry. Splitting the inventory across sentences or gates would make it likelier that a role acts having read only part of it -- which is the failure this vocabulary exists to prevent. Density is the documented posture for this audience, so it subordinates the smell."
+      }
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "overridden",
+      "finding": "The one-spine-per-process rule is now stated in skills/implementer/SKILL.md, skills/reviewer/SKILL.md, skills/workbench/references/checklist-engine.md, the shared global-*.md doctrine, the .agent-work/templates/ overlay, and -- as of this diff -- specs/*.spine.toml. Changing the rule is an N-site edit across the corpus.",
+      "override": {
+        "repo_standard": "Epic #567's own thesis and its managed response: gate g1 of this lane extended tests/test_cli_retirement_guard.py to walk specs/**/*.toml precisely because doctrine restated on a new surface needs a mechanical sweep, and docs/agents/CREW_CONTEXT.md ships the governing rule for it -- \"Any guard that loops must assert what it looped over\", which the guard's census and its five TestTheWalkIsNotVacuous floors implement.",
+        "reason": "The spread is pre-existing and deliberate: each role reads only its own compiled spine, so doctrine that is not restated per surface does not reach the role at all -- verified at r4, where the header comment measurably does NOT survive compilation while the imperative prose does. The repo's answer to the resulting edit cost is a guard that walks every surface, not consolidation into one file, and this diff lands inside that guard's walk (confirmed non-vacuously at r4). Flagging it would be flagging the architecture the epic deliberately chose."
+      }
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "specs/reviewer.spine.toml now changes for at least four unrelated reasons: survey mechanics, the Fowler-pass policy in r6, door vocabulary, and the config_ref convention question.",
+      "override": {
+        "repo_standard": "skills/workbench/references/checklist-engine.md s.\"One agent, one plan\": a checklist is one plan one agent works through, and delegation is by reference rather than by splitting a role's plan across files.",
+        "reason": "The file's defining axis is the ROLE, not any one concern, so everything that role must know legitimately converges here -- that convergence is the documented design, and splitting along concern lines would hand a reviewer several files where the standard says it drives exactly one."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The new prose quotes the refusal text inline (\"one door drives one spine at a time ... release it first\") rather than sending the reader off to find it, so the reader needs no hop to act. The one genuine chain in this change is on the verification side, not the reading side -- confirming the archive-gate clause required hopping SKILL.md -> COMMANDER_SPINE.template.json -> spine_lifecycle.py -> evals/*/checks/spine_completed.py -- and that is recorded as the r3 finding rather than double-counted here.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "The change actively avoided this smell, which is worth recording rather than passing over. The open schema question was whether to add spec keys for door doctrine; the implementer declined, on the measured ground that _compile_gate builds from a fixed field list so a new key reaches no consumer. I re-derived that at r4 and it holds. Adding the key anyway -- against a future generate_spine.py that might read it -- is exactly the speculative generality that was not committed.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "The diff adds a 10-line header comment to each spec, which is the shape this smell takes, so it was worth testing rather than waving through. It is not deodorant. The comment does not paper over unclear adjacent text; it records an EXTERNAL, invisible compiler property -- that _compile_gate copies a fixed field list, so an authored key is dropped silently and spec_shape_faults has no unknown-key fault to catch it. Nothing in the file could make that visible, and the alternative (editing generate_spine.py) was a stop condition on the gate. Its audience is right too: I verified the comment is measurably absent from the compiled spine, so it addresses the next spec AUTHOR and never competes with the doctrine an agent is handed.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

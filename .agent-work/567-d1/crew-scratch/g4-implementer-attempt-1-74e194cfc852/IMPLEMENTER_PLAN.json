@@ -1,0 +1,259 @@
+{
+  "work_id": "567-d1-g4-implementer-attempt-1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-596",
+    "m2-526",
+    "m3-verify-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (implementer references/global-crew.md and references/global-everyone.md), then the project deltas: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g4 handoff, and the governing authority docs/agents/ORCHESTRATOR_CONTEXT.md section 'The Retired Learning Playbook'. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + governing doctrine loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g4 handoff, and ORCHESTRATOR_CONTEXT.md section 'The Retired Learning Playbook'. Handoff carries task, intent, allowed scope, fences, required evidence, test mode, stop conditions and return format: complete."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-596": {
+      "id": "m1-596",
+      "title": "Dispose #596 \u2014 reconcile the CONSTELLATION_FEEDBACK.md mandate with the episode ledger",
+      "imperative": "Measure first: grep every live CONSTELLATION_FEEDBACK mandate in skills/ docs/ scripts/, and read the feedback gate's ACTUAL postconditions in skills/commander/templates/COMMANDER_SPINE.template.json to confirm or refute the issue's sharpest claim (that the commander-delegated 'a FENCE.md citation without the staged export still fails the gate' clause is false as written). Then reconcile every live mandate in files this lane owns, answering the two questions the handoff names: what happens to the fence case, and whether the archive gate's c4 deny-glob stays consistent. Decide deliberately whether scripts/collect_feedback.py and scripts/agent_work_root.py are in scope and say why. Doctrine/doc change, no runtime behaviour: collapse to the single evidence postcondition c1. Write .agent-work/567-d1/dispositions/596.md quoting the grep output that establishes the disposition, including a negative.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete there."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dispositions/596.md exists and is non-empty; every skills/ edit keeps the CLI retirement guard reporting no violation outside skills/workbench/",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/596.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard-m1.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard-m1.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-596-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: skills/** except skills/workbench/**; scripts/collect_feedback.py and scripts/agent_work_root.py only with a stated reason; .agent-work/567-d1/dispositions/** and triage-candidates/**.",
+        "Fenced: docs/agents/**, skills/workbench/**, scripts/mcp_spine_server.py, episodes/**, scripts/run_crew.py, scripts/checklist_engine.py, map/INDEX.md, tests/test_cli_retirement_guard.py.",
+        "File NO issues; stage candidates under .agent-work/567-d1/triage-candidates/.",
+        "A skills/ template mirrored in .agent-work/templates/ and its .baseline/ copy must be updated in all three.",
+        "Edit shipped compact-format JSON templates as raw text; never round-trip through json.load/json.dump. Re-validate with json.load after.",
+        "An evidenced 'no longer reproduces' is a complete disposition; do not manufacture a fix."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-596-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/596.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard-m1.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard-m1.log | sed 's/^E *//' | grep -qv '^skills/workbench/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-526": {
+      "id": "m2-526",
+      "title": "Dispose #526 \u2014 build-script close criteria (defect 1) and the survey-reuse convention (defect 2)",
+      "imperative": "Treat the two defects separately and evidence each independently. Defect 1: confirm or refute the Commander's preliminary measurement that no close-criteria phrasing names a nonexistent code_map build script; widen the search to any close-criteria phrasing that assumes a layout rather than resolving the entry point from the repo. An evidenced negative is a complete disposition. Defect 2: confirm that skills/reviewer/SKILL.md documents --override-reason but not survey reuse across review rounds, and if it still reproduces write the convention the evidence supports, saying which shape this run actually used (a new round file) and why. Doctrine/doc change, no runtime behaviour: collapse to the single evidence postcondition c1. Write .agent-work/567-d1/dispositions/526.md quoting the grep output that establishes each verdict, including the negative one.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "#596 disposed and the guard still green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-596 complete; test_retirement_guard.py 16 passed and the CLI guard reports only skills/workbench/ paths."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dispositions/526.md exists and is non-empty; every skills/ edit keeps the CLI retirement guard reporting no violation outside skills/workbench/",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard-m2.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard-m2.log | sed 's/^E *//' | grep -qv '^skills/workbench/'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-526-1"
+        }
+      ],
+      "constraints": [
+        "Same allowed scope, fences, and constraints as m1-596.",
+        "skills/reviewer/SKILL.md is this lane's file.",
+        "Do not run the whole test suite: tests/test_gauge_chain_writer_to_trip.py:604 snapshots .agent-work/ and this run's own engine records would fail it."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-526-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard-m2.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard-m2.log | sed 's/^E *//' | grep -qv '^skills/workbench/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-verify-result": {
+      "id": "m3-verify-result",
+      "title": "Verify the gate's own closing check and deliver IMPLEMENTER_RESULT",
+      "imperative": "Run the gate's closing check exactly as the Commander will re-run it, confirm tests/test_mcp_adoption.py is still green, confirm every edited .json still parses, and write the full IMPLEMENTER_RESULT to .agent-work/567-d1/crew-handoffs/g4-implementer-result.md with a Return status field and a Workflow Feedback section. The result write is the delivery.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both dispositions written and both issues disposed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "596.md and 526.md both written; #596 repaired in 3 files + census, #526 defect 1 negative + widened fix, defect 2 convention written."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the gate closing check passes, test_mcp_adoption.py is green, every edited .json parses, and g4-implementer-result.md exists non-empty with Return status: complete",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/' && py -m pytest tests/test_mcp_adoption.py tests/test_retirement_guard.py -q > /tmp/g4-mcp.log 2>&1 && test -s .agent-work/567-d1/crew-handoffs/g4-implementer-result.md && grep -q '^`complete`$' .agent-work/567-d1/crew-handoffs/g4-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-result-1"
+        }
+      ],
+      "constraints": [
+        "Release the engine lease only after this final advance."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-d1-doctrine-sweep-guard && test -s .agent-work/567-d1/dispositions/596.md && test -s .agent-work/567-d1/dispositions/526.md && { python3 -m pytest tests/test_cli_retirement_guard.py -q > /tmp/g4-guard.log 2>&1 || true; } && ! grep -oE '^E +(skills|specs|[.]agent-work)/[A-Za-z0-9_./-]+' /tmp/g4-guard.log | sed 's/^E *//' | grep -qv '^skills/workbench/' && py -m pytest tests/test_mcp_adoption.py tests/test_retirement_guard.py -q > /tmp/g4-mcp.log 2>&1 && test -s .agent-work/567-d1/crew-handoffs/g4-implementer-result.md && grep -q '^`complete`$' .agent-work/567-d1/crew-handoffs/g4-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m1-596",
+      "statement": "skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md:4 still says the export is 'Appended by the feedback/closeout steps'; measured at g4, no step appends it. Fenced to lane D2 \u2014 staged at .agent-work/567-d1/triage-candidates/feedback-export-template-claims-a-writer-that-is-gone.md"
+    },
+    {
+      "id": "tc2",
+      "from": "m2-526",
+      "statement": "Skill PROSE names bundled scripts by a repo-relative 'scripts/<name>.py' path at 91 sites across 27 files, which is only correct where the target repo vendors scripts/ at its root; global-everyone.md says the opposite. Corpus-wide ruling, not a g4 edit \u2014 staged at .agent-work/567-d1/triage-candidates/prose-names-vendored-script-paths-corpus-wide.md"
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/567-d1/g4/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-17T21:43:27.357444+00:00",
+    "last_heartbeat": "2026-08-17T21:59:35.337821+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-17T21:59:41.796434+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Both issues are doctrine-wording judgement in this lane's files. #596's crux is measurable: the feedback gate's ONLY postcondition is verify_episode_captured, so the delegated clause asserting a gate failure is false. Blast radius found early: three of the four #596 sites are keyed line-for-line in tests/data/store_mentions.approved.txt, so any edit there must move the census in lockstep or test_retirement_guard.py goes red \u2014 the handoff named only the CLI guard.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:47:06.997180+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-596",
+      "why": "Issue confirmed in a sharper form: CONSTELLATION_FEEDBACK.md was never retired (RETIRED_NAMES holds only LESSONS.md/AGENT_FEEDBACK.md), so the defect is three live sites mandating collection of an export that ZERO gates write \u2014 feedback's single postcondition is verify_episode_captured.py and archive c4 deny-globs the file. The delegated 'still fails the gate' clause is false as written and is repaired; the fourth site the issue names (the feedback imperative's crew Workflow Feedback sentence) is refuted, not a mandate. Rescoped rather than deleted because collect_feedback.py serves a live cross-project channel the per-repo episode store cannot replace.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:52:20.247712+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-526",
+      "why": "Split verdicts, both evidenced. Defect 1 does not reproduce and never did in the corpus: zero 'code_map' hits under skills/ and git log -S over all history shows the phrasing only ever lived in issue #456's own .agent-work run records, so the 'stock close criteria' attribution is wrong. Widening it by SHAPE rather than by script name found the real instance: 16 of 17 shipped command checks use a resolver token and REVIEW_SURVEY r6-fowler.c1 was the one bare path \u2014 fixed in all three copies and proven to resolve in both layouts. Defect 2 reproduces; the convention is written from this lane's own two-round g1b review, and the evidence argues against the issue's own guessed remedy (re-consolidate with --override-reason), so that half is written down as what NOT to do.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:57:56.855881+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify-result",
+      "why": "Gate closing check passes in the anchored form the Commander re-runs; the only CLI-guard violations left are lane D2's two fenced skills/workbench/ files. test_mcp_adoption 172 passed, test_retirement_guard 16 passed, and the five suites reading the edited template 313 passed. All three REVIEW_SURVEY copies parse and share one md5. Result written with Return status complete, the census scope call flagged for the Commander to overturn, and two triage candidates staged rather than filed.",
+      "mechanical": false,
+      "ts": "2026-08-17T21:59:35.337800+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-17T21:50:13.026714+00:00",
+      "reason": "The handoff's unanchored guard-log grep matches the pytest summary sentence 'scanned ... 113 under .agent-work/templates/' and so can never pass; the Commander's own g4-integrate check (amend-census.json) anchors on '^E +'. Adopt the anchored form the gate is actually scored on, and add test_retirement_guard.py to m3 because the store-mention census is coupled line-for-line to the skills/ text this gate edits.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m1-596.c1",
+        "retext-check m2-526.c1",
+        "retext-check m3-verify-result.c1"
+      ]
+    }
+  ]
+}

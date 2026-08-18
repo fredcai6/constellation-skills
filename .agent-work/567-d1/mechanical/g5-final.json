@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g5-final",
+  "mechanical": {
+    "run": "567-d1",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "g5-final",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 2,
+    "context-manifest-ref": "ctx-567-d1-g5-final@2ee6459d7d5fbf35957e5de9643fd111fc00630b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-d1",
+    "generated_at": "2026-08-17T22:15:01Z"
+  }
+}
