@@ -1683,6 +1683,132 @@ class AmendRetextCheck(unittest.TestCase):
         self.assertFalse(cond["satisfied"])
 
 
+class AmendBookendGuard(unittest.TestCase):
+    """#634: a declared-bookend gate (task.get('bookend')) is frozen against
+    every amend op that would drop it, rescope it, retext its check, or land a
+    new gate after it — while an undeclared plan (no 'bookend' key anywhere)
+    behaves exactly as at 9b38b9d9. See probe-closing-bookend.md for the
+    measured gap this closes."""
+
+    def test_amend_add_refuses_after_last_bookend(self):
+        # g3 is the declared closing bookend. Appending past it (no 'after',
+        # or 'after' the bookend itself) must be refused either way.
+        g3 = gate("g3", "pending")
+        g3["bookend"] = True
+        cl = gated(g1=gate("g1", "pending"), g2=gate("g2", "pending"), g3=g3)
+        with self.assertRaises(E.EngineError) as ctx:
+            E.amend(cl, {"ops": [_add_op("g4")]}, "r", "human")
+        self.assertIn("bookend", str(ctx.exception))
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("g4", after="g3")]}, "r", "human")
+
+    def test_amend_add_into_middle_still_succeeds(self):
+        g3 = gate("g3", "pending")
+        g3["bookend"] = True
+        cl = gated(g1=gate("g1", "pending"), g2=gate("g2", "pending"), g3=g3)
+        E.amend(cl, {"ops": [_add_op("g1a", after="g1")]}, "r", "human")
+        self.assertEqual(cl["items"], ["g1", "g1a", "g2", "g3"])
+
+    def test_amend_drop_refuses_bookend_gate_pending(self):
+        # the exact hole probe-closing-bookend.md measured: a PENDING closing
+        # gate is otherwise perfectly droppable.
+        archive = gate("archive", "pending")
+        archive["bookend"] = True
+        cl = gated(g1=gate("g1", "pending"), archive=archive)
+        with self.assertRaises(E.EngineError) as ctx:
+            E.amend(cl, {"ops": [{"op": "drop", "id": "archive"}]}, "r", "human")
+        self.assertIn("bookend", str(ctx.exception))
+        self.assertIn("archive", cl["tasks"])
+
+    def test_amend_drop_pending_gate_no_bookend_key_still_succeeds(self):
+        # backward compatibility: no 'bookend' key anywhere -> 9b38b9d9 behavior.
+        cl = gated(g1=gate("g1", "complete", command=PASS_COMMAND),
+                   archive=gate("archive", "pending"))
+        E.amend(cl, {"ops": [{"op": "drop", "id": "archive"}]}, "cut it", "human")
+        self.assertEqual(cl["items"], ["g1"])
+        self.assertNotIn("archive", cl["tasks"])
+
+    def test_amend_reproduces_measured_gap_refused_when_declared(self):
+        # probe-closing-bookend.md's fixture: init/context/understand/plan
+        # complete, execute in-progress, reconcile/triage/review/feedback/archive
+        # pending. The probe's delta dropped archive, feedback, review with
+        # exit 0. Declared, it must now be refused (and unmutated).
+        tasks = {
+            "init": gate("init", "complete", command=PASS_COMMAND),
+            "context": gate("context", "complete", command=PASS_COMMAND),
+            "understand": gate("understand", "complete", command=PASS_COMMAND),
+            "plan": gate("plan", "complete", command=PASS_COMMAND),
+            "execute": gate("execute", "in-progress", command=PASS_COMMAND),
+            "reconcile": gate("reconcile", "pending"),
+            "triage": gate("triage", "pending"),
+            "review": gate("review", "pending"),
+            "feedback": gate("feedback", "pending"),
+            "archive": gate("archive", "pending"),
+        }
+        tasks["archive"]["bookend"] = True
+        cl = gated(**tasks)
+        before = copy.deepcopy(cl)
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [{"op": "drop", "id": "archive"},
+                                  {"op": "drop", "id": "feedback"},
+                                  {"op": "drop", "id": "review"}]},
+                    "probe: is the CLOSING bookend frozen?", "probe")
+        self.assertEqual(cl["items"], before["items"])
+        self.assertEqual(cl["tasks"], before["tasks"])
+
+    def test_amend_rescope_refuses_bookend_gate(self):
+        g1 = gate("g1", "pending")
+        g1["bookend"] = True
+        cl = gated(g1=g1)
+        with self.assertRaises(E.EngineError) as ctx:
+            E.amend(cl, {"ops": [{"op": "rescope", "id": "g1", "title": "x"}]}, "r", "human")
+        self.assertIn("bookend", str(ctx.exception))
+        self.assertEqual(cl["tasks"]["g1"]["title"], "g1")
+
+    def test_amend_rescope_sets_bookend_flag_via_overwritable(self):
+        # retrofit path: a live spine can be frozen through the engine.
+        cl = gated(g1=gate("g1", "pending"))
+        self.assertNotIn("bookend", cl["tasks"]["g1"])
+        E.amend(cl, {"ops": [{"op": "rescope", "id": "g1", "bookend": True}]},
+                "retrofit", "human")
+        self.assertTrue(cl["tasks"]["g1"]["bookend"])
+
+    def test_amend_rescope_bookend_flag_is_one_way_latch(self):
+        cl = gated(g1=gate("g1", "pending"))
+        E.amend(cl, {"ops": [{"op": "rescope", "id": "g1", "bookend": True}]},
+                "retrofit", "human")
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [{"op": "rescope", "id": "g1", "bookend": False}]},
+                    "try to unset", "human")
+        self.assertTrue(cl["tasks"]["g1"]["bookend"])
+
+    def test_amend_retext_check_refuses_bookend_gate(self):
+        # a freeze that only stops deletion is not a freeze: retext-check could
+        # otherwise rewrite a frozen gate's command to something trivially true.
+        g1 = gate("g1", "in-progress", command=FAIL_COMMAND)
+        g1["bookend"] = True
+        cl = gated(g1=g1)
+        with self.assertRaises(E.EngineError) as ctx:
+            E.amend(cl, {"ops": [{"op": "retext-check", "id": "g1", "cond": "c1",
+                                  "command": PASS_COMMAND}]}, "r", "human")
+        self.assertIn("bookend", str(ctx.exception))
+        self.assertEqual(cl["tasks"]["g1"]["postconditions"][0]["check"]["command"], FAIL_COMMAND)
+
+    def test_amend_all_or_nothing_leaves_checklist_unmutated_with_bookend_violation(self):
+        # 1st op legal (add g3), 2nd op refused (drop the bookend g2). The
+        # whole delta must abort: items/tasks byte-identical, legal op absent.
+        g2 = gate("g2", "pending")
+        g2["bookend"] = True
+        cl = gated(g1=gate("g1", "pending"), g2=g2)
+        before = copy.deepcopy(cl)
+        with self.assertRaises(E.EngineError):
+            E.amend(cl, {"ops": [_add_op("g3", after="g1"),
+                                 {"op": "drop", "id": "g2"}]}, "r", "human")
+        self.assertEqual(cl["items"], before["items"])
+        self.assertEqual(cl["tasks"], before["tasks"])
+        self.assertNotIn("amendments", cl)
+
+
 class ReopenCascade(unittest.TestCase):
     def test_reopen_cascades_downstream_complete_and_supersedes_evidence(self):
         cl = gated(g1=_artifact_gate("g1", "complete"),
