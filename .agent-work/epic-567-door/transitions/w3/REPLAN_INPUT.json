@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic: the door is the interface — finish the MCP migration (#567)",
+      "spec_path": ".agent-work/epic-567-door/LATITUDE_CONTRACT.md",
+      "intent_and_why": "One interface for agents: the MCP door. The CLI becomes an operator and debug path only. The outcome that must not be violated is that this epic reduces complexity by removing a redundant path."
+    },
+    "definition_of_done": [
+      "A dispatched crew drives its own spine through the door end to end.",
+      "No agent-facing file teaches the CLI as a path for agents.",
+      "A guard refuses reintroduction of the CLI-fallback text.",
+      "ExternalBackend refuses a spineless success."
+    ],
+    "good_enough": {
+      "mandatory_quality": "The merge gate is the full suite green on Linux in a clean detached worktree of the branch, never a working copy. Engine and hook behaviour is validated in a fresh process with explicit paths.",
+      "sufficient_evidence": "Behaviour-level red-proofs against the shipped path rather than a fixture, plus a re-verify of main after each merge.",
+      "appetite": "Two waves planned; a third added by the human after wave 2."
+    },
+    "hard_constraints": [
+      "No lane files an issue during the run.",
+      "No lane promotes an observation into docs/agents/*.",
+      "No lane regenerates map/INDEX.md (#544).",
+      "Design work is never dispatched as a fork.",
+      "Every dispatch and every crew passes --model explicitly."
+    ],
+    "fixed_decisions": [
+      "Wave-1 and wave-2 lane identities remain stable and their branches are merged and kept (#412).",
+      "The workbench directory stays a template-only package; the four templates do not move.",
+      "#613's heartbeat half is deferred behind #615.",
+      "#574's PR-opening question stays reserved for the human."
+    ],
+    "current_wave": {
+      "objective": "Subtract the redundant path now that the door reaches the caller's own spine.",
+      "exit_criteria": [
+        "Zero CLI fallback clauses and zero live agent-facing <engine> tokens remain, and a guard fails if either returns.",
+        "The workbench teaching half is gone and every role spine still starts.",
+        "Lanes E, F and H each return a merged green PR or an evidenced honest null.",
+        "main is re-verified green after the last merge."
+      ],
+      "issues": [
+        {
+          "id": "D1",
+          "title": "The complete doctrine sweep and the regrowth guard (#559, with #596 and #526)",
+          "desired_outcome": "No agent-facing instruction names the CLI as a path for agents, and a guard fails if any of it returns.",
+          "useful_now": "The door now reaches the caller's own spine, so the fallback is genuinely redundant for the first time.",
+          "appetite": "One Commander at Opus tier. The guard is the deliverable, not the deletion.",
+          "acceptance_or_falsification_evidence": "A red-proof of the guard: reintroduce a clause and a token, show the guard fails, remove them, show it passes.",
+          "implementation_latitude": "Choose the guard's mechanism, its scope expression, and the replacement wording.",
+          "hard_constraints_no_gos": [
+            "Do not touch skills/workbench/** -- lane D2's file set.",
+            "Do not edit docs/superpowers/** -- historical records.",
+            "Do not regenerate map/INDEX.md (#544).",
+            "Do not file an issue."
+          ],
+          "local_unknowns": [
+            "Whether the guard belongs with the retirement-guard family or as its own module."
+          ],
+          "anchors": [
+            "skills",
+            "specs",
+            "scripts/init_work_area.py",
+            "tests"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "D2",
+          "title": "Sunset the workbench teaching half and keep the directory as a template-only package (#565, with #561)",
+          "desired_outcome": "The teaching half is gone, workbench is no longer a taught skill, and the four templates still resolve at their existing paths.",
+          "useful_now": "The CLI text kept growing back because teaching an agent to drive the engine is what this skill was for, and that job moved to the door.",
+          "appetite": "One Commander at Sonnet tier.",
+          "acceptance_or_falsification_evidence": "Establish, do not assume, that the door's tool descriptions carry what the two references carried, and name anything they do not.",
+          "implementation_latitude": "Choose how workbench is deregistered and the replacement wording.",
+          "hard_constraints_no_gos": [
+            "Do not move any of the four templates.",
+            "Do not regenerate map/INDEX.md (#544).",
+            "Do not file an issue."
+          ],
+          "local_unknowns": [
+            "Whether deregistering a skill that still ships templates is a supported state."
+          ],
+          "anchors": [
+            "skills/workbench",
+            "scripts/install_constellation.py",
+            "docs/agents"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "E",
+          "title": "Door rejections captured as episode friction (#541)",
+          "desired_outcome": "A door refusal lands in the run's episode record instead of vanishing.",
+          "useful_now": "The door hides the friction the CLI used to surface.",
+          "appetite": "One Commander at Sonnet tier.",
+          "acceptance_or_falsification_evidence": "A real refusal, triggered in a fresh process, read back out of the store, with a negative control.",
+          "implementation_latitude": "Choose which refusals are captured and the record's shape.",
+          "hard_constraints_no_gos": [
+            "episodes/ has one write path, apply_episode_delta.py.",
+            "Do not regenerate map/INDEX.md (#544).",
+            "Do not file an issue."
+          ],
+          "local_unknowns": [
+            "Whether a refusal with no bound spine has any work-id to attribute to."
+          ],
+          "anchors": [
+            "scripts/mcp_spine_server.py",
+            "episodes"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "F",
+          "title": "Reveal the spec through the spine, not the launch order (#535)",
+          "desired_outcome": "A dispatch starts with an identifier and the spine reveals the spec.",
+          "useful_now": "Wave 1's worst failure was a lane that could not get past the bootstrap floor a launch order opens with.",
+          "appetite": "One Commander at Sonnet tier, measure-first.",
+          "acceptance_or_falsification_evidence": "A dispatch driven from an identifier alone reaches its first gate with the spec available; an evidenced honest null is complete.",
+          "implementation_latitude": "Choose how much of the launch order the spine absorbs.",
+          "hard_constraints_no_gos": [
+            "Measure the existing spine_open spec compilation first.",
+            "Do not regenerate map/INDEX.md (#544).",
+            "Do not file an issue."
+          ],
+          "local_unknowns": [
+            "How much of #535 wave 1 already delivered."
+          ],
+          "anchors": [
+            "scripts/run_crew.py",
+            "specs"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "H",
+          "title": "The rail and the HARD refusal remedy read to the agent they are aimed at (#442)",
+          "desired_outcome": "A cold agent shown only the rail and a HARD refusal can state what it is being asked to do and do it.",
+          "useful_now": "Agents read the RAIL banner as possible prompt injection and discount the instruction it carries.",
+          "appetite": "One Commander at Sonnet tier.",
+          "acceptance_or_falsification_evidence": "Measured on real cold agents, not judged by the author.",
+          "implementation_latitude": "Rewrite the strings; choose the measurement's shape.",
+          "hard_constraints_no_gos": [
+            "Do not redesign the trip mechanic.",
+            "Do not reopen #595's precedence.",
+            "Do not file an issue."
+          ],
+          "local_unknowns": [
+            "Whether a cold-agent measurement fits a Sonnet lane's budget."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Closeout: episodes, cartographer reconcile, triage pairing, feedback sweep, ADMIRAL_LOG archived.",
+        "why_likely": "Contract v2 carries closeout on the same rope as wave 2.",
+        "entry_conditions": [
+          "Every wave-2 lane is dispositioned."
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "How the regrowth guard expresses agent-facing without exempting the corpus or catching historical records.",
+        "affects": "Whether #559 actually closes.",
+        "settle_by": "Lane D1's guard design.",
+        "current_evidence": "Two of 11 <engine> sites are a historical record and a convention comment.",
+        "next_probe": "D1 red-proofs the guard by reintroducing a clause and a token."
+      }
+    ],
+    "parked_possibilities": [
+      "#575 Windows proof of the .mcp.json launch line.",
+      "Sweeping the 41 pre-existing stale leases."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "D1",
+      "outcome": "#559 closed by a guard rather than a deletion: tests/test_cli_retirement_guard.py at 718 lines, tests/test_mcp_adoption.py inverted across 472 changed lines, door vocabulary added to both specs, and the sweep applied across skills/ and the tracked .agent-work/templates/ overlay.",
+      "evidence": "PR #631 merged. git grep 'CLI fallback' over skills/, specs/ and .agent-work/templates returns zero. A freshly instantiated spine hands a Commander no <engine>, no CLI fallback and no checklist_engine.py at init, plan or archive."
+    },
+    {
+      "issue_id": "D2",
+      "outcome": "Workbench teaching half cut from 289 to 124 lines, every retained section justified by the specific test that pins it; #561 delivered.",
+      "evidence": "PR #629 merged, suite green at 3352 in a clean detached worktree."
+    },
+    {
+      "issue_id": "E",
+      "outcome": "Door refusals now land in the tracked episode store, and the door's own CLI-recommending refusal tail was retired at all three occurrences.",
+      "evidence": "PR #630 merged. A real refusal triggered in a fresh subprocess was read back through query_episodes.py, with a negative control showing no trace when the capture is removed."
+    },
+    {
+      "issue_id": "F",
+      "outcome": "Evidenced honest null on #535: run_crew.py's spine-only dispatch already ships the mechanism the issue names.",
+      "evidence": "PR #627 merged with zero diff in scripts/run_crew.py. The lane cited its own launch as the proof, having been dispatched exactly that way."
+    },
+    {
+      "issue_id": "H",
+      "outcome": "Evidenced honest null on #442: the premise did not reproduce.",
+      "evidence": "PR #628 merged with zero tracked source changed. 11 fresh cold subjects across four framings; 9 of 9 that produced a comprehension answer restated both texts correctly and named the right next action."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The epic's sweep landed and is guarded.",
+      "expected": "Zero CLI-fallback clauses in agent-facing instruction, and a test that fails if any returns.",
+      "observed": "Zero across skills/, specs/ and the tracked overlay; tests/test_cli_retirement_guard.py (718 lines) on main, red-proofed by reintroduction one line below the reworded text.",
+      "source": "origin/main at de8ef4ea, clean detached worktree"
+    },
+    {
+      "claim": "main is green after all five merges.",
+      "expected": "Full suite green on Linux.",
+      "observed": "3374 passed, 6 skipped, 1219 subtests, 0 failed, 0 FAILED lines, map index fresh. 3191 at epic start.",
+      "source": "clean detached worktree of origin/main"
+    },
+    {
+      "claim": "A dispatched crew can drive its own spine through the door.",
+      "expected": "Uncertain at wave-2 launch; spine_bind refuses a sibling worktree.",
+      "observed": "A door launched from the lane's own worktree with SPINE_FILE set binds that lane's spine. All five lanes ran that way, and a cartographer dispatched at closeout reported no CLI fallback used or needed at any gate.",
+      "source": "per-process /proc environ checks and the cartographer's reconcile"
+    },
+    {
+      "claim": "One path to the engine remains unswept, and it is not a documented limit.",
+      "expected": "Three sites that could not be swept without lying.",
+      "observed": "A Commander's execute.json, an Interrogator's interrogation.json and an in-session crew's plan are all driven outside the door under hand-invented session ids -- commander-567-d1-execute and constellation/567-e/execute, two lanes, two formats. The human ruled that any exception to the single access point is a failure rather than a limit.",
+      "source": "execute.json journals on merged main, and the human's ruling"
+    },
+    {
+      "claim": "Crew model tier does not follow the lane's tier.",
+      "expected": "Sonnet lanes running Sonnet crews.",
+      "observed": "15 spawned crew sessions, every one Opus, all from the single Opus-tiered lane; 6 abandoned and retried. run_crew.py inherits the host settings default when --model is unset.",
+      "source": "crew-runs.json across the wave-2 lane work areas"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-unswept-path",
+      "signal": "Three sites reach the engine outside the door because a role's own second plan file is not door-reachable.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth: the epic is not finished",
+      "evidence": "execute.json journals under invented session ids; spine_bind refuses a second spine while a lease is held; archive requires the lease to cover every journaled action.",
+      "reason": "The human ruled an exception to the single access point is a failure, so this becomes work rather than a documented limit."
+    },
+    {
+      "id": "D-crew-tier",
+      "signal": "A launcher takes a machine-local default instead of a declared one, for model tier and for the interpreter alike.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth: added scope",
+      "evidence": "15 Opus crew sessions from a Sonnet-tiered wave; a real install rewrites the calling repo's tracked .mcp.json regardless of --dest.",
+      "reason": "The human pulled both into scope so the model-tier item is settled before the epic closes."
+    },
+    {
+      "id": "D-frozen-middle",
+      "signal": "A gated spine's middle cannot be reshaped in place, so every planning role keeps its middle somewhere else.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Current planning truth: added scope",
+      "evidence": "Commander exiles its middle to execute.json; the Admiral keeps an entire nine-lane epic inside one execute gate with its real structure in the log and transitions/.",
+      "reason": "The human wants frozen bookends and a mutable middle for every planning role."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "U-closeout",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-parked-575",
+      "kind": "parked"
+    },
+    {
+      "id": "U-guard-scope",
+      "kind": "uncertainty"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/run_crew.py",
+      "scripts/install_constellation.py",
+      "scripts/mcp_spine_server.py",
+      "skills/admiral/templates",
+      "skills/commander/templates"
+    ],
+    "map_status": "map/INDEX.md fresh at origin/main and Admiral-owned; map/ids.jsonl empty because no anchors have ever been minted, so every run here orients DEGRADED"
+  }
+}

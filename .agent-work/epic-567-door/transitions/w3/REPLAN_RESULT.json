@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "decision": "advance",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 2's exit criteria are met and measured. Five lanes returned, five PRs merged (#627, #628, #629, #630, #631), zero CLI-fallback clauses remain in skills/, specs/ or the tracked overlay, a 718-line guard is on main red-proofed by reintroduction, and origin/main runs 3374 passed / 0 failed in a clean detached worktree. No lane filed an issue.",
+    "epic_done": "The epic is not complete, and the reason changed at this boundary. Three of four definition-of-done clauses hold. The second — no agent-facing file teaches the CLI as a path for agents — does not, because a role's own second plan file is still driven outside the door. That was recorded during wave 2 as a documented limit; the human ruled it a failure, so it is work.",
+    "good_enough": "The quality boundary is preserved and one constraint is added: every dispatch and every crew passes --model explicitly, because the default is wrong until #633 lands."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D-unswept-path",
+      "action": "revise_plan",
+      "reason": "Reclassified from a documented limit to unfinished work by human ruling, and filed as #634. It becomes lane K.",
+      "issue_created": true
+    },
+    {
+      "id": "D-crew-tier",
+      "action": "revise_plan",
+      "reason": "Filed as #633, with #619 pulled into scope alongside it because both are a launcher taking a machine-local default instead of a declared one. Together they become lane J.",
+      "issue_created": true
+    },
+    {
+      "id": "D-frozen-middle",
+      "action": "revise_plan",
+      "reason": "The mechanism behind the unswept path: a gated spine's middle cannot be reshaped in place, so every planning role keeps its middle elsewhere. Folded into #634 and lane K rather than tracked separately.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Close the gap that keeps a second path to the engine alive, and stop launchers taking machine-local defaults, so the epic's own claim is true rather than nearly true.",
+    "exit_criteria": [
+      "A role's authored gates are driven through the door in its own spine, with no second plan file and no invented session id -- or an evidenced finding that this costs more mechanism than it removes.",
+      "A real install with --dest outside the repo leaves the repo's tracked .mcp.json byte-identical.",
+      "A crew dispatched with no --model runs at its role's default rather than the host's, proven from the registry.",
+      "Each lane returns to results/lane-<x>-RETURN.md; no lane files an issue; no lane regenerates map/INDEX.md.",
+      "main is re-verified green on Linux in a clean detached worktree after the last merge."
+    ],
+    "issues": [
+      {
+        "id": "J",
+        "title": "A launcher must take declared defaults, not machine-local ones (#619 + #633)",
+        "desired_outcome": "install_constellation.py stops writing a probed interpreter into a tracked .mcp.json and stops touching the calling repo's file at all when --dest points elsewhere; and run_crew.py resolves a crew's model from a per-role, per-harness table with an allowed set and a recorded reason, never from the host's settings.json.",
+        "useful_now": "Both already cost real work this epic: an install silently dirtied a tracked file in a repo it was not targeting, and 15 crew sessions ran a tier above the one their lane was assigned, 6 of them abandoned and retried.",
+        "appetite": "One Commander at Sonnet tier. Two files, one idea.",
+        "acceptance_or_falsification_evidence": "A real (non-dry-run) install with --dest outside the repo leaves the repo's .mcp.json byte-identical, proven by git diff. And a crew dispatched with no --model runs at its role's default rather than the host default, proven from the registry entry rather than from the code.",
+        "implementation_latitude": "Choose the table's shape and where it lives; choose how the harness dimension is expressed.",
+        "hard_constraints_no_gos": [
+          "Ship the table at today's honest tiers, not the target ones: admiral opus, commander sonnet, implementer sonnet, reviewer sonnet, with haiku in the allowed sets. The human's direction is commanders at Sonnet and crews at Haiku or local, and he said explicitly we are not there yet.",
+          "The table must express Codex and local models, not only Claude Code. Which entry applies is a function of the harness the agent is running in.",
+          "An unset model resolves from the role and fails closed toward the cheaper tier.",
+          "A model outside a role's allowed set is refused by name, the way the duplicate-crew guard refuses.",
+          "A non-default choice requires a reason, recorded in the registry beside the model.",
+          "Do not regenerate or hand-edit map/INDEX.md (#544).",
+          "Do not file an issue; stage candidates under .agent-work/567-j/triage-candidates/.",
+          "Pass --model sonnet explicitly on every crew you dispatch."
+        ],
+        "local_unknowns": [
+          "Whether the harness an agent is running in can be detected, or must be declared.",
+          "Whether install_constellation.py's caller-mutation is one bug with the probed interpreter or two separate ones."
+        ],
+        "anchors": [
+          "scripts/install_constellation.py",
+          "scripts/run_crew.py",
+          "skills/admiral/templates/LAUNCH_ORDER.template.md",
+          "tests"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "K",
+        "title": "One spine per agent: frozen bookends, mutable middle, for every planning role (#634)",
+        "desired_outcome": "A role's authored gates land in its own spine instead of a second file, the steps at the start and finish stay frozen, the middle can be added to, dropped from or rescoped during the run by the agent that owns the spine, and a reader can reconstruct how the plan changed.",
+        "useful_now": "This is the one exception epic #567 could not sweep. A Commander's execute.json, an Interrogator's interrogation.json and an in-session crew's own plan all reach the engine outside the door, under hand-invented session ids.",
+        "appetite": "One Commander at Opus tier, design-it-twice before converging. Convergence is human-only: return a comparison and a recommendation.",
+        "acceptance_or_falsification_evidence": "A Commander drives its authored gates through the door in its own spine, with no second plan file and no invented session id, proven in a fresh process. An evidenced finding that this cannot be had without adding more mechanism than it removes is a complete deliverable.",
+        "implementation_latitude": "Choose the mechanism. spine_amend already re-plans a gated checklist under a named authority; whether that is the seam or whether the middle needs a different expression is yours to determine.",
+        "hard_constraints_no_gos": [
+          "Build it for every planning role -- Admiral, Commander and crew -- not for Commanders with a note to generalise later. The human said so directly.",
+          "SELF-HOSTING: this changes the rule the Admiral's own live spine runs under. Before merging, a read-only status on the live spine must exit 0, and a mutating verb must be proven against a COPY of a spine, never the live file.",
+          "Establish what spine_advance --from_child was for before removing or reshaping it. If that seam exists so a different agent's plan can feed a parent gate, it survives this change and constrains it.",
+          "Frozen means frozen: the bookend steps stay fixed. Only the middle is mutable.",
+          "Do not regenerate or hand-edit map/INDEX.md (#544).",
+          "Do not file an issue; stage candidates under .agent-work/567-k/triage-candidates/.",
+          "Design work goes to fresh agents, never a fork. Pass --model sonnet on every crew you dispatch."
+        ],
+        "local_unknowns": [
+          "What spine_advance --from_child was built for.",
+          "Whether gated spines carry invariants -- why_trail, trip ledger, postcondition evaluation across a grown step -- that appending would break.",
+          "Whether the plan-change record is a use of the existing why_trail and spine_amend authority, or needs its own shape."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "scripts/mcp_spine_server.py",
+          "skills/commander/templates/COMMANDER_SPINE.template.json",
+          "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+          "specs"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Closeout re-runs after wave 3: hygiene over the new branches and worktrees, the triage pairing pass, and the epic summary rewritten to describe an epic that finished rather than one that stopped.",
+      "why_likely": "Closeout c1-c4 were attested at the wave-2 boundary and cascaded back to pending when execute reopened; the episodes and the reconcile stand, the hygiene does not.",
+      "entry_conditions": [
+        "Both wave-3 lanes are dispositioned and main is green."
+      ]
+    },
+    {
+      "outcome": "#559 and #565 can close once a role's own plan is door-reachable.",
+      "why_likely": "Both are open against this gap rather than against anything wave 2 left undone.",
+      "entry_conditions": [
+        "Lane K lands, or returns an evidenced null that changes the premise."
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "What spine_advance --from_child was built for.",
+      "affects": "Lane K's scope, and whether the parent/child seam survives.",
+      "settle_by": "Lane K's first gate.",
+      "current_evidence": "The verb consumes a child checklist's consolidation as evidence, so someone deliberately built the seam.",
+      "next_probe": "Read it at source and in its tests before proposing to remove or reshape it."
+    },
+    {
+      "unknown": "Whether the harness an agent runs in can be detected or must be declared.",
+      "affects": "How the per-harness dimension of the model table is expressed.",
+      "settle_by": "Lane J's design.",
+      "current_evidence": "The human wants the same table to express Codex and local models, chosen by the harness the agent is in.",
+      "next_probe": "Establish what a running agent can know about its own harness before choosing between detection and declaration."
+    },
+    {
+      "unknown": "Whether a gated spine can grow its middle without breaking why_trail, the trip ledger or postcondition evaluation.",
+      "affects": "Whether lane K's change is a use of spine_amend or a deeper engine change.",
+      "settle_by": "Lane K's design-it-twice comparison.",
+      "current_evidence": "spine_amend already re-plans a gated checklist under a named authority; capture --append is refused on gated checklists.",
+      "next_probe": "Prove a grown middle against a copy of a live spine, never the live one."
+    }
+  ],
+  "revised_parked": [
+    "#575 Windows proof of the .mcp.json launch line.",
+    "Sweeping the 41 pre-existing stale leases.",
+    "#613's parent-heartbeat half, behind #615.",
+    "#574's reserved PR-opening question."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-closeout",
+      "action": "keep",
+      "reason": "Still ahead, now after wave 3, and its hygiene half must genuinely re-run."
+    },
+    {
+      "id": "U-parked-575",
+      "action": "keep",
+      "reason": "Parked by the 2026-08-16 rescope; nothing at this boundary disturbs it."
+    },
+    {
+      "id": "U-guard-scope",
+      "action": "delete",
+      "reason": "Settled: lane D1's guard scopes to an rglob over skills/, specs/ and the tracked overlay, with no exception list, and was red-proofed by reintroduction."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "wave_forecast",
+      "before": "Wave 2 is the last wave; closeout follows it.",
+      "after": "A third wave runs first: lane J (#619 + #633) and lane K (#634).",
+      "reason": "Human ruling after wave 2 closed: file it now and do it now, so the model-tier item is settled before the epic closes."
+    },
+    {
+      "surface": "epic_body_decomposition",
+      "before": "The three sites that cannot be swept are a documented limit of the door's isolation property.",
+      "after": "They are unfinished work. Any exception to the single access point is a failure, and #634 is that failure stated as work.",
+      "reason": "Human ruling, overturning the Admiral's wave-2 reading."
+    }
+  ],
+  "wave_review_comment": "## Wave review — boundary w3 (wave 2 complete, wave 3 authorized)\n\n**Wave 2 delivered.** Five lanes, five merged PRs — #631 (D1), #629 (D2), #630 (E), #627 (F), #628 (H). `origin/main` runs **3374 passed, 6 skipped, 1219 subtests, 0 failed** in a clean detached worktree, up from 3191 at epic start. `git grep \"CLI fallback\"` over `skills/`, `specs/` and the tracked `.agent-work/templates/` overlay returns **zero**, and `tests/test_cli_retirement_guard.py` (718 lines) is on main to keep it that way.\n\n**The wave's most valuable finding was why the text kept coming back.** `tests/test_mcp_adoption.py` *mandated* it across nine assertions, failing with \"the CLI door must stay, never be removed or discouraged.\" Every earlier sweep was reverted by a red suite telling the deleter it had broken a rule. That mandate is now inverted, and the guard generalizes an in-tree precedent that already asserted absence for two files.\n\n**Two lanes returned evidenced honest nulls**, and both were accepted on their evidence rather than their conclusion. #535's mechanism was already shipped — lane F cited its own launch as the proof. #442's premise did not reproduce across 11 cold subjects in four framings.\n\n**Decision: advance to a third wave.** At this boundary the human overturned the Admiral's reading of the epic's own result. Three sites — a Commander's `execute.json`, an Interrogator's `interrogation.json`, an in-session crew's plan — reach the engine outside the door, and had been recorded as a documented limit. His ruling: an exception to the single access point is a failure. So #634 was filed and becomes lane K, alongside lane J carrying #619 and #633, which are one shape — a launcher taking a machine-local default instead of a declared one.\n\n`execute` was reopened rather than left complete, cascading closeout back to pending, because a spine claiming the epic had ended would have been false.",
+  "revised_epic_body": "## Current planning truth — epic 567, boundary w3\n\n### Intent\n\nOne interface for agents: the MCP door. The CLI becomes an operator and debug path only. The outcome that must not be violated: **this epic reduces complexity by removing a redundant path.** Judge a change by whether it reduces work on agents by moving it into mechanisms.\n\n### Measured state (`de8ef4ea`)\n\n| Claim | State |\n|---|---|\n| full suite, Linux, clean detached worktree | **3374 passed, 0 failed** (3191 at epic start) |\n| `CLI fallback` in `skills/`, `specs/`, tracked overlay | **zero**, guarded by a 718-line regrowth test |\n| a dispatched crew driving its own spine through the door | **yes** — five lanes did, and a cartographer dispatched at closeout used no CLI at any gate |\n| a role driving its **own authored plan** through the door | **no** — the remaining gap, filed as #634 |\n| a launcher taking declared rather than machine-local defaults | **no** — #619 and #633 |\n\n### Current wave (launched at this boundary)\n\n- **J** — #619 + #633. A launcher takes declared defaults, not machine-local ones: no probed interpreter in a tracked file, no touching the calling repo, and a crew model resolved from a per-role, per-harness table with an allowed set and a recorded reason. Sonnet.\n- **K** — #634. One spine per agent: frozen bookends, mutable middle, for every planning role. Opus, design-it-twice, convergence human-only, self-hosting proof against a copy before merge.\n\n### Nonbinding forecast\n\nCloseout re-runs after wave 3 — its hygiene half genuinely must, since new branches and worktrees exist. #559 and #565 close once a role's own plan is door-reachable.\n\n### Standing constraints\n\nNo lane files an issue. No lane promotes doctrine into `docs/agents/*`. No lane regenerates `map/INDEX.md` (#544). No design work goes to a fork. **Every dispatch and every crew passes `--model` explicitly — the default is wrong until #633 lands.** The merge gate is the full suite green on Linux in a clean detached worktree of the branch, and `main` is re-verified after each merge.\n\n### Open uncertainty\n\nWhat `spine_advance --from_child` was built for. Whether a gated spine can grow its middle without breaking `why_trail`, the trip ledger or postcondition evaluation. Whether an agent can detect its own harness or must be told.",
+  "escalation": null
+}
