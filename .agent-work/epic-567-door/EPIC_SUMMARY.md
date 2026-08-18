@@ -117,9 +117,43 @@ That is **#615** and **#369** stated exactly. Paired onto both at closeout.
   back before touching anything. A progress number at the wrong altitude says the opposite of the
   truth.
 
-## Still to run at closeout
+## Closeout status
 
-Episodes (one per distinct thing, ~18 Admiral-level entries drafted; the store already holds 24
-lane-written ones), the cartographer reconcile, the triage-candidate pairing pass (**27 candidates,
-19 onto open issues, 6 episodes, 1 resolved, 2 for you — zero new issues**), the corrected
-`collect_feedback.py` sweep, and archiving the ADMIRAL_LOG.
+| Item | State |
+|---|---|
+| Episodes | **done** — 18 Admiral-level records applied through the sanctioned writer; all cleared the observation guard first time. The store already held 24 lane-written ones, and the two of mine that duplicated them were dropped and referenced instead |
+| Repo hygiene | **done** — all 9 epic branches merged and **kept** (#412), all lane worktrees swept after a verified harvest, stray worktrees pruned, the peer session's untouched |
+| Cartographer reconcile | running at Sonnet, bounded brief |
+| Triage pairing | **indexed, not yet posted — see the ask below** |
+| `collect_feedback.py` sweep | run, read-only, **10 uncollected findings surfaced**; not marked, deliberately |
+| ADMIRAL_LOG archive | last action before the lease release |
+
+## The one thing I need from you before posting
+
+The candidate count grew **24 → 60** (lane D1 alone staged 19). Every one is a committed markdown
+file on `main` with a full write-up, so **nothing is at risk** — the only question is how much gets
+surfaced onto GitHub.
+
+Posting one comment per candidate means **60 comments across ~12 issues**, which is the ballooning
+your ruling exists to prevent wearing a different shape. So I grouped them: **one comment per target
+issue**, each carrying every candidate paired to it with its path. That is **~14 comments**, and the
+index is at `.agent-work/epic-567-door/CLOSEOUT_PAIRING_INDEX.md`.
+
+**31 pair onto 14 open issues** — #559 ×6, #535 ×4, #544 ×4, #369 ×3, then #432, #561, #595, #613
+×2 each, and #495, #522, #541, #565, #575, #615 ×1. **26 have no open issue that fits** and are
+covered by episodes — mine plus the lanes' own. **2 need your decision**, **1 is resolved**.
+
+Say the word and I post the 14. Or name a subset — several are individually worth more than the
+rest (a real `install_constellation.py` run mutating the **calling** repo; skill prose naming
+bundled scripts by repo-relative path across **91 sites in 27 files**; a headless `claude -p`
+inheriting the launching lane's spine and Stop hook).
+
+## The two that need your ruling, restated
+
+1. **#442** — close as an evidenced honest null, or keep it open? Its premise did not reproduce on
+   11 cold subjects across four framings.
+2. **#565** — it calls a sentence false that this epic measured to be true. Close it as delivered
+   with a correcting comment, or would you rather rule on the sentence first?
+
+Plus **`wire finish_work as a spine_done MCP tool`**, whose parent #574 is closed, and which is
+adjacent to the PR-opening question you reserved and no lane may settle.
