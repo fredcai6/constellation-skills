@@ -554,17 +554,30 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-k --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py 567-k --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -576,7 +589,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "feedback complete: 7 episodes captured and committed, capture gate exit 0, observation guard clean for 567-k, feedback export staged with FENCE.md."
         }
       ],
       "postconditions": [
@@ -654,7 +668,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -675,7 +689,7 @@
     "session_id": "constellation/567-k/lane-k/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-18T04:46:31.340831+00:00",
-    "last_heartbeat": "2026-08-18T06:06:45.276339+00:00",
+    "last_heartbeat": "2026-08-18T06:07:08.886252+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -737,6 +751,13 @@
       "why": "Run summary written to the exact path the order names and committed on the branch, with PR #635 open and verified against the forge rather than inferred. The summary is honest about what it is: delivered for Admiral, Commander and Explorer; NOT delivered for crew, with the reason at source rather than an apology; and deliberately unconverged on the design choice, which is the human's. I put my own mistakes in it \u2014 the mis-scoped gate plan, the proof gate whose postconditions could not fail, the question I silently closed, the off-by-one in my own handoff, and the verification command I got wrong \u2014 because the previous wave's most useful returns were the ones that indicted their own author, and because three of those five were caught by a critic or a crew rather than by me, which is itself the finding.",
       "mechanical": false,
       "ts": "2026-08-18T06:02:31.945241+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Seven episodes captured, one per distinct thing that happened rather than one summary of the run, and the capture gate ran the check itself. Two assertions tripped the observation guard because they opened on words it reads as imperatives \u2014 \"Read\", and \"run\" from a sentence starting \"run_crew.py\" \u2014 so I restated them through the writer rather than growing the guard's exception list, which is what the inherited context asked for. Worth recording that restate-assertion and amend-assertion are different ops and nothing pointed me there: one changes wording, the other changes standing and demands a history. The reflection is not a \"none\": the run had a real contradiction, which is that the plan step MANDATED authoring the very execute.json #634 exists to remove, so this run performed the defect it was sent to fix, under instruction, and I followed it rather than improvising and recorded it as evidence. The most useful thing to come out of harvesting crew feedback rather than skimming it: the g2 crew named TemplateOnlyFieldAllowlist (#475), which I had not known about and which falsified a triage candidate I had already drafted claiming the new field was invisible to the suite. It is not \u2014 the crew registered it there. I rewrote the candidate to the narrower claim I could actually verify, that the field is registered but not RENDERED by current, and checked that by running current and grepping. Shipping the original would have been an unverified assertion in exactly the register I spent the run objecting to. The feedback export is staged with a FENCE.md rather than waived, because the archive gate's deny_globs name the durable-root file.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:07:03.179953+00:00"
     }
   ]
 }
