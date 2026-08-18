@@ -455,3 +455,22 @@ All four merged 2026-08-17 under the Linux-green gate, in dependency order, each
   - **`git grep "CLI fallback"` over `skills/`, `specs/` and `.agent-work/templates/` returns ZERO**, and `tests/test_cli_retirement_guard.py` (718 lines) is on `main` to keep it that way.
   - Suite trajectory across the whole epic: **3191** at epic start → **3352** at wave-2 launch → **3374** now. 183 net-new tests, and the epic's subject was *removing* a path.
   - Five PRs merged this wave — #627 (F), #628 (H), #629 (D2), #630 (E), #631 (D1) — each gated on its **exact head** in a clean detached worktree, with `main` re-verified after **every** merge. No merge produced a red main; wave 1's pair-of-green-PRs incident did not recur.
+- `2026-08-17` — `RULING` (delegated, issue disposition — **the `execute` c1 ledger, every member issue accounted for**). States checked on GitHub, not recalled.
+
+| Issue | State | Disposition |
+|---|---|---|
+| **#559** | **CLOSED** | delivered by D1's guard; auto-closed on PR #631 merge |
+| **#561** | **CLOSED** | delivered by D2; auto-closed on PR #629 merge |
+| #565 | open | **delivered** by D2 (289→124 lines). Closes at the pairing pass **with a correction comment**: the sentence its body calls false is true |
+| #596 | open | **delivered** by D1 |
+| #526 | open | **delivered or evidenced-stale** by D1 — its return states which; closes on that evidence |
+| #541 | open | **delivered** by E, with a negative control |
+| #535 | open | **evidenced honest null** by F — the mechanism was already shipped. Closes with F's evidence and its two floated gaps recorded as candidates |
+| #442 | open | **evidenced honest null** by H — **ESCALATED, not closed.** Its premise did not reproduce on 11 cold subjects, and that is a finding about a human-filed issue, so the human rules |
+| #432 | open | delivered wave 1 (PR #621); **verify and close** at the pairing pass |
+| #595 | open | delivered wave 1 (PR #620); **verify and close** at the pairing pass |
+| #613 | open | **DEFERRED with a recorded ruling** — atomicity half shipped in PR #623; the parent-heartbeat half waits behind #615 |
+| #575 | open | **PARKED** by the 2026-08-16 rescope; untouched by this epic |
+
+  - Every member issue therefore holds one of the four dispositions c1 admits: **merged**, **honest-null**, **deferred with a ruling**, or **escalated**. Two are escalated rather than closed — **#442** and **#565** — because in both cases this epic's measurements **contradict a claim the human wrote**, and closing a human's issue on the strength of my own contradiction is not a delegated call. They go to acceptance.
+  - The `gh issue comment`/`close` calls themselves are **closeout hygiene**, run in the pairing pass, where 27 staged candidates are paired onto open issues or recorded as episodes and **nothing new is filed**.
