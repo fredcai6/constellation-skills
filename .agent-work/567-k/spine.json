@@ -402,13 +402,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No Cartographer dispatched, because there is no packet map to fold into \u2014 the context step's orientation came back DEGRADED-UNPARSEABLE and that verdict is on record with three hash-pinned substitutes: no docs/architecture/ tree at all, a 0-byte map/ids.jsonl, and a map/INDEX.md whose per-module INDEX.md links do not resolve. This is the skill-source-repo branch the imperative names, so I reconciled the structural record directly instead, and it is NOT a reasoned no-op: the change has a real structural record and I folded it in. docs/CHECKLIST_SCHEMA.md (\"Status: built/shipped... this schema tracks the shipped behavior\") now carries (1) the optional per-task `bookend` key in the Task field table, stated as opt-in with a missing key reading as not-a-bookend; (2) `bookend` added to the documented list of rescope's overwritable fields, named as the retrofit path for a plan already running; (3) a new \"Bookends \u2014 the frozen ends of a mutable plan (#634)\" subsection under Amend delta, explaining why the pre-existing floor rule covered a plan's opening by accident of status and its closing not at all, why retext-check is deliberately covered, that the middle between floor and last bookend stays freely mutable, which gates the three shipped role spines declare, and that crew plans are NOT covered because generate_spine.py's gate compiler emits a fixed field list. Committed at 1af06b2b. map/INDEX.md is fenced to the Admiral (#544) so I did not regenerate it; its staleness is the one permitted suite failure and is recorded in the suite evidence. One structural gap found while reconciling and staged rather than fixed: `current` does not render the bookend flag, so an agent cannot see which gates are frozen through the projection \u2014 and the schema doc's own Rendering section had already predicted exactly this blind spot in TaskFieldCompleteness's stated residual limit."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -424,7 +425,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete: structural record folded into docs/CHECKLIST_SCHEMA.md at 1af06b2b."
         }
       ],
       "postconditions": [
@@ -432,7 +434,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All 3 candidates routed to exactly one disposition, all recommend-and-defer, none left unrouted and none filed. Each was checked against the fix-now ladder and each fails a DIFFERENT rung, recorded per candidate rather than waved off collectively: (1) render-the-freeze fails \"verifiable now\" \u2014 the property test that should cover it is structurally blind to a template-only field, which the schema doc itself already documented as its residual limit, so \"it works\" cannot be demonstrated in this context; (2) human-confirmation-in-the-middle fails \"no architecture/production-default impact\" \u2014 it changes what a run must prove before it may close, i.e. the rigor dial; (3) the gauge writer fails \"adjacent to current scope\" \u2014 hook/gauge code this run never opened, and I have an effect with no cause because I did not read its source. Each candidate file carries its observation with what was observed, what was expected, and whether it is measured or inferred: (1) and (2) are structural readings of files I read, (3) is a measured diff. Index at .agent-work/567-k/triage-candidates/README.md."
         },
         {
           "id": "c2",
@@ -441,17 +444,38 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude \u2014 'Issue filing | ruled: none'; and LAUNCH_ORDER:Pre-Rulings \u2014 decision:no-issue-filing-mid-run (settled/human)",
+            "decision": "NO issues filed. The citation records the DEFERRAL itself, not a filing approval \u2014 none was sought and none was authorized this run.",
+            "human_reason": "'we've been ballooning out tracking.'",
+            "candidates": "3, all recommend-and-defer, staged as files under .agent-work/567-k/triage-candidates/ with a README index: (1) current does not render the bookend freeze; (2) the human-confirmation requirement sits in the mutable middle for Commander and Explorer; (3) the context-gauge writer overwrote its parent's reading.",
+            "fix_now": "none \u2014 each fails a DIFFERENT rung of the fix-now ladder, recorded per candidate",
+            "floats_not_triage": "The crew half of decision:every-planning-role (blocked on scripts/generate_spine.py) and the execute.json->spine migration (reaches lane J's files) are SCOPE FLOATS in the return, needing an Admiral ownership ruling rather than a future issue.",
+            "authority": "Admiral as the human's delegate; human ratifies at the epic return boundary"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -628,7 +652,7 @@
     "session_id": "constellation/567-k/lane-k/commander-delegated",
     "status": "active",
     "claimed_at": "2026-08-18T04:46:31.340831+00:00",
-    "last_heartbeat": "2026-08-18T05:56:35.226129+00:00",
+    "last_heartbeat": "2026-08-18T05:58:05.521749+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -669,6 +693,20 @@
       "why": "All eight gates of execute.json are closed and its lease released; the commander REPLAN_INPUT verifier exits 0. Delivered: amend() freezes a declared bookend against drop, rescope, retext-check and against an add landing past it, read through one swappable helper so the human can still change the declaration form by changing one function; and the three role spine templates this lane owns declare their bookends, pinned by a test asserting the exact flagged-id set rather than \"something is flagged\". Both crew gates carried an independent APPROVE, and g1's reviewer proved the new tests go red before green rather than reporting that they do. Self-hosting holds under the engine I patched: read-only on both live spines exits 0, the exact three-drop delta that succeeded at 9b38b9d9 is refused on a copy, the middle still grows, and a mixed delta rolls back so the legal op does not land either. Full suite 3383 passed, 0 FAILED at eb94b150 in a clean detached worktree, with only the Admiral-owned MapTreeFreshness deselection, which I verified genuinely fails rather than assuming it. Two things are NOT delivered and are floated rather than hidden: the crew half of decision:every-planning-role, because IMPLEMENTER_PLAN is compiled by generate_spine.py whose _compile_gate drops unknown keys and which neither lane owns; and the \"capture the plan changed\" half, still served only by amend's pre-existing amendments trail. The convergence between design candidates is deliberately not taken \u2014 it is the human's.",
       "mechanical": false,
       "ts": "2026-08-18T05:55:03.853769+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconciled directly rather than through a Cartographer, because there is no packet map in this repo and that verdict was already on record from the context step rather than discovered convenient here. The structural record that actually exists is docs/CHECKLIST_SCHEMA.md, which declares itself the tracker of shipped engine behaviour, so the bookend key, rescope's widened overwritable list, and a new Bookends subsection went there. Reconciling turned up one thing I did not expect and did not fix: the projection does not render the flag, so an agent reading current cannot see which gates are frozen \u2014 and reading spine.json to find out is itself a violation under global-everyone. The schema doc's own Rendering section had already written down why this would happen, in the residual limit it names for TaskFieldCompleteness: a field carried by a template but built by neither the amend-task builder nor append() is invisible to that property. So the suite passing at eb94b150 is not evidence the field is rendered; it is evidence the check cannot see it. Staged as a triage candidate, deliberately deferred until the human picks the declaration form, since rendering a name the human may replace would bake in the wrong one.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:57:06.032800+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Three candidates, all recommend-and-defer, none filed \u2014 and the citation records the deferral itself rather than a filing approval, because none was sought and none was authorized. decision:no-issue-filing-mid-run is settled/human with the reason stated: \"we've been ballooning out tracking.\" The discipline worth naming is that I checked the fix-now ladder honestly instead of using the no-filing ruling as cover for skipping the check: each candidate fails a DIFFERENT rung, and candidate 1 is the one I would otherwise have been tempted to fix, since rendering the flag is a small edit. It fails \"verifiable now\" for an interesting reason \u2014 the property test that should have caught the omission is structurally blind to a template-only field, which the schema doc had already written down as its own residual limit. So I could have made the change and had no way to show it was right. It also fails on timing: the human has not yet chosen the declaration form, so rendering a name they may replace would bake in the wrong one. Two items are deliberately NOT in triage: the crew half of every-planning-role and the execute.json migration are scope floats needing an Admiral ownership ruling, and turning a float into a future issue would quietly convert a question I owe upward into a backlog entry nobody answers.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:58:05.521737+00:00"
     }
   ]
 }
