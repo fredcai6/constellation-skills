@@ -636,19 +636,21 @@
           "id": "c1",
           "statement": "a crew dispatched with no --model is proven, from its crew-runs.json registry entry, to have run at its role's table default",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Real crew dispatched via THIS worktree's scripts/run_crew.py with NO --model flag (role=implementer, default harness=claude). Registry entry (crew-runs.json, crew_id constellation/567-j/g4-verify/implementer/attempt-1): model=sonnet, status=completed, exit_code=0, result_present=true, result_fresh=true. sonnet is implementer's declared ROLE_MODEL_TIERS default, proven from the registry, not the code."
         },
         {
           "id": "c2",
           "statement": "full suite green in a clean detached worktree of this branch on Linux, MapTreeFreshnessTests the only permitted failure",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Full suite (py -m pytest tests/ -q) run in a clean detached worktree (/tmp/567-j-suite-verify, git worktree add --detach at commit 0a47ef39) with SPINE_FILE/SPINE_SESSION/SPINE_PARENT/CREW_SCRATCH_DIR unset: 3398 passed, 6 skipped, 1219 subtests passed, 1 failed in 140.89s. The one failure: tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build -- the exact pre-authorized failure named in LAUNCH_ORDER.md Inherited Context (map/INDEX.md is Admiral-owned, decision:map-index-is-admiral-owned). Nothing else failed. Worktree removed after the run."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -659,16 +661,17 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "commander-567-j-execute",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-18T05:10:27.103888+00:00",
-    "last_heartbeat": "2026-08-18T06:07:21.388807+00:00",
+    "last_heartbeat": "2026-08-18T06:12:09.202598+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-18T06:12:14.173933+00:00"
   },
   "why_trail": [
     {
@@ -740,6 +743,13 @@
       "why": "g3 closed. c1 waived for the documented pre-existing failure.",
       "mechanical": false,
       "ts": "2026-08-18T06:07:12.806040+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-verify",
+      "why": "Both proofs complete: role-default resolution from the registry, and full suite green in a clean detached worktree with only the pre-authorized MapTreeFreshnessTests failure. execute.json fully closed.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:12:09.202592+00:00"
     }
   ]
 }
