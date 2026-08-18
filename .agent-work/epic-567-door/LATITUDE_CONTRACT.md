@@ -350,3 +350,52 @@ checkpoint.
 **#574's reserved question, floated by lane G in wave 1 and never ruled:** does PR-opening
 live in the engine verb or in the wrapper script that manages the worktree? Tommy reserved
 it; it is not adjudicated here and no lane may settle it.
+
+---
+
+# Contract amendment — 2026-08-17, wave 3
+
+**The two-wave plan is amended by the human after wave 2 closed.** Scope added, in his words:
+*"let's file it now and do it now."*
+
+## Added to scope
+
+| Issue | What |
+|---|---|
+| **#619** | The installer writes a machine-probed interpreter into a tracked `.mcp.json` — and a real install rewrites the **calling** repo's file regardless of `--dest` |
+| **#633** | Crew model tier resolves from a **per-role, per-harness** table with an allowed set and a recorded reason, never from the host's `settings.json` |
+| **#634** | One spine per agent: frozen bookends, mutable middle, for **every** planning role — not built for Commanders and generalised later |
+
+His reason for pulling #619 in: he wants the model-tier item settled before the epic closes, and
+both are one shape — *a launcher taking a machine-local default instead of a declared one.*
+
+## What this overturns
+
+The wave-2 summary recorded the three unsweepable child-plan sites as a **documented limit**. That
+is withdrawn. His ruling: *"we're trying to move down to a single access point for the door so any
+exception to that is a failure."* #634 is that failure, stated as work.
+
+## Design direction he gave, to be carried into #634's launch order verbatim
+
+> "I regret freezing gates, if anything I want to make the gates a little looser so we can step
+> back more frequently and update them. there should likely be frozen required gates at the start
+> and finish, but what we do in the middle is squishy and is totally reasonable to change as we're
+> executing and understanding the problem better"
+
+And on scope: *"this isn't only a commander thing, admirals also should be able to mutate the middle
+of their plan… let's not over design this for commanders. heck, I wouldn't be mad at a crew updating
+its plan along the way too. it'd probably be good for us to be able to capture 'the plan changed,
+here's how' though."*
+
+## Unchanged
+
+Everything in Contract v2 still binds: the merge gate, no issue filing by lanes, no `docs/agents/*`
+promotion by lanes, the Admiral-owned map index, no forks for design work, per-lane return paths.
+
+**Plus, new and not discretionary:** every dispatch and every crew runs at the tier named in its
+launch order, and `--model` is passed explicitly on every `run_crew.py` call. The default is wrong
+until #633 lands.
+
+## Expiry
+
+**Event: closeout acceptance**, unchanged — now after wave 3.
