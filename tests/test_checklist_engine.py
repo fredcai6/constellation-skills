@@ -5858,6 +5858,10 @@ class TemplateOnlyFieldAllowlist(unittest.TestCase):
     ALLOWLIST = {
         "anchors", "context_refs", "why_exempt",
         "context_headroom_tokens", "context_headroom_note", "kind",
+        # #634/g2: template-only declaration read by checklist_engine.py's
+        # _is_bookend -- never built by _new_task/_build_amend_task, only
+        # ever landed by a template author or the rescope-overwritable path.
+        "bookend",
     }
 
     def test_negative_self_test_catches_a_synthetic_planted_field(self):
@@ -7375,3 +7379,30 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
             self.assertEqual(len(cl["trip_ledger"]), 1)
+
+
+class ShippedTemplateBookendDeclarations(unittest.TestCase):
+    """#634 declared the `bookend` freeze mechanism in the engine; issue g2
+    puts the declaration on the templates that actually ship it. Pins the
+    EXACT set of bookend-flagged gate ids per role spine template -- a test
+    that only checked 'at least one gate is flagged' would still pass in a
+    world where the flag landed on the wrong gate, so this asserts both the
+    intended two carry it AND every other gate in that template does not."""
+
+    EXPECTED = {
+        ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json": {"init", "archive"},
+        ROOT / "skills" / "admiral" / "templates" / "ADMIRAL_SPINE.template.json": {"init", "closeout"},
+        ROOT / "skills" / "explorer" / "templates" / "EXPLORER_SPINE.template.json": {"init", "route"},
+    }
+
+    def test_exact_bookend_set_per_template(self):
+        for path, expected_bookends in self.EXPECTED.items():
+            with self.subTest(template=path.name):
+                cl = json.loads(path.read_text(encoding="utf-8"))
+                actual_bookends = {tid for tid, task in cl["tasks"].items()
+                                    if task.get("bookend")}
+                self.assertEqual(
+                    actual_bookends, expected_bookends,
+                    f"{path.name}: expected bookend gates {sorted(expected_bookends)}, "
+                    f"got {sorted(actual_bookends)}",
+                )

@@ -16,7 +16,7 @@
         {"id": "c2", "statement": "engine session lease claimed for this spine (explorer owns the state)", "check": null, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0, "bookend": true
     },
     "context": {
       "id": "context",
@@ -79,7 +79,7 @@
       "preconditions": [{"id": "p1", "statement": "spec confirmed", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "confirmed spec routed (handed off / shaped-design issue filed / shelved with UNCONFIRMED header); work area archived; engine lease released", "check": null, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0, "bookend": true
     }
   },
   "consolidation": null,
