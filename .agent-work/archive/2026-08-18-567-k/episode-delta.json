@@ -1,0 +1,285 @@
+{
+  "work_id": "567-k",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-k",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-k-feedback@bbad5846505f10a848faed0c0d974485185d6c93",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/checklist_engine.py",
+          ".agent-work/567-k/evidence/probe-closing-bookend.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "The lane was sent to make a run's plan frozen at its bookends and mutable in its middle, on the launch order's framing that gated plans could already be re-planned and the roles simply kept their middle in a second file."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The work would be moving the roles' middles into their own spines, since amend() was described as already able to grow a gated plan."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "amend() did already support add/drop/rescope on pending gates with a reason+authority audit trail, so the mutable middle was built. But _floor(), the engine's only freeze, is '1 + the index of the last non-pending gate' -- it freezes what has already been STARTED. That covered a plan's opening by accident of status and its closing not at all. On a synthetic mid-run Commander spine, one amend deleted review, feedback and archive together, exit 0, no --force."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The lane's scope inverted before any code was written: the deliverable became closing a freeze gap in the engine rather than migrating doctrine. The migration became a float, because it reaches run_crew.py and recover_crews.py which were fenced to another lane."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Measured the gap first, on copies in a fresh process, and rebuilt the gate plan around the measurement instead of around the order's framing."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-k",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-k-feedback@bbad5846505f10a848faed0c0d974485185d6c93",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/checklist_engine.py",
+          "tests/test_checklist_engine.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Settle what spine_advance --from_child was built for, because the launch order said the answer would change the lane's own scope."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "It might be a workaround for gated-plans-cannot-grow, in which case it would be removed along with the file boundary."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It reads a child checklist's consolidation and attaches it as review-result evidence before postconditions run. consolidate() refuses anything that is not a survey, and a survey is the reviewer's work file. On a BLOCK verdict the advance is refused while the evidence is still attached, so a parent cannot launder a rejection into a pass. It is a cross-agent verdict seam carrying evidence upward, not a growth workaround."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "It left the lane's scope entirely and constrained the design's vocabulary: 'one spine per agent' had to mean one agent DRIVES one spine, not that no spine may reference another."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Read the verb at source and its three tests before designing, rather than reasoning from the error message that had been cited as the blocker in an earlier investigation."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-k",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-k-feedback@bbad5846505f10a848faed0c0d974485185d6c93",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-k/execute.json",
+          ".agent-work/567-k/CRITIC_TRIAGE.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author a gate plan whose g3-proof gate would carry the run's empirical proof: read-only on the live spine, mutating verbs against copies, full suite in a clean detached worktree."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A reasoning gate closing on attested conditions would be adequate, since the Commander performs the proof in its own hands and the code had already been independently reviewed."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "A cold plan critic with no authoring context found that both of that gate's postconditions were check:null, so an agent attesting them without running anything passed exactly as one that ran everything. The gate meant to BE the proof could not fail."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Both were replaced with command checks. Each was then run against the pre-change tree and observed exiting 1, so the replacements were shown to discriminate rather than assumed to. The suite check and the self-hosting check were afterwards executed by the engine on advance rather than by the agent and reported."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Ran the cold critic before freezing the plan, and proved each replacement check red against today's tree before trusting it."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-k",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-k-feedback@bbad5846505f10a848faed0c0d974485185d6c93",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "scripts/generate_spine.py",
+          "specs/implementer.spine.toml",
+          "tests/test_generate_spine.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Declare bookends for every planning role, including crew, under a settled/human ruling that named Admiral, Commander and crew explicitly."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Adding the declaration to skills/implementer/templates/IMPLEMENTER_PLAN.template.json alongside the three role spine templates."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "That template is COMPILED from specs/implementer.spine.toml by scripts/generate_spine.py, whose _compile_gate returns a fixed field list with no bookend key. A hand-added declaration would have survived until the next regeneration and then vanished. The repo had already had that exact failure, pinned by a test whose comment reads 'the artifact diverged from its source'. The file was also not a *SPINE* template and so had never been in the lane's grant."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The crew half was not delivered and was floated to the Admiral for an ownership ruling, because generate_spine.py sat in neither lane's grant. Shipping it would have looked like a delivered feature and been a durability hole."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Narrowed the gate to the three owned templates and wrote the compiler's behaviour and the prior incident into the crew handoff, so the crew would not helpfully finish the job."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-k",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-k-feedback@bbad5846505f10a848faed0c0d974485185d6c93",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-k/crew-runs.json",
+          ".agent-work/567-k/crew-runs/"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Dispatch three design-candidate crews concurrently through run_crew.py, whose registry is documented as durable and written before each crew starts."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "All three recorded in .agent-work/567-k/crew-runs.json, so recover_crews.py could classify them after a dispatcher death."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "All three ran, wrote their results, and had stdout and stderr captured in the registry's own directory. Only one of the three had a registry entry. recover_crews.py reported seven crews and never mentioned the other two."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The under-report is silent and in the dangerous direction: a relaunched Commander running recover_crews.py as doctrine instructs would be told those crews never ran and would redispatch them. Every recover_crews.py call this run was made against an already-incomplete registry."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Noticed only during a rebase conflict on that file, and resolved by merging both sides as a union rather than taking one. run_crew.py was fenced to another lane, so the finding was routed rather than fixed."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-k",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-k-feedback@bbad5846505f10a848faed0c0d974485185d6c93",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-567-door/gauge-constellation-epic-567-door-470f957c39f5.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run an ordinary dispatched lane whose context gauge would report this session's own fill."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Either a gauge reading attributed to this session, or no reading."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The engine repeatedly reported CONTEXT GAUGE SILENT, saying the writer could not tell which of two bound spines a reading belonged to and wrote nothing rather than guess. Separately, and for the same ambiguity, the parent epic's gauge file was overwritten with this session's reading -- claude-opus-5 at 0.048 fill, replacing claude-sonnet-5 at 0.122. So the writer had two behaviours for one ambiguity and they disagreed."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "This session had no automatic context readings for the whole run and judged headroom unaided, while the parent's trip advisories were being driven by a child's number."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Reverted the parent's gauge file with git checkout so the branch would not carry a corrupted reading, and staged the observation with its diff rather than diagnosing a writer this run never read."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "567-k",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-567-k-feedback@bbad5846505f10a848faed0c0d974485185d6c93",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/567-k/execute.json",
+          ".agent-work/567-k/DESIGN_COMPARISON.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run the issue whose stated defect is that a Commander drives its work gates in a second file, execute.json, off the door under a session id it invents."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The run would demonstrate the alternative it was building."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The Commander spine's plan step mandates authoring execute.json, so the run created one and drove it under an invented session id, commander-567-k-execute, outside the MCP door -- performing the defect it was sent to remove. Separately, on a copy, a Commander standing at plan was able to amend its three work gates directly into its own spine's middle with the bookends frozen and the change recorded in the amendments trail, which is the alternative working."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The engine capability and the doctrine that would use it now disagree: nothing requires a Commander to keep using the second file, and nothing yet tells it not to."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Followed the mandated path rather than improvising around it, recorded the contradiction as first-hand evidence in the run's own why-record, and floated the doctrine migration rather than taking it unilaterally."
+        }
+      }
+    }
+  ]
+}

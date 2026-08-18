@@ -13,7 +13,7 @@
         {"id": "c1", "statement": "engine session lease claimed for this spine (commander owns the state)", "check": null, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0, "bookend": true
     },
     "context": {
       "id": "context",
@@ -130,7 +130,7 @@
         {"id": "c4", "statement": "staged diff carries no suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); refuse closeout unless a human waives via the engine override path", "check": {"kind": "git-change-policy", "mode": "staged", "max_file_bytes": 1000000, "deny_globs": ["*.parquet", "*.pkl", "*.pickle", "*.joblib", "*.pt", "*.onnx", "*.bin", "*.ckpt", "data/generated/**", "records/**", ".agent-work/LESSONS.md", ".agent-work/AGENT_FEEDBACK.md", ".agent-work/CONSTELLATION_FEEDBACK.md", ".agent-work/CONSTELLATION_FEEDBACK.collected.json"], "allow_globs": ["docs/**", "src/**", "tests/**", "skills/**", "scripts/**", ".agent-work/**"], "require_human_waiver_for_binary": true}, "satisfied": false, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0, "bookend": true
     }
   },
   "consolidation": null,

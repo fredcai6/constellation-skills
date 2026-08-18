@@ -198,6 +198,7 @@ A lease whose `last_heartbeat` is older than `lease_stale_seconds` is **stale**.
 | `result` | `pass`\|`fail`\| null | **survey only**: the check's outcome |
 | `finding` | string \| null | **survey only**: what the check found |
 | `evidence` | `[Evidence]` | attached artifacts |
+| `bookend` | bool | *optional*; **opt-in, default NOT a bookend.** A gate with `bookend: true` is a **frozen bookend** (#634): `amend` refuses `drop`, `rescope` and `retext-check` on it **regardless of status**, and refuses an `add` that would land after the last bookend. A missing key reads as not-a-bookend, so an undeclared plan behaves exactly as before. Settable through the engine via `rescope` — and because the refusal precedes the overwrite, the flag is a **one-way latch** (a later `rescope` unsetting it is refused). See *Bookends — the frozen ends of a mutable plan* |
 | `rework_count` | int | reopen count vs `config.rework_cap` |
 
 There is no `owner`/`executor` (see Scope) and no `compound`/`primitive` flag — a gate is "delegating" iff `child_checklist` is set, otherwise it is a primitive the agent does itself.
@@ -358,10 +359,25 @@ The delta file is JSON `{"ops": [...]}` with a non-empty `ops` list. Every op to
 |---|---|---|
 | `add` | `{"op":"add","id":"…","title":"…","imperative":"…","postconditions":[…],"after":"<gate-id>"?, …}` | insert a **new pending gate**. `id` must match `^[a-z0-9][a-z0-9-]*$` and be unique; `title` and `imperative` non-empty; **≥1 postcondition**. `after` names an existing gate to insert **behind** (omit to append at the end). `preconditions`/`constraints` default to empty, `directives`/`child_checklist` to null — the same shape `append` builds. |
 | `drop` | `{"op":"drop","id":"<gate-id>"}` | remove a **pending** gate (dropping a non-pending gate is refused). |
-| `rescope` | `{"op":"rescope","id":"<gate-id>", …fields}` | overwrite provided fields on a **pending** gate; overwritable fields are `title`, `imperative`, `postconditions`, `preconditions`, `constraints`, `directives`. At least one is required; if `postconditions` is given it must stay **≥1**. |
+| `rescope` | `{"op":"rescope","id":"<gate-id>", …fields}` | overwrite provided fields on a **pending** gate; overwritable fields are `title`, `imperative`, `postconditions`, `preconditions`, `constraints`, `directives`, `bookend`. (`bookend` is the retrofit path for a plan already running — see *Bookends*.) At least one is required; if `postconditions` is given it must stay **≥1**. |
 | `retext-check` | `{"op":"retext-check","id":"<gate-id>","cond":"<cond-id>","which":"postconditions"?,"command":"…"}` or `{…,"check":{…}}` | correct the **check TEXT** of one condition on a **pending or in-progress** gate (`which` defaults to `postconditions`) — `command` corrects a `command` check, or a same-kind `check` object replaces it. **Never changes the check kind**; deep-copy all-or-nothing like the others; **resets that condition to unsatisfied** (clears `satisfied`/`satisfied_by`/`waived`/`attested`) so no stale approval survives — but **never marks it satisfied** (that stays `waive`'s job). Refused on a `check: null` condition (nothing to correct — use `attest`/`waive`). |
 
 **Position / floor rule (`add`).** A new gate may not be inserted **before a frozen (non-pending) gate**. The engine computes a *floor* = one past the index of the last non-pending gate; an `add` whose landing index falls below the floor is refused, naming the frozen gate that blocks it. So an amendment can reorder and extend the pending tail but never re-sequence work that is already underway or done.
+
+**Bookends — the frozen ends of a mutable plan (#634).** The floor rule above freezes what has already been
+**started**, which covers a plan's *opening* by accident of status and covers its *closing* not at all: a closing
+gate is `pending` for the whole run, and before #634 a Commander standing at `execute` could `drop` its own
+`archive`, `review` and `feedback` in one delta and terminate having never been reviewed or archived. A gate
+declaring `bookend: true` is therefore frozen **by declaration rather than by status**: `drop`, `rescope` and
+`retext-check` on it are refused whatever its status, and an `add` may not land **after** the last bookend, so a
+frozen finish keeps meaning finish. `retext-check` is covered deliberately — it could otherwise rewrite a frozen
+gate's `command` check to something trivially true and pass it, and a freeze that only stops deletion is not a
+freeze. Between the floor and the last bookend the plan stays **freely mutable**: this is what lets a role author
+its own work gates into its own spine mid-run instead of into a second file. The declaration is read in exactly one
+helper (`_is_bookend`), so the form it takes is one function's worth of change. The shipped role spines declare
+`init` + `archive` (Commander), `init` + `closeout` (Admiral), `init` + `route` (Explorer). **Not covered:** crew
+plans, whose template is compiled by `scripts/generate_spine.py` — its gate compiler emits a fixed field list, so a
+`bookend` key in a spec would be dropped silently.
 
 **All-or-nothing.** The whole delta is validated and built on **copies**; canonical state is touched only once *every* op passes. Any invalid op refuses the entire amendment and leaves the checklist **unmutated** — important, because the engine persists state even on the error path, so a partially-applied delta could otherwise leak. On success the engine appends one audit entry to the top-level `amendments` list: `{ts, reason, authority, ops:[…]}` (the `ops` are human-readable summaries such as `"added g3"`, `"dropped g4"`, `"rescoped g2"`). `amend` is a mutating verb: once a lease exists it needs the owning `--session-id`, and a successful amend refreshes the lease.
 

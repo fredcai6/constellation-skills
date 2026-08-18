@@ -1,0 +1,298 @@
+{
+  "work_id": "g2-implement-567-k",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-declare-bookends",
+    "m2-full-suites",
+    "m3-e2e-proof",
+    "m4-result-artifact"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the handoff at .agent-work/567-k/crew-handoffs/g2-implement-handoff.md, the g1 evidence at .agent-work/567-k/evidence/probe-closing-bookend.md, and the engine's bookend implementation in scripts/checklist_engine.py (_is_bookend and its call sites). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff, g1 evidence, and engine bookend mechanism read; handoff confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff, probe-closing-bookend.md, and checklist_engine.py _is_bookend + call sites (add/drop/rescope/retext-check guards) all read; handoff verified complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-declare-bookends": {
+      "id": "m1-declare-bookends",
+      "title": "Pin the declaration with a test (red), then declare bookends in the three templates (green)",
+      "imperative": "TDD, test-led. FIRST add a new test class to tests/test_checklist_engine.py asserting, per template (COMMANDER_SPINE, ADMIRAL_SPINE, EXPLORER_SPINE), the EXACT set of gate ids carrying task.get('bookend') is True, and every other gate in that template does NOT carry a truthy 'bookend' key -- an assertion that only checks 'at least one gate flagged' is insufficient. Run it and observe it FAIL against the current (undeclared) templates -- attest that as c1 (manual, RED). THEN add \"bookend\": true to exactly: COMMANDER_SPINE.template.json tasks.init and tasks.archive; ADMIRAL_SPINE.template.json tasks.init and tasks.closeout; EXPLORER_SPINE.template.json tasks.init and tasks.route -- on those six gates and no others, adding only the new key beside the existing per-task keys (status, rework_count, etc.), with no other reformatting. Confirm each edited template still parses as JSON and still instantiates via scripts/init_work_area.py --spine (or the equivalent instantiation path test_init_work_area.py already exercises) -- do this on a COPY in a temp dir, never against the live .agent-work/567-k/spine.json or .agent-work/epic-567-door/spine.json. Re-run the new test and observe it PASS -- c2 (command check).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff/evidence/engine mechanism confirmed loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new bookend-declaration pinning test written and observed FAILING against the undeclared templates -- manual attest (check MUST be null so the by-design-failing test is not itself run as a gate)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Added ShippedTemplateBookendDeclarations to tests/test_checklist_engine.py; ran pytest -k Bookend and observed 3 failed subtests (COMMANDER/ADMIRAL/EXPLORER templates all report got=[] vs expected two bookend gates each) -- RED confirmed against undeclared templates. 11 passed = pre-existing bookend engine-mechanism tests (#634), unaffected."
+        },
+        {
+          "id": "c2",
+          "statement": "bookend declared on exactly the six named gates; templates still parse/instantiate; pinning test now passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k Bookend"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-declare-bookends-1"
+        }
+      ],
+      "constraints": [
+        "only init/archive (commander), init/closeout (admiral), init/route (explorer) may carry bookend:true",
+        "no other reformatting of the three template files",
+        "never touch scripts/checklist_engine.py, scripts/mcp_spine_server.py, IMPLEMENTER_PLAN.template.json, specs/*.spine.toml, scripts/generate_spine.py",
+        "never run a mutating engine verb against a live spine.json/execute.json"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-declare-bookends-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k Bookend",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-full-suites": {
+      "id": "m2-full-suites",
+      "title": "Run the full required verification suites",
+      "imperative": "Run both required verification commands from the handoff in full (not just the new test) and confirm both are green: the full tests/test_checklist_engine.py suite, and tests/test_generate_spine.py plus tests/test_init_work_area.py together (the latter two guard the deliberately-out-of-scope generate_spine.py path and template instantiation, so they must stay green even though that file is untouched).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "bookend declarations landed and the pinning test passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete: bookends declared, templates parse/instantiate, pinning test green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full tests/test_checklist_engine.py suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-full-suites-1"
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_generate_spine.py and tests/test_init_work_area.py pass",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_generate_spine.py tests/test_init_work_area.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-full-suites-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-full-suites-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-full-suites-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_generate_spine.py tests/test_init_work_area.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-e2e-proof": {
+      "id": "m3-e2e-proof",
+      "title": "Prove the declaration live end to end on a copy, fresh process",
+      "imperative": "On a COPY of the Commander template in a temp dir (never the live spine files), drive it through a fresh `python scripts/checklist_engine.py` process: mark init..plan complete and execute in-progress, then attempt `amend` with delta {\"ops\":[{\"op\":\"drop\",\"id\":\"archive\"}]} and confirm it is REFUSED, citing 'bookend'. Capture the exact refusal text. Attest c1 with the pasted refusal as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "declarations landed and suites green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete: declarations landed, full suites green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "drop of archive on a copy with the declared bookend is REFUSED; refusal text captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Fresh-process copy of COMMANDER_SPINE.template.json (init/context/understand/plan complete, execute in-progress, rest pending, same fixture shape as probe-closing-bookend.md), delta {\"ops\":[{\"op\":\"drop\",\"id\":\"archive\"}]}: REFUSED: drop archive: a declared bookend gate cannot be dropped, regardless of status (exit 1). Copy verified unmutated afterward (archive still present, items list unchanged). Live spine.json/execute.json files at .agent-work/567-k/ and .agent-work/epic-567-door/ were never targeted by any mutating verb this run."
+        }
+      ],
+      "constraints": [
+        "copy only, never the live .agent-work/567-k/spine.json, .agent-work/567-k/execute.json, or .agent-work/epic-567-door/spine.json"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-result-artifact": {
+      "id": "m4-result-artifact",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write .agent-work/567-k/crew-handoffs/g2-implement-result.md per skills/implementer/templates/IMPLEMENTER_RESULT.template.md: diff summary, red->green evidence, the pasted end-to-end refusal, both test tallies, anything refused and why, and a Workflow Feedback section including your own mistakes. The '## Return status' section's value must read exactly 'complete' (lowercase).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "e2e proof captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e2e proof captured (m3 complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result artifact written at the exact required path with a Return status of complete",
+          "check": {
+            "kind": "command",
+            "command": "grep -A1 '^## Return status' .agent-work/567-k/crew-handoffs/g2-implement-result.md | grep -q '^`complete`$'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-result-artifact-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-result-artifact-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -A1 '^## Return status' .agent-work/567-k/crew-handoffs/g2-implement-result.md | grep -q '^`complete`$'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g2-implement-implementer-attempt-1-1787031234",
+    "status": "released",
+    "claimed_at": "2026-08-18T05:33:54.575249+00:00",
+    "last_heartbeat": "2026-08-18T05:39:05.331499+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T05:39:09.963784+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "bookend key is a per-task boolean (task.get('bookend')) read by _is_bookend in checklist_engine.py; it freezes drop/rescope/retext-check on that gate and caps amend-add past the last bookend. Handoff confirmed complete: six named gates, test requirement, hard fences, verification commands, stop conditions, return format all present.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:34:12.220859+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-declare-bookends",
+      "why": "declared bookend:true on exactly commander init/archive, admiral init/closeout, explorer init/route (task-level key, per _is_bookend in checklist_engine.py); confirmed all three templates still parse and instantiate cleanly via init_work_area.py --spine (auto-detected skill-dir) in temp dirs, with the flag surviving into spine.json; pinning test (ShippedTemplateBookendDeclarations) went RED then GREEN.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:35:48.758566+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-full-suites",
+      "why": "full test_checklist_engine.py suite initially caught a real gap this run introduced: TemplateOnlyFieldAllowlist.test_shipped_templates_carry_no_unaccounted_task_fields failed because 'bookend' wasn't yet on the stated template-only allowlist -- added it there with a reason (task-only field, never builder-emitted). Full suite (467 passed, 143 subtests) and test_generate_spine.py + test_init_work_area.py (202 passed) both now green.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:37:25.431278+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-e2e-proof",
+      "why": "the declared closing bookend on archive is now enforced end to end: the exact drop that succeeded silently in probe-closing-bookend.md is now REFUSED, citing bookend, and the copy is left byte-unmutated.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:38:09.074284+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-result-artifact",
+      "why": "result artifact written at the exact handoff-required path with the full evidence set (diff summary, red->green, e2e refusal, both suite tallies, workflow feedback) and Return status: complete.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:39:05.331489+00:00"
+    }
+  ]
+}

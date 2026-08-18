@@ -1,0 +1,640 @@
+{
+  "work_id": "567-k",
+  "type": "gated",
+  "config_ref": null,
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-proof"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine (global-orchestrator.md, global-everyone.md) and the project deltas docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Note that docs/agents/engine-config.json does NOT exist in this repo. Re-read .agent-work/567-k/MISSION_FRAME.md and notes-1.md and confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + project deltas + mission frame re-read; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doctrine and project deltas re-read at the spine's context step and carried forward; MISSION_FRAME.md and notes-1.md re-read; docs/agents/engine-config.json confirmed absent in this repo. Plan intent and scope confirmed as narrowed at plan: engine guard + three owned SPINE templates + proof; specs/ and the crew template floated."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Bookend guard in amend(): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer (run_crew.py, --model sonnet). Task: give amend() a declared-bookend guard so a role cannot amend away its own CLOSING bookend, while the middle stays freely mutable. Recommended declaration form is candidate B's per-gate 'bookend': true key (see .agent-work/567-k/DESIGN_COMPARISON.md) \u2014 the human may swap the declaration form, so keep the declaration read behind ONE helper function so the swap is one function. Guards go in add (ceiling), drop, rescope and retext-check. Add 'bookend' to rescope's overwritable tuple so the flag can be set through the engine (the retrofit path for live spines) and is a one-way latch. Attach the returned IMPLEMENTER_RESULT with status copied verbatim, lowercase.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "design comparison written and the recommended declaration form named",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DESIGN_COMPARISON.md written; recommended declaration form named (candidate B, per-gate bookend flag, with the ship-time retrofit attached)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Sole-writer scope this wave: scripts/checklist_engine.py, scripts/mcp_spine_server.py, the three *SPINE*.template.json files under skills/*/templates/ (COMMANDER, ADMIRAL, EXPLORER), and tests covering those. OUT OF SCOPE and FLOATED, do not touch: specs/*.spine.toml and skills/implementer/templates/IMPLEMENTER_PLAN.template.json. IMPLEMENTER_PLAN is not a *SPINE* template and is COMPILED from specs/implementer.spine.toml by scripts/generate_spine.py, whose _compile_gate (:669-684) returns a FIXED field list with no bookend key, so a hand-added declaration would silently vanish on the next regeneration. This repo has already had that exact incident (tests/test_generate_spine.py:1694-1700, 'the artifact diverged from its source'). generate_spine.py is in neither this lane's ownership nor lane J's fence, so the crew half is FLOATED to the Admiral, not hand-patched. FENCED to others: scripts/run_crew.py, scripts/install_constellation.py, both LAUNCH_ORDER.template.md (lane J), map/INDEX.md (the Admiral).",
+        "The engine under edit is not the engine in play: hooks resolve CLAUDE_PROJECT_DIR once at session launch (#269), so validate every engine/door behaviour in a FRESH process with explicit paths. Never run a mutating verb against a live spine \u2014 copy it to a temp dir first. .agent-work/567-k/spine.json and .agent-work/epic-567-door/spine.json are LIVE.",
+        "Backward compatibility is a hard requirement: an undeclared plan must behave exactly as it does at 9b38b9d9. Every spine in flight today carries no bookend declaration.",
+        "Tests are part of this gate: negative tests (drop/rescope/retext-check of a bookend REFUSED; add past the ceiling REFUSED), an all-or-nothing test (a mixed delta leaves the plan unmutated), and an explicit backward-compat test (an undeclared plan behaves exactly as today).",
+        "Do NOT touch spine_advance --from_child or consolidate(): the parent/child verdict seam is out of scope and must survive untouched.",
+        "DECISION, explicit because the design comparison called it open: the bookend guard DOES cover retext-check. Candidate A argued the opposite (a bookend whose typo'd check can never be corrected is worse). Overridden, with the reason on the record: retext-check can rewrite a frozen gate's command check to something trivially true and then pass it, which defeats the freeze completely while leaving the gate standing \u2014 a freeze that only stops deletion is not a freeze. The typo case has a sanctioned path that does not require weakening the guard: fix the template and re-instantiate, or waive the condition with a recorded authority. Surface this to the human as a decision candidate.",
+        "Reviewer/survey is deliberately NOT in scope, and this is the reasoning rather than an omission: amend on a SURVEY already accepts a retext-check-only delta (checklist_engine.py:3013-3029), so add/drop/rescope of a survey item is structurally impossible already and a survey needs no bookend."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:2971 amend()",
+          "scripts/checklist_engine.py:3036 _floor()",
+          "scripts/checklist_engine.py:3047/3076/3089/3115 add/drop/rescope/retext-check",
+          "scripts/checklist_engine.py:3180 cl['amendments'] audit append"
+        ],
+        "evidence": [
+          ".agent-work/567-k/evidence/probe-closing-bookend.md"
+        ],
+        "decision": [
+          "ruling:frozen-means-frozen",
+          "ruling:every-planning-role",
+          "ruling:plan-change-is-legible"
+        ]
+      }
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Bookend guard in amend(): review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and the IMPLEMENTER_RESULT. Dispatch constellation-reviewer (run_crew.py, --model sonnet). The reviewer must independently confirm: the four guards refuse; an undeclared plan is unchanged from 9b38b9d9; the all-or-nothing property holds on a refused mixed delta; from_child and consolidate() are untouched; and no fenced path was written.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-implement returned complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-implement returned complete; result attached as e-g1-implement-1; Commander independently re-ran the tests and reproduced all four behaviours."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned with verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [
+        "Sole-writer scope this wave: scripts/checklist_engine.py, scripts/mcp_spine_server.py, the three *SPINE*.template.json files under skills/*/templates/ (COMMANDER, ADMIRAL, EXPLORER), and tests covering those. OUT OF SCOPE and FLOATED, do not touch: specs/*.spine.toml and skills/implementer/templates/IMPLEMENTER_PLAN.template.json. IMPLEMENTER_PLAN is not a *SPINE* template and is COMPILED from specs/implementer.spine.toml by scripts/generate_spine.py, whose _compile_gate (:669-684) returns a FIXED field list with no bookend key, so a hand-added declaration would silently vanish on the next regeneration. This repo has already had that exact incident (tests/test_generate_spine.py:1694-1700, 'the artifact diverged from its source'). generate_spine.py is in neither this lane's ownership nor lane J's fence, so the crew half is FLOATED to the Admiral, not hand-patched. FENCED to others: scripts/run_crew.py, scripts/install_constellation.py, both LAUNCH_ORDER.template.md (lane J), map/INDEX.md (the Admiral).",
+        "The engine under edit is not the engine in play: hooks resolve CLAUDE_PROJECT_DIR once at session launch (#269), so validate every engine/door behaviour in a FRESH process with explicit paths. Never run a mutating verb against a live spine \u2014 copy it to a temp dir first. .agent-work/567-k/spine.json and .agent-work/epic-567-door/spine.json are LIVE."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:2971 amend()",
+          "scripts/checklist_engine.py:3036 _floor()",
+          "scripts/checklist_engine.py:3047/3076/3089/3115 add/drop/rescope/retext-check",
+          "scripts/checklist_engine.py:3180 cl['amendments'] audit append"
+        ],
+        "evidence": [
+          ".agent-work/567-k/evidence/probe-closing-bookend.md"
+        ],
+        "decision": [
+          "ruling:frozen-means-frozen",
+          "ruling:every-planning-role",
+          "ruling:plan-change-is-legible"
+        ]
+      }
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Bookend guard in amend(): integrate",
+      "imperative": "Check the verdict. On APPROVE, independently re-run the verification yourself before advancing \u2014 do not accept the crew's claim: re-run the targeted tests and reproduce the refusals in a fresh process against a COPY. On BLOCK, return for rework. Log out-of-scope finds as triage candidates under .agent-work/567-k/triage-candidates/. Harvest the crew's Workflow Feedback into the run's lesson pool.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-review returned a verdict",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-review returned APPROVE."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "review verdict APPROVE, and the Commander independently reproduced the refusals and the targeted tests",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "targeted tests pass",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -x"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [
+        "Sole-writer scope this wave: scripts/checklist_engine.py, scripts/mcp_spine_server.py, the three *SPINE*.template.json files under skills/*/templates/ (COMMANDER, ADMIRAL, EXPLORER), and tests covering those. OUT OF SCOPE and FLOATED, do not touch: specs/*.spine.toml and skills/implementer/templates/IMPLEMENTER_PLAN.template.json. IMPLEMENTER_PLAN is not a *SPINE* template and is COMPILED from specs/implementer.spine.toml by scripts/generate_spine.py, whose _compile_gate (:669-684) returns a FIXED field list with no bookend key, so a hand-added declaration would silently vanish on the next regeneration. This repo has already had that exact incident (tests/test_generate_spine.py:1694-1700, 'the artifact diverged from its source'). generate_spine.py is in neither this lane's ownership nor lane J's fence, so the crew half is FLOATED to the Admiral, not hand-patched. FENCED to others: scripts/run_crew.py, scripts/install_constellation.py, both LAUNCH_ORDER.template.md (lane J), map/INDEX.md (the Admiral).",
+        "The engine under edit is not the engine in play: hooks resolve CLAUDE_PROJECT_DIR once at session launch (#269), so validate every engine/door behaviour in a FRESH process with explicit paths. Never run a mutating verb against a live spine \u2014 copy it to a temp dir first. .agent-work/567-k/spine.json and .agent-work/epic-567-door/spine.json are LIVE."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -x",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:2971 amend()",
+          "scripts/checklist_engine.py:3036 _floor()",
+          "scripts/checklist_engine.py:3047/3076/3089/3115 add/drop/rescope/retext-check",
+          "scripts/checklist_engine.py:3180 cl['amendments'] audit append"
+        ],
+        "evidence": [
+          ".agent-work/567-k/evidence/probe-closing-bookend.md"
+        ],
+        "decision": [
+          "ruling:frozen-means-frozen",
+          "ruling:every-planning-role",
+          "ruling:plan-change-is-legible"
+        ]
+      }
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Declare bookends in the role plan templates: implement",
+      "imperative": "Fill the implementer handoff and dispatch (--model sonnet). Task: declare bookends in the THREE owned role spine templates, per ruling:every-planning-role as far as this lane's ownership reaches. COMMANDER_SPINE: freeze init and archive. ADMIRAL_SPINE: freeze init and closeout. EXPLORER_SPINE: freeze init and route. Justify each choice in the handoff rather than assuming it. The crew template and specs/ are OUT: see this gate's scope constraint, and the float in the return.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated: the engine honours the declaration",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 integrated at b0a96c3f; the engine honours a per-gate bookend declaration, proven by independent reproduction and by the reviewer's red-proof."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Sole-writer scope this wave: scripts/checklist_engine.py, scripts/mcp_spine_server.py, the three *SPINE*.template.json files under skills/*/templates/ (COMMANDER, ADMIRAL, EXPLORER), and tests covering those. OUT OF SCOPE and FLOATED, do not touch: specs/*.spine.toml and skills/implementer/templates/IMPLEMENTER_PLAN.template.json. IMPLEMENTER_PLAN is not a *SPINE* template and is COMPILED from specs/implementer.spine.toml by scripts/generate_spine.py, whose _compile_gate (:669-684) returns a FIXED field list with no bookend key, so a hand-added declaration would silently vanish on the next regeneration. This repo has already had that exact incident (tests/test_generate_spine.py:1694-1700, 'the artifact diverged from its source'). generate_spine.py is in neither this lane's ownership nor lane J's fence, so the crew half is FLOATED to the Admiral, not hand-patched. FENCED to others: scripts/run_crew.py, scripts/install_constellation.py, both LAUNCH_ORDER.template.md (lane J), map/INDEX.md (the Admiral).",
+        "The engine under edit is not the engine in play: hooks resolve CLAUDE_PROJECT_DIR once at session launch (#269), so validate every engine/door behaviour in a FRESH process with explicit paths. Never run a mutating verb against a live spine \u2014 copy it to a temp dir first. .agent-work/567-k/spine.json and .agent-work/epic-567-door/spine.json are LIVE.",
+        "skills/commander/templates/EXECUTE_PLAN.template.json is NOT a *SPINE* template and its disposition is a floated scope question \u2014 do not migrate it in this gate."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:2971 amend()",
+          "scripts/checklist_engine.py:3036 _floor()",
+          "scripts/checklist_engine.py:3047/3076/3089/3115 add/drop/rescope/retext-check",
+          "scripts/checklist_engine.py:3180 cl['amendments'] audit append"
+        ],
+        "evidence": [
+          ".agent-work/567-k/evidence/probe-closing-bookend.md"
+        ],
+        "decision": [
+          "ruling:frozen-means-frozen",
+          "ruling:every-planning-role",
+          "ruling:plan-change-is-legible"
+        ]
+      }
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Declare bookends in the role plan templates: review",
+      "imperative": "Dispatch constellation-reviewer (--model sonnet). Confirm each template still instantiates (init_work_area round-trip), the declarations match what the design comparison and the human's direction call for, and the crew template's deliberate lack of a closing bookend is justified rather than forgotten.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-implement returned complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2-implement returned complete; declarations independently confirmed exact."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned with verdict APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [
+        "Sole-writer scope this wave: scripts/checklist_engine.py, scripts/mcp_spine_server.py, the three *SPINE*.template.json files under skills/*/templates/ (COMMANDER, ADMIRAL, EXPLORER), and tests covering those. OUT OF SCOPE and FLOATED, do not touch: specs/*.spine.toml and skills/implementer/templates/IMPLEMENTER_PLAN.template.json. IMPLEMENTER_PLAN is not a *SPINE* template and is COMPILED from specs/implementer.spine.toml by scripts/generate_spine.py, whose _compile_gate (:669-684) returns a FIXED field list with no bookend key, so a hand-added declaration would silently vanish on the next regeneration. This repo has already had that exact incident (tests/test_generate_spine.py:1694-1700, 'the artifact diverged from its source'). generate_spine.py is in neither this lane's ownership nor lane J's fence, so the crew half is FLOATED to the Admiral, not hand-patched. FENCED to others: scripts/run_crew.py, scripts/install_constellation.py, both LAUNCH_ORDER.template.md (lane J), map/INDEX.md (the Admiral).",
+        "The engine under edit is not the engine in play: hooks resolve CLAUDE_PROJECT_DIR once at session launch (#269), so validate every engine/door behaviour in a FRESH process with explicit paths. Never run a mutating verb against a live spine \u2014 copy it to a temp dir first. .agent-work/567-k/spine.json and .agent-work/epic-567-door/spine.json are LIVE."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:2971 amend()",
+          "scripts/checklist_engine.py:3036 _floor()",
+          "scripts/checklist_engine.py:3047/3076/3089/3115 add/drop/rescope/retext-check",
+          "scripts/checklist_engine.py:3180 cl['amendments'] audit append"
+        ],
+        "evidence": [
+          ".agent-work/567-k/evidence/probe-closing-bookend.md"
+        ],
+        "decision": [
+          "ruling:frozen-means-frozen",
+          "ruling:every-planning-role",
+          "ruling:plan-change-is-legible"
+        ]
+      }
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Declare bookends in the role plan templates: integrate",
+      "imperative": "Check the verdict, independently reproduce the evidence, and integrate. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-review returned a verdict",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2-review returned APPROVE with two non-blocking findings, both staged."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "review verdict APPROVE and independently reproduced",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "the declaration landed on exactly the intended gate ids in all three templates, and on no others \u2014 asserted mechanically, not eyeballed by a reviewer",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -c \"import json,sys;E={'skills/commander/templates/COMMANDER_SPINE.template.json':{'init','archive'},'skills/admiral/templates/ADMIRAL_SPINE.template.json':{'init','closeout'},'skills/explorer/templates/EXPLORER_SPINE.template.json':{'init','route'}};bad=[];[bad.append((p,sorted(g),sorted(e))) for p,e in E.items() for g in [{k for k,v in json.load(open(p))['tasks'].items() if v.get('bookend')}] if g!=e];sys.exit(1) if bad else print('bookend sets exact:',list(E))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [
+        "Sole-writer scope this wave: scripts/checklist_engine.py, scripts/mcp_spine_server.py, the three *SPINE*.template.json files under skills/*/templates/ (COMMANDER, ADMIRAL, EXPLORER), and tests covering those. OUT OF SCOPE and FLOATED, do not touch: specs/*.spine.toml and skills/implementer/templates/IMPLEMENTER_PLAN.template.json. IMPLEMENTER_PLAN is not a *SPINE* template and is COMPILED from specs/implementer.spine.toml by scripts/generate_spine.py, whose _compile_gate (:669-684) returns a FIXED field list with no bookend key, so a hand-added declaration would silently vanish on the next regeneration. This repo has already had that exact incident (tests/test_generate_spine.py:1694-1700, 'the artifact diverged from its source'). generate_spine.py is in neither this lane's ownership nor lane J's fence, so the crew half is FLOATED to the Admiral, not hand-patched. FENCED to others: scripts/run_crew.py, scripts/install_constellation.py, both LAUNCH_ORDER.template.md (lane J), map/INDEX.md (the Admiral).",
+        "The engine under edit is not the engine in play: hooks resolve CLAUDE_PROJECT_DIR once at session launch (#269), so validate every engine/door behaviour in a FRESH process with explicit paths. Never run a mutating verb against a live spine \u2014 copy it to a temp dir first. .agent-work/567-k/spine.json and .agent-work/epic-567-door/spine.json are LIVE."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -c \"import json,sys;E={'skills/commander/templates/COMMANDER_SPINE.template.json':{'init','archive'},'skills/admiral/templates/ADMIRAL_SPINE.template.json':{'init','closeout'},'skills/explorer/templates/EXPLORER_SPINE.template.json':{'init','route'}};bad=[];[bad.append((p,sorted(g),sorted(e))) for p,e in E.items() for g in [{k for k,v in json.load(open(p))['tasks'].items() if v.get('bookend')}] if g!=e];sys.exit(1) if bad else print('bookend sets exact:',list(E))\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:2971 amend()",
+          "scripts/checklist_engine.py:3036 _floor()",
+          "scripts/checklist_engine.py:3047/3076/3089/3115 add/drop/rescope/retext-check",
+          "scripts/checklist_engine.py:3180 cl['amendments'] audit append"
+        ],
+        "evidence": [
+          ".agent-work/567-k/evidence/probe-closing-bookend.md"
+        ],
+        "decision": [
+          "ruling:frozen-means-frozen",
+          "ruling:every-planning-role",
+          "ruling:plan-change-is-legible"
+        ]
+      }
+    },
+    "g3-proof": {
+      "id": "g3-proof",
+      "title": "Self-hosting proof and full suite (reasoning gate)",
+      "imperative": "REASONING GATE \u2014 no crew. Crew waiver: this gate produces a measurement and a document, not code, and the measurement is one the Commander must make in its own hands per global-everyone.md 'verify claimed side-effects against the world'. Delegating the proof of my own change to a crew is exactly the self-grading this repo's independent-reviewer premise exists to prevent \u2014 g1/g2 already carry that independent review. Do: (1) read-only status on the LIVE spine exits 0; (2) every mutating verb proven against a COPY, never the live file, in a fresh process with explicit paths; (3) full suite on Linux in a CLEAN DETACHED WORKTREE of the branch, never the working copy, with env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR; record the tally, the ^FAILED grep and the commit sha. MapTreeFreshnessTests may fail; nothing else may.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 and g2 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 integrated at b0a96c3f; g2 integrated at HEAD."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "self-hosting proof: read-only status on the LIVE spine exits 0, AND dropping a declared closing bookend is REFUSED on a COPY (never the live file), in a fresh process with explicit paths",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle/scripts/checklist_engine.py --file /home/tommy/projects/constellation-skills/.agent-work/epic-567-door/spine.json current > /dev/null && d=$(mktemp -d) && cp /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle/skills/commander/templates/COMMANDER_SPINE.template.json $d/c.json && printf '%s' '{\"ops\":[{\"op\":\"drop\",\"id\":\"archive\"}]}' > $d/delta.json && ! env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle/scripts/checklist_engine.py --file $d/c.json amend --delta $d/delta.json --reason self-hosting-proof --authority self-hosting-proof"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-proof-1"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green on Linux in a CLEAN DETACHED WORKTREE of this branch (not the working copy); MapTreeFreshnessTests deselected per decision:map-index-is-admiral-owned",
+          "check": {
+            "kind": "command",
+            "command": "d=$(mktemp -d)/wt && git -C /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle worktree add --detach $d HEAD > /dev/null 2>&1 && ( cd $d && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q --deselect tests/test_code_map.py::MapTreeFreshnessTests > /tmp/567k-suite.log 2>&1 ); rc=$?; git -C /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle worktree remove --force $d > /dev/null 2>&1; tail -3 /tmp/567k-suite.log; grep -c '^FAILED' /tmp/567k-suite.log; exit $rc"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-proof-2"
+        }
+      ],
+      "constraints": [
+        "Sole-writer scope this wave: scripts/checklist_engine.py, scripts/mcp_spine_server.py, the three *SPINE*.template.json files under skills/*/templates/ (COMMANDER, ADMIRAL, EXPLORER), and tests covering those. OUT OF SCOPE and FLOATED, do not touch: specs/*.spine.toml and skills/implementer/templates/IMPLEMENTER_PLAN.template.json. IMPLEMENTER_PLAN is not a *SPINE* template and is COMPILED from specs/implementer.spine.toml by scripts/generate_spine.py, whose _compile_gate (:669-684) returns a FIXED field list with no bookend key, so a hand-added declaration would silently vanish on the next regeneration. This repo has already had that exact incident (tests/test_generate_spine.py:1694-1700, 'the artifact diverged from its source'). generate_spine.py is in neither this lane's ownership nor lane J's fence, so the crew half is FLOATED to the Admiral, not hand-patched. FENCED to others: scripts/run_crew.py, scripts/install_constellation.py, both LAUNCH_ORDER.template.md (lane J), map/INDEX.md (the Admiral).",
+        "The engine under edit is not the engine in play: hooks resolve CLAUDE_PROJECT_DIR once at session launch (#269), so validate every engine/door behaviour in a FRESH process with explicit paths. Never run a mutating verb against a live spine \u2014 copy it to a temp dir first. .agent-work/567-k/spine.json and .agent-work/epic-567-door/spine.json are LIVE.",
+        "A check that runs against your own working copy is not a check on the world \u2014 the suite runs in a clean detached worktree or it does not count.",
+        "HONEST SCOPE, per the cold critic: this run delivers the FREEZE half of #634. The 'capture the plan changed, here's how' half is served only by amend's pre-existing cl['amendments'] trail, to which this run adds nothing, and no role is newly TOLD that spine_amend is how it re-plans its own middle (grep -rn 'amend' skills/implementer/ returns nothing). Say so plainly in the return as a measured limitation. Do NOT promote it into docs/agents/* \u2014 that is the human's call."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-proof-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle/scripts/checklist_engine.py --file /home/tommy/projects/constellation-skills/.agent-work/epic-567-door/spine.json current > /dev/null && d=$(mktemp -d) && cp /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle/skills/commander/templates/COMMANDER_SPINE.template.json $d/c.json && printf '%s' '{\"ops\":[{\"op\":\"drop\",\"id\":\"archive\"}]}' > $d/delta.json && ! env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle/scripts/checklist_engine.py --file $d/c.json amend --delta $d/delta.json --reason self-hosting-proof --authority self-hosting-proof",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-proof-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "d=$(mktemp -d)/wt && git -C /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle worktree add --detach $d HEAD > /dev/null 2>&1 && ( cd $d && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q --deselect tests/test_code_map.py::MapTreeFreshnessTests > /tmp/567k-suite.log 2>&1 ); rc=$?; git -C /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle worktree remove --force $d > /dev/null 2>&1; tail -3 /tmp/567k-suite.log; grep -c '^FAILED' /tmp/567k-suite.log; exit $rc",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:2971 amend()",
+          "scripts/checklist_engine.py:3036 _floor()",
+          "scripts/checklist_engine.py:3047/3076/3089/3115 add/drop/rescope/retext-check",
+          "scripts/checklist_engine.py:3180 cl['amendments'] audit append"
+        ],
+        "evidence": [
+          ".agent-work/567-k/evidence/probe-closing-bookend.md"
+        ],
+        "decision": [
+          "ruling:frozen-means-frozen",
+          "ruling:every-planning-role",
+          "ruling:plan-change-is-legible"
+        ]
+      }
+    }
+  },
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "commander-567-k-execute",
+    "status": "released",
+    "claimed_at": "2026-08-18T05:14:22.237816+00:00",
+    "last_heartbeat": "2026-08-18T05:53:48.412042+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T05:54:38.864266+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Entering execution with the scope narrowed by the cold critic: the crew half is fenced behind scripts/generate_spine.py, which neither lane owns, so this run delivers the freeze for Admiral, Commander and Explorer and floats crew. Recording first-hand what this gate is: I am driving a SECOND checklist file under a session id I invented (commander-567-k-execute), off the door, which is exactly the defect #634 names.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:14:22.426767+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "The guard landed as one swappable seam, which was the requirement that mattered: _is_bookend() is the only place task.get('bookend') is read, so a future switch to a positional rule or a plan-level region is a change to one function, not a rewrite. I verified the crew rather than believing it: re-ran its tests myself (528 passed, 154 subtests, 0 FAILED) and independently reproduced all four behaviours in a fresh process against COPIES \u2014 the measured three-drop gap is now REFUSED on a declared plan, an insert past the closing bookend is REFUSED, an UNDECLARED plan still drops its closing gates exactly as at 9b38b9d9, and a refused delta leaves items untouched. The load-bearing demonstration: a Commander standing at 'plan' amended g1-implement/g1-review/g1-integrate directly into its own spine's middle, bookends frozen, with the change recorded in amendments as reason+authority+ops \u2014 #634's actual point, working, with no execute.json and no invented session id. The crew also caught an error in MY handoff: I wrote the ceiling formula as the bookend's index+1, which would have permitted the append-past-archive case my own prose said must be refused; it implemented the corrected semantics and said so.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:27:03.734139+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "APPROVE from an independent reviewer that reproduced rather than read: it re-ran every criterion, and on criterion 10 it broke two guards locally to confirm the new tests actually go red before restoring the tree. It also re-derived, without being told the answer, the off-by-one in candidate B's written ceiling formula that the implementer had already caught \u2014 two independent arrivals at the same defect in the design artifact, which is why I corrected DESIGN_COMPARISON.md so a later reader does not copy it. Three findings, all info/nit, none blocking: the formula divergence (a doc fix, now done), agreement rather than disagreement on covering retext-check, and a nit that the four guard messages hand-write their prose instead of sharing a builder \u2014 which I am leaving, because the messages are usefully distinct per verb and criterion 7's one-seam requirement was about the READ, not the message text.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:31:33.200427+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Integrated. The c2 command postcondition ran the targeted suite itself on advance, so the close is gated on the engine's own execution, not on my report of it. The mechanism is real: a Commander at plan can now author its work gates into its own spine's middle while init and archive stay frozen, with the change legible in amendments as ts+reason+authority+ops. What is NOT yet true is that anything declares a bookend \u2014 the guard protects nothing until g2 lands the declarations in the templates, which is why g2 is not optional polish.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:31:51.060034+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "Six declarations landed on exactly the intended gates and no others \u2014 I verified by computing the set from the JSON myself, not by reading the diff. The diff is as small as it should be: one key appended per gate, no reformatting of files that are read constantly.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:39:47.128828+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "APPROVE. The reviewer did what I most wanted from criterion 7 \u2014 it judged the six choices rather than only verifying them, and it found something I had not: Admiral's closeout carries a human-acceptance postcondition baked onto the gate now frozen, while Commander's archive and Explorer's route do not, so for those two the human-confirmation requirement still lives at 'review', inside the mutable middle, and is amendable away. That means this freeze protects a run's COMPLETION but not its ACCEPTANCE. Staged as a triage candidate and deliberately not taken: baking an acceptance postcondition onto a closing bookend changes what a run must prove before it can close, which is the human's rigor-dial call and wider than #634.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:50:28.164903+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "Integrated. The c2 command postcondition \u2014 the one the cold critic made me add \u2014 ran on advance and asserted the exact bookend id set per template rather than trusting a reviewer's prose, which is the difference between checking the declaration landed and checking someone said it did.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:50:28.396356+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-proof",
+      "why": "Self-hosting proof and the full suite, both run in this gate rather than delegated: the whole point is that the Commander verifies its own change in its own hands, and the independent review already happened at g1 and g2 where the code was written. Read-only on both live spines exits 0 under the engine I just patched. Every mutating verb ran against copies: the exact three-drop delta that succeeded at 9b38b9d9 is now refused, the middle still grows, and a mixed delta rolls back so the legal op does not land either. The Admiral's work area is untouched.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:53:48.412018+00:00"
+    }
+  ]
+}

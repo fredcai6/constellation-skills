@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "#634 \u2014 one spine per agent: frozen bookends, mutable middle",
+      "spec_path": ".agent-work/567-k/MISSION_FRAME.md",
+      "intent_and_why": "A run's plan should be frozen at its bookends and mutable in its middle, and live in one spine per agent, for Admiral, Commander and crew alike."
+    },
+    "definition_of_done": [
+      "amend() refuses to touch a declared bookend gate, while the middle stays freely mutable.",
+      "The three role spine templates this lane owns declare their bookends.",
+      "The plan change stays legible through amend's existing reason+authority+amendments trail.",
+      "A design comparison of N>=2 candidates is returned UNCONVERGED for the human."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Backward compatible: an undeclared plan behaves exactly as at 9b38b9d9.",
+      "sufficient_evidence": "Negative tests proven to go red first, plus independent reproduction in a fresh process against copies.",
+      "appetite": "One extended session, lane K of epic #567 wave 3."
+    },
+    "hard_constraints": [
+      "Never run a mutating engine verb against a live spine \u2014 copy first.",
+      "The engine under edit is not the engine in play (#269): validate in a fresh process with explicit paths.",
+      "File no issue (decision:no-issue-filing-mid-run); stage candidates only.",
+      "Promote nothing into docs/agents/* (decision:no-doctrine-promotion).",
+      "Do not touch lane J's files or map/INDEX.md."
+    ],
+    "fixed_decisions": [
+      "decision:frozen-means-frozen \u2014 bookends stay fixed; only the middle is mutable.",
+      "decision:every-planning-role \u2014 Admiral, Commander and crew, not Commanders alone.",
+      "decision:design-it-twice \u2014 convergence between candidates is human-only.",
+      "decision:establish-from-child-first \u2014 settled by source read: from_child is a cross-agent verdict seam and survives untouched."
+    ],
+    "current_wave": {
+      "objective": "Close the closing-bookend gap in amend() and declare the bookends this lane owns.",
+      "exit_criteria": [
+        "g1 and g2 integrated with independent APPROVE",
+        "self-hosting proof recorded",
+        "full suite green in a clean detached worktree"
+      ],
+      "issues": [
+        {
+          "id": "634-K",
+          "title": "one spine per agent \u2014 frozen bookends, mutable middle",
+          "desired_outcome": "A role cannot amend away its own closing bookend; it can still grow its middle, legibly.",
+          "useful_now": "It is the one exception epic #567 could not sweep.",
+          "appetite": "One extended session",
+          "acceptance_or_falsification_evidence": "Negative tests red-then-green; independent reproduction; full suite green.",
+          "implementation_latitude": "The mechanism and whether spine_amend is the seam are the Commander's; convergence is the human's.",
+          "hard_constraints_no_gos": [
+            "scripts/run_crew.py",
+            "scripts/install_constellation.py",
+            "LAUNCH_ORDER.template.md",
+            "map/INDEX.md"
+          ],
+          "local_unknowns": [
+            "what spine_advance --from_child was built for \u2014 SETTLED this run",
+            "whether an Admiral's execute gate should grow one gate per wave \u2014 SETTLED this run",
+            "whether owner-only mutation needs enforcement given ownership is a caller-supplied string (#632) \u2014 NOT taken"
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/mcp_spine_server.py",
+            "skills/*/templates/*SPINE*.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Migrate the roles' second-file middles (execute.json, ADMIRAL_LOG.md + transitions/) into their own spines",
+        "why_likely": "The engine now supports it and the freeze makes it safe",
+        "entry_conditions": [
+          "a human ruling on the declaration form",
+          "scripts/run_crew.py and recover_crews.py in scope (currently lane J / unowned)"
+        ]
+      },
+      {
+        "outcome": "Extend the bookend declaration to crew plans",
+        "why_likely": "decision:every-planning-role is settled/human and crew is the one role left out",
+        "entry_conditions": [
+          "scripts/generate_spine.py brought into some lane's ownership"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Which declaration form the human wants (per-gate flag, positional, plan-level region, or the hybrid)",
+        "affects": "One helper function, _is_bookend()",
+        "settle_by": "human convergence at the epic return boundary",
+        "current_evidence": "Three cold candidates plus a fourth from the critic; comparison returned unconverged",
+        "next_probe": "the human picks"
+      },
+      {
+        "unknown": "Whether retext-check should be covered by the freeze",
+        "affects": "Whether a frozen gate's check text can be corrected in place",
+        "settle_by": "human ruling",
+        "current_evidence": "Implemented as covered; candidate A argued against; the reviewer agreed with covering it",
+        "next_probe": "the human rules"
+      },
+      {
+        "unknown": "Whether the closing bookend was ever actually dropped in a real run",
+        "affects": "How urgent the retrofit of live spines is",
+        "settle_by": "a journal search",
+        "current_evidence": "None \u2014 the probe proves capability, not occurrence",
+        "next_probe": "grep the journals for amend drop ops"
+      }
+    ],
+    "parked_possibilities": [
+      "A file-integrity check so hand-editing spine.json cannot defeat the guard",
+      "A template lint that fails an undeclared role spine (mitigates B's silent-permissive failure mode)"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "634-K",
+      "outcome": "Partial and honest. DELIVERED: amend() freezes a declared bookend gate against drop/rescope/retext-check and against an add landing past it, read through one swappable helper (_is_bookend), with 'bookend' added to rescope's overwritable tuple so a running spine can be frozen through the engine as a one-way latch; and the three role spine templates this lane owns (Commander, Admiral, Explorer) declare their bookends, pinned by an exact-set test. An undeclared plan is unchanged. NOT DELIVERED: the crew half of decision:every-planning-role, blocked on scripts/generate_spine.py which neither lane owns (see D0); and the 'capture the plan changed' half, which remains served only by amend's pre-existing amendments trail (see D2). NOT CONVERGED by design: the declaration form is returned as a comparison for the human, per decision:design-it-twice.",
+      "evidence": ".agent-work/567-k/evidence/probe-closing-bookend.md (the measured gap); commit b0a96c3f; independent APPROVE at .agent-work/567-k/crew-handoffs/g1-review-result.md with a red-proof; .agent-work/567-k/DESIGN_COMPARISON.md; .agent-work/567-k/CRITIC_TRIAGE.md"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The closing bookend is unprotected at 9b38b9d9",
+      "expected": "refused, if bookends were frozen",
+      "observed": "'amended: dropped archive, dropped feedback, dropped review', exit 0, on a synthetic mid-run Commander spine",
+      "source": ".agent-work/567-k/evidence/probe-closing-bookend.md"
+    },
+    {
+      "claim": "The guard closes that gap without breaking the middle",
+      "expected": "drop of a declared bookend refused; add into the middle still succeeds",
+      "observed": "both, reproduced independently in a fresh process against copies",
+      "source": "Commander's own re-run at g1-integrate"
+    },
+    {
+      "claim": "An undeclared plan is unaffected",
+      "expected": "identical to 9b38b9d9",
+      "observed": "the three-drop delta still succeeds on an undeclared plan",
+      "source": "Commander's own re-run; plus the crew's backward-compat tests"
+    },
+    {
+      "claim": "A role can author its work gates into its own spine's middle",
+      "expected": "the point of #634",
+      "observed": "a Commander at 'plan' added g1-implement/g1-review/g1-integrate to its own spine; amendments recorded ts+reason+authority+ops",
+      "source": "Commander's own reproduction"
+    },
+    {
+      "claim": "An Admiral's execute gate can grow one gate per wave",
+      "expected": "contested between candidates A and B",
+      "observed": "REFUSED: drop execute: only a pending gate can be dropped (is 'in-progress') \u2014 so reification is possible only BEFORE execute starts",
+      "source": "measured on a copy of the live epic-567-door spine"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The crew half of decision:every-planning-role cannot be delivered by this lane: IMPLEMENTER_PLAN.template.json is not a *SPINE* template and is compiled by scripts/generate_spine.py, whose _compile_gate returns a fixed field list with no bookend key, so a hand-added declaration would silently vanish on regeneration.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Scope of a settled/human ruling",
+      "evidence": "scripts/generate_spine.py:669-684; the repo's own prior incident pinned at tests/test_generate_spine.py:1694-1700",
+      "reason": "Reclassified by the Commander from blocks_current_wave_exit. It does NOT block this lane's exit \u2014 the lane delivers what it owns and floats the rest, which is the sanctioned move. What it invalidates is the DECOMPOSITION: the wave cut put decision:every-planning-role's crew half in lane K's scope, and it is not reachable from there, because generate_spine.py is in neither this lane's ownership nor lane J's fence. It needs an Admiral ruling on ownership, not a unilateral edit."
+    },
+    {
+      "id": "D1",
+      "signal": "Reifying an Admiral's waves as spine gates is only possible before 'execute' is started; the live epic-567-door spine has already passed that door.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Any forecast that assumed the current epic could migrate its own middle",
+      "evidence": "measured refusal on a copy of the live spine",
+      "reason": "A doctrine choice with a deadline, not a free option."
+    },
+    {
+      "id": "D2",
+      "signal": "The 'capture the plan changed, here is how' half of the human's direction is served only by amend's pre-existing amendments trail; no role is newly told that spine_amend is how it re-plans its own middle (grep -rn amend skills/implementer/ returns nothing).",
+      "classification": "later_only",
+      "affects": "A later doctrine wave",
+      "evidence": "the grep; the cold critic's intent-fit finding",
+      "reason": "The remedy is role prose, and prose promotion is the human's call under decision:no-doctrine-promotion."
+    },
+    {
+      "id": "D3",
+      "signal": "The context-gauge writer wrote this child session's reading into the parent epic's gauge file, while separately reporting CONTEXT GAUGE SILENT for the same ambiguity.",
+      "classification": "evidence_only",
+      "affects": "Trip advisories at the Admiral tier",
+      "evidence": ".agent-work/567-k/triage-candidates/gauge-writer-overwrites-parent-reading.md",
+      "reason": "Observed with a diff, not diagnosed; out of this lane's scope."
+    },
+    {
+      "id": "D4",
+      "signal": "Suspicion that spine_advance --from_child was a workaround for gated-can't-grow, which would have put it in scope.",
+      "classification": "drop",
+      "affects": "This lane's scope",
+      "evidence": "checklist_engine.py:2617-2645, consolidate() survey-only at :2734, tests at test_checklist_engine.py:429-471",
+      "reason": "Falsified: it is a cross-agent verdict seam that carries evidence up and never drives a child. Out of scope, survives untouched."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "U-crew-bookend",
+      "kind": "issue"
+    },
+    {
+      "id": "U-migrate-second-file-middles",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-declaration-form",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "U-file-integrity-vs-hand-edit",
+      "kind": "parked"
+    },
+    {
+      "id": "U-template-lint-for-undeclared-spines",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/mcp_spine_server.py",
+      "skills/commander/templates",
+      "skills/admiral/templates",
+      "skills/explorer/templates"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE and discharged: no docs/architecture/ packets, map/ids.jsonl is 0 bytes, map/INDEX.md's per-module links do not resolve. Receipt at .agent-work/567-k/map-orientation.json with three hash-pinned substitutes. map/INDEX.md is Admiral-owned (#544), so escalated rather than repaired."
+  }
+}

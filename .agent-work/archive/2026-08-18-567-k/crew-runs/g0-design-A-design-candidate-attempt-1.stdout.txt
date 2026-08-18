@@ -1,0 +1,7 @@
+Design candidate A ("Positional Bookends") is written to `.agent-work/567-k/crew-handoffs/design-A-result.md`. Summary of what I did:
+
+- Verified every fact and line number the handoff cited against source at `9b38b9d9` — nothing had drifted.
+- Read the three role spine templates and the crew plan template, plus the MCP door's `spine_amend` wiring and the README's rail definition, to ground the design in what's actually there.
+- Designed a purely positional freeze (`items[0]`/`items[-1]`, recomputed fresh each `amend()` call) requiring zero schema changes, and traced its exact edits into `amend()`'s `add`/`drop`/`rescope` branches.
+- Answered the required sections concretely and without deferring — including a definite "no" on Admiral's `execute` growing per-wave gates (structurally impossible once `execute` has started) and a definite, unfavorable finding for crew (the positional rule freezes crew's *only* real milestone, which is the opposite of what the human asked for).
+- Led the self-attack with the sharpest finding: under "no new state," positional bookend enforcement and "undeclared plans behave exactly as before" are provably incompatible — I own that as a real cost rather than papering over it, and included a checked-in test designed to fail against `9b38b9d9` and pass against the patch, documenting the break rather than hiding it.

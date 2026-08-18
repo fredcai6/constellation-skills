@@ -1,0 +1,40 @@
+{
+  "work_id": "epic-567-door",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "epic-567-door-008",
+      "assertion": "a1",
+      "statement": "An Admiral epic lease, claimed through the door at session start, and a probe written to check whether it was still held.",
+      "history": "retracted — there is no lease lapse. The lease lives in engine_session and a spine has no `lease` key at all; the probe read d.get('lease'), got None on every spine, and the Admiral reported that as a lapse to the human as one of five criticals. Measured after: epic-567-door engine_session.status active with a current heartbeat, held for the whole run."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-567-door-008",
+      "assertion": "a2",
+      "statement": "The probe was expected to report the lease's state. It read a top-level `lease` key.",
+      "history": "retracted — there is no lease lapse. The lease lives in engine_session and a spine has no `lease` key at all; the probe read d.get('lease'), got None on every spine, and the Admiral reported that as a lapse to the human as one of five criticals. Measured after: epic-567-door engine_session.status active with a current heartbeat, held for the whole run."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-567-door-008",
+      "assertion": "a3",
+      "statement": "There is no `lease` key on a spine; the lease lives in `engine_session`. The probe therefore returned None on every spine it was pointed at, and the Admiral read that as the lease having silently lapsed, reporting it with two spines as corroboration -- which was one broken read applied twice. Measured afterwards: epic-567-door carried engine_session.status active with a current heartbeat for the entire run, and 567-carto carried released, cleanly, at its close.",
+      "history": "retracted — there is no lease lapse. The lease lives in engine_session and a spine has no `lease` key at all; the probe read d.get('lease'), got None on every spine, and the Admiral reported that as a lapse to the human as one of five criticals. Measured after: epic-567-door engine_session.status active with a current heartbeat, held for the whole run."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-567-door-008",
+      "assertion": "a4",
+      "statement": "A false defect reached the human and a triage candidate was staged for it. The engine had already contradicted the reading: a re-claim answered 'resumed lease ... claim re-stamped', where resumed means a lease already held, and that message was cited as proof of the lapse it disproved. Two stray directories under the epic work area were attached to the hypothesis and now have no explanation.",
+      "history": "retracted — there is no lease lapse. The lease lives in engine_session and a spine has no `lease` key at all; the probe read d.get('lease'), got None on every spine, and the Admiral reported that as a lapse to the human as one of five criticals. Measured after: epic-567-door engine_session.status active with a current heartbeat, held for the whole run."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "epic-567-door-008",
+      "assertion": "a5",
+      "statement": "The candidate was deleted, the log entry marked void, and the probe corrected to read engine_session and to distinguish an absent key from a released lease. The general shape, recorded because it recurred four times in one run: a real observation attached to a mechanism nobody checked.",
+      "history": "retracted — there is no lease lapse. The lease lives in engine_session and a spine has no `lease` key at all; the probe read d.get('lease'), got None on every spine, and the Admiral reported that as a lapse to the human as one of five criticals. Measured after: epic-567-door engine_session.status active with a current heartbeat, held for the whole run."
+    }
+  ]
+}

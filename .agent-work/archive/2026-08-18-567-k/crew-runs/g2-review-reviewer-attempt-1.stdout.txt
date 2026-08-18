@@ -1,0 +1,7 @@
+The tree is exactly as the implementer left it, the diff is intact, and the result artifact is written. The review is complete.
+
+**Verdict: APPROVE** — written to `.agent-work/567-k/crew-handoffs/g2-review-result.md`.
+
+Summary: I drove an independent survey through the checklist engine (no spine was bound for this crew), reproduced all 7 close criteria myself rather than trusting the implementer's account — exact declaration set computed programmatically, the pinning test red-proofed by moving the flag to a wrong gate and restoring, all three templates instantiated, the end-to-end `drop archive` REFUSED / `add after execute` SUCCEEDS pair reproduced fresh-process on a throwaway copy, diff hygiene and fenced-path exclusions confirmed, and a Fowler code-smell pass (all 12 absent). Both required test suites matched the implementer's tallies exactly (467 passed/143 subtests, 202 passed).
+
+One non-blocking finding filed as a triage candidate: Commander's `archive` and Explorer's `route` don't mechanically enforce that the human-confirmation step (`review`/`confirm`) actually happened, unlike Admiral's `closeout`, which bakes that check directly onto the frozen bookend. I also made and caught my own mistake mid-review — an initial `git checkout --` restore attempt reverted a file to pre-diff HEAD instead of the implementer's working state — corrected from a backup and documented in Workflow Feedback.

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-e2e-proof",
+  "mechanical": {
+    "run": "g2-implement-567-k",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m3-e2e-proof",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-567-k-m3-e2e-proof@3b8e92dd1a8ce2d2d52393f83f63d0937d42da09",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement-567-k",
+    "generated_at": "2026-08-18T05:37:31Z"
+  }
+}

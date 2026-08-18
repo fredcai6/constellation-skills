@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-all-or-nothing",
+  "mechanical": {
+    "run": "567-k-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m5-all-or-nothing",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-k-g1-implement-m5-all-or-nothing@df2ada5759ff357c6176b746ebaca7826f458921",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-k-g1-implement",
+    "generated_at": "2026-08-18T05:22:45Z"
+  }
+}

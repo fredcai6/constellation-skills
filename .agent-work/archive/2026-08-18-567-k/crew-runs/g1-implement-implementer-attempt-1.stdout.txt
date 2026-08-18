@@ -1,0 +1,8 @@
+The g1-implement crew run is complete. Summary:
+
+- Implemented the per-gate `bookend` guard in `amend()` (`scripts/checklist_engine.py`): a new `_is_bookend(tid)` helper beside `_floor()`, a ceiling on `add`, and refusals on `drop`/`rescope`/`retext-check` for a declared bookend gate — plus `bookend` added to `rescope`'s overwritable tuple as a one-way-latch retrofit path.
+- Added one sentence to `spine_amend`'s tool description in `scripts/mcp_spine_server.py` (confirmed no schema/handler change was needed).
+- Wrote a new `AmendBookendGuard` test class in `tests/test_checklist_engine.py` with red→green evidence for every guard, plus backward-compat and all-or-nothing tests.
+- Full suites green: `test_checklist_engine.py` 466 passed/140 subtests; `test_mcp_spine_server.py` + `test_mcp_identity.py` 62 passed/14 subtests.
+- Found and fixed an off-by-one in design candidate B's cited ceiling formula (it would have let a role append a gate immediately after a bookend that's the last item — exactly the case that must be refused); documented this divergence in the result.
+- Result written to `.agent-work/567-k/crew-handoffs/g1-implement-result.md` with `Return status: complete`; drove the run's own `IMPLEMENTER_PLAN.json` through the engine end to end and released the lease as the final action.

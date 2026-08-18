@@ -1,0 +1,10 @@
+Only the pre-existing modification (unrelated gauge file, not touched by me) and my new result file under `.agent-work/567-k/`. No tracked source files were changed.
+
+The design candidate is written to `.agent-work/567-k/crew-handoffs/design-B-result.md`. Summary of what it delivers, under the assigned constraint (declare bookends per gate via an explicit key):
+
+- A per-gate `"bookend": true` key, read by a new `_bookend_ceiling()` helper mirroring `_floor()`, plus refusal guards added to `amend()`'s `add`/`drop`/`rescope`/`retext-check` branches in `checklist_engine.py` — no MCP door changes needed since `spine_amend` already passes through.
+- One correction the brief's established facts didn't surface: `rescope`'s overwritable-fields tuple doesn't include `bookend`, so I added it — which also makes the flag a one-way latch (settable once, then un-rescopeable by the same guard it creates).
+- Worked example showing a Commander folding `g1-implement/g1-review/g1-integrate` directly into its own spine instead of `execute.json`, and `drop archive` flipping from succeeding (today) to refused.
+- Direct answers for Admiral (execute gate replaced by one gate per wave) and crew (only `m0-context` bookended; no closing bookend, deliberately, since the template has no fixed terminal gate).
+- Six self-attacks, including that hand-editing `spine.json` bypasses the freeze entirely (no integrity check against the journal at load time) and that in-flight spines stay unprotected until retrofitted.
+- Nine named test cases plus scope disclaimers.

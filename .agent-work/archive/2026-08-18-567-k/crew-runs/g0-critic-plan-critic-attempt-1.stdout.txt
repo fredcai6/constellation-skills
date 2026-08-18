@@ -1,0 +1,10 @@
+Wrote the critique to `.agent-work/567-k/crew-handoffs/critic-result.md`.
+
+Summary of what I found, verified against source (not just the documents):
+
+- **Blocking**: `g3-proof`'s two postconditions have `"check": null` — fully self-attested, no mechanical enforcement, which undercuts the gate's own stated reason for skipping a crew.
+- **Blocking**: the plan claims `specs/` as in-scope, but no gate touches it, and I confirmed via `generate_spine.py:612-712` that the compiler silently drops unknown spec keys — so a hand-edited template's `bookend` flag would vanish on the next regeneration, and the file that would need to change (`generate_spine.py`) is neither owned nor fenced.
+- **Should-fix**: `g2`'s postconditions never mechanically verify which gates got the `bookend` flag — only that templates instantiate and a reviewer's prose says APPROVE.
+- **Should-fix**: intent-fit — the plan builds the "freeze" half of #634 thoroughly but does nothing for the "capture what changed, here's how" half; grep confirms zero mentions of `amend` anywhere in `skills/implementer/`.
+- **Section 5** (argue against candidate B): the comparison's "immediate protection or backward compatibility, not both" is a false binary — B's own retrofit path could be run once against live spines at ship time to get both, or the two bookends could use different strategies (positional for the uncontested opening, declared for the closing where the real tension lives).
+- Plus overclaim/quietly-skipped findings (the `retext-check` hatch resolved without addressing its own cited counter-argument, Reviewer silently absent from "every planning role") and a short genuinely-good section (g1's guard placement and negative tests, the verified `execute`-reification measurement).

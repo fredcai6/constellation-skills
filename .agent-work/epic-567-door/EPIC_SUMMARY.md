@@ -1,7 +1,11 @@
 # Epic #567 — the door is the interface. Summary for acceptance.
 
-Two waves, nine lanes, written 2026-08-17. Figures are measured, not recalled; where a number is
-an estimate it says so.
+**Superseded in part on 2026-08-17: a third wave is running.** After wave 2 closed, the human
+overturned this document's central concession and added scope. What that changed is in
+"Wave 3" below; everything above it still holds as the record of waves 1 and 2.
+
+Three waves, eleven lanes. Figures are measured, not recalled; where a number is an estimate it
+says so.
 
 ---
 
@@ -90,11 +94,11 @@ That is **#615** and **#369** stated exactly. Paired onto both at closeout.
 
 ## Decisions you may want to revisit
 
-- **The complete sweep has three honest exceptions**, and they are the same shape: a Commander's
-  `execute.json`, an Interrogator's `interrogation.json` and an in-session crew's own plan **cannot
-  be driven through the door at all** — a door refuses to bind a second checklist while holding its
-  own lease, and releasing the lease breaks `archive`'s own requirement. Measured by D1, corroborated
-  by F, H and E's implementer. Those three sites state the constraint instead of naming a "fallback".
+- ~~**The complete sweep has three honest exceptions**~~ — **WITHDRAWN.** I recorded those three
+  sites as a documented limit. The human rejected that reading: *"we're trying to move down to a
+  single access point for the door so any exception to that is a failure."* They are unfinished
+  work, not a limit, and they are now **#634** and lane K. The measurement stands; the conclusion
+  drawn from it did not.
 - **`docs/EPISODE_STORE.md` §10 says categorically "nothing should auto-create an episode."** Lane
   E's #541 mechanism does exactly that, but every field is a literal extraction of what the refusal
   emitted — never composed judgment — so the rule's own stated rationale (fabricated assertions)
@@ -160,3 +164,63 @@ inheriting the launching lane's spine and Stop hook).
 
 Plus **`wire finish_work as a spine_done MCP tool`**, whose parent #574 is closed, and which is
 adjacent to the PR-opening question you reserved and no lane may settle.
+
+
+---
+
+# Wave 3 — added after wave 2 closed
+
+The human added scope rather than accept the epic's concession: *"let's file it now and do it now."*
+
+## What changed his mind, and mine
+
+I had written the three unsweepable sites up as a documented limit of the door's isolation
+property. His answer reframed it: an exception to the single access point is a **failure**, and two
+doors would be an acceptable answer where a surviving CLI path for agents is not.
+
+Then he asked the question that dismantled my framing of the problem: **"is the commander really
+driving its crew's spine or is it just populating it?"** It populates. Every crew plan in this epic
+was driven under the crew's **own** identity — 26 and 27 journal entries, never the Commander's. So
+the gap was never about reaching another agent's work.
+
+What is actually left is one file. A Commander's `execute.json` is the Commander's **own** work,
+kept in a second file because a gated spine cannot grow, and driven off-door under an id each lane
+invents (`commander-567-d1-execute` and `constellation/567-e/execute` — two lanes, two formats).
+
+And both roles already have the shape he wants. Commander: frozen bookends around **one** middle
+step. Admiral: `init · latitude · execute · closeout` — an entire nine-lane epic inside one gate.
+**The structure is already right; the file boundary is wrong.**
+
+## The three issues
+
+| | |
+|---|---|
+| **#632** | A helper inherits its launcher's spine and Stop hook, so every dispatcher strips four variables by hand. Three lanes paid for this in two days. Filed, not in wave-3 scope. |
+| **#633** | Crew model tier from a per-role, **per-harness** table with an allowed set and a recorded reason. **Lane J.** |
+| **#619** | The installer writes a machine-probed interpreter into a tracked file, and a real install rewrites the *calling* repo's `.mcp.json` regardless of `--dest`. Pulled into scope so the tier item settles before the epic closes. **Lane J.** |
+| **#634** | One spine per agent: frozen bookends, mutable middle, for every planning role. **Lane K.** |
+
+## The filing bar, which is his and which I had wrong
+
+Asked which of five findings to file, he gave the test instead of the answer: **file what costs
+agents work repeatedly, not what is severe.** Re-scored against it, four of my five "criticals"
+failed — the door dying on a non-`KeyError`, the fixed-temp-name atomic write, and the silent lease
+lapse are risks with one debugging session between them. They became episodes. Only the inherited
+environment passed, because three lanes had already paid for it.
+
+## Wave 3 lanes
+
+- **J** — Sonnet — #619 + #633. One idea in two files: a launcher must take declared defaults, not
+  machine-local ones. Merges first.
+- **K** — Opus — #634, design-it-twice, convergence human-only. Merges last, and carries a sharper
+  self-hosting proof than wave 1 did, because it changes the rule the Admiral's own live spine runs
+  under.
+
+## One correction to my own record
+
+I reopened `execute` rather than leave it complete, cascading closeout's four attestations back to
+pending. The episodes and the cartographer reconcile stand; hygiene must genuinely re-run over new
+branches and worktrees.
+
+That reopen is also the clearest evidence for #634. **This run's own plan changed mid-flight, and
+the only way the engine could express it was to unfreeze a frozen middle.**
