@@ -354,3 +354,37 @@ Merge position last, per the order. **Lane J is not merged** — `main` records 
    starts, so this epic's own spine can no longer do it.
 4. **Route triage candidate 3 to lane J now** — the crew registry silently loses concurrent
    dispatches, and lane J has that file open this wave.
+
+
+---
+
+## Post-closeout addendum — the Stop hook pointed me at your spine
+
+Appended after lane K's spine reached terminal and released its lease, so it is outside the run's
+own record and marked as such.
+
+On turn-end the Stop hook fired `SPINE MID-FLIGHT: gate execute is still open`, pasted **your**
+`execute` imperative as my next action, and told me that ending my turn would abandon an active
+run. It was reading `.agent-work/epic-567-door/spine.json`, not my `SPINE_FILE`. Side by side:
+
+```
+.agent-work/567-k/spine.json          → LEASE released: constellation/567-k/...  DONE: no open items.
+.agent-work/epic-567-door/spine.json  → LEASE active: constellation/epic-567-door (by admiral)
+                                        ACTIVE execute [in-progress]
+```
+
+**I did not act on it, and ran no verb against your spine.** Complying would have meant driving a
+spine whose lease is held by your live session — supplying another agent's session id, which is
+precisely the #632 shape this epic already filed — and disposing an epic gate whose condition is
+"every epic issue dispositioned" while lane J is still blocked at c6. The hook's offered exits
+(`spine_halt block`, or a human waiver) were no better: both would have applied to **your** gate.
+There is no offered exit that is correct for a finished child whose parent is still open.
+
+**This is the third symptom of one root cause**, and I think that is the useful part: the silent
+context gauge, your gauge file overwritten with my reading, and now this. All three are a child
+session in a worktree being indistinguishable from its parent — consistent with #269, which my
+launch order named. **They should be triaged together; one fix probably closes all three.** Staged
+as `triage-candidates/stop-hook-reads-the-parent-spine.md` (now six candidates, still none filed).
+
+Nothing about the run's deliverables changed. Spine terminal, lease released, PR #635 open and
+mergeable at `b49ca38a`.
