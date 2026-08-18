@@ -2366,6 +2366,13 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def is_self_install(args: argparse.Namespace) -> bool:
+    """Whether this run installs into the checkout's own default targets --
+    no explicit `--dest` and no explicit `--project` pointing elsewhere. Pure:
+    reads only the parsed args, no filesystem or environment access."""
+    return args.dest is None and args.project is None
+
+
 def main(
     argv: Sequence[str] | None = None,
     *,
@@ -2512,7 +2519,18 @@ def main(
                 # a previously-stale entry to wired.
                 report_hook_wiring(
                     target_root, env=runtime_env, out=out, specs=HOOK_SETS[args.hooks])
-        if wire_repo_mcp_config:
+        # Wiring targets THIS checkout's own .mcp.json (`default_mcp_config_path()`,
+        # unconditional) -- firing it on a run that installs somewhere else
+        # (`--dest`, or `--project` pointing outside this checkout) would rewrite
+        # a file the run never touched otherwise. Skip the whole call rather than
+        # redirect its path: an explicit `mcp_config_path` override (every test
+        # in RepoMcpConfigWiringTests) is a caller who named its own target and
+        # is exempt from this guard. `--scope user` with no `--dest` still
+        # satisfies `is_self_install` and still wires the checkout's own
+        # `.mcp.json`, even though the install target is the user's home
+        # directory rather than this checkout's project scope -- that matches
+        # today's behavior and is accepted, not a second bug this wave.
+        if wire_repo_mcp_config and (mcp_config_path is not None or is_self_install(args)):
             # Same `interpreter` this run already resolved above -- never a
             # second probe. Runs once per process regardless of --agent all,
             # since this checkout's own .mcp.json is not per-agent-target.

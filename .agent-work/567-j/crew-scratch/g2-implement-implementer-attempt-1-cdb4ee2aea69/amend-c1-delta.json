@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m3-verify-and-result",
+      "cond": "c1",
+      "which": "postconditions",
+      "command": "py -m pytest tests/test_crew_launcher.py -q --deselect \"tests/test_crew_launcher.py::ScratchDirResumeTests::test_resume_of_legacy_entry_without_worktree_key_does_not_crash_and_leaves_scratch_dir_unbound\""
+    }
+  ]
+}

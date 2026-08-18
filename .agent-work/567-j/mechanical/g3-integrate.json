@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g3-integrate",
+  "mechanical": {
+    "run": "567-j",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "g3-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-j-g3-integrate@79b8be44a6b5d7955bab6763de9ff03ab3a7ea17",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-j",
+    "generated_at": "2026-08-18T06:07:12Z"
+  }
+}

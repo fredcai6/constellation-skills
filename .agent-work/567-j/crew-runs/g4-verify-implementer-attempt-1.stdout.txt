@@ -1,0 +1,1 @@
+Both artifacts are written: the proof note listing the `"claude"` harness's populated roles and default tiers (admiral=opus, commander/implementer/reviewer/critic/cartographer=sonnet), and the IMPLEMENTER_RESULT at the required path. Task complete.

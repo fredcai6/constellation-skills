@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m2-green-impl",
+  "mechanical": {
+    "run": "567-j-g2-implement",
+    "project": "constellation-skills",
+    "spine-step": "m2-green-impl",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-j-g2-implement-m2-green-impl@9efe52dbf0b650e6a77f9a75e769c233b5bfbd6a",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "567-j-g2-implement",
+    "generated_at": "2026-08-18T05:34:29Z"
+  }
+}

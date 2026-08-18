@@ -1,0 +1,5 @@
+Both confirmed not ignored (exit 1), as required.
+
+I've completed the g3-implement work with one important caveat: the wiring, `--reason` threading, and the two named test rewrites are done, but running the full suite surfaced **three additional pre-existing tests** (beyond the two named in the handoff) that break because they use falsy/arbitrary `model` values for role/harness pairs now populated in `ROLE_MODEL_TIERS`. This matches the handoff's explicit stop condition ("name it and stop rather than silently rewriting more than specified"), so I left those three untouched rather than exceeding authorized scope.
+
+The result artifact is written to `.agent-work/567-j/crew-handoffs/g3-implement-result.md` with `Return status: blocked`, naming all three tests, why they break, and the exact ruling needed. `resume_crew()` and its backends show zero diff as required, and all other close criteria (field, `__post_init__` wiring, `--reason` CLI flag, `build_entry` threading at both call sites, docstring updates, five new tests, old-shape round-trip test) are complete.

@@ -1,0 +1,7 @@
+Rework complete. Summary:
+
+- **Ruling 1** — rewrote the three tests `resolve_model` wiring broke: `test_crew_spec_refuses_falsy_model_directly` now asserts resolved-default behavior; `test_cli_parser_persists_model_and_reasoning_effort_to_external_registry` swapped its arbitrary `gpt-5.6` for a real in-table non-default choice (`haiku` + `--reason`); `test_external_dispatch_records_without_spawning_returns_none` swapped `opus` for `sonnet` (implementer's default).
+- **Ruling 2** — threaded `reason=args.reason` into the `--abandon --relaunch` `CrewSpec(...)` site in `scripts/run_crew.py`, symmetric with the fresh-launch site, plus a new test confirming a reasoned relaunch persists.
+- Full suite: **236 passed, 1 known-unrelated failed** (the pre-existing `CREW_SCRATCH_DIR` environmental leak named out of scope by the handoff).
+
+Result written to `.agent-work/567-j/crew-handoffs/g3-implement-result.md` with status `complete`.

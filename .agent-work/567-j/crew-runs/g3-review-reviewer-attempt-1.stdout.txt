@@ -1,0 +1,5 @@
+Review complete. **APPROVE**, no blockers.
+
+Summary: g3-implement wires `resolve_model` into `CrewSpec.__post_init__` correctly — all 4 construction sites resolve through it, `resume_crew()`/backend `resume()` methods show zero diff (independently verified against hunk headers), the three rewritten tests preserve their original intent, and the full suite reproduces cleanly (236 passed, 1 known-unrelated pre-existing failure). A mutation test confirmed the tests assert real behavior. The Fowler pass found one non-blocking observation (`build_entry` at 19 kwargs, flagged as a triage candidate) and no blockers.
+
+Per a previously-recorded pattern for this exact setup, my `SPINE_*` env pointed at the parent Commander's spine rather than my own — I authored my own survey at `.agent-work/567-j/g3-review/review.json`, drove it via the CLI, and released my own lease rather than touching the parent's. The consolidated result is written to `.agent-work/567-j/crew-handoffs/g3-reviewer-result.md`.

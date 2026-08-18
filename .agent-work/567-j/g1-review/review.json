@@ -1,0 +1,179 @@
+{
+  "work_id": "567-j",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md (skimmed), the reviewer handoff, the working-tree diff (scripts/install_constellation.py + tests/test_install_constellation.py), and the IMPLEMENTER_RESULT evidence.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "is_self_install(args) added at L2369-2373, pure (args.dest is None and args.project is None), no I/O. Guard at L2533 skips the entire apply_repo_mcp_config_wiring call unless mcp_config_path is not None or is_self_install(args); confirmed apply_repo_mcp_config_wiring is never reachable with mcp_config_path=None (L2538 always passes a Path). Re-ran full suite: 206 passed, 506 subtests -- matches claim. Independently reproduced TDD red-proof: reverted guard to unconditional 'if wire_repo_mcp_config:', new test failed with exact claimed AssertionError (py vs <python-interpreter>), restored fix, suite green again. Wiring grep confirms exactly 1 non-test/non-def call site. RepoMcpConfigWiringTests diff shows only additions plus the one named docstring edit; the assertion body of test_default_mcp_config_path_points_at_this_checkouts_own_mcp_json is byte-for-byte unchanged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows only scripts/install_constellation.py and tests/test_install_constellation.py as M (both pre-existing tracked files, no ?? for either -- confirms 'no new file created'). No changes to any specific exclusion: map/INDEX.md, scripts/checklist_engine.py, scripts/mcp_spine_server.py, *SPINE*.template.json, specs/ -- all untouched. default_mcp_config_path()'s signature/body is byte-identical (verified in r1). The only other porcelain entry, .agent-work/epic-567-door/gauge-constellation-epic-567-door-470f957c39f5.json, is unrelated spine/gauge infrastructure state from the parent run, not implementer output -- noted, not a scope violation.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Verified test_a_dest_outside_the_checkout_never_touches_this_checkouts_own_mcp_json (L4298-4348) calls installer.main([...], wire_repo_mcp_config=True) with NO mcp_config_path kwarg -- exactly the real CLI entry-point shape ('if __name__ == \"__main__\": raise SystemExit(main(wire_repo_mcp_config=True))'), not a version passing an explicit mcp_config_path override. IMPLEMENTER_RESULT evidence (full suite 206/506, TDD red/green, wiring grep) independently reproduced in r1 -- all matched claims exactly, none fabricated.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CREW_CONTEXT.md rules checked: (1) Python invocation -- verified py/python/python3 all have pytest before running, matches measured baseline. (2) Windows file-write encoding rule -- diff adds no new write_text/write_bytes/open() calls; the new test reuses the pre-existing _write_mcp_config helper (unmodified), fixture reads use read_bytes (binary, encoding-neutral). (3) Record stores never hand-edited -- n/a, no checklist/episode files touched. (4) Two-engines-alive -- n/a, install_constellation.py is not checklist_engine.py/hooks/MCP door. (5) Verification discipline: 'a check that cannot fail is indistinguishable from one that passed' -- satisfied by the TDD red-proof (independently reproduced in r1); 'assert against behaviour, never text describing it' -- byte-identical test asserts real bytes, not a docstring/message string. No rule violations found.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture map exists in this repo (map/ids.jsonl empty, DEGRADED-UNPARSEABLE), waived by the Admiral this wave per decision:map-index-is-admiral-owned (handoff Map Anchors). No reconciliation artifacts to update. The --scope user + no --dest edge case (is_self_install=True, still wires checkout's own .mcp.json even though install target is /home/tommy) is explicitly documented in-line as accepted pre-existing behavior, not a new divergence -- correctly not treated as a second bug. One out-of-scope improvement flagged to triage: handoff template's literal REPO_ROOT-monkeypatch test recipe is inert/harmful as written; see triage candidate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to .agent-work/567-j/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/567-j/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/567-j/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to .agent-work/567-j/FOWLER_PASS.json: 12 baseline smells rendered, 10 absent, 1 flagged (duplicated-code: IsSelfInstallTests uses 4 near-identical test methods where the file's own established convention for the same shape, IsRewritableMcpCommandTests, uses subTest-grouping -- minor, non-blocking observation), 1 overridden (comments-as-deodorant: the WHY-comments added match this file's dense pre-existing comment idiom, logged standard+reason). scripts/verify_fowler_pass.py exited 0: 'fowler pass ok: smells=12, flagged=[duplicated-code], overridden=[comments-as-deodorant]'.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/567-j/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 7 checks pass. is_self_install is pure and correctly gates apply_repo_mcp_config_wiring; the call is provably never reachable with mcp_config_path=None. Full suite green (206 passed, 506 subtests), TDD red/green proof independently reproduced, wiring grep confirms exactly 1 non-test call site. Scope respected: only the two allowed files touched, no exclusions violated, no new files. Pre-existing RepoMcpConfigWiringTests cases unmodified except the one named docstring edit; that assertion body is byte-for-byte unchanged. No architecture map exists (waived). Fowler pass: 1 flagged (duplicated-code, non-blocking -- IsSelfInstallTests could follow the file's own subTest convention like IsRewritableMcpCommandTests), 1 overridden (comments-as-deodorant, matches file's dense WHY-comment house style) -- neither blocks. One triage candidate flagged: handoff's literal REPO_ROOT-monkeypatch test recipe is inert/harmful as written, worth fixing at the template level."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "The handoff Close Criteria's literal test recipe for the byte-identical proof ('monkeypatch installer.REPO_ROOT ... so it resolves via the real default_mcp_config_path()') does not work as written: default_mcp_config_path(repo_root: Path = REPO_ROOT) binds its default at def-time, so patching the REPO_ROOT module global afterward is inert for it, and patching REPO_ROOT itself separately breaks install_skills (which reads REPO_ROOT directly). Implementer worked around this correctly (patching default_mcp_config_path.__defaults__ instead, confirmed correct by this review) but flagged it in Workflow Feedback as worth fixing at the template level -- REPO_ROOT gates 3 other functions the same def-time-default way (validate_required_scripts, source_hook_path, discover_skills/SOURCE_ROOT), so the same handoff-recipe mistake would recur. Suggest updating the shared handoff/close-criteria template wording to name the __defaults__ patch pattern instead of a bare REPO_ROOT monkeypatch."
+    }
+  ],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/567-j/g1-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-18T05:24:16.835202+00:00",
+    "last_heartbeat": "2026-08-18T05:28:06.843797+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T05:28:47.600238+00:00"
+  }
+}

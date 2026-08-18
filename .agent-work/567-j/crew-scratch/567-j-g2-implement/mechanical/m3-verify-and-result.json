@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-verify-and-result",
+  "mechanical": {
+    "run": "567-j-g2-implement",
+    "project": "constellation-skills",
+    "spine-step": "m3-verify-and-result",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-j-g2-implement-m3-verify-and-result@d4cac18495416d7cbde7a5b197f2ee4c57e50bdc",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "567-j-g2-implement",
+    "generated_at": "2026-08-18T05:35:01Z"
+  }
+}

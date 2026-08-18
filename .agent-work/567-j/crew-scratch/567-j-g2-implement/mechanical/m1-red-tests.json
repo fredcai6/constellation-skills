@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-red-tests",
+  "mechanical": {
+    "run": "567-j-g2-implement",
+    "project": "constellation-skills",
+    "spine-step": "m1-red-tests",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-j-g2-implement-m1-red-tests@a59606517f82dc798a79d1fa5b9c033887a0a741",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "567-j-g2-implement",
+    "generated_at": "2026-08-18T05:33:53Z"
+  }
+}
