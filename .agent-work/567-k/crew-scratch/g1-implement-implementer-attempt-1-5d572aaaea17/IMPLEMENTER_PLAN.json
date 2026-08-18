@@ -1,0 +1,553 @@
+{
+  "work_id": "567-k-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-helper-add-ceiling",
+    "m2-drop-guard",
+    "m3-rescope-guard-latch",
+    "m4-retext-check-guard",
+    "m5-all-or-nothing",
+    "m6-mcp-prose",
+    "m7-verify",
+    "m8-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (implementer skill), then the handoff at .agent-work/567-k/crew-handoffs/g1-implement-handoff.md, the design-B result, DESIGN_COMPARISON.md, and the evidence file probe-closing-bookend.md. Verify the handoff is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + design-B + evidence loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md + handoff + design-B-result.md + DESIGN_COMPARISON.md + probe-closing-bookend.md all read; handoff carries task/intent/scope/exclusions/evidence/test-mode/stop-conditions/return-format \u2014 complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-helper-add-ceiling": {
+      "id": "m1-helper-add-ceiling",
+      "title": "Bookend helper + add() ceiling guard",
+      "imperative": "Add one helper beside _floor() (:3036) answering whether a gate is a declared bookend from task.get('bookend'). Use it in add() (:3047) as a ceiling: refuse an insert landing after the last bookend-marked gate, mirroring the _floor() refusal style. Write tests/test_checklist_engine.py::test_amend_add_refuses_after_last_bookend and ::test_amend_add_into_middle_still_succeeds FIRST, observe them fail (RED, no bookend key exists yet), then implement to GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: both new tests written and observed failing against pre-change engine",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "test_amend_add_refuses_after_last_bookend RED: AssertionError: EngineError not raised. test_amend_add_into_middle_still_succeeds already passed (asserts unchanged behavior)."
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: both tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k 'test_amend_add_refuses_after_last_bookend or test_amend_add_into_middle_still_succeeds'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-helper-add-ceiling-1"
+        }
+      ],
+      "constraints": [
+        "helper must be the single source of truth for bookend-ness \u2014 every guard site calls it, none re-reads task.get('bookend') directly"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-helper-add-ceiling-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k 'test_amend_add_refuses_after_last_bookend or test_amend_add_into_middle_still_succeeds'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-drop-guard": {
+      "id": "m2-drop-guard",
+      "title": "drop() bookend guard (closes the measured gap)",
+      "imperative": "In drop() (:3076), refuse when the target carries the bookend flag, regardless of status \u2014 placed alongside/before the existing pending-only refusal. Write tests FIRST (RED): test_amend_drop_refuses_bookend_gate_pending, test_amend_drop_pending_gate_no_bookend_key_still_succeeds (backward compat), test_amend_reproduces_measured_gap_refused_when_declared (the three-drop archive/feedback/review delta from probe-closing-bookend.md, now refused on a declared plan). Observe RED, then implement to GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 helper exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 helper _is_bookend exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: three new tests written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All three tests RED first: 'EngineError not raised' for the bookend-pending-drop test and the measured-gap-reproduction test; the backward-compat test already passed (proves the guard addition doesn't need to change undeclared behavior)."
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: all three pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k 'test_amend_drop_refuses_bookend_gate_pending or test_amend_drop_pending_gate_no_bookend_key_still_succeeds or test_amend_reproduces_measured_gap_refused_when_declared'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-drop-guard-1"
+        }
+      ],
+      "constraints": [
+        "undeclared plan (no bookend key) must drop a pending closing gate exactly as at 9b38b9d9"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-drop-guard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k 'test_amend_drop_refuses_bookend_gate_pending or test_amend_drop_pending_gate_no_bookend_key_still_succeeds or test_amend_reproduces_measured_gap_refused_when_declared'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-rescope-guard-latch": {
+      "id": "m3-rescope-guard-latch",
+      "title": "rescope() bookend guard + retrofit path + one-way latch",
+      "imperative": "In rescope() (:3089), refuse when the target carries the bookend flag, BEFORE the field overwrite. Add 'bookend' to the overwritable tuple (:3099-3100) so rescope can SET the flag (retrofit path) on a gate that is not yet marked. Because the guard runs before the overwrite, once bookend is set, every later rescope of that gate (including one trying to set bookend:false) is refused -- a one-way latch. Write tests FIRST (RED): test_amend_rescope_refuses_bookend_gate, test_amend_rescope_sets_bookend_flag_via_overwritable, test_amend_rescope_bookend_flag_is_one_way_latch. Observe RED, implement to GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 helper exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 helper _is_bookend exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: three new tests written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All three tests RED first: refusal test raised nothing (fell through to overwritable-field EngineError instead, no bookend guard); set-via-overwritable and one-way-latch both failed with 'at least one overwritable field is required' since 'bookend' was not yet in the tuple."
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: all three pass, latch property explicitly asserted",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k 'test_amend_rescope_refuses_bookend_gate or test_amend_rescope_sets_bookend_flag_via_overwritable or test_amend_rescope_bookend_flag_is_one_way_latch'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-rescope-guard-latch-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-rescope-guard-latch-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k 'test_amend_rescope_refuses_bookend_gate or test_amend_rescope_sets_bookend_flag_via_overwritable or test_amend_rescope_bookend_flag_is_one_way_latch'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-retext-check-guard": {
+      "id": "m4-retext-check-guard",
+      "title": "retext-check() bookend guard (contested, overridden)",
+      "imperative": "In the retext-check branch (:3115), refuse when the target carries the bookend flag -- a freeze that only stops deletion is not a freeze, since retext-check could otherwise rewrite a frozen gate's command to something trivially true. Write test_amend_retext_check_refuses_bookend_gate FIRST (RED), observe it fail, implement to GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 helper exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 helper exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: test written and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED: AssertionError: EngineError not raised (retext-check happily rewrote a bookend gate's FAIL_COMMAND to PASS_COMMAND)."
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k test_amend_retext_check_refuses_bookend_gate"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-retext-check-guard-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-retext-check-guard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k test_amend_retext_check_refuses_bookend_gate",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-all-or-nothing": {
+      "id": "m5-all-or-nothing",
+      "title": "All-or-nothing discipline holds across a bookend refusal",
+      "imperative": "Write test_amend_all_or_nothing_leaves_checklist_unmutated_with_bookend_violation: a delta mixing one legal op with one bookend-violating op must leave items AND tasks byte-identical to before, and the legal op must not have landed. This should already pass given the copy-then-commit structure (:3031/:3177) -- confirm rather than change engine logic; if it fails, that is a real defect to fix, not a test to soften.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2, m3, m4 guards exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2, m3, m4 guards implemented and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test passes, proving all-or-nothing holds with the new guards",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k test_amend_all_or_nothing_leaves_checklist_unmutated_with_bookend_violation"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-all-or-nothing-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-all-or-nothing-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py -k test_amend_all_or_nothing_leaves_checklist_unmutated_with_bookend_violation",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-mcp-prose": {
+      "id": "m6-mcp-prose",
+      "title": "spine_amend tool description: prose-only mention of the refusal",
+      "imperative": "In scripts/mcp_spine_server.py, add one sentence to the spine_amend tool description noting that add/drop/rescope/retext-check on a declared bookend gate is refused, so a calling agent learns of the refusal without a failed call. No schema change. If the door turns out to need more than prose, STOP and report in the result rather than redesigning it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "guards implemented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "guards m1-m4 implemented"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sentence added to spine_amend's description; door forwards delta/EngineError unchanged (verified by reading the tool, not modified beyond prose)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && grep -qi bookend scripts/mcp_spine_server.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-mcp-prose-1"
+        }
+      ],
+      "constraints": [
+        "scripts/mcp_spine_server.py is a fenced file: prose only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-mcp-prose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && grep -qi bookend scripts/mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-verify": {
+      "id": "m7-verify",
+      "title": "Full required verification, fresh process",
+      "imperative": "Run both required verification commands from the handoff in a fresh process with the crew env vars unset (never rely on this session's own behaviour, per #269). Capture both tallies for the result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all guards and tests implemented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all guards and tests implemented"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test_checklist_engine.py suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "mcp_spine_server + mcp_identity suites pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_mcp_spine_server.py tests/test_mcp_identity.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-verify-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT -u CREW_SCRATCH_DIR python -m pytest -q tests/test_mcp_spine_server.py tests/test_mcp_identity.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-result": {
+      "id": "m8-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write .agent-work/567-k/crew-handoffs/g1-implement-result.md per templates/IMPLEMENTER_RESULT.template.md with Return status: complete, file:line changes, red->green evidence, both tallies, anything refused and why, and Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "verification green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "verification green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result file written at the named path with Return status: complete",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && grep -q '^Return status: complete$' .agent-work/567-k/crew-handoffs/g1-implement-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m8-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle && grep -q '^Return status: complete$' .agent-work/567-k/crew-handoffs/g1-implement-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g1-implement-implementer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-18T05:17:52.988621+00:00",
+    "last_heartbeat": "2026-08-18T05:25:21.235051+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T05:25:26.704715+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Candidate B is chosen and specified: one _bookend_ceiling-style helper beside _floor(), guards in add/drop/rescope/retext-check, bookend added to rescope's overwritable tuple as the one-way-latch retrofit path. retext-check guard is a deliberate contested override per the handoff. Undeclared plans must behave identically to 9b38b9d9.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:18:23.586461+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-helper-add-ceiling",
+      "why": "Implemented _is_bookend(tid) beside _floor(); add() computes a ceiling = max index of any bookend-marked gate and refuses insert_at > ceiling. Diverged from design-B's literal '+1' ceiling formula, which would NOT refuse appending immediately after a bookend that is the last item (off-by-one: ceiling=len(items) makes insert_at==ceiling==len(items) pass, exactly the append-past-archive case the design's own prose says must be refused). Using ceiling = bookend's own index (no +1) so insert_at>ceiling correctly refuses landing after it. Both required tests green.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:20:41.953014+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-drop-guard",
+      "why": "drop() now refuses when _is_bookend(tid), checked before the pending-status check, regardless of status, with EngineError(task_id, verb='amend-drop', status). Reproduces and closes the measured gap: the probe's exact three-drop delta against the probe fixture is now refused and leaves the checklist unmutated. Backward compat holds: undeclared plans drop a pending closing gate exactly as at 9b38b9d9.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:21:29.532617+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-rescope-guard-latch",
+      "why": "rescope() refuses _is_bookend(tid) before the field overwrite, regardless of status. Added 'bookend' to the overwritable tuple -- the retrofit path. Because the guard fires before the overwrite, once bookend=true lands, every later rescope on that gate (including bookend:false) is refused: a one-way latch, asserted explicitly by test_amend_rescope_bookend_flag_is_one_way_latch. Full Amend* test classes (44 tests) still green -- no regression to existing rescope behavior.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:22:13.082400+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-retext-check-guard",
+      "why": "retext-check now refuses _is_bookend(tid) before the status check and before any mutation. This is the contested, deliberate override the handoff calls out: without it, retext-check could rewrite a frozen gate's command check to something trivially true and let it pass, defeating the drop/rescope guards while leaving the gate standing. The two sanctioned recovery paths (fix template + re-instantiate, or waive under recorded authority) stay open. Full Amend* suite: 45 passed, no regression.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:22:42.025726+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-all-or-nothing",
+      "why": "Confirmed rather than changed: the new bookend guards raise before any of new_items/new_tasks are touched (guards run inline in the ops loop, commit only happens after the loop at :3177+), so the existing copy-then-commit discipline covers the new refusal paths for free. Test passed on first run, no engine change needed for this item.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:23:04.365689+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-mcp-prose",
+      "why": "spine_amend handler (:2404-2424) is confirmed a pure pass-through: writes the delta beside the bound spine and calls run_engine('amend', ...) -> checklist_engine.main() -> amend(), which raises the new bookend EngineErrors through the same as_result() path every existing amend refusal already uses. No schema/handler change needed or made; added one sentence to the tool description only, per the three independent design agents' shared conclusion.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:23:30.536444+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-verify",
+      "why": "Both required commands run in a fresh subprocess with SPINE_FILE/SPINE_SESSION/SPINE_PARENT/CREW_SCRATCH_DIR unset, per #269. test_checklist_engine.py: 466 passed, 140 subtests passed. test_mcp_spine_server.py + test_mcp_identity.py: 62 passed, 14 subtests passed. No failures, no skips.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:24:04.521949+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-result",
+      "why": "IMPLEMENTER_RESULT written at .agent-work/567-k/crew-handoffs/g1-implement-result.md with Return status: complete, file:line-level change summary, full red->green TDD evidence per guard, both required test tallies, the one thing refused-and-corrected (design-B's ceiling off-by-one) named explicitly, and Workflow Feedback filled honestly.",
+      "mechanical": false,
+      "ts": "2026-08-18T05:25:21.235038+00:00"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-retext-check-guard",
+  "mechanical": {
+    "run": "567-k-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m4-retext-check-guard",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-k-g1-implement-m4-retext-check-guard@d0c04e9d6456e2b328486eb9572e4af67d28ece8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-k-g1-implement",
+    "generated_at": "2026-08-18T05:22:17Z"
+  }
+}

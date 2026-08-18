@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-rescope-guard-latch",
+  "mechanical": {
+    "run": "567-k-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m3-rescope-guard-latch",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-k-g1-implement-m3-rescope-guard-latch@ab99f7aa7d2d6f5783eb3c4aeef5912da044a077",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-k-g1-implement",
+    "generated_at": "2026-08-18T05:21:34Z"
+  }
+}
