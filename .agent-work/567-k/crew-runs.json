@@ -5,7 +5,7 @@
     "gate": "lane-k",
     "role": "commander-delegated",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/567-k/lane-k/commander-delegated/attempt-1",
     "backend": "cli",
     "door_bound": true,
@@ -18,10 +18,14 @@
     "stdout": ".agent-work/567-k/crew-runs/lane-k-commander-delegated-attempt-1.stdout.txt",
     "stderr": ".agent-work/567-k/crew-runs/lane-k-commander-delegated-attempt-1.stderr.txt",
     "started_at": "2026-08-18T04:46:13.891640+00:00",
-    "last_heartbeat": "2026-08-18T04:46:13.891640+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-18T06:10:29.742087+00:00",
+    "completed_at": "2026-08-18T06:10:29.742087+00:00",
     "abandoned": false,
     "model": "opus",
-    "scratch_dir": ".agent-work/567-k/crew-scratch/lane-k-commander-delegated-attempt-1-5d572aaaea17"
+    "scratch_dir": ".agent-work/567-k/crew-scratch/lane-k-commander-delegated-attempt-1-5d572aaaea17",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
   }
 ]

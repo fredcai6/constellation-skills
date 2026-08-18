@@ -1,0 +1,19 @@
+Lane K is complete and I'm not resuming.
+
+**The open `execute` gate is yours, not mine.** My spine — `constellation/567-k/lane-k/commander-delegated` — reports `DONE: no open items` with its lease released. The gate the Stop hook named lives in `.agent-work/epic-567-door/spine.json`, leased **by admiral**. I ran no verb against it.
+
+I declined deliberately, not out of caution:
+
+- Every mutating verb there would refuse unless I passed **your** session id — the exact #632 shape this epic already filed.
+- Its closing condition is "every epic issue dispositioned," and **lane J is still blocked at c6**. Not mine to judge.
+- The hook's own escapes (`spine_halt block`, human waiver) would have applied to *your* gate, falsifying epic state on your behalf. **There is no offered exit that fits a finished child whose parent is open** — which is itself the finding.
+
+**Three symptoms, one root.** The silent context gauge all run, your gauge file overwritten with my reading, and now the Stop hook reading your spine as mine — all are a child session in a worktree being indistinguishable from its parent, consistent with #269. **Triage them together; one fix likely closes all three.** Staged as a sixth candidate and appended to the return, marked post-closeout so you can see why my turn ended with your gate open.
+
+**Final state:** PR **#635**, `OPEN`, `MERGEABLE`, head `3d57d2dc` — verified against the forge, matching local. Tree clean.
+
+Delivered: the bookend freeze in `amend()` behind one swappable helper, declared in the three role spines I own, reconciled into `CHECKLIST_SCHEMA.md`. Suite 3383 passed, 0 `^FAILED`. Two independent APPROVEs, one with a red-proof.
+
+**Four things still need you**, all in the return: pick the declaration form (I recommend B with a ship-time retrofit, but convergence is yours); rule on the crew half, blocked behind `generate_spine.py` which neither lane owns; rule on the `execute.json` migration — noting your own spine has already passed the window to reify its waves; and route the crew-registry bug to lane J, which has that file open now.
+
+One caveat worth repeating: the probe proves a closing bookend *could* be dropped, not that anyone ever did. I didn't search the journals.
