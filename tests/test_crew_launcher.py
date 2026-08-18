@@ -1167,6 +1167,22 @@ class ResolveModelTests(unittest.TestCase):
         self.assertEqual({}, RC.ROLE_MODEL_TIERS["codex"])
         self.assertEqual({}, RC.ROLE_MODEL_TIERS["local"])
 
+    def test_commander_tier_is_sonnet_or_opus_haiku_excluded(self):
+        """#567 lane L, human ruling verbatim: 'commander should be sonnet or
+        opus allowed, haiku can't handle it.' Upward-only change from the
+        original {sonnet, haiku}: default stays sonnet, opus is added, haiku
+        is removed. Every other row (including admiral's opus-only row) is
+        untouched by this gate."""
+        self.assertEqual(
+            {"default": "sonnet", "allowed": frozenset({"sonnet", "opus"})},
+            RC.ROLE_MODEL_TIERS["claude"]["commander"],
+        )
+        resolved = RC.resolve_model("commander", "claude", "opus", "epic-567 ruling")
+        self.assertEqual("opus", resolved.model)
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("commander", "claude", "haiku", None)
+        self.assertIn("haiku", str(ctx.exception))
+
 
 class EntryLivenessTests(unittest.TestCase):
     """Issue #599: `entry_liveness`'s corroborated three-state rule, and its

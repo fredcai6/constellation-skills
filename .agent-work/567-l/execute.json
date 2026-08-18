@@ -1,0 +1,287 @@
+{
+  "work_id": "567-l",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g2-implement",
+    "g3-implement"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope from MISSION_FRAME.md and LAUNCH_ORDER.md, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Confirmed intent/scope from MISSION_FRAME.md and LAUNCH_ORDER.md."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Rephrase 567-j-004.a5 so the observation guard passes",
+      "imperative": "CREW-WAIVED reasoning gate (decision:pass-model-explicitly, launch order latitude to skip crew machinery for a bounded edit with an existing test as the acceptance bar): use scripts/apply_episode_delta.py's restate-assertion op (op, id=567-j-004, assertion=a5, statement=<rephrased>, history=<reason>) to rewrite episodes/active/567-j-004.md's a5 so it no longer trips the imperative trigger. Do NOT add an EXCEPTIONS entry. Do NOT hand-edit episodes/. Verify with `python3 -m pytest tests/test_episode_observations.py::RealStoreTests -q` before advancing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RealStoreTests passes with 567-j-004.a5 restated and no new EXCEPTIONS entry",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_episode_observations.py::RealStoreTests -q"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "decision:no-exception-list-growth",
+        "restate-assertion accepts exactly op,id,assertion,statement,history"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/verify_episode_observations.py \u2014 guard module",
+          "episodes/active/567-j-004.md \u2014 record being restated"
+        ],
+        "capability": [
+          "episode-observation guard"
+        ],
+        "constraint": [
+          "episodes/'s only write path is scripts/apply_episode_delta.py"
+        ],
+        "decision": [
+          "decision:no-exception-list-growth \u2014 rephrase instead of growing guard.EXCEPTIONS @grade: settled/human \u00b7 leans g1-implement"
+        ],
+        "evidence": [
+          "claim: guard passes after restate \u2014 pytest tests/test_episode_observations.py::RealStoreTests -q exits 0"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_episode_observations.py::RealStoreTests -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Widen the commander tier row: haiku out, opus in",
+      "imperative": "CREW-WAIVED reasoning gate (same latitude as g1). Edit scripts/run_crew.py's ROLE_MODEL_TIERS['claude']['commander'] from {default: sonnet, allowed: {sonnet, haiku}} to {default: sonnet, allowed: {sonnet, opus}}. Touch no other row. Add a pinning test to tests/test_crew_launcher.py::ResolveModelTests since none currently pins commander's allowed set specifically. Verify with `python3 -m pytest tests/test_crew_launcher.py::ResolveModelTests -q` before advancing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-implement complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "ResolveModelTests passes; commander allowed={sonnet,opus}, default unchanged, every other row unchanged",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_crew_launcher.py::ResolveModelTests -q"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "decision:commander-tier-upward-only",
+        "admiral/implementer/reviewer/critic/cartographer rows untouched"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/run_crew.py:847-858 \u2014 ROLE_MODEL_TIERS dict literal",
+          "tests/test_crew_launcher.py::ResolveModelTests"
+        ],
+        "capability": [
+          "crew model-tier resolution"
+        ],
+        "constraint": [
+          "admiral stays {default: opus, allowed: {opus}}, human-confirmed directly"
+        ],
+        "decision": [
+          "decision:commander-tier-upward-only \u2014 haiku out, opus in, default unchanged @grade: settled/human \u00b7 leans g2-implement"
+        ],
+        "evidence": [
+          "claim: tier change is upward-only and isolated \u2014 ResolveModelTests + full ROLE_MODEL_TIERS diff re-read"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_crew_launcher.py::ResolveModelTests -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Build the role-spine-template bookend lint",
+      "imperative": "CREW-WAIVED reasoning gate (same latitude as g1/g2). Write a new script (e.g. scripts/check_role_spine_bookends.py) that: (a) globs skills/*/templates/*_SPINE.template.json in the repo and fails if any declares zero \"bookend\": true tasks; (b) for each such template, compares its set of bookend task ids against the installed corpus copy (constellation-<skill>/templates/<name> under the resolved skills root) and fails on drift (declared-but-not-installed or vice versa). check_skill_freshness.py's check() compares a PROJECT's .agent-work/templates/{.baseline,local} against installed upstream \u2014 it has no notion of repo-source-vs-installed and no manifest for this repo's own skill sources, so its three-way machinery does not fit; write a small standalone script instead and say so in the Return artifact. Do NOT modify checklist_engine.py::_is_bookend() or its permissive default. Write tests including a red-proof fixture (an undeclared template) and a green-proof fixture (a declared, undrifted template). Verify with the new test file before advancing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2-implement complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new lint's own test suite passes, including a red-proof (fails on undeclared template) and a green-proof (passes on declared, undrifted template)",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_check_role_spine_bookends.py -q"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "decision:lint-scope-role-spine-templates-only",
+        "_is_bookend()'s permissive default is frozen; lint is a corpus check, not a runtime refusal"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:3045 \u2014 _is_bookend()",
+          "skills/{commander,admiral,explorer}/templates/*_SPINE.template.json"
+        ],
+        "capability": [
+          "corpus freshness/declaration tooling"
+        ],
+        "constraint": [
+          "a plan with no declaration reads as not-a-bookend at runtime; unchanged"
+        ],
+        "decision": [
+          "decision:lint-scope-role-spine-templates-only \u2014 checks role spine templates only @grade: settled/human \u00b7 leans g3-implement",
+          "decision pressure: reuse check_skill_freshness.py vs write standalone \u2014 resolved at plan time, self-scoped, no float needed"
+        ],
+        "evidence": [
+          "claim: lint fails on undeclared template and passes on declared one \u2014 the lint's own red/green-proof test fixtures"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_check_role_spine_bookends.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-18T06:42:47.593931+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "episodes/active/567-j-004.md a5 restated via apply_episode_delta.py restate-assertion (op,id,assertion,statement,history exactly); no EXCEPTIONS entry added; RealStoreTests passes 2/2.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:43:16.640299+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g2-implement",
+      "why": "commander row is now {default: sonnet, allowed: {sonnet, opus}} -- haiku out, opus in, default unchanged. Every other row byte-identical (git diff confirms one line changed). Added a pinning test since none existed. ResolveModelTests 14/14 passes.",
+      "mechanical": false,
+      "ts": "2026-08-18T06:43:39.296886+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g3-implement",
+      "why": "scripts/check_role_spine_bookends.py written, scoped to skills/*/templates/*_SPINE.template.json only; does not touch _is_bookend(). check_skill_freshness.py's project-scoped .baseline/local/upstream machinery does not fit repo-source-vs-installed comparison so a standalone script was written instead, as the mission frame's decision-pressure line anticipated. tests/test_check_role_spine_bookends.py: 7/7 pass including red-proof (undeclared), green-proof (declared+matching), drift, installed-missing, unreadable-refuses, and a real-repo sanity check. Live-repo run against the actual installed corpus reproduces exactly the drift the Admiral hit after merging K (all 3 role spine templates: repo declares bookends, installed shows none).",
+      "mechanical": false,
+      "ts": "2026-08-18T06:45:08.809523+00:00"
+    }
+  ]
+}

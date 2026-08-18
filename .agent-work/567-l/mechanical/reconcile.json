@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "567-l",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 7,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-l-reconcile@a3eb3cd39665543cea0915090159ae2b43dd5039",
+    "artifact-ref": [
+      "episodes/active/567-j-004.md"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-l",
+    "generated_at": "2026-08-18T06:46:55Z"
+  }
+}

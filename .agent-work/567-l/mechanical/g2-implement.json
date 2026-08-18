@@ -1,0 +1,24 @@
+{
+  "contract": 1,
+  "step": "g2-implement",
+  "mechanical": {
+    "run": "567-l",
+    "project": "constellation-skills",
+    "spine-step": "g2-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-l-g2-implement@a4642186e37d87313c2f096b45b111f511b5f9fe",
+    "artifact-ref": [
+      "episodes/active/567-j-004.md"
+    ]
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "567-l",
+    "generated_at": "2026-08-18T06:43:19Z"
+  }
+}

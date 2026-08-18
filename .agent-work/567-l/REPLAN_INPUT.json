@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #567 wave 3: finish lane L",
+      "spec_path": ".agent-work/567-l/LAUNCH_ORDER.md",
+      "intent_and_why": "Unblock lane J's merge gate (PR #637), land the human's commander-tier ruling, and build the lint that makes the human's B-plus-lint choice on undeclared role-spine bookends actually safe."
+    },
+    "definition_of_done": [
+      "tests/test_episode_observations.py::RealStoreTests passes with 567-j-004.a5 restated and no new EXCEPTIONS entry",
+      "ROLE_MODEL_TIERS['claude']['commander'] allows {sonnet, opus}, default unchanged at sonnet, every other row unchanged",
+      "a role-spine-template lint exists that fails on an undeclared template and on repo-vs-installed drift, without touching _is_bookend()'s permissive default"
+    ],
+    "good_enough": {
+      "mandatory_quality": "Each of the three changes independently verified by a real test run, not self-report",
+      "sufficient_evidence": "Existing tests as the acceptance bar (per the launch order's own framing), plus one new pinning test and one new lint test file",
+      "appetite": "Three small bounded edits, no crew dispatch"
+    },
+    "hard_constraints": [
+      "no twelfth entry in guard.EXCEPTIONS",
+      "admiral/implementer/reviewer/critic/cartographer tier rows untouched",
+      "_is_bookend()'s permissive default untouched; lint is a corpus check, not a runtime refusal",
+      "no issue filing mid-run",
+      "no doctrine promotion into docs/agents/*",
+      "map/INDEX.md not regenerated or hand-edited"
+    ],
+    "fixed_decisions": [
+      "decision:no-exception-list-growth",
+      "decision:commander-tier-upward-only",
+      "decision:lint-scope-role-spine-templates-only",
+      "decision:map-index-is-admiral-owned"
+    ],
+    "current_wave": {
+      "objective": "Land lane L's three human-ruled changes so PR #637 goes green",
+      "exit_criteria": [
+        "RealStoreTests passes",
+        "ResolveModelTests passes with the widened commander row",
+        "the new lint's own test suite passes, including a red-proof and a green-proof"
+      ],
+      "issues": [
+        {
+          "id": "L1",
+          "title": "Rephrase 567-j-004.a5 so the observation guard passes",
+          "desired_outcome": "The guard's imperative trigger no longer fires on a5, with the original wording preserved verbatim in history.",
+          "useful_now": "Unblocks lane J's merge gate directly.",
+          "appetite": "One restate-assertion call",
+          "acceptance_or_falsification_evidence": "pytest tests/test_episode_observations.py::RealStoreTests -q exits 0",
+          "implementation_latitude": "Wording only, via apply_episode_delta.py's restate-assertion op; no EXCEPTIONS growth.",
+          "hard_constraints_no_gos": ["no EXCEPTIONS entry", "no hand-edit of episodes/"],
+          "local_unknowns": [],
+          "anchors": ["scripts/verify_episode_observations.py", "episodes/active/567-j-004.md"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "L2",
+          "title": "Widen the commander model-tier row",
+          "desired_outcome": "commander allowed = {sonnet, opus}, default unchanged, every other row unchanged.",
+          "useful_now": "Lands the human's ruling verbatim.",
+          "appetite": "One dict-literal edit plus one pinning test",
+          "acceptance_or_falsification_evidence": "pytest tests/test_crew_launcher.py::ResolveModelTests -q exits 0",
+          "implementation_latitude": "Touch only the commander row.",
+          "hard_constraints_no_gos": ["admiral/implementer/reviewer/critic/cartographer rows untouched"],
+          "local_unknowns": [],
+          "anchors": ["scripts/run_crew.py", "tests/test_crew_launcher.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "L3",
+          "title": "Build the role-spine-template bookend lint",
+          "desired_outcome": "A corpus check that fails on an undeclared role spine template and on repo-vs-installed drift.",
+          "useful_now": "Makes the human's 'B plus lint' ruling on undeclared bookends actually safe.",
+          "appetite": "One small standalone script plus tests",
+          "acceptance_or_falsification_evidence": "pytest tests/test_check_role_spine_bookends.py -q exits 0, including a red-proof and a green-proof",
+          "implementation_latitude": "Reuse check_skill_freshness.py if it fits; write standalone if it does not, and say so.",
+          "hard_constraints_no_gos": ["_is_bookend()'s permissive default untouched", "scope limited to role spine templates"],
+          "local_unknowns": [],
+          "anchors": ["scripts/checklist_engine.py", "skills/commander/templates/COMMANDER_SPINE.template.json"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "L1",
+      "outcome": "episodes/active/567-j-004.md's a5 restated (statement reworded, original preserved verbatim in history); RealStoreTests passes 2/2.",
+      "evidence": "git diff episodes/active/567-j-004.md; pytest tests/test_episode_observations.py::RealStoreTests -q -> 2 passed"
+    },
+    {
+      "issue_id": "L2",
+      "outcome": "scripts/run_crew.py commander row now {default: sonnet, allowed: {sonnet, opus}}; one-line diff confirmed via git diff; one pinning test added; ResolveModelTests passes 14/14.",
+      "evidence": "git diff scripts/run_crew.py; pytest tests/test_crew_launcher.py::ResolveModelTests -q -> 14 passed"
+    },
+    {
+      "issue_id": "L3",
+      "outcome": "scripts/check_role_spine_bookends.py written and tested; run against the real repo + installed corpus reproduces the exact drift the Admiral hit after merging K (all 3 role spine templates: repo declares bookends, installed shows none, exit 1).",
+      "evidence": "pytest tests/test_check_role_spine_bookends.py -q -> 7 passed; python3 scripts/check_role_spine_bookends.py --repo-root . --skills-root ~/.claude/skills -> exit 1, 3 drift rows"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The three baselines the launch order stated were accurate as of this lane's start.",
+      "expected": "RealStoreTests failing on 567-j-004.a5's 'run'; commander row {sonnet,haiku}; all 3 role spine templates declaring bookends in-repo and none installed.",
+      "observed": "All three confirmed exactly as stated by direct read/run before any edit.",
+      "source": "pytest run + direct file reads at the understand step"
+    },
+    {
+      "claim": "No existing test pinned the commander tier row's allowed set specifically.",
+      "expected": "The launch order's 'update whatever test pins the table's contents' implied a target test existed.",
+      "observed": "grep across tests/test_crew_launcher.py found no case referencing commander+haiku or commander's allowed set; only implementer's frozenset type and codex/local emptiness were pinned. Added one rather than leaving the widened row unpinned.",
+      "source": "grep -n commander tests/test_crew_launcher.py at the understand step"
+    },
+    {
+      "claim": "check_skill_freshness.py's machinery does not fit a repo-source-vs-installed comparison.",
+      "expected": "Launch order invited reuse if it fits, and to say so if it does not.",
+      "observed": "check() compares a PROJECT's .agent-work/templates/{.baseline,local} against installed upstream via a TEMPLATES_MANIFEST.json this repo (the skill source itself) has no reason to carry -- wrong shape. Wrote scripts/check_role_spine_bookends.py standalone instead.",
+      "source": "reading scripts/check_skill_freshness.py at understand and plan"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "plan.c6 (map_orient.py verify-frame) could not be waived by this session even though the check names itself waivable for a trivial change -- the engine door unconditionally refuses spine_evidence action=waive on a spine a session is itself bound to and driving, regardless of the authority value passed.",
+      "classification": "evidence_only",
+      "affects": "Commander/delegated-run mechanism, not this lane's content",
+      "evidence": "spine_evidence waive call refused with 'a crew must not waive its own bound spine check -- always ask up'; resolved via spine_halt(block) then a release-claim-waive-release-reclaim handshake with the Admiral, who confirmed this is the SECOND occurrence this wave (lane J hit the same gap first) and that both routes the refusal text names (session-id impersonation #632, force-claim attribution loss #369) are filed defects.",
+      "reason": "Already resolved this run via the handshake; no issue is warranted from this lane -- the Admiral asked that the existing triage candidate be strengthened to reflect two occurrences in one wave, which this lane does at its own triage step rather than here."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/verify_episode_observations.py",
+      "scripts/run_crew.py",
+      "scripts/checklist_engine.py",
+      "scripts/check_role_spine_bookends.py"
+    ],
+    "map_status": "DEGRADED-UNPARSEABLE: map/INDEX.md is a fresh, fully built scan but map/ids.jsonl is empty (no anchor ids ever minted in this repo), so map_orient.py cannot resolve frame citations against it. Admiral-owned per decision:map-index-is-admiral-owned."
+  }
+}
