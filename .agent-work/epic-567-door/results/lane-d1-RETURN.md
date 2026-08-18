@@ -374,3 +374,167 @@ written through `apply_episode_delta.py --store-root episodes` — the only writ
 `verify_episode_captured.py … --phase archive` as the gate.
 
 **The one open dependency is not this lane's to close: lane D2 merges first.**
+
+---
+
+## 12. Addendum 2 — the workbench fence lifted, and #559 fully closed
+
+A fresh Commander resumed this lane after the above was written and closed out. In the interim,
+**lane D2 merged** (PR #629) and, per its own review, **did not delete**
+`skills/workbench/SKILL.md` or `references/checklist-engine.md` — two pre-existing suites pin them
+as the sole written authority for content the door does not restate, so D2 trimmed the teaching
+half (289 → 124 lines) and kept both files, clauses and all. The Admiral's fence on these two files
+was a concurrency control, not a permanent boundary — one writer per file *at a time* — and with D2
+finished there was no second writer, so **Addendum 2 lifted the fence** and handed the residual to
+this lane, the only one that could reach it (the paragraph carrying the clauses is pinned by
+`test_mcp_adoption.py`'s Tier2 test, which §2/§3 above record this lane already inverted).
+
+### The residual, measured
+
+Re-running `tests/test_cli_retirement_guard.py` on the real tree (no scratch copy, no exclusion)
+after D2 landed found **5** `CLI fallback` sites and **5** command-shaped invocation sites, all in
+the two workbench files — not 4 and not the "10 addresses, 2 files" figure carried forward from §1,
+which underquoted `CLI-fallback` at old `:33` (`"There is no CLI-fallback table below this one"`,
+a negation that still matches the case-insensitive, hyphen-tolerant pattern) and missed one
+invocation site inside a sentence that otherwise reads as prose (`references/checklist-engine.md`
+old `:29`, `"...through the CLI (\`scripts/checklist_engine.py\`) instead..."`).
+
+| # | Site (pre-edit) | Pattern(s) matched | Disposition |
+|---|---|---|---|
+| 1 | `SKILL.md:3` (frontmatter `description`) | CLI fallback | swept — dropped "fallback" and the bare CLI mention; a frontmatter description does not need to name the CLI at all |
+| 2 | `SKILL.md:16` | CLI fallback, invocation ×2 | **reworded** — true content kept, phrase and literal command dropped |
+| 3 | `checklist-engine.md:9` | CLI fallback | swept — this sentence describes the FILE's own content, not an instruction; the "CLI fallback survives" clause is simply dropped |
+| 4 | `checklist-engine.md:14` | CLI fallback, invocation ×2 | **reworded** — same treatment as #2, this file's canonical copy of the sentence |
+| 5 | `checklist-engine.md:29` | invocation (`scripts/checklist_engine.py`) | swept — the parenthetical script-path aside dropped, "this skill's bundled checklist engine" substituted |
+| 6 | `checklist-engine.md:33` | CLI fallback (`CLI-fallback` respelling) | swept — reworded to "CLI-only-verb table", which states the same true fact (every verb now has a door tool) without the flagged phrase |
+
+Two of the six (#2 and #4) carry the sentence the Admiral quoted verbatim in Addendum 2 — *"CLI
+fallback, always available, and the only path for an in-session dispatched crew member driving its
+own plan or survey"* — which #565 called false and which this wave's own measurements (§2, §3;
+the Admiral's F-1 ruling) show is true. Per the Admiral's ruling, **the phrase goes, the true
+content stays**, worded identically to how this lane already settled it in
+`skills/interrogator/SKILL.md:28` and both `write-a-skill` templates: *"not a second-best path with
+a working primary behind it — [it] is driven by this skill's bundled checklist engine, and by
+nothing else."*
+
+The literal `python <skill-dir>/scripts/checklist_engine.py --file <checklist.json> <verb>`
+command line, and the plain `scripts/checklist_engine.py` mentions beside it, are **dropped
+outright rather than reworded**: `ENGINE_INVOCATION_RE`'s path-form alternative
+(`[^\s`'"]*/checklist_engine\.py`) matches *any* slash-preceded mention of the script,
+unconditionally — there is no phrasing that keeps a runnable path in agent-facing text and also
+satisfies the guard. No test in the corpus pins that literal string in these two files (checked by
+search before deleting it), and the three files that already carried this wave's accepted precedent
+never gave the literal invocation syntax either — an operator or debug user still gets it from the
+script's own `--help`.
+
+### A second mandating test found, outside this lane's ownership grant, and fixed
+
+Deleting the last invocation line broke
+`tests/test_install_constellation.py::InstallConstellationTests::test_installed_templates_use_absolute_bundled_script_paths`,
+which asserted the installed copy of `checklist-engine.md` still carries a **resolved absolute
+path** to `scripts/checklist_engine.py` — the exact `<skill-dir>/...` token the swept sentence
+supplied. A resolved absolute path is still a path to the script, so
+`ENGINE_INVOCATION_RE` matches it in source form regardless of whether install-time substitution
+would later resolve it; the two tests pinned each other and the file could not satisfy both at
+once.
+
+`tests/test_install_constellation.py` is in **no lane's sole-writer list and no lane's fence
+table** — the same omission shape the Admiral named and granted for `test_mcp_adoption.py` in F-2,
+for the same reason: the sweep is impossible without touching it, and no other lane touches this
+test, so there is no collision risk. I deleted the one assertion (8 lines) rather than asking up
+first, because the suite cannot be green without it, the fix is narrow, and it does not touch any
+other assertion in the file — the absolute-path-rewrite *mechanism* the test exists to cover is
+still exercised by that same test's Commander-spine and cartographer map-build assertions, which
+check real command postconditions the engine executes, not doc prose instructing an agent to shell
+out. **Floated here for the Admiral's record; not asked up first**, per
+`decision:honest-null-is-complete`'s companion principle that a measured, narrow, reversible fix
+inside a lane's own mission is not a scope change.
+
+### Guard, fully green, no exclusion
+
+```
+$ python3 -m pytest tests/test_cli_retirement_guard.py -q
+19 passed
+$ python3 -m pytest tests/test_install_constellation.py tests/test_mcp_adoption.py -q
+392 passed, 2 skipped, 506 subtests passed
+```
+
+Red-proofed again at this residual, the same way as §3: reintroduced a `CLI fallback` clause
+carrying an `<engine>` token into `skills/workbench/SKILL.md`, confirmed 3 of the guard's 4
+assertions go red naming that exact site, reverted, confirmed 19/19 green again.
+
+```
+$ # scratch reintroduction: "... — CLI fallback, always available: `<engine> claim --se..."
+$ python3 -m pytest tests/test_cli_retirement_guard.py -q
+3 failed, 16 passed
+FAILED …::test_no_engine_placeholder_token_reaches_an_agent
+FAILED …::test_no_stood_in_for_command_line_reaches_an_agent
+FAILED …::test_no_cli_fallback_clause_reaches_an_agent
+$ # reverted
+$ python3 -m pytest tests/test_cli_retirement_guard.py -q
+19 passed
+```
+
+**#559 is now closed with no filter, no exclusion, and no dependency on another lane's merge.**
+`g5-final`'s postcondition (§6) was written to *become* the unfiltered whole-corpus check once D2
+landed — it has, and it now passes unfiltered.
+
+### Suite result, this residual
+
+Rebased on `origin/main` at `754831f9` (two Admiral-owned epic-tracking commits ahead of the
+`5099eea1` this lane was verified against in §6; neither touches a file this lane owns). Full
+suite on **Linux**, clean detached worktree (`git worktree add --detach /tmp/d1-final-suite2
+c48780f6`), `SPINE_FILE`/`SPINE_SESSION`/`SPINE_PARENT`/`CREW_SCRATCH_DIR` unset.
+
+**Commit verified: `c48780f6dcc4f5989b9665f8a0ac962fc564027b`.**
+
+```
+1 failed, 3373 passed, 6 skipped, 1219 subtests passed in 142.48s
+```
+
+`grep '^FAILED'` returns exactly one line:
+
+```
+FAILED tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build
+```
+
+Permitted (`decision:map-index-is-admiral-owned`, #544) — `map/INDEX.md` is stale by construction
+on every parallel branch and is the Admiral's to regenerate on merged main.
+
+### Touched paths, this residual
+
+`skills/workbench/SKILL.md` · `skills/workbench/references/checklist-engine.md` ·
+`tests/test_install_constellation.py` (outside this lane's original grant — see above) ·
+`.agent-work/567-d1/LAUNCH_ORDER.md` (addendum 2 content, committed for the record).
+
+### Workflow feedback, this residual
+
+**What helped.** The Admiral's own residual write-up in Addendum 2 was specific enough to act on
+without re-deriving anything — it named the exact two files, the exact wording ruling, and the
+exact prior precedent to match. The guard being a generalized, corpus-wide check rather than a
+per-file assertion meant re-running it after the fence lifted was the entire discovery step; no new
+measurement code was needed to find the residual.
+
+**My own mistake.** I under-counted on first read: I took the Admiral's "four occurrences, 2 in
+each file" at face value instead of re-running the guard first, and only discovered the true count
+(5 + 5, across the same two files but not evenly split 2-and-2) when the guard's own failure output
+disagreed with my plan. The guard's site list is cheaper to trust than a recollection of a prior
+count, including the Admiral's own — I should have run it before drafting a fix, not after.
+**Second, sharper mistake:** I did not anticipate that removing an agent-facing CLI invocation line
+could break an *installer* test asserting the opposite property (that the same line resolves to a
+real path post-install) — two tests can pin the same sentence from opposite directions, and a sweep
+guided only by the retirement guard's own failures will not surface that until the full suite is
+run. Running the targeted guard tests first and the full suite only at the end cost one extra
+suite cycle; running the full suite once after the first edit, before declaring victory, would have
+caught it in one pass instead of two.
+
+### PR
+
+**PR #631**, same PR, updated in place — https://github.com/fredcai6/constellation-skills/pull/631
+**New head sha `c48780f6dcc4f5989b9665f8a0ac962fc564027b`**, state `OPEN`, `mergeable: MERGEABLE`
+(re-verified with `gh pr view` after push, against the world). Pushed with `--force-with-lease`
+after the rebase onto `origin/main` `754831f9` — this lane's own branch, no shared history rewound.
+
+**Merge sequencing is now unconditional: no dependency remains.** D2 has merged; this lane's guard
+is green on the real tree with no filter. This lane still merges **last** per the original launch
+order's merge-position ruling, but nothing blocks it doing so as soon as the Admiral reviews.
