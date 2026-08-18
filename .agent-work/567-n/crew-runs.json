@@ -1,0 +1,27 @@
+[
+  {
+    "crew_id": "constellation/567-n/execute/implementer/attempt-1",
+    "work_id": "567-n",
+    "gate": "execute",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/567-n/execute/implementer/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 1765393,
+    "worktree": ".worktrees/567-n-role-key",
+    "handoff": ".worktrees/567-n-role-key/.agent-work/567-n/LAUNCH_ORDER.md",
+    "result": ".worktrees/567-n-role-key/.agent-work/567-n/RETURN.md",
+    "spine": null,
+    "parent": null,
+    "stdout": ".agent-work/567-n/crew-runs/execute-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/567-n/crew-runs/execute-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-18T12:02:50.698072+00:00",
+    "last_heartbeat": "2026-08-18T12:02:50.698072+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "model": "sonnet",
+    "scratch_dir": ".agent-work/567-n/crew-scratch/execute-implementer-attempt-1-e906f1579080"
+  }
+]
