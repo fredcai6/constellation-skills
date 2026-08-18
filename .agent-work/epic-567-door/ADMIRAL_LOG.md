@@ -474,3 +474,10 @@ All four merged 2026-08-17 under the Linux-green gate, in dependency order, each
 
   - Every member issue therefore holds one of the four dispositions c1 admits: **merged**, **honest-null**, **deferred with a ruling**, or **escalated**. Two are escalated rather than closed — **#442** and **#565** — because in both cases this epic's measurements **contradict a claim the human wrote**, and closing a human's issue on the strength of my own contradiction is not a delegated call. They go to acceptance.
   - The `gh issue comment`/`close` calls themselves are **closeout hygiene**, run in the pairing pass, where 27 staged candidates are paired onto open issues or recorded as episodes and **nothing new is filed**.
+
+## Closeout
+
+- `2026-08-17` — `HARVEST` (the mandated harvest-before-sweep substep, **verified rather than performed**): the closeout requires collecting each Commander's worktree-local `CONSTELLATION_FEEDBACK.md` export **before** `git worktree remove`, because that file does not survive it.
+  - **In this repo the harvest is already complete by construction**, and I checked rather than assumed it: `.agent-work/` is deliberately tracked, every lane committed its work area to its branch, and every branch merged. **620 files from the five wave-2 lane work areas are on `main`.** Lanes D2 and F wrote explicit `staged-feedback/<work-id>/` exports with `FENCE.md` — both tracked. Lane D1's `.agent-work/567-d1/FEEDBACK.md` (65 lines) is tracked. Lanes E and H carried their feedback in their returns, which are tracked at `results/lane-{e,h}-RETURN.md`.
+  - What is **not** tracked in any lane worktree: gauge state, `crew-scratch/`, and `.stderr`/`.stdout` capture files — all ephemeral run state, none of it feedback.
+  - So nothing is lost by sweeping. Recorded because "the harvest was unnecessary here" is only a safe conclusion if someone actually looked, and the substep exists precisely because in most repos it is not.

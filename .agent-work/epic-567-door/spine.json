@@ -243,7 +243,8 @@
           "id": "c1",
           "statement": "the epic's observations recorded as episodes \u2014 what was observed, with no rule written for a future agent to follow",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "18 episodes applied through apply_episode_delta.py with --store-root episodes, never hand-edited. One per distinct thing that happened, written as records of what was observed with no rule for a future agent. Two drafted entries were dropped because the store already holds them from the lanes that lived them (the fork inheriting its dispatcher's identity, cmdr-g-001; the lane whose working directory would not stick, cmdr-a-003) \u2014 checked against the 24 existing lane episodes rather than assumed. All 18 cleared the observation guard on the first attempt, so its exception list did not grow. tests/test_episode_observations.py, test_episode_negative_control.py, test_retirement_guard.py and test_cli_retirement_guard.py: 70 passed."
         },
         {
           "id": "c2",
@@ -295,7 +296,7 @@
     "session_id": "constellation/epic-567-door",
     "status": "active",
     "claimed_at": "2026-08-17T18:45:51.248764+00:00",
-    "last_heartbeat": "2026-08-18T01:07:46.482691+00:00",
+    "last_heartbeat": "2026-08-18T01:10:25.646485+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
