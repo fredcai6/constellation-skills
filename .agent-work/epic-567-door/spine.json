@@ -329,7 +329,21 @@
       },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-closeout-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "accept",
+            "authority": "human (Tommy)",
+            "artifact": ".agent-work/epic-567-door/EPIC_SUMMARY.md",
+            "verbatim": "Accept - close #567",
+            "scope": "epic 567 summary as presented: four waves, twelve lanes, 3431 passed / 0 failed at c30ef5ae, zero CLI-fallback text in agent-facing doctrine, 34 episodes captured"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -341,7 +355,7 @@
     "session_id": "constellation/epic-567-door",
     "status": "active",
     "claimed_at": "2026-08-17T18:45:51.248764+00:00",
-    "last_heartbeat": "2026-08-18T12:44:08.521314+00:00",
+    "last_heartbeat": "2026-08-18T12:50:45.421880+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
