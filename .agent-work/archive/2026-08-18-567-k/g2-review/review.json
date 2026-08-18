@@ -1,0 +1,319 @@
+{
+  "work_id": "567-k",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a",
+    "r4b",
+    "r4c",
+    "r4d",
+    "r4e",
+    "r4f",
+    "r4g"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 6 close criteria the handoff enumerates were independently reproduced (exact declarations, red-proof, instantiation, e2e refusal+add, diff hygiene, no fenced-path). Matches handoff task: declare bookends per the exact six-gate table and pin with a test.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff --stat confirms exactly 4 files changed (3 templates + tests/test_checklist_engine.py), 37 insertions/6 deletions. All 9 fenced paths individually checked with git diff --stat -- <path>: zero hits on every one. No reformatting/reordering: each template diff is a single-line field-list extension (6 changed lines total across 3 files).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reproduced fresh, env vars unset: pytest tests/test_checklist_engine.py -> 467 passed, 143 subtests passed (matches implementer claim). pytest tests/test_generate_spine.py tests/test_init_work_area.py -> 202 passed (matches). Independently red-proofed the pinning test by moving the flag to Commander 'feedback' -- went red with exact expected/got diff naming 'archive' missing and 'feedback' spurious -- then restored (see workflow feedback for a restore mistake made and corrected). Independently reproduced the e2e refusal (drop archive REFUSED) and the middle-still-grows add (SUCCEEDS) on a fresh copy in a fresh subprocess.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 7 numbered close criteria from the handoff visited as siblings r4a-r4g, each independently reproduced (not trusted from the implementer's account). Criterion 7's judgment call recorded in r4g with a real gap traced (review/confirm's human sign-off is not downstream-enforced by archive/route the way feedback's episode-existence is) and flagged as triage candidate tc1, not a blocker.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence: this gate only lands a template-only declaration read by the _is_bookend mechanism #634 already built and recorded map impact for; nothing new introduced. Implementer's 'Map Impact: skipped' is correct for a mechanical field addition. The one durable/architecture-relevant insight this review surfaced (Admiral's closeout-bakes-human-decision pattern vs Commander/Explorer's droppable-middle pattern) was routed to Triage as tc1 rather than silently dropped or fixed in-scope.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/567-k/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline-catalog pass written to .agent-work/567-k/FOWLER_PASS.json: all 12 smells rendered absent -- diff is a minimal 6-key declaration + one small, single-purpose test class + one allowlist line, no logic duplication, no scattered fan-out beyond the fixed 3-template footprint the task itself requires, and the two comments present (ALLOWLIST reason, test docstring) are non-obvious WHY notes, not deodorant. c1's check command required a retext-check amendment first (see amendments log): the repo does not vendor skills/reviewer/scripts/verify_fowler_pass.py, so <reviewer-skill-dir> had no resolvable target; retexted to the absolute installed path per global doctrine. python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/567-k/FOWLER_PASS.json -> 'fowler pass ok: smells=12, flagged=[], overridden=[]', exit=0, and the engine's own postcondition check now confirms it (record succeeded).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python <reviewer-skill-dir>/scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/567-k/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a": {
+      "id": "r4a",
+      "title": "Criterion 1: exact declarations, nothing else",
+      "imperative": "Load JSON, compute set of bookend-flagged gates per template, verify exact match and no others flagged.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "python json.load computed set per template: Commander={archive,init}, Admiral={closeout,init}, Explorer={init,route} -- all exact matches, verified programmatically not by eyeballing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b": {
+      "id": "r4b",
+      "title": "Criterion 2: pinning test can fail",
+      "imperative": "Move the flag to a wrong gate, confirm RED, restore, confirm clean tree.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Moved bookend from Commander archive to feedback (backed up original first): pytest -k Bookend went RED (1 failed subtest, AssertionError naming feedback spurious/archive missing). Restored via backup copy (git checkout -- initially reverted to pre-diff HEAD by mistake, corrected by restoring from backup); confirmed git diff matches original exactly and suite green again (11 passed, 3 subtests passed).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c": {
+      "id": "r4c",
+      "title": "Criterion 3: templates still valid and instantiable",
+      "imperative": "Parse each template and instantiate via init_work_area.py; confirm bookend survives.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "python -c json.load on all 3 templates: valid. Instantiated each via 'python scripts/init_work_area.py <id> --root <tmpdir> --spine <template>': all 3 succeeded (exit implied by 'spine ready' message), and each resulting spine.json's tasks carry the expected bookend pair unchanged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d": {
+      "id": "r4d",
+      "title": "Criterion 4: declaration works end to end",
+      "imperative": "On a copy, fresh process: mark init..plan complete, execute in-progress; confirm drop archive REFUSED and add after execute SUCCEEDS.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Built fixture from COMMANDER_SPINE.template.json (init/context/understand/plan complete, execute in-progress), saved to tmp copy. Fresh subprocess: amend --delta {drop archive} -> REFUSED: 'a declared bookend gate cannot be dropped, regardless of status', exit=1. Then amend --delta {add midstep after:execute, with required postcondition} -> 'amended: added midstep', exit=0; items list confirms midstep landed between execute and reconcile.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4e": {
+      "id": "r4e",
+      "title": "Criterion 5: diff hygiene",
+      "imperative": "Confirm no reformatting/reordering/unrelated edits; diff is six added keys plus the test.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff --stat: 3 templates each show 1 line changed (the task-object line gaining ,\"bookend\":true), tests/test_checklist_engine.py +31/-0 (new ShippedTemplateBookendDeclarations class + one ALLOWLIST entry). No reordering, no reformatting -- confirmed by reading each hunk: single-line diffs only.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4f": {
+      "id": "r4f",
+      "title": "Criterion 6: no fenced path touched",
+      "imperative": "Confirm none of the 9 named fenced paths appear in the diff.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff --stat -- <path> for each of the 9 named fenced paths (scripts/checklist_engine.py, scripts/mcp_spine_server.py, scripts/generate_spine.py, specs/, skills/implementer/templates/IMPLEMENTER_PLAN.template.json, scripts/run_crew.py, scripts/install_constellation.py, LAUNCH_ORDER.template.md, map/INDEX.md): zero output for every one -- none touched.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4g": {
+      "id": "r4g",
+      "title": "Criterion 7: judge the six choices (outermost-two freeze)",
+      "imperative": "Render independent judgment on whether freezing only the outermost two gates per spine is right, given the human's 'frozen at start/finish, squishy middle' framing and Commander's review/feedback deliberately left mutable.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Freezing exactly outermost-two per spine is the right cut, but I traced the downstream-enforcement gap the handoff's rationale glosses over. Verified: Commander archive's postconditions (c1-c4) never reference review's user-decision evidence, so dropping review removes human sign-off with NO downstream enforcement. feedback is different: archive c1 mechanically requires an episode to exist for this work_id (verify_episode_captured.py scans the store), so dropping the feedback GATE doesn't bypass that invariant -- it's enforced by state, not by gate completion. Explorer shows the same asymmetry: route's precondition p1 ('spec confirmed') and postcondition c1 are both check:null (self-attested), so dropping confirm (the ONE gate with a mechanical user-decision artifact check) removes the only machine-enforced human sign-off with nothing pulling it back at route. Admiral avoids this: closeout's own c5 bakes 'epic summary accepted by human' (artifact/user-decision) directly onto the FROZEN bookend, so it cannot be dropped away regardless of what happens to the mutable middle. Judgment: the six declarations are correct as scoped and I would not block on this, but Admiral's pattern (bake the human-decision postcondition onto the frozen closing gate itself) is strictly more robust than Commander's/Explorer's (leave the decision on a droppable middle gate and hope archive/route's other checks compensate) -- for feedback the compensation happens to hold (episode-existence is state-checked), for review/confirm it does not. Flagging as a triage candidate, not a blocker on this diff.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 7 named close criteria independently reproduced (not trusted from the implementer's account): exact declarations verified programmatically, pinning test red-proofed (moved flag to a wrong gate, confirmed RED, restored), templates parse and instantiate with bookend intact, end-to-end refusal (drop archive) and middle-growth (add after execute) both reproduced fresh-process on a copy, diff hygiene confirmed (4 files, 37/-6, no fenced path touched), and the outermost-two freeze judged correct as scoped with one non-blocking triage finding (tc1: Commander archive / Explorer route don't downstream-enforce the human-confirmation evidence the way Admiral's closeout does). Fowler pass: all 12 baseline smells absent. Two required test suites reproduced green matching implementer's tallies exactly."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4g",
+      "statement": "Commander's archive and Explorer's route do not mechanically verify that the human-confirmation step (review's user-decision / confirm's user-decision) actually happened before the closing bookend completes -- dropping the middle review/confirm gate removes the only machine-enforced sign-off with nothing downstream re-enforcing it. Admiral's closeout already bakes its human-decision postcondition (c5) directly onto the frozen bookend; consider the same pattern for Commander archive and Explorer route so the mutable middle can't quietly drop the human-confirmation requirement. Not a blocker on #634/g2 -- the six declarations it shipped are correct as scoped -- but worth a follow-up issue."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g2-review-reviewer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-18T05:41:05.618645+00:00",
+    "last_heartbeat": "2026-08-18T05:48:40.352580+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-18T05:49:53.587696+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-18T05:48:22.245947+00:00",
+      "reason": "repo does not vendor skills/reviewer/scripts/verify_fowler_pass.py (confirmed: neither scripts/ nor skills/reviewer/scripts/ carries it), so the <reviewer-skill-dir> placeholder has no resolvable target here; global doctrine (references/global-everyone.md: 'Reference bundled scripts... by their absolute installed path; don't resolve scripts/ from the target repo unless it vendors them') directs the absolute installed path instead",
+      "authority": "constellation/567-k/lane-k/commander-delegated",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

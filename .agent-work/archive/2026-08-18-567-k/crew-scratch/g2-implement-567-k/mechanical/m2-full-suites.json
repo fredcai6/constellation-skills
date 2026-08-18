@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-full-suites",
+  "mechanical": {
+    "run": "g2-implement-567-k",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m2-full-suites",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-567-k-m2-full-suites@56e0b4a95ee0aa352701ebc0df8add6adf96783b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement-567-k",
+    "generated_at": "2026-08-18T05:35:54Z"
+  }
+}

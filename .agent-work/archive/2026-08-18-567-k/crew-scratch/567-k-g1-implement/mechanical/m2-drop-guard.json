@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-drop-guard",
+  "mechanical": {
+    "run": "567-k-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-drop-guard",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-k-g1-implement-m2-drop-guard@a460f38d257a7c5c33a76e0b8dbd8882dfc5e5c9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-k-g1-implement",
+    "generated_at": "2026-08-18T05:20:46Z"
+  }
+}

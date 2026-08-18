@@ -3042,6 +3042,17 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
                 floor = idx + 1
         return floor
 
+    def _is_bookend(tid: str) -> bool:
+        """Is gate `tid` a declared bookend (#634) -- frozen against drop,
+        rescope, retext-check, and against a new gate landing after it via add?
+        Optional key, read exactly like the engine's other ad-hoc per-task keys
+        (`why_exempt` at :2374/:2683, `override_policy`) -- no task-schema
+        validator exists to update. A missing key reads as NOT a bookend, so an
+        undeclared plan is unaffected. This is the single seam a future swap to
+        a positional rule or a plan-level region key would change; every guard
+        site below calls this, none re-reads task.get('bookend') directly."""
+        return bool(new_tasks[tid].get("bookend"))
+
     for op in ops:
         kind = op.get("op")
         if kind == "add":
@@ -3070,6 +3081,14 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
                 raise EngineError(
                     f"add {nid}: cannot insert before frozen (non-pending) gate {frozen}"
                 )
+            bookends = [idx for idx, t in enumerate(new_items) if _is_bookend(t)]
+            if bookends:
+                ceiling = max(bookends)
+                if insert_at > ceiling:
+                    tail = new_items[ceiling]
+                    raise EngineError(
+                        f"add {nid}: cannot insert after bookend (frozen finish) gate {tail}"
+                    )
             new_tasks[nid] = _build_amend_task(op)
             new_items.insert(insert_at, nid)
             summaries.append(f"added {nid}")
@@ -3078,6 +3097,12 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
             if tid not in new_tasks:
                 raise EngineError(f"drop {tid}: no such gate")
             status = new_tasks[tid]["status"]
+            if _is_bookend(tid):
+                raise EngineError(
+                    f"drop {tid}: a declared bookend gate cannot be dropped, "
+                    "regardless of status",
+                    task_id=tid, verb="amend-drop", status=status,
+                )
             if status != "pending":
                 raise EngineError(
                     f"drop {tid}: only a pending gate can be dropped (is {status!r})",
@@ -3091,13 +3116,20 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
             if tid not in new_tasks:
                 raise EngineError(f"rescope {tid}: no such gate")
             status = new_tasks[tid]["status"]
+            if _is_bookend(tid):
+                raise EngineError(
+                    f"rescope {tid}: a declared bookend gate cannot be rescoped "
+                    "(the flag is a one-way latch through the engine -- this "
+                    "also refuses an attempt to unset it)",
+                    task_id=tid, verb="amend-rescope", status=status,
+                )
             if status != "pending":
                 raise EngineError(
                     f"rescope {tid}: only a pending gate can be rescoped (is {status!r})",
                     task_id=tid, verb="amend-rescope", status=status,
                 )
             overwritable = ("title", "imperative", "postconditions",
-                            "preconditions", "constraints", "directives")
+                            "preconditions", "constraints", "directives", "bookend")
             fields = {k: op[k] for k in overwritable if k in op}
             if not fields:
                 raise EngineError(f"rescope {tid}: at least one overwritable field is required")
@@ -3117,6 +3149,14 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
             if tid not in new_tasks:
                 raise EngineError(f"retext-check {tid}: no such gate")
             status = new_tasks[tid]["status"]
+            if _is_bookend(tid):
+                raise EngineError(
+                    f"retext-check {tid}: a declared bookend gate's check text "
+                    "cannot be corrected -- a freeze that only stops deletion is "
+                    "not a freeze; fix the template and re-instantiate, or waive "
+                    "the condition under a recorded authority",
+                    task_id=tid, verb="amend-retext-check", status=status,
+                )
             if status not in ("pending", "in-progress"):
                 raise EngineError(
                     f"retext-check {tid}: only a pending or in-progress gate's check text "

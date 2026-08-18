@@ -2051,7 +2051,10 @@ TOOLS = [
             "{\"ops\": [...]} object the CLI's --delta file holds -- this tool "
             "writes it to a file beside the bound spine and hands the engine "
             "that path; the engine alone validates the ops, never this door. "
-            "All-or-nothing: a refusal leaves the plan unmutated."
+            "All-or-nothing: a refusal leaves the plan unmutated. A gate "
+            "declared a bookend (task.get('bookend')) is frozen: add cannot "
+            "insert past the last bookend, and drop/rescope/retext-check on a "
+            "bookend gate are refused regardless of status."
         ),
         "inputSchema": {
             "type": "object",

@@ -1,0 +1,9 @@
+The design candidate C result is written to `.agent-work/567-k/crew-handoffs/design-C-result.md`. Summary of what it delivers:
+
+- **Candidate**: `mutable_region` — one optional top-level key `{"after": <id|null>, "before": <id|null>}` on a gated checklist that bounds `amend()`'s existing add/drop/rescope/retext-check ops to the half-open index range those two gate ids resolve to; absent key = today's exact unrestricted behavior.
+- **Mechanism**: small changes localized to `_floor()` and the `add`/`drop`/`rescope`/`retext-check` branches inside `amend()` (`checklist_engine.py:2971-3183`), no MCP schema change needed.
+- **Worked example**: Commander at `plan` drops the `execute` placeholder and adds `g1-implement`/`g1-review`/`g1-integrate` directly into the main spine; a subsequent `drop archive` is refused — closing the exact gap the brief's fact 3 identified.
+- **Admiral/crew**: answered directly — Admiral's `execute` doesn't automatically split per wave (it's enabled, not forced); crew gets an open-ended finish (`before: null`) since `IMPLEMENTER_PLAN.json` has no natural closing bookend.
+- **Self-attack**: four weaknesses including that live in-flight spines (including this epic's own) aren't retrofitted, a `retext-check` loophole survives untouched, an unresolvable anchor id needs a hardening fix I flagged but didn't originally include, and the `execute.json` migration cost is real and explicitly not solved here (scripts off-limits per the brief's Rules).
+
+No other files were touched.

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g3-proof",
+  "mechanical": {
+    "run": "567-k",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 0,
+    "spine-step": "g3-proof",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-567-k-g3-proof@528c73c18ed72eda5eaea462297e58ae6f4eca80",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "567-k",
+    "generated_at": "2026-08-18T05:50:41Z"
+  }
+}

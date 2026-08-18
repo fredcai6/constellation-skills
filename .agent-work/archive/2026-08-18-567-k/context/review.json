@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "review",
+  "files": [],
+  "repo_rev": {
+    "commit": "bbad5846505f10a848faed0c0d974485185d6c93"
+  },
+  "run": {
+    "work_id": "567-k",
+    "generated_at": "2026-08-18T06:02:13Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle",
+      "repo": "/home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle",
+      "durable": "/home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills/.worktrees/567-k-one-spine-mutable-middle"
+    }
+  }
+}
