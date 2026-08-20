@@ -1378,8 +1378,10 @@ def has_pending_refresh_request(cl: dict, gate: str, why_ref: str | None = None)
     ordinary `attach` verb) whose payload carries POINTERS ONLY: `seam` = the gate
     it concerns, `why_ref` = the why-record id it was raised against — never copies
     of state. It is pending while present and not superseded (the reopen cascade
-    supersedes evidence; the flow that consumes/fulfils it is #183). No shared
-    mutable state, no side effects.
+    supersedes evidence). A request attached under an active lease also carries
+    that lease's claimed_at. It stays pending only while the active lease still
+    has the same claim stamp, so any later claim consumes it. An unstamped request
+    keeps the legacy pending behavior. No shared mutable state, no side effects.
 
     `why_ref` (#190) is an OPTIONAL identity filter. When None (the default — the
     DISPLAY semantic: "a refresh is pending for this gate"), any pending request for
@@ -1398,6 +1400,11 @@ def has_pending_refresh_request(cl: dict, gate: str, why_ref: str | None = None)
             payload = ev.get("payload") or {}
             if payload.get("seam") != gate:
                 continue
+            claim_stamp = payload.get("lease_claimed_at")
+            if claim_stamp is not None:
+                lease = _active_lease(cl)
+                if lease is None or lease.get("claimed_at") != claim_stamp:
+                    continue
             if why_ref is not None and payload.get("why_ref") != why_ref:
                 continue
             return True
@@ -3350,9 +3357,14 @@ def waive(
 
 def attach(cl: dict, iid: str, etype: str, payload: dict) -> str:
     t = task(cl, iid)
+    stored_payload = dict(payload)
+    if etype == "refresh-request":
+        lease = _active_lease(cl)
+        if lease is not None and lease.get("claimed_at") is not None:
+            stored_payload["lease_claimed_at"] = lease["claimed_at"]
     eid = _new_evidence_id(t)
     t.setdefault("evidence", []).append(
-        {"id": eid, "type": etype, "payload": payload, "produced_by": "engine", "ts": ""}
+        {"id": eid, "type": etype, "payload": stored_payload, "produced_by": "engine", "ts": ""}
     )
     return f"attached {eid} ({etype}) to {iid}"
 

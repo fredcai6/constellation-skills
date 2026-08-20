@@ -3288,10 +3288,78 @@ class RefreshPrimitives(unittest.TestCase):
         # attach a refresh-request (pointers only) against the active gate g2
         why_ref = cl["why_trail"][-1]["id"]
         E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": why_ref})
+        payload = cl["tasks"]["g2"]["evidence"][-1]["payload"]
+        self.assertNotIn("lease_claimed_at", payload)  # unleased legacy attach
         self.assertTrue(E.has_pending_refresh_request(cl, "g2"))
         out = E.current(cl)
         self.assertIn("REFRESH REQUESTED:", out)
         self.assertIn(why_ref, out)  # the why_ref pointer surfaces on the line
+
+    def test_claimed_refresh_request_records_and_matches_the_active_claim(self):
+        cl = self._one_active_after_advance()
+        with mock.patch.object(E, "_now", return_value="2026-08-20T10:00:00+00:00"):
+            E.claim(cl, "agent-1", "implementer", ".", {})
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        payload = cl["tasks"]["g2"]["evidence"][-1]["payload"]
+        self.assertEqual(payload["lease_claimed_at"], "2026-08-20T10:00:00+00:00")
+        self.assertTrue(E.has_pending_refresh_request(cl, "g2"))
+
+    def test_same_session_reclaim_consumes_the_earlier_refresh_request(self):
+        cl = self._one_active_after_advance()
+        with mock.patch.object(E, "_now", return_value="2026-08-20T10:00:00+00:00"):
+            E.claim(cl, "agent-1", "implementer", ".", {})
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        self.assertTrue(E.has_pending_refresh_request(cl, "g2"))
+        self.assertIn("REFRESH REQUESTED:", E.current(cl))
+
+        with mock.patch.object(E, "_now", return_value="2026-08-20T10:01:00+00:00"):
+            E.claim(cl, "agent-1", "implementer", ".", {})
+
+        self.assertFalse(E.has_pending_refresh_request(cl, "g2"))
+        self.assertNotIn("REFRESH REQUESTED:", E.current(cl))
+
+    def test_legacy_unstamped_refresh_request_keeps_pending_behavior(self):
+        cl = self._one_active_after_advance()
+        E.claim(cl, "agent-1", "implementer", ".", {})
+        cl["tasks"]["g2"]["evidence"].append({
+            "id": "legacy-refresh",
+            "type": "refresh-request",
+            "payload": {"seam": "g2", "why_ref": "w-1"},
+            "produced_by": "engine",
+            "ts": "",
+        })
+        E.claim(cl, "agent-1", "implementer", ".", {})
+        self.assertTrue(E.has_pending_refresh_request(cl, "g2"))
+
+    def test_cli_successor_claim_consumes_request_before_first_current(self):
+        cl = self._one_active_after_advance()
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            claim = ["--file", str(f), "claim", "--session-id", "agent-1",
+                     "--claimed-by", "implementer", "--worktree", "."]
+            self.assertEqual(E.main(claim), 0)
+            self.assertEqual(
+                E.main(["--file", str(f), "attach", "g2", "--type", "refresh-request",
+                        "--field", "seam=g2", "--field", "why_ref=w-1",
+                        "--session-id", "agent-1"]), 0)
+            attached = E.load(f)["tasks"]["g2"]["evidence"][-1]
+            self.assertEqual(
+                attached["payload"]["lease_claimed_at"],
+                E.load(f)["engine_session"]["claimed_at"],
+            )
+
+            import contextlib, io
+            before = io.StringIO()
+            with contextlib.redirect_stdout(before):
+                self.assertEqual(E.main(["--file", str(f), "current"]), 0)
+            self.assertIn("REFRESH REQUESTED:", before.getvalue())
+
+            self.assertEqual(E.main(claim), 0)
+            successor = io.StringIO()
+            with contextlib.redirect_stdout(successor):
+                self.assertEqual(E.main(["--file", str(f), "current"]), 0)
+            self.assertNotIn("REFRESH REQUESTED:", successor.getvalue())
 
     def test_refresh_request_is_seam_specific(self):
         cl = self._one_active_after_advance()
@@ -3823,6 +3891,28 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
             msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
         self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
         self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+
+    def test_claimed_refresh_releases_hard_until_a_later_claim_consumes_it(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_now", return_value="2026-08-20T10:00:00+00:00"):
+            E.claim(cl, "agent-1", "implementer", ".", {})
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+
+        released = copy.deepcopy(cl)
+        released_start = _start_ns("g2")
+        released_start.session_id = "agent-1"
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            msg = E.dispatch(released, released_start, base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+
+        with mock.patch.object(E, "_now", return_value="2026-08-20T10:01:00+00:00"):
+            E.claim(cl, "agent-1", "implementer", ".", {})
+        consumed_start = _start_ns("g2")
+        consumed_start.session_id = "agent-1"
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, consumed_start, base_dir=Path("."))
+        self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
 
     def test_trip_begin_stale_why_ref_does_not_release_begin_work(self):
         """#190's identity check, preserved verbatim at the new guard sites: a
