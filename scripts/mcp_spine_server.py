@@ -142,7 +142,7 @@ The lifecycle door: 3 more tools, dispatched OUTSIDE call_tool
 --------------------------------------------------------------------------- #
 
 `spine_open` and `spine_close` (issue #559, C3/g3) wire `scripts/spine_lifecycle.py`'s
-`open_work`/`close_work` onto this same, already-registered server -- no
+`open_work`/`finish_work` onto this same, already-registered server -- no
 `.mcp.json` change, because a tool is not a server. They are NOT engine
 pass-throughs: neither ever calls `run_engine`, so they are dispatched from
 `call_lifecycle_tool`, a MODULE-LEVEL SIBLING of `call_tool` with its own
@@ -163,8 +163,9 @@ directory when there is one, and on THIS SCRIPT's own when there is not. The
 identifier ban is on `_spine_open`'s own source, which that helper is not, so
 what the ban buys is that no ARGUMENT on the call can redirect the open onto
 the bound spine -- never that the bound spine is invisible to the tool.
-`spine_close` takes no arguments at all and acts on `SPINE` alone, because
-there is no field to redirect.
+`spine_close` acts on `SPINE` and `SESSION` alone for identity. Its readiness
+and publication arguments are explicit: why, clean-tree and episode-capture
+readiness, push, and PR choice. No field can redirect it.
 
 `spine_bind` (issue #567, lane A) is the third, and it is a third posture rather
 than a copy of either: it acts on a spine that already exists and is NOT the one
@@ -1749,13 +1750,35 @@ def _spine_bind(args: dict) -> dict:
     })
 
 
-def _spine_close(args: dict) -> dict:  # noqa: ARG001 - spine_close takes no arguments; args always {}
+def _spine_close(args: dict) -> dict:
     """`spine_close`'s own dispatch path. Acts on `SPINE` -- the spine THIS
     door is bound to -- and nothing else; there is no field to redirect
-    because the tool schema declares none. `close_work` itself refuses,
-    doing nothing at all, unless the caller already drove the bound spine to
-    a released, terminal close through the existing `spine_advance`/
-    `spine_lease` tools (see `scripts/spine_lifecycle.py`'s own docstring)."""
+    because the tool schema declares none. It passes readiness and publication
+    choices to `finish_work`, the existing one-call composition that verifies,
+    releases declared child plans, advances and releases this spine, reaps
+    bindings, archives, and optionally publishes."""
+    required = ("tree_clean", "episodes_captured", "push", "open_pr")
+    missing = [name for name in required if name not in args]
+    if missing:
+        return _tool_error(
+            f"spine_close: missing required argument(s): {', '.join(missing)}",
+            tool="spine_close", rejection_class="missing-required-argument",
+        )
+    for name in required:
+        if not isinstance(args[name], bool):
+            return _tool_error(
+                f"spine_close: {name} must be boolean",
+                tool="spine_close", rejection_class="invalid-argument",
+            )
+    if "why" in args and (
+        not isinstance(args["why"], str) or not args["why"].strip()
+    ):
+        return _tool_error(
+            "spine_close: why must be a non-empty string when supplied; "
+            "omit it for a mechanical close",
+            tool="spine_close", rejection_class="invalid-argument",
+        )
+
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     try:
         root = _worktree_root_for_lifecycle()
@@ -1765,9 +1788,25 @@ def _spine_close(args: dict) -> dict:  # noqa: ARG001 - spine_close takes no arg
             tool="spine_close", rejection_class="root-resolution-failed",
         )
     try:
-        closed = spine_lifecycle.close_work(SPINE, root=root, today=today)
+        closed = spine_lifecycle.finish_work(
+            SPINE,
+            root=root,
+            session_id=SESSION,
+            today=today,
+            tree_clean=args["tree_clean"],
+            episodes_captured=args["episodes_captured"],
+            why=args.get("why"),
+            push=args["push"],
+            open_pr=args["open_pr"],
+        )
     except spine_lifecycle.SpineLifecycleError as exc:
         return _tool_error(f"spine_close: {exc}", tool="spine_close", rejection_class="close-refused")
+    if not closed.get("ok"):
+        stage = closed.get("stage", "unknown")
+        return _tool_error(
+            f"spine_close: {closed.get('refusal', 'close refused')} (stage: {stage})",
+            tool="spine_close", rejection_class="close-refused",
+        )
     return _lifecycle_result(closed)
 
 
@@ -2150,14 +2189,46 @@ LIFECYCLE_TOOLS = [
     {
         "name": "spine_close",
         "description": (
-            "Close the spine THIS door is bound to: moves the work area and "
-            "the spine (last) into the archive and commits, once the caller "
-            "has already driven the bound spine to a released, terminal "
-            "close through spine_advance and spine_lease. Acts on the bound "
-            "spine and nothing else -- no arguments, because there is "
-            "nothing to redirect."
+            "Finish the spine THIS door is bound to in one call. Call it while "
+            "the final gate and its lease are still active, after every final-gate "
+            "postcondition is satisfied. It verifies the declared clean-tree and "
+            "episode-capture readiness, releases declared child plans, advances "
+            "and releases the bound spine, reaps bindings, archives the work area, "
+            "then follows the explicit push and PR choices. 'why' records the "
+            "reason for the final advance; omit it only for a mechanical close. "
+            "tree_clean and episodes_captured are required readiness assertions. "
+            "push and open_pr are required choices; tests and locally fenced runs "
+            "pass false for both. This replaces the old no-argument call made "
+            "after manual spine_advance and spine_lease release. Acts on the bound "
+            "SPINE and SESSION only; no input can redirect identity."
         ),
-        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "why": {
+                    "type": "string",
+                    "description": "Reason for the final advance. Omit only for a mechanical close.",
+                },
+                "tree_clean": {
+                    "type": "boolean",
+                    "description": "True only after the branch has no uncommitted changes.",
+                },
+                "episodes_captured": {
+                    "type": "boolean",
+                    "description": "True only after this run's required episode capture passes.",
+                },
+                "push": {
+                    "type": "boolean",
+                    "description": "Whether finish_work should push the archived branch.",
+                },
+                "open_pr": {
+                    "type": "boolean",
+                    "description": "Whether finish_work should open a PR after the optional push.",
+                },
+            },
+            "required": ["tree_clean", "episodes_captured", "push", "open_pr"],
+            "additionalProperties": False,
+        },
     },
 ]
 LIFECYCLE_TOOL_NAMES = {t["name"] for t in LIFECYCLE_TOOLS}
