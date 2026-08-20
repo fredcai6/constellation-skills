@@ -298,6 +298,48 @@ class RegistryConcurrencyTests(unittest.TestCase):
                 {entry["session_name"] for entry in RC.load_registry(path)},
             )
 
+    def test_seeded_target_absent_preserves_same_session_other_worktree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "crew-runs.json"
+            identity = "constellation/issue-636/g1/implementer/attempt-1"
+            persisted_y = {
+                "session_name": identity,
+                "crew_id": identity,
+                "worktree": "/worktree/y",
+                "marker": "Y",
+                "status": "running",
+            }
+            expected_y = dict(persisted_y)
+            seed_x = {
+                "session_name": identity,
+                "crew_id": identity,
+                "worktree": "/worktree/x",
+                "marker": "X",
+                "status": "running",
+            }
+            RC.save_registry(path, [persisted_y])
+
+            def complete(entry):
+                entry["status"] = "completed"
+
+            snapshot, current, _ = RC.mutate_registry_entry(
+                path, identity, complete, seed=seed_x
+            )
+
+            self.assertEqual("X", current["marker"])
+            self.assertEqual("/worktree/x", current["worktree"])
+            self.assertEqual("completed", current["status"])
+            self.assertEqual(2, len(snapshot))
+            persisted = RC.load_registry(path)
+            persisted_x = next(
+                entry for entry in persisted if entry["worktree"] == "/worktree/x"
+            )
+            persisted_y_after = next(
+                entry for entry in persisted if entry["worktree"] == "/worktree/y"
+            )
+            self.assertEqual("completed", persisted_x["status"])
+            self.assertEqual(expected_y, persisted_y_after)
+
     def test_windows_registry_lock_adapter_contract(self):
         class FakeMsvcrt:
             LK_LOCK = 1

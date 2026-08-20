@@ -400,26 +400,31 @@ def mutate_registry_entry(
     without changing the public crew identity or duplicate-detection rules.
     """
     def mutate_named(entries: list[dict]):
-        entry = find_entry(entries, identity)
-        if entry is not None and seed is not None:
-            seed_worktree = seed.get("worktree")
-            for candidate in entries:
-                candidate_identity = candidate.get("session_name") or candidate.get("crew_id")
-                if candidate_identity == identity and candidate.get("worktree") == seed_worktree:
-                    entry = candidate
-                    break
-        if entry is None:
-            if seed is None:
-                raise CrewLaunchError(
-                    f"cannot mutate: no crew recorded with session name or crew id {identity!r}"
-                )
+        if seed is None:
+            entry = find_entry(entries, identity)
+        else:
             seed_identity = seed.get("session_name") or seed.get("crew_id")
             if seed_identity != identity:
                 raise CrewLaunchError(
                     f"cannot seed stable identity {identity!r} from entry {seed_identity!r}"
                 )
-            entry = dict(seed)
-            entries.append(entry)
+            seed_worktree = seed.get("worktree")
+            entry = next(
+                (
+                    candidate
+                    for candidate in entries
+                    if (candidate.get("session_name") or candidate.get("crew_id")) == identity
+                    and candidate.get("worktree") == seed_worktree
+                ),
+                None,
+            )
+            if entry is None:
+                entry = dict(seed)
+                entries.append(entry)
+        if entry is None:
+            raise CrewLaunchError(
+                f"cannot mutate: no crew recorded with session name or crew id {identity!r}"
+            )
         return entry, mutate(entry)
 
     snapshot, (entry, result) = registry_transaction(path, mutate_named)
