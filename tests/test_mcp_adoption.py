@@ -725,7 +725,7 @@ TIER1_JSON_FIELDS = [
     ("skills/commander/templates/COMMANDER_SPINE.template.json", ("tasks", "plan", "imperative"),
      "spine_evidence", "attach plan --type user-decision --field cite='LAUNCH_ORDER:Mission'"),
     ("skills/commander/templates/COMMANDER_SPINE.template.json", ("tasks", "archive", "imperative"),
-     "spine_lease", "<engine> release --session-id <commander-session-id>"),
+     "spine_close", "<engine> release --session-id <commander-session-id>"),
     ("skills/admiral/templates/ADMIRAL_SPINE.template.json", ("tasks", "init", "imperative"),
      "spine_lease", "<engine> claim --session-id <admiral-session-id>"),
     ("skills/admiral/templates/ADMIRAL_SPINE.template.json", ("tasks", "closeout", "imperative"),
