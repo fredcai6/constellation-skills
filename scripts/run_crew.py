@@ -36,11 +36,17 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
+
+try:
+    import msvcrt as _msvcrt
+except ImportError:  # pragma: no cover - platform branch
+    _msvcrt = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import checklist_engine  # noqa: E402 -- spine-only completion reads its `active_id` (#559)
@@ -289,9 +295,136 @@ def load_registry(path: Path) -> list[dict]:
     return data
 
 
-def save_registry(path: Path, entries: list[dict]) -> None:
+def _registry_lock_path(path: Path) -> Path:
+    return path.with_name(path.name + ".lock")
+
+
+def _windows_registry_lock(fileobj, msvcrt_mod) -> None:
+    fileobj.seek(0)
+    msvcrt_mod.locking(fileobj.fileno(), msvcrt_mod.LK_LOCK, 1)
+
+
+def _windows_registry_unlock(fileobj, msvcrt_mod) -> None:
+    fileobj.seek(0)
+    msvcrt_mod.locking(fileobj.fileno(), msvcrt_mod.LK_UNLCK, 1)
+
+
+@contextlib.contextmanager
+def registry_lock(path: Path):
+    """Hold the registry's stable sibling lock for one bounded transaction."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(entries, indent=2) + "\n", encoding="utf-8")
+    with open(_registry_lock_path(path), "a+b") as lock_file:
+        lock_file.seek(0, os.SEEK_END)
+        if lock_file.tell() == 0:
+            lock_file.write(b"\0")
+            lock_file.flush()
+        if _msvcrt is not None:
+            _windows_registry_lock(lock_file, _msvcrt)
+        else:
+            import fcntl
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if _msvcrt is not None:
+                _windows_registry_unlock(lock_file, _msvcrt)
+            else:
+                import fcntl
+                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
+def _write_registry_atomic(path: Path, entries: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=path.name + ".", suffix=".tmp", dir=str(path.parent)
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as tmp_file:
+            json.dump(entries, tmp_file, indent=2)
+            tmp_file.write("\n")
+            tmp_file.flush()
+            os.fsync(tmp_file.fileno())
+        os.replace(tmp_name, path)
+    except Exception:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
+
+
+def save_registry(path: Path, entries: list[dict]) -> None:
+    """Atomically replace the registry while holding its stable sibling lock."""
+    with registry_lock(path):
+        _write_registry_atomic(path, entries)
+
+
+def registry_transaction(
+    path: Path,
+    mutate: Callable[[list[dict]], object],
+) -> tuple[list[dict], object]:
+    """Reload, mutate, and atomically replace one registry under its lock."""
+    with registry_lock(path):
+        entries = load_registry(path)
+        result = mutate(entries)
+        _write_registry_atomic(path, entries)
+    return entries, result
+
+
+def append_registry_entry(path: Path, entry: dict) -> tuple[list[dict], dict]:
+    """Append one crew entry without replacing unrelated entries.
+
+    Existing duplicate semantics allow one session name in separate worktrees.
+    """
+    identity = entry.get("session_name") or entry.get("crew_id")
+    if not identity:
+        raise CrewLaunchError("cannot append a registry entry without session_name or crew_id")
+
+    def append(entries: list[dict]) -> dict:
+        entries.append(entry)
+        return entry
+
+    return registry_transaction(path, append)
+
+
+def mutate_registry_entry(
+    path: Path,
+    identity: str,
+    mutate: Callable[[dict], object],
+    *,
+    seed: dict | None = None,
+) -> tuple[list[dict], dict, object]:
+    """Mutate one current entry selected by session_name or crew_id.
+
+    A seed worktree disambiguates the existing cross-worktree duplicate case
+    without changing the public crew identity or duplicate-detection rules.
+    """
+    def mutate_named(entries: list[dict]):
+        entry = find_entry(entries, identity)
+        if entry is not None and seed is not None:
+            seed_worktree = seed.get("worktree")
+            for candidate in entries:
+                candidate_identity = candidate.get("session_name") or candidate.get("crew_id")
+                if candidate_identity == identity and candidate.get("worktree") == seed_worktree:
+                    entry = candidate
+                    break
+        if entry is None:
+            if seed is None:
+                raise CrewLaunchError(
+                    f"cannot mutate: no crew recorded with session name or crew id {identity!r}"
+                )
+            seed_identity = seed.get("session_name") or seed.get("crew_id")
+            if seed_identity != identity:
+                raise CrewLaunchError(
+                    f"cannot seed stable identity {identity!r} from entry {seed_identity!r}"
+                )
+            entry = dict(seed)
+            entries.append(entry)
+        return entry, mutate(entry)
+
+    snapshot, (entry, result) = registry_transaction(path, mutate_named)
+    return snapshot, entry, result
+
 
 
 def find_entry(entries: list[dict], name: str) -> dict | None:
@@ -1592,22 +1725,29 @@ class CrewBackend:
         failure modes apart (MISSING vs STALE). Only a fresh result finalizes to
         `completed`; otherwise the entry is left `running` so the duplicate-guard
         keeps holding. Refuses if the named crew is unknown or abandoned."""
-        entry = find_entry(entries, session)
-        if entry is None:
+        initial = find_entry(entries, session)
+        if initial is None:
             raise CrewLaunchError(f"cannot verify: no crew recorded with session name {session!r}")
-        if is_abandoned(entry):
-            raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
 
-        present = result_exists(entry["result"], root)
-        fresh = result_fresh(entry["result"], root, entry["started_at"])
-        entry["result_present"] = present
-        entry["result_fresh"] = fresh
-        if fresh:
-            now = _now()
-            entry["status"] = "completed"
-            entry["completed_at"] = now
-            entry["last_heartbeat"] = now
-        save_registry(registry_path(entry["work_id"], root), entries)
+        def verify_current(entry: dict) -> bool:
+            if is_abandoned(entry):
+                raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
+            present = result_exists(entry["result"], root)
+            fresh = result_fresh(entry["result"], root, entry["started_at"])
+            entry["result_present"] = present
+            entry["result_fresh"] = fresh
+            if fresh:
+                now = _now()
+                entry["status"] = "completed"
+                entry["completed_at"] = now
+                entry["last_heartbeat"] = now
+            return fresh
+
+        snapshot, entry, fresh = mutate_registry_entry(
+            registry_path(initial["work_id"], root), session, verify_current,
+            seed=initial,
+        )
+        entries[:] = snapshot
         return fresh, entry
 
 
@@ -1658,9 +1798,9 @@ class CliBackend(CrewBackend):
         )
         # Durable record BEFORE the crew starts (so a parent loss leaves a durable
         # `running` record).
-        entries.append(entry)
         reg = registry_path(spec.work_id, root)
-        save_registry(reg, entries)
+        snapshot, entry = append_registry_entry(reg, entry)
+        entries[:] = snapshot
 
         stdout_path, stderr_path = run_log_paths(spec.work_id, spec.gate, spec.role, spec.attempt, root)
         argv = build_crew_argv(
@@ -1677,10 +1817,15 @@ class CliBackend(CrewBackend):
             exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
                                cwd=crew_cwd(spec.worktree, root))
 
-        final = finalize_from_exit_code(
-            entry, exit_code=exit_code, result=spec.result, root=root, since=started, spine=spec.spine,
+        def finalize_current(current: dict) -> int:
+            return finalize_from_exit_code(
+                current, exit_code=exit_code, result=spec.result, root=root,
+                since=started, spine=spec.spine,
+            )
+        snapshot, entry, final = mutate_registry_entry(
+            reg, entry["session_name"], finalize_current, seed=entry
         )
-        save_registry(reg, entries)
+        entries[:] = snapshot
         if final != 0:
             _print_drift_hint_if_any(stderr_path)
         return final, entry
@@ -1714,11 +1859,19 @@ class CliBackend(CrewBackend):
         # relaunch the child, not the original launch, so a stale prior-attempt
         # result left at the path cannot pass this resume as `completed`.
         resumed_at = _now()
-        entry["status"] = "running"
-        entry["last_heartbeat"] = resumed_at
-        entry["pid"] = os.getpid()
         reg = registry_path(work_id, root)
-        save_registry(reg, entries)
+
+        def mark_running(current: dict) -> None:
+            if is_abandoned(current):
+                raise CrewLaunchError(
+                    f"cannot resume an abandoned crew {session!r}; use --abandon --relaunch instead"
+                )
+            current["status"] = "running"
+            current["last_heartbeat"] = resumed_at
+            current["pid"] = os.getpid()
+
+        snapshot, entry, _ = mutate_registry_entry(reg, session, mark_running, seed=entry)
+        entries[:] = snapshot
 
         # A resume re-enters the SAME attempt, not a new one: GET the
         # already-reserved scratch directory (computed, never re-reserved --
@@ -1752,11 +1905,15 @@ class CliBackend(CrewBackend):
             exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
                                cwd=crew_cwd(entry.get("worktree"), root))
 
-        final = finalize_from_exit_code(
-            entry, exit_code=exit_code, result=entry["result"], root=root, since=resumed_at,
-            spine=entry.get("spine"),
+        def finalize_current(current: dict) -> int:
+            return finalize_from_exit_code(
+                current, exit_code=exit_code, result=current["result"], root=root,
+                since=resumed_at, spine=current.get("spine"),
+            )
+        snapshot, entry, final = mutate_registry_entry(
+            reg, session, finalize_current, seed=entry
         )
-        save_registry(reg, entries)
+        entries[:] = snapshot
         if final != 0:
             _print_drift_hint_if_any(stderr_path)
         return final, entry
@@ -1815,8 +1972,8 @@ class ExternalBackend(CrewBackend):
         # Durable record — the crew is dispatched by the caller out-of-band, so
         # unlike the spawn path there is no child to run and no completion to
         # finalize here (the caller verifies later with `verify`).
-        entries.append(entry)
-        save_registry(registry_path(spec.work_id, root), entries)
+        snapshot, entry = append_registry_entry(registry_path(spec.work_id, root), entry)
+        entries[:] = snapshot
         # UNCONDITIONAL visibility banner (issue: unbound-door hazard) — binding
         # the door out-of-band is impossible by construction (module-import-time
         # env read in mcp_spine_server.py, pinned by test_mcp_identity.py), so
@@ -1890,54 +2047,59 @@ class ExternalBackend(CrewBackend):
         `--spine`) is judged solely on the spine.
 
         Returns (fresh, entry) -- same signature/contract as the base."""
-        entry = find_entry(entries, session)
-        if entry is None:
+        initial = find_entry(entries, session)
+        if initial is None:
             raise CrewLaunchError(f"cannot verify: no crew recorded with session name {session!r}")
-        if is_abandoned(entry):
-            raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
 
-        spine = entry.get("spine")
-        has_result = entry.get("result") is not None
-        if has_result:
-            present = result_exists(entry["result"], root)
-            result_ok = result_fresh(entry["result"], root, entry["started_at"])
-        else:
-            present = False
-            result_ok = False
+        def verify_current(entry: dict) -> bool:
+            if is_abandoned(entry):
+                raise CrewLaunchError(f"cannot verify an abandoned crew {session!r}")
+            spine = entry.get("spine")
+            has_result = entry.get("result") is not None
+            if has_result:
+                present = result_exists(entry["result"], root)
+                result_ok = result_fresh(entry["result"], root, entry["started_at"])
+            else:
+                present = False
+                result_ok = False
 
-        effective_spine = verify_spine if verify_spine is not None else spine
-        if effective_spine is not None:
-            drove = spine_terminal(effective_spine, root)
-            entry["spine_verified"] = drove
-            fresh = drove and (result_ok if has_result else True)
-        elif accept_mtime_only_risk is not None:
-            entry["spine_verified"] = None
-            entry["mtime_only_risk_accepted"] = {
-                "reason": accept_mtime_only_risk, "at": _now(),
-            }
-            fresh = result_ok  # only reachable with has_result True (CrewSpec.__post_init__
-                                # requires result or spine; effective_spine is None here)
+            effective_spine = verify_spine if verify_spine is not None else spine
+            if effective_spine is not None:
+                drove = spine_terminal(effective_spine, root)
+                entry["spine_verified"] = drove
+                fresh = drove and (result_ok if has_result else True)
+            elif accept_mtime_only_risk is not None:
+                entry["spine_verified"] = None
+                entry["mtime_only_risk_accepted"] = {
+                    "reason": accept_mtime_only_risk, "at": _now(),
+                }
+                fresh = result_ok
+                if fresh:
+                    risk_line = (
+                        f"RISK ACCEPTED: {entry['session_name']!r} marked completed on a "
+                        f"fresh result artifact alone, with no spine evidence to check -- "
+                        f"reason: {accept_mtime_only_risk} (see #432)"
+                    )
+                    print(risk_line)
+                    print(risk_line, file=sys.stderr)
+            else:
+                entry["spine_verified"] = False
+                fresh = False
+
+            entry["result_present"] = present
+            entry["result_fresh"] = result_ok if has_result else False
             if fresh:
-                risk_line = (
-                    f"RISK ACCEPTED: {entry['session_name']!r} marked completed on a "
-                    f"fresh result artifact alone, with no spine evidence to check -- "
-                    f"reason: {accept_mtime_only_risk} (see #432)"
-                )
-                print(risk_line)
-                print(risk_line, file=sys.stderr)
-        else:
-            # DEFAULT: no spine evidence, no explicit accepted risk -- REFUSE.
-            entry["spine_verified"] = False
-            fresh = False
+                now = _now()
+                entry["status"] = "completed"
+                entry["completed_at"] = now
+                entry["last_heartbeat"] = now
+            return fresh
 
-        entry["result_present"] = present
-        entry["result_fresh"] = result_ok if has_result else False
-        if fresh:
-            now = _now()
-            entry["status"] = "completed"
-            entry["completed_at"] = now
-            entry["last_heartbeat"] = now
-        save_registry(registry_path(entry["work_id"], root), entries)
+        snapshot, entry, fresh = mutate_registry_entry(
+            registry_path(initial["work_id"], root), session, verify_current,
+            seed=initial,
+        )
+        entries[:] = snapshot
         return fresh, entry
 
 
@@ -2097,13 +2259,20 @@ def verify_external_result(
 
 def abandon_crew(entries: list[dict], session: str, root: Path) -> dict:
     """Mark a prior attempt abandoned (releases its hold on the gate/worktree)."""
-    entry = find_entry(entries, session)
-    if entry is None:
+    initial = find_entry(entries, session)
+    if initial is None:
         raise CrewLaunchError(f"cannot abandon: no crew recorded with session name {session!r}")
-    entry["abandoned"] = True
-    entry["status"] = "abandoned"
-    entry["completed_at"] = entry.get("completed_at") or _now()
-    save_registry(registry_path(entry["work_id"], root), entries)
+
+    def abandon_current(entry: dict) -> None:
+        entry["abandoned"] = True
+        entry["status"] = "abandoned"
+        entry["completed_at"] = entry.get("completed_at") or _now()
+
+    snapshot, entry, _ = mutate_registry_entry(
+        registry_path(initial["work_id"], root), session, abandon_current,
+        seed=initial,
+    )
+    entries[:] = snapshot
     return entry
 
 

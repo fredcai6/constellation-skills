@@ -3,6 +3,7 @@ import contextlib
 import hashlib
 import io
 import json
+import multiprocessing
 import os
 import shlex
 import subprocess
@@ -45,6 +46,41 @@ def load_module(name: str, path: Path):
 
 RC = load_module("run_crew", RUN_CREW)
 REC = load_module("recover_crews", RECOVER)
+
+
+def _concurrent_registry_dispatch_worker(
+    run_crew_path: str,
+    root_path: str,
+    gate: str,
+    ready,
+    release,
+    outcome,
+) -> None:
+    """Load one stale snapshot, then dispatch after both writers are ready."""
+    module = load_module(f"run_crew_concurrent_{gate}", Path(run_crew_path))
+    root = Path(root_path)
+    work_id = "issue-636"
+    entries = module.load_registry(module.registry_path(work_id, root))
+    ready.put(gate)
+    if not release.wait(timeout=15):
+        outcome.put(f"{gate}: timed out waiting for release")
+        return
+    spec = module.CrewSpec(
+        work_id=work_id,
+        gate=gate,
+        role="implementer",
+        handoff=f".agent-work/{work_id}/{gate}-handoff.md",
+        result=f".agent-work/{work_id}/{gate}-result.md",
+        worktree=".",
+        attempt=1,
+        model="sonnet",
+    )
+    try:
+        module.ExternalBackend().dispatch(spec, root=root, entries=entries)
+    except Exception as exc:
+        outcome.put(f"{gate}: {exc!r}")
+    else:
+        outcome.put(None)
 
 
 def write_handoff(root: Path, work_id: str, gate: str, role: str) -> str:
@@ -167,6 +203,127 @@ class InstalledBundleTests(unittest.TestCase):
         result = self._installed_run_crew_help("explorer", "constellation-explorer")
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertNotIn("ModuleNotFoundError", result.stderr)
+
+
+class RegistryConcurrencyTests(unittest.TestCase):
+    def test_concurrent_registry_dispatches_preserve_both_entries(self):
+        """Two independently loaded production writers preserve both entries."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work = root / ".agent-work" / "issue-636"
+            work.mkdir(parents=True)
+            for gate in ("writer-a", "writer-b"):
+                (work / f"{gate}-handoff.md").write_text(
+                    "bounded handoff\n", encoding="utf-8", newline="\n"
+                )
+
+            context = multiprocessing.get_context("spawn")
+            ready = context.Queue()
+            release = context.Event()
+            outcome = context.Queue()
+            processes = [
+                context.Process(
+                    target=_concurrent_registry_dispatch_worker,
+                    args=(str(RUN_CREW), str(root), gate, ready, release, outcome),
+                )
+                for gate in ("writer-a", "writer-b")
+            ]
+            for process in processes:
+                process.start()
+            observed_ready = {ready.get(timeout=15), ready.get(timeout=15)}
+            self.assertEqual({"writer-a", "writer-b"}, observed_ready)
+            release.set()
+            for process in processes:
+                process.join(timeout=15)
+                self.assertFalse(process.is_alive(), "concurrent writer did not exit")
+                self.assertEqual(0, process.exitcode)
+            outcomes = [outcome.get(timeout=5) for _ in processes]
+            self.assertEqual([None, None], sorted(outcomes, key=str))
+
+            registry_path = RC.registry_path("issue-636", root)
+            registry = RC.load_registry(registry_path)
+            self.assertEqual(
+                {
+                    "constellation/issue-636/writer-a/implementer/attempt-1",
+                    "constellation/issue-636/writer-b/implementer/attempt-1",
+                },
+                {entry["session_name"] for entry in registry},
+            )
+            json.loads(registry_path.read_text(encoding="utf-8"))
+
+    def test_save_registry_is_atomic_and_keeps_public_round_trip(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "nested" / "crew-runs.json"
+            entries = [{"session_name": "crew-a", "crew_id": "crew-a"}]
+            calls = []
+            real_replace = RC.os.replace
+
+            def track_replace(source, target):
+                calls.append((Path(source), Path(target)))
+                return real_replace(source, target)
+
+            RC.os.replace = track_replace
+            try:
+                RC.save_registry(path, entries)
+            finally:
+                RC.os.replace = real_replace
+
+            self.assertEqual(entries, RC.load_registry(path))
+            self.assertEqual(1, len(calls))
+            source, target = calls[0]
+            self.assertEqual(path, target)
+            self.assertEqual(path.parent, source.parent)
+            self.assertNotEqual(path, source)
+            self.assertEqual([], list(path.parent.glob("crew-runs.json.*.tmp")))
+
+    def test_stable_identity_mutation_preserves_new_unrelated_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "crew-runs.json"
+            first = {"session_name": "crew-a", "crew_id": "crew-a", "status": "running"}
+            second = {"session_name": "crew-b", "crew_id": "crew-b", "status": "running"}
+            RC.save_registry(path, [first])
+            stale_first = RC.load_registry(path)[0]
+            RC.append_registry_entry(path, second)
+
+            def complete(entry):
+                entry["status"] = "completed"
+
+            snapshot, current, _ = RC.mutate_registry_entry(
+                path, "crew-a", complete, seed=stale_first
+            )
+            self.assertEqual({"crew-a", "crew-b"}, {entry["session_name"] for entry in snapshot})
+            self.assertEqual("completed", current["status"])
+            self.assertEqual(
+                {"crew-a", "crew-b"},
+                {entry["session_name"] for entry in RC.load_registry(path)},
+            )
+
+    def test_windows_registry_lock_adapter_contract(self):
+        class FakeMsvcrt:
+            LK_LOCK = 1
+            LK_UNLCK = 2
+
+            def __init__(self):
+                self.calls = []
+
+            def locking(self, fd, mode, count):
+                self.calls.append((fd, mode, count))
+
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_path = Path(tmp) / "crew-runs.json.lock"
+            lock_path.write_bytes(b"\0")
+            with open(lock_path, "a+b") as lock_file:
+                fake = FakeMsvcrt()
+                lock_file.seek(1)
+                RC._windows_registry_lock(lock_file, fake)
+                self.assertEqual(
+                    [(lock_file.fileno(), FakeMsvcrt.LK_LOCK, 1)], fake.calls
+                )
+                lock_file.seek(1)
+                RC._windows_registry_unlock(lock_file, fake)
+                self.assertEqual(
+                    (lock_file.fileno(), FakeMsvcrt.LK_UNLCK, 1), fake.calls[-1]
+                )
 
 
 class SessionNameTests(unittest.TestCase):
