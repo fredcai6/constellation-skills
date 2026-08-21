@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1",
+  "files": [],
+  "repo_rev": {
+    "commit": "d3d0c9ac77b43c8894f0358e8b3454e05f1ca644"
+  },
+  "run": {
+    "work_id": "20260820-issue-613",
+    "generated_at": "2026-08-21T01:56:18Z",
+    "roots": {
+      "skill": "/tmp/constellation-20260820-613",
+      "repo": "/tmp/constellation-20260820-613",
+      "durable": "/tmp/constellation-20260820-613"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/tmp/constellation-20260820-613"
+    }
+  }
+}
