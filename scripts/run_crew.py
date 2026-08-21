@@ -1633,7 +1633,9 @@ _PARENT_HEARTBEAT_THREAD_NAME = "run_crew-parent-lease-heartbeat"
 
 
 @contextlib.contextmanager
-def _parent_lease_heartbeat(interval: float | None = None):
+def _parent_lease_heartbeat(
+    child_env: Mapping[str, str] | None = None, interval: float | None = None,
+):
     """Keep the DISPATCHING process's OWN ambient engine-session lease alive for
     exactly the duration of the wrapped blocking call (issue #607).
 
@@ -1642,17 +1644,10 @@ def _parent_lease_heartbeat(interval: float | None = None):
     while it waits -- so a healthy, still-blocked parent's lease can go stale
     purely from being blocked, even though it is very much alive. This context
     manager reads the DISPATCHER's own ambient `SPINE_FILE`/`SPINE_SESSION`
-    (never the child's derived env -- `_crew_door_env`/`crew_env` may hand the
-    child the SAME pair unchanged when no explicit `--spine` was given; that is
-    the common case, not an edge case, and is exactly what makes this fix
-    matter) and, if both are set, heartbeats that lease on a background daemon
-    thread every `interval` seconds (default `PARENT_HEARTBEAT_INTERVAL_SECONDS`)
-    until the wrapped block exits.
-
-    No self-collision guard: `checklist_engine.heartbeat()` already refuses a
-    `session_id` that does not own the lease, so heartbeating with the same
-    pair the child also carries is safe, and guarding it off would silently
-    disable the fix in its most common case.
+    and compares them with the actual child environment. When the child has
+    exactly the same pair, the child is the one active writer for that shared
+    lease, so the parent starts no redundant heartbeat thread. A different or
+    missing child pair keeps the parent heartbeat intact.
 
     If either ambient var is unset, this is a no-op: no thread starts, nothing
     else changes. Any exception raised while heartbeating (missing file,
@@ -1665,6 +1660,12 @@ def _parent_lease_heartbeat(interval: float | None = None):
     spine_file = os.environ.get("SPINE_FILE")
     spine_session = os.environ.get("SPINE_SESSION")
     if not spine_file or not spine_session:
+        yield
+        return
+    if child_env is not None and (
+        child_env.get("SPINE_FILE") == spine_file
+        and child_env.get("SPINE_SESSION") == spine_session
+    ):
         yield
         return
 
@@ -1818,7 +1819,7 @@ class CliBackend(CrewBackend):
             work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root,
             parent=spec.parent, scratch_dir=str(scratch),
         )
-        with _parent_lease_heartbeat():
+        with _parent_lease_heartbeat(env):
             exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
                                cwd=crew_cwd(spec.worktree, root))
 
@@ -1906,7 +1907,7 @@ class CliBackend(CrewBackend):
             spine=entry.get("spine"), root=root, parent=entry.get("parent"),
             scratch_dir=(str(scratch) if scratch is not None else None),
         )
-        with _parent_lease_heartbeat():
+        with _parent_lease_heartbeat(env):
             exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path,
                                cwd=crew_cwd(entry.get("worktree"), root))
 

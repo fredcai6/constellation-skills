@@ -3979,11 +3979,9 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
     context-managed daemon-thread helper, started around the blocking call in
     both `CliBackend.dispatch` and `CliBackend.resume`, that refreshes the
     DISPATCHING process's own `SPINE_FILE`/`SPINE_SESSION` lease for exactly
-    the duration of the block. These tests drive it both directly (unit-level:
-    no-op, thread-advances-heartbeat, join-before-return, exception-swallowed)
-    and through the real `CliBackend.dispatch`/`resume` call sites (the
-    shared-spine case a first draft's now-removed self-collision guard would
-    have silently broken)."""
+    the duration of the block when the child has a different pair. A shared
+    child pair suppresses the redundant parent writer. These tests drive it
+    directly and through the real call sites."""
 
     def _claimed_spine(self, root: Path, session_id: str, name: str = "parent_spine.json") -> Path:
         """A real `checklist_engine`-shaped spine with a lease actively claimed
@@ -4067,6 +4065,24 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
             self.assertTrue(advanced, "last_heartbeat never advanced while the thread ran")
             self.assertGreater(self._last_heartbeat(spine), before)
 
+    def test_child_env_without_pair_keeps_parent_heartbeat(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = "constellation/w/commander"
+            spine = self._claimed_spine(root, session)
+            before = self._last_heartbeat(spine)
+            with no_ambient_spine_env():
+                os.environ["SPINE_FILE"] = str(spine)
+                os.environ["SPINE_SESSION"] = session
+                try:
+                    with RC._parent_lease_heartbeat({}, interval=0.01):
+                        self.assertTrue(self._wait_until(
+                            lambda: self._last_heartbeat(spine) != before
+                        ))
+                finally:
+                    os.environ.pop("SPINE_FILE", None)
+                    os.environ.pop("SPINE_SESSION", None)
+
     # -- (c) thread stops (joined) before the context exits ---------------- #
     def test_thread_is_joined_before_context_manager_returns(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -4105,8 +4121,8 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
             # reaching here at all is the assertion: no exception propagated
 
     # -- (e) shared-spine dispatch: child inherits the SAME ambient pair,
-    #        and the parent's own lease is still heartbeated throughout ----- #
-    def test_dispatch_heartbeats_ambient_lease_in_shared_spine_case(self):
+    #        so the parent must not become a second writer ------------------ #
+    def test_dispatch_skips_parent_heartbeat_in_shared_spine_case(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             session = "constellation/w/commander"
@@ -4126,9 +4142,7 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
                 Path(stderr_path).write_text("err\n", encoding="utf-8")
                 Path(root / result).parent.mkdir(parents=True, exist_ok=True)
                 Path(root / result).write_text("RESULT\n", encoding="utf-8")
-                # block long enough for the tiny-interval heartbeat thread to
-                # tick at least once, polling rather than a blind fixed sleep.
-                self._wait_until(lambda: self._last_heartbeat(spine) != before, timeout=2.0)
+                self.assertFalse(self._heartbeat_thread_alive())
                 return 0
 
             with no_ambient_spine_env():
@@ -4153,14 +4167,14 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
             # the child inherited the parent's OWN ambient pair unchanged
             self.assertEqual(str(spine), observed["env"]["SPINE_FILE"])
             self.assertEqual(session, observed["env"]["SPINE_SESSION"])
-            # and despite that, the parent's own lease was heartbeated during
-            # the block -- no self-collision guard silently disabled it.
-            self.assertGreater(self._last_heartbeat(spine), before)
+            # The child owns the shared pair for this call; the parent starts
+            # no second writer against the same lease.
+            self.assertEqual(self._last_heartbeat(spine), before)
             # the heartbeat thread does not outlive the (now-returned) dispatch
             self.assertFalse(self._heartbeat_thread_alive())
 
     # -- resume() is wired the same way as dispatch() ----------------------- #
-    def test_resume_heartbeats_ambient_lease_in_shared_spine_case(self):
+    def test_resume_skips_parent_heartbeat_in_shared_spine_case(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             session = "constellation/w/commander"
@@ -4186,7 +4200,7 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
                 Path(stderr_path).write_text("err\n", encoding="utf-8")
                 Path(root / result).parent.mkdir(parents=True, exist_ok=True)
                 Path(root / result).write_text("RESULT\n", encoding="utf-8")
-                self._wait_until(lambda: self._last_heartbeat(spine) != before, timeout=2.0)
+                self.assertFalse(self._heartbeat_thread_alive())
                 return 0
 
             with no_ambient_spine_env():
@@ -4197,6 +4211,47 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
                 try:
                     code, entry = RC.CliBackend().resume(
                         crew_session, root=root, entries=entries, launch=slow_launch,
+                    )
+                finally:
+                    RC.PARENT_HEARTBEAT_INTERVAL_SECONDS = saved_interval
+                    os.environ.pop("SPINE_FILE", None)
+                    os.environ.pop("SPINE_SESSION", None)
+
+            self.assertEqual(0, code)
+            self.assertEqual("completed", entry["status"])
+            self.assertEqual(self._last_heartbeat(spine), before)
+            self.assertFalse(self._heartbeat_thread_alive())
+
+    def test_dispatch_heartbeats_parent_lease_when_child_pair_differs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            session = "constellation/w/commander"
+            spine = self._claimed_spine(root, session)
+            before = self._last_heartbeat(spine)
+            handoff = write_handoff(root, "w", "g1", "implementer")
+            result = result_rel("w", "g1", "implementer")
+
+            def slow_launch(argv, *, stdin, env, stdout_path, stderr_path, cwd=None):
+                self.assertNotEqual(str(spine), env["SPINE_FILE"])
+                self.assertNotEqual(session, env["SPINE_SESSION"])
+                Path(stdout_path).parent.mkdir(parents=True, exist_ok=True)
+                Path(stdout_path).write_text("out\n", encoding="utf-8")
+                Path(stderr_path).write_text("err\n", encoding="utf-8")
+                Path(root / result).parent.mkdir(parents=True, exist_ok=True)
+                Path(root / result).write_text("RESULT\n", encoding="utf-8")
+                self.assertTrue(self._wait_until(lambda: self._last_heartbeat(spine) != before))
+                return 0
+
+            with no_ambient_spine_env():
+                os.environ["SPINE_FILE"] = str(spine)
+                os.environ["SPINE_SESSION"] = session
+                saved_interval = RC.PARENT_HEARTBEAT_INTERVAL_SECONDS
+                RC.PARENT_HEARTBEAT_INTERVAL_SECONDS = 0.01
+                try:
+                    code, entry = RC.launch_crew(
+                        work_id="w", gate="g1", role="implementer", handoff=handoff,
+                        result=result, spine="child_spine.json", worktree=".", model="sonnet",
+                        launcher="claude", attempt=1, root=root, entries=[], launch=slow_launch,
                     )
                 finally:
                     RC.PARENT_HEARTBEAT_INTERVAL_SECONDS = saved_interval

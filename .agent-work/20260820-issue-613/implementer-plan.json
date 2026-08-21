@@ -1,0 +1,272 @@
+{
+  "work_id": "20260820-issue-613",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the relevant packet. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded global crew/everyone doctrine, glossary, handoff, and required workbench reference; handoff confirms mission, scope, exclusions, evidence, test-first mode, and stop conditions. No map anchors were supplied; map gap will be reported as workflow feedback."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Suppress redundant shared-pair parent heartbeat",
+      "imperative": "TDD: add focused shared-pair dispatch and resume regressions, observe them red on d3d0c9ac, then change only scripts/run_crew.py and tests/test_crew_launcher.py so the parent heartbeat is suppressed only when actual child SPINE_FILE and SPINE_SESSION exactly equal the ambient pair. Preserve different-pair heartbeating. Attest c1 after red; advance on c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 context gate completed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red (when the test mode requires it): new test written and observed failing \u2014 manual attest; check MUST be null so the engine does not run the by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Red observed on the pre-fix helper: focused ParentLeaseHeartbeatTests exited 1 with exactly the new shared-pair dispatch and resume tests failing because the parent heartbeat thread was alive."
+        },
+        {
+          "id": "c2",
+          "statement": "Shared-pair suppression and different-pair preservation pass in focused parent-heartbeat tests",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_crew_launcher.py -k ParentLeaseHeartbeatTests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: scripts/run_crew.py _parent_lease_heartbeat and its two CLI call sites; tests/test_crew_launcher.py ParentLeaseHeartbeatTests and minimal fixtures; local .agent-work artifacts. Do not modify exclusions in the handoff."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_crew_launcher.py -k ParentLeaseHeartbeatTests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "Run required evidence",
+      "imperative": "Run the handoff's full crew-launcher test file, atomic-save confirmatory test, git diff --check, and heartbeat call-site search. Record exact outputs in the durable result. Advance only after all command evidence passes.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Required and confirmatory tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_crew_launcher.py && python -m pytest -q tests/test_checklist_engine_atomic_save.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-3"
+        },
+        {
+          "id": "c2",
+          "statement": "Diff is whitespace-clean and heartbeat seam audit is recorded",
+          "check": {
+            "kind": "command",
+            "command": "git diff --check && rg -n '_parent_lease_heartbeat' scripts/run_crew.py tests/test_crew_launcher.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-4"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Added the explicit child-environment-without-pair compatibility control after first verification, so the evidence gate must rerun against the final diff."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_crew_launcher.py && python -m pytest -q tests/test_checklist_engine_atomic_save.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2",
+            "reason": "Added the explicit child-environment-without-pair compatibility control after first verification, so the evidence gate must rerun against the final diff.",
+            "ts": "2026-08-21T01:59:36.216995+00:00"
+          }
+        },
+        {
+          "id": "e-m2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --check && rg -n '_parent_lease_heartbeat' scripts/run_crew.py tests/test_crew_launcher.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2",
+            "reason": "Added the explicit child-environment-without-pair compatibility control after first verification, so the evidence gate must rerun against the final diff.",
+            "ts": "2026-08-21T01:59:36.217002+00:00"
+          }
+        },
+        {
+          "id": "e-m2-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_crew_launcher.py && python -m pytest -q tests/test_checklist_engine_atomic_save.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --check && rg -n '_parent_lease_heartbeat' scripts/run_crew.py tests/test_crew_launcher.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "m3": {
+      "id": "m3",
+      "title": "Record and commit result",
+      "imperative": "Write IMPLEMENTER_RESULT with scope, red/green/full evidence, map impact, workflow feedback, and commit locally. Attest c1 after independently confirming the result and commit exist; advance only then.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Durable result written and local commit created",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "implementer-20260820-issue-613",
+    "status": "active",
+    "claimed_at": "2026-08-21T01:55:56.076629+00:00",
+    "last_heartbeat": "2026-08-21T01:59:50.516617+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/tmp/constellation-20260820-613",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The bounded handoff is complete and its settled shared-pair and different-pair decisions define a minimal two-call-site behavior change with focused regressions.",
+      "mechanical": false,
+      "ts": "2026-08-21T01:56:10.025691+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "Passing the actual child env into the existing helper makes equality suppression local and explicit: exact shared pairs yield no parent thread, while missing or different child pairs leave ambient parent heartbeating unchanged.",
+      "mechanical": false,
+      "ts": "2026-08-21T01:58:31.791075+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "The complete launcher suite and atomic-save confirmatory suite pass; the diff is whitespace-clean, and the seam audit shows one helper plus exactly dispatch and resume call sites.",
+      "mechanical": false,
+      "ts": "2026-08-21T01:58:59.376724+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m2",
+      "reopen": true,
+      "reason": "Added the explicit child-environment-without-pair compatibility control after first verification, so the evidence gate must rerun against the final diff.",
+      "ts": "2026-08-21T01:59:36.217007+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m2",
+      "why": "Final evidence passes with the missing-child-pair compatibility regression included: 9 focused heartbeat tests, 245 launcher tests, and 15 atomic-save tests.",
+      "mechanical": false,
+      "ts": "2026-08-21T01:59:40.188822+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-21T01:58:21.252005+00:00",
+      "reason": "The shipped two-gate template does not contain distinct full-evidence and durable-result/commit gates required by the authoritative handoff; append them before m1 closes.",
+      "authority": "Tommy via Admiral frozen launch",
+      "ops": [
+        "added m2",
+        "added m3"
+      ]
+    }
+  ]
+}
