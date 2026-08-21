@@ -859,9 +859,13 @@ def test_journal_seq_missing_is_zero(tmp_path):
 
 
 def test_reconstruct_current_active():
+    # R1 (deficiency cleanup batch A+B): renders HELD + age, same shape A3
+    # established for checklist_engine._lease_line -- never `active`.
     spine = make_spine([("g1", "in-progress")], imperatives={"g1": "do the thing"})
     out = sr.reconstruct_current(spine)
-    assert "LEASE active: eng-1 (by commander" in out
+    assert "LEASE HELD: eng-1 (by commander" in out
+    assert "last heartbeat" in out
+    assert "LEASE active" not in out
     assert "ACTIVE g1 [in-progress] -- do the thing" in out
 
 
@@ -875,7 +879,69 @@ def test_reconstruct_current_no_lease_line_when_released():
     spine = make_spine([("g1", "in-progress")], lease_status="released")
     out = sr.reconstruct_current(spine)
     assert "LEASE active" not in out
+    assert "LEASE HELD" not in out
     assert "ACTIVE g1" in out
+
+
+class ReconstructCurrentLeaseShapeMatchesA3(unittest.TestCase):
+    """R1 (deficiency cleanup batch A+B, coordinator-adjudicated): the Stop
+    hook's `reconstruct_current` is the SECOND renderer of the lease line --
+    checklist_engine._lease_line is the first, fixed by A3. This is the
+    regression that would have caught the original gap: it proves the
+    Stop-hook render no longer says `active` for a stale lease, and that it
+    renders the same HELD + age shape A3 established, without importing
+    checklist_engine (this module is stdlib-only by design)."""
+
+    def test_stop_hook_render_says_held_not_active_for_a_stale_lease(self):
+        stale_hb = (datetime.now(timezone.utc) - timedelta(days=22)).isoformat()
+        spine = make_spine([("g1", "in-progress")], last_heartbeat=stale_hb)
+        out = sr.reconstruct_current(spine)
+        self.assertNotIn("LEASE active", out)
+        self.assertIn("LEASE HELD: eng-1", out)
+        self.assertIn("last heartbeat", out)
+        # a real age is rendered, in the day-scale ballpark -- e.g. "528h..."
+        # (this module's _format_age, like checklist_engine's, caps its
+        # units at hours: no threshold judgment, just unit arithmetic)
+        self.assertRegex(out, r"last heartbeat \d+h\d\dm ago")
+
+    def test_stop_hook_render_never_prints_a_verdict_word(self):
+        for label, hb in (
+            ("fresh", (datetime.now(timezone.utc) - timedelta(seconds=5)).isoformat()),
+            ("stale", (datetime.now(timezone.utc) - timedelta(days=22)).isoformat()),
+        ):
+            with self.subTest(arm=label):
+                spine = make_spine([("g1", "in-progress")], last_heartbeat=hb)
+                out = sr.reconstruct_current(spine)
+                self.assertNotIn("STALE", out)
+                self.assertNotIn("LIVE", out)
+
+    def test_stop_hook_render_shares_the_same_shape_as_checklist_engine(self):
+        # Kept in sync by inspection (this module cannot import the engine),
+        # so this test pins the two renderers against EACH OTHER: the same
+        # fixture, run through both, must produce the same HELD-plus-age
+        # substring shape.
+        engine_spec = importlib.util.spec_from_file_location(
+            "checklist_engine_for_shape_check", _REPO_ROOT / "scripts" / "checklist_engine.py")
+        engine = importlib.util.module_from_spec(engine_spec)
+        engine_spec.loader.exec_module(engine)
+        stale_hb = (datetime.now(timezone.utc) - timedelta(days=22)).isoformat()
+        cl = {
+            "type": "gated", "items": ["g1"],
+            "tasks": {"g1": {"id": "g1", "status": "in-progress", "imperative": "do the thing",
+                              "preconditions": [], "postconditions": []}},
+            "engine_session": {
+                "session_id": "eng-1", "status": "active", "claimed_by": "commander",
+                "last_heartbeat": stale_hb,
+            },
+        }
+        engine_line = engine._lease_line(cl)
+        hook_line = sr.reconstruct_current(
+            make_spine([("g1", "in-progress")], last_heartbeat=stale_hb)
+        )
+        self.assertIn("LEASE HELD: eng-1 (by commander, last heartbeat", engine_line)
+        self.assertIn("LEASE HELD: eng-1 (by commander, last heartbeat", hook_line)
+        self.assertNotIn("active", engine_line)
+        self.assertNotIn("active", hook_line)
 
 
 # --- path comparison helper (_same_path) -------------------------------------

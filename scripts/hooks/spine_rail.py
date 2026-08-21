@@ -641,20 +641,62 @@ def journal_seq(spine_path) -> int:
         return 0
 
 
+# R1 (deficiency cleanup batch A+B, coordinator-adjudicated follow-on): a COPY
+# of checklist_engine._format_age's rendering rule, not an import -- this
+# module is stdlib-only by design and may gain none (the same law
+# `_worktree_from_spine`'s docstring states above: "it will re-land as a
+# COPY, not an import"). Same unit-conversion arithmetic, same NO-threshold-
+# judgment rule: this renders whatever age it is handed, it never decides
+# whether that age is "old". Kept in sync by inspection, not by sharing code
+# -- the two are pinned against each other in
+# tests/test_spine_rail.py::ReconstructCurrentLeaseShapeMatchesA3.
+def _format_age(total_seconds: float) -> str:
+    total_seconds = int(total_seconds)
+    if total_seconds < 0:
+        total_seconds = 0
+    if total_seconds < 60:
+        return f"{total_seconds}s"
+    if total_seconds < 3600:
+        minutes, seconds = divmod(total_seconds, 60)
+        return f"{minutes}m{seconds:02d}s"
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes = remainder // 60
+    return f"{hours}h{minutes:02d}m"
+
+
 def reconstruct_current(spine: dict) -> str:
     """Rebuild the engine's `current` output from the state file (no subprocess).
 
-    Optional `LEASE active: ...` line, then `ACTIVE <aid> [<status>] -- <imp>`
+    Optional `LEASE HELD: ...` line, then `ACTIVE <aid> [<status>] -- <imp>`
     or `DONE: no open items.` when every item is terminal.
+
+    R1 (deficiency cleanup batch A+B): this is the SECOND renderer of the
+    lease line -- checklist_engine._lease_line is the first, fixed by A3.
+    Both now render the SAME shape: `HELD` (never `active`, a liveness word
+    for a field that only means "not released") plus an AGE (never a
+    STALE/LIVE verdict -- pid corroboration is unavailable for the
+    overwhelming majority of leases in this corpus, so this renderer, like
+    `_lease_line`, is not positioned to make that call). Before this fix,
+    the Stop hook told an agent a 22-day-dead plan was `active` even after
+    A3 had already stopped `current` from saying so -- half the defect was
+    still live.
     """
     lines = []
     lease = spine.get("engine_session") or {}
     if lease.get("status") == "active":
+        hb_dt = _parse_aware_iso(lease.get("last_heartbeat"))
+        if hb_dt is not None:
+            age_text = f"{_format_age((datetime.now(timezone.utc) - hb_dt).total_seconds())} ago"
+        else:
+            # Absent/unparseable heartbeat is untrustworthy, not evidence of
+            # any particular age -- say so rather than printing a wrong
+            # number (mirrors checklist_engine._lease_line's same rule).
+            age_text = "unknown"
         lines.append(
-            "LEASE active: {sid} (by {by}, heartbeat {hb})".format(
+            "LEASE HELD: {sid} (by {by}, last heartbeat {age})".format(
                 sid=lease.get("session_id"),
                 by=lease.get("claimed_by"),
-                hb=lease.get("last_heartbeat"),
+                age=age_text,
             )
         )
     aid = active_id(spine)
