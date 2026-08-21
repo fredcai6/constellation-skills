@@ -875,6 +875,11 @@ def crew_settings_json() -> str:
 #: a plain, honest "I don't know" is the whole point (#559 follow-on, "fail
 #: up"): a crew that cannot satisfy a check must ask up to a REAL parent, and
 #: guessing one would be worse than saying it has none.
+#: B2 (deficiency cleanup batch A+B) made `--parent` REQUIRED for a fresh or
+#: relaunched dispatch, so this value can no longer be produced by one --
+#: it survives only for DISPLAY of registry entries recorded before this
+#: requirement (172 of 545 in this checkout carried a real parent; the rest
+#: read as this string) and for `_crew_status_line`'s blocked-crew report.
 UNKNOWN_PARENT = "unknown"
 
 
@@ -1577,9 +1582,19 @@ class CrewSpec:
     as the handoff/spine pair above -- it would have no completion contract at
     all.
 
-    `parent` is nullable and never required (E1 fail-up, issue #559): a
-    dispatch with no `--parent` must still work -- it is recorded, bound, and
-    named as `UNKNOWN_PARENT`, never invented as some other identity.
+    `parent` is REQUIRED (B2, deficiency cleanup batch A+B -- reversing E1
+    fail-up, issue #559, now that the cost of the reversal is measured).
+    `crew-runs.json:parent` is already read and gate-enforced by
+    `verify_declared_dispatch.py`, but it is populated on only 172 of 545
+    registry entries in this checkout: an optional field a third of callers
+    remember to pass is not a lineage edge, it is a coin flip. The fix is to
+    remove the optionality rather than add a second carrier for the same
+    fact elsewhere. A dispatch that omits it is refused HERE, at
+    construction -- the one choke point every backend passes through --
+    with a message naming exactly what to pass, same shape as the
+    handoff/spine and result/spine refusals just above. `UNKNOWN_PARENT`
+    remains for DISPLAY of pre-existing registry entries that predate this
+    requirement; it is no longer a value a fresh dispatch can produce.
 
     `model`/`reason` are resolved HERE too (issue #633, g3-implement), via
     `resolve_model`: a role/harness pair WITH a `ROLE_MODEL_TIERS` entry now
@@ -1618,6 +1633,14 @@ class CrewSpec:
                 "a crew needs a completion contract: refusing a dispatch with "
                 "neither --result nor --spine given (a spine-only dispatch is "
                 "judged on its spine reaching a terminal state instead)"
+            )
+        if not (self.parent or "").strip():
+            raise CrewLaunchError(
+                "a crew needs a parent: refusing a dispatch with no --parent "
+                "given -- pass the identifier of whoever is dispatching this "
+                "crew (e.g. a Commander/Admiral session name); "
+                "crew-runs.json:parent is what verify_declared_dispatch.py "
+                "checks, and an absent value cannot be checked against"
             )
         resolved = resolve_model(
             role=self.role, harness=self.launcher, requested=self.model, reason=self.reason
@@ -2346,9 +2369,14 @@ def build_parser() -> argparse.ArgumentParser:
             "identifier for whoever dispatched this crew (e.g. a Commander/Admiral "
             "session name). Recorded in the registry entry, bound into the crew's "
             "environment as SPINE_PARENT, and named in the crew prompt on both the "
-            "handoff and spine-only branches. Optional and never required -- a "
-            "dispatch with no --parent still works, and the crew is told plainly "
-            f"its parent is {UNKNOWN_PARENT!r} rather than having one invented."
+            "handoff and spine-only branches. REQUIRED for a fresh or relaunched "
+            "dispatch (B2, deficiency cleanup batch A+B) -- `CrewSpec.__post_init__` "
+            "refuses a construction with none, naming what to pass. Not required "
+            "for --resume/--abandon-only/--verify-result, which build no fresh "
+            "CrewSpec. Not accepted as a bare flag here at the argparse level "
+            "(those recovery modes need it absent, not defaulted), so the refusal "
+            "lands at construction, where every dispatch path already passes "
+            "through it."
         ),
     )
     p.add_argument("--root", default=".", type=Path, help="repo root (default: cwd)")

@@ -732,7 +732,7 @@ class McpJsonVarExpansionLaunchTests(unittest.TestCase):
                 text = status_reply["result"]["content"][0]["text"]
                 self.assertIn("ACTIVE g1", text)
                 self.assertIn(
-                    "LEASE active: varexp-sess#varexp-agent (by varexp-tester", text,
+                    "LEASE HELD: varexp-sess#varexp-agent (by varexp-tester", text,
                     "SPINE_SESSION must reach the engine verbatim, opaque '#' and all -- "
                     "the server does no parsing/validation of the caller-composed identity",
                 )
@@ -880,8 +880,8 @@ class Utf8StdioConformanceTests(unittest.TestCase):
         """Claim the lease with a non-ASCII `claimed_by` sent as RAW UTF-8
         bytes (ensure_ascii=False), then read it back through a REAL
         `spine_status` ("current") call and pull the substring out of the
-        rendered `LEASE active: <id> (by <claimed_by>, heartbeat ...)` line
-        -- asserted against rendered behaviour, never against the raw
+        rendered `LEASE HELD: <id> (by <claimed_by>, last heartbeat ... ago)`
+        line -- asserted against rendered behaviour, never against the raw
         argument merely echoed. Returns the round-tripped substring's own
         UTF-8 encoding, for a byte-for-byte comparison by the caller."""
         claim_req = {
@@ -913,8 +913,8 @@ class Utf8StdioConformanceTests(unittest.TestCase):
         status_reply = json.loads(status_reply_line.decode("utf-8"))
         text = status_reply["result"]["content"][0]["text"]
 
-        match = re.search(r"\(by (.*?), heartbeat", text)
-        self.assertIsNotNone(match, f"no 'LEASE active: ... (by <claimed_by>, heartbeat ...)' line found in: {text!r}")
+        match = re.search(r"\(by (.*?), last heartbeat", text)
+        self.assertIsNotNone(match, f"no 'LEASE HELD: ... (by <claimed_by>, last heartbeat ...)' line found in: {text!r}")
         return match.group(1).encode("utf-8")
 
     def test_claimed_by_round_trips_byte_for_byte_even_with_a_non_utf8_ambient_default(self):
