@@ -1772,11 +1772,46 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
 
 # --- SessionStart: re-inject resume doctrine after compaction ----------------
 
+# A5 (deficiency cleanup batch A+B): the fallback scan's own staleness
+# threshold, mirroring `checklist_engine.DEFAULT_LEASE_STALE_SECONDS`
+# (1800s). Duplicated deliberately, not imported: this hook is stdlib-only
+# by contract and cannot import the engine (the same reason `reconstruct_
+# current` above duplicates the lease-line render instead of calling it).
+_LEASE_STALE_SECONDS = 1800
+
+
+def _lease_is_stale(lease: dict, now_text: str | None = None) -> bool:
+    """Mirrors `checklist_engine._is_stale`'s verdict -- same threshold, same
+    fail-toward-stale rule for a missing/unparseable heartbeat -- without
+    importing the engine. Used ONLY to gate an ADVISORY injection, never to
+    refuse a claim or reap a binding, so failing toward "stale" here costs
+    nothing worse than an unshown suggestion, never a lost record (contrast
+    `_reap_binding_entries`, which fails the OTHER way because a delete is
+    not reversible; the two rules are not in tension, they answer different
+    questions)."""
+    hb_dt = _parse_aware_iso(lease.get("last_heartbeat"))
+    if hb_dt is None:
+        return True
+    now_dt = _parse_aware_iso(now_text) if now_text else datetime.now(timezone.utc)
+    if now_dt is None:
+        return True
+    return (now_dt - hb_dt).total_seconds() > _LEASE_STALE_SECONDS
+
+
 def _scan_active_spine(project_dir: Path):
-    """Best-effort fallback: EVERY .agent-work/*/spine.json with an active
-    lease and a non-None active id, as a list of `(spine_dict, spine_path)`
-    tuples in glob order (session->spine binding is preferred; this is the
-    last-resort discovery path). Empty list if none found.
+    """Best-effort fallback: EVERY .agent-work/*/spine.json with an active,
+    NON-STALE lease and a non-None active id, as a list of `(spine_dict,
+    spine_path)` tuples in glob order (session->spine binding is preferred;
+    this is the last-resort discovery path). Empty list if none found.
+
+    A5 (deficiency cleanup batch A+B): staleness is checked HERE, not just at
+    the injection site downstream, because this is the ONE fallback path with
+    no proof of ownership behind it at all -- unlike the `owned` bindings
+    branch above (this session's OWN claim, which stays ungated: an owner is
+    never blocked by its own staleness, same rule `require_session` uses),
+    this glob answers "some active-leased spine is on disk", session
+    unknown, and could be anyone's, dead or alive. Before this, EVERY active
+    lease in this checkout (58 of them, all stale) was an eligible match.
 
     Returning every match (not just the first) is deliberate: the caller
     needs a COUNT to tell an unambiguous single active spine from an
@@ -1793,8 +1828,11 @@ def _scan_active_spine(project_dir: Path):
             if not isinstance(spine, dict):
                 continue
             lease = spine.get("engine_session") or {}
-            if lease.get("status") == "active" and active_id(spine) is not None:
-                matches.append((spine, str(spath)))
+            if lease.get("status") != "active" or active_id(spine) is None:
+                continue
+            if _lease_is_stale(lease):
+                continue
+            matches.append((spine, str(spath)))
         return matches
     except Exception:
         return []

@@ -20,6 +20,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -62,11 +63,17 @@ def _spawn_session_start_writer(project_dir, session_id, barrier):
 # --- fixtures ----------------------------------------------------------------
 
 def make_spine(items_status, lease_status="active", session_id="eng-1",
-               claimed_by="commander", imperatives=None):
+               claimed_by="commander", imperatives=None, last_heartbeat=None):
     """Build a minimal spine dict.
 
     items_status: list of (id, status) in item order.
-    """
+
+    `last_heartbeat` defaults to FRESH (real "now" at call time), not a fixed
+    past date -- A5 (deficiency cleanup batch A+B) made `_scan_active_spine`
+    staleness-aware, and the overwhelming majority of callers here are
+    testing identity/binding logic, not staleness, so they must not be
+    accidentally stale. Tests that specifically exercise staleness pass an
+    explicit old `last_heartbeat`."""
     imperatives = imperatives or {}
     items = [iid for iid, _ in items_status]
     tasks = {}
@@ -83,7 +90,7 @@ def make_spine(items_status, lease_status="active", session_id="eng-1",
             "session_id": session_id,
             "status": lease_status,
             "claimed_by": claimed_by,
-            "last_heartbeat": "2026-07-12T00:00:00+00:00",
+            "last_heartbeat": last_heartbeat or sr._now_iso(),
         },
     }
     return spine
@@ -1633,7 +1640,7 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
 
     # -- the SECOND door into the same writer --------------------------------
 
-    def _in_tree_crew_and_the_parents_archived_spine(self):
+    def _in_tree_crew_and_the_parents_archived_spine(self, last_heartbeat=None):
         """`_in_tree_crew_only` plus ONE ordinary further event: the parent
         claims a spine of its OWN, and that spine is later archived at closeout.
 
@@ -1648,6 +1655,13 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
         Every binding entry is written by the real claim writer from the real
         captured payloads, so the store shape is production's, not one invented
         here.
+
+        `last_heartbeat` is optional and threaded through to `make_spine`
+        (which otherwise defaults to a fresh timestamp per call) -- a caller
+        that invokes this helper more than once and compares the results
+        byte-for-byte must pass the SAME value each time, or the rendered
+        `LEASE`/`heartbeat` text will differ by the microseconds between
+        calls even though nothing about ownership changed.
         """
         parent = _real_parent_payloads()[0]
         crew = _real_subagent_payloads()[0]
@@ -1655,13 +1669,15 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
         write_spine(
             self.proj,
             make_spine([("g3", "in-progress")],
-                       imperatives={"g3": "CREW-MARKER implement the crew gate"}),
+                       imperatives={"g3": "CREW-MARKER implement the crew gate"},
+                       last_heartbeat=last_heartbeat),
             work="run-crew", journal_lines=1,
         )
         write_spine(
             self.proj,
             make_spine([("execute", "in-progress")],
-                       imperatives={"execute": "OWN-MARKER drive your own gate"}),
+                       imperatives={"execute": "OWN-MARKER drive your own gate"},
+                       last_heartbeat=last_heartbeat),
             work="run-own", journal_lines=1,
         )
         sr.handle_post_tool_use(
@@ -1745,13 +1761,21 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
         to move an answer that belongs to another agent entirely."""
         answers = {}
         arms = (("no restart", False), ("parent restarts first", True))
+        # Same instant for both arms (A5, deficiency cleanup batch A+B): the
+        # helper's spines now default to a FRESH per-call heartbeat, and this
+        # test asserts the two arms' output is byte-identical, so both must
+        # be built against the SAME heartbeat text or an unrelated clock tick
+        # between arms would fail the comparison for a reason that has
+        # nothing to do with what this test checks.
+        fixed_heartbeat = sr._now_iso()
         for label, restart in arms:
             with self.subTest(arm=label):
                 sr.save_binding(self.proj, {})
                 sr.save_nudges(self.proj, {})  # each arm gets its own strike count
                 shutil.rmtree(str(self.proj / ".agent-work"), True)
                 sid, crew, _crew_key, _crew_spine = \
-                    self._in_tree_crew_and_the_parents_archived_spine()
+                    self._in_tree_crew_and_the_parents_archived_spine(
+                        last_heartbeat=fixed_heartbeat)
                 if restart:
                     sr.decide_session_start({"session_id": sid, "cwd": str(self.proj)},
                                             self.proj)
@@ -2317,6 +2341,70 @@ def test_session_start_fallback_scan_finds_active(proj):
     write_spine(proj, spine, work="wtX")  # no binding at all
     out = sr.decide_session_start({"session_id": "unbound"}, proj)
     assert out["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+    assert "RESUMING" in out["hookSpecificOutput"]["additionalContext"]
+
+
+# --- A5 staleness (deficiency cleanup batch A+B) ------------------------------
+
+def _stale_iso(seconds_ago):
+    return (datetime.now(timezone.utc) - timedelta(seconds=seconds_ago)).isoformat()
+
+
+def test_scan_active_spine_excludes_a_stale_lease(proj):
+    # The measured worst case this item exists for: an active lease whose
+    # heartbeat is 22 days dead must not be an eligible fallback match.
+    stale = make_spine([("g2", "in-progress")], last_heartbeat=_stale_iso(22 * 24 * 3600))
+    write_spine(proj, stale, work="wtX")  # no binding at all -- fallback-only
+    assert sr._scan_active_spine(proj) == []
+
+
+def test_scan_active_spine_includes_a_fresh_lease(proj):
+    fresh = make_spine([("g2", "in-progress")], last_heartbeat=_stale_iso(5))
+    write_spine(proj, fresh, work="wtX")
+    assert len(sr._scan_active_spine(proj)) == 1
+
+
+def test_scan_active_spine_excludes_a_lease_with_no_heartbeat(proj):
+    # Missing/unparseable is untrustworthy, not proof of freshness -- fails
+    # toward excluding it from an ADVISORY injection (never toward reaping
+    # or refusing anything, the opposite-direction rule `_reap_binding_
+    # entries` follows for a delete).
+    no_hb = make_spine([("g2", "in-progress")])
+    del no_hb["engine_session"]["last_heartbeat"]
+    write_spine(proj, no_hb, work="wtX")
+    assert sr._scan_active_spine(proj) == []
+
+
+def test_session_start_fallback_does_not_inject_for_a_stale_lease(proj):
+    # The injection itself, not just the scan's own list -- #549/#419's own
+    # failure class fixed for the surface that is UNASKED: no binding at
+    # all, so this is the fallback-only path, and the stale lease must not
+    # produce "Pick the run back up... Run it." at session start.
+    stale = make_spine([("g2", "in-progress")], last_heartbeat=_stale_iso(22 * 24 * 3600))
+    write_spine(proj, stale, work="wtX")
+    out = sr.decide_session_start({"session_id": "unbound"}, proj)
+    assert out == {}
+
+
+def test_session_start_fallback_does_inject_for_a_fresh_lease(proj):
+    # The positive control for the test above -- proves the gate is
+    # staleness-specific, not a blanket suppression of the fallback path.
+    fresh = make_spine([("g2", "in-progress")], last_heartbeat=_stale_iso(5))
+    write_spine(proj, fresh, work="wtX")
+    out = sr.decide_session_start({"session_id": "unbound"}, proj)
+    assert "RESUMING" in out["hookSpecificOutput"]["additionalContext"]
+
+
+def test_owned_binding_resume_is_not_gated_by_staleness(proj):
+    # The owner's OWN claimed binding is a different question from the
+    # fallback scan's "whose is this, even" -- and the owner is never
+    # blocked by its own staleness, the same rule `require_session` uses on
+    # the write path. A session resuming its OWN 22-day-old claim must still
+    # be told to pick it back up.
+    spine = make_spine([("g2", "in-progress")], last_heartbeat=_stale_iso(22 * 24 * 3600))
+    sp = write_spine(proj, spine)
+    bind(proj, "s1", sp)
+    out = sr.decide_session_start({"session_id": "s1", "source": "compact"}, proj)
     assert "RESUMING" in out["hookSpecificOutput"]["additionalContext"]
 
 

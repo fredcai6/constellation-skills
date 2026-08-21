@@ -1433,7 +1433,7 @@ class TwoDoorRoundTripTests(_RealDoorInAStagedCheckout):
 
         is_err, status = door_two.text("spine_status")
         self.assertFalse(is_err, status)
-        self.assertIn("LEASE active: " + minted_session, status)
+        self.assertIn("LEASE HELD: " + minted_session, status)
 
         # Drive the gate to terminal and release, through the ordinary tools.
         for call in (("spine_start", {"task_id": "m1"}),

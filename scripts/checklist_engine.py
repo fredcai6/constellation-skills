@@ -454,7 +454,18 @@ def active_id(cl: dict) -> str | None:
 # #145) — do not paraphrase; token placeholders {id}/{n}/{imperative} are the
 # only substituted parts.
 # --------------------------------------------------------------------------- #
-RAIL_VERBS = {"claim", "current", "start", "advance", "attest", "attach"}
+# #145/A1 (deficiency cleanup batch A+B): `current` was removed from this set
+# because it is the only railed verb a NON-OWNER routinely calls -- the other
+# five are things an agent calls *after* deciding a plan is its own to drive.
+# Railing `current` meant a plan whose owner died weeks ago still answered a
+# bare inspection with "you are N steps from done... Run it.", instructing a
+# reader into resuming a dead run before it had decided the plan was its own.
+# Removing the verb from this set is a set-membership change ONLY: `_rail()`
+# is still callable with `point="current"` (kept for direct unit tests below)
+# and `_RAIL_STRINGS` stays byte-identical -- both frozen as a measurement
+# precondition for #145. See A2/A3/A4 (same batch) for the read-surface
+# changes that replace what `current`'s rail used to carry.
+RAIL_VERBS = {"claim", "start", "advance", "attest", "attach"}
 
 _RAIL_STRINGS = {
     "early": "Work the engine never saw did not happen. Run the step's checks, "
@@ -543,6 +554,34 @@ def _rail_prefix(point: str, cl: dict) -> str:
     banner, silently hiding a real REFUSED line."""
     rail = _rail(point, cl)
     return f"{rail.lstrip(chr(10))}\n\n" if rail else ""
+
+
+# A2 (deficiency cleanup batch A+B): a plan filed under `.agent-work/archive/`
+# is finished by definition -- the recovery doctrine for it is temp-copy-back,
+# never drive in place. Printing an ARCHIVED banner and suppressing the rail
+# there is a PATH fact, never a liveness claim: it reads the path the caller
+# handed in (`--file`, via `base_dir`), never ambient cwd, and it refuses
+# nothing -- only advice changes. That is what makes it safe under #609 g2
+# (verb functions stay pure and location-blind; this lives at the `dispatch()`
+# seam, which is already permitted to read files for the rail and the trip
+# advisory).
+_ARCHIVED_BANNER = (
+    "ARCHIVED -- this file is under .agent-work/archive/. It records a finished run."
+)
+
+
+def _is_archived_path(base_dir: Path | None) -> bool:
+    """True iff `base_dir` (the directory holding the checklist file the caller
+    named with `--file`) has `.agent-work/archive` as two CONSECUTIVE path
+    components -- a lexical fact about the path handed in, nothing else. No
+    resolve(), no existence check, no cwd: a path that never touches disk is
+    still answerable, and nothing here can be forged by a `cd` prefix because
+    nothing here is compared against the process's own location."""
+    if base_dir is None:
+        return False
+    parts = base_dir.parts
+    return any(parts[i] == ".agent-work" and parts[i + 1] == "archive"
+               for i in range(len(parts) - 1))
 
 
 # --------------------------------------------------------------------------- #
@@ -1145,10 +1184,27 @@ def require_session(cl: dict, verb: str, session_id: str | None, config: dict) -
             f"checklist lease {lease.get('session_id')!r} is stale; "
             f"`claim` it (same id or --force --reason) before mutating"
         )
+    # A6 (deficiency cleanup batch A+B): the two remedies a caller reaches for
+    # here are both filed defects when recommended unconditionally --
+    # `--session-id <the holder's>` with no qualifier reads as "pass this
+    # string" and #632 is exactly a caller doing that without being the run
+    # it names; `claim --force --reason` reached for reflexively is #369's
+    # concern, even though force DOES correctly record the takeover (measured:
+    # `previous_session_id`/`takeover_reason` are written). Both remedies stay
+    # -- passing the holder's own id back IS the correct, required move for a
+    # relaunched run resuming itself (`run_crew.assignment_session_name`
+    # reproduces a predecessor's session string on purpose) -- but each is now
+    # named WITH the condition that makes it correct, not as a bare command to
+    # paste. A caller that is not that session and does not know it is gone
+    # is told the honest third option: leave the plan alone.
     raise EngineError(
         f"checklist is owned by active session {lease.get('session_id')!r}; "
-        f"pass --session-id {lease.get('session_id')!r} or take over with "
-        f"`claim --force --reason ...`"
+        f"if that is YOU resuming after a restart, pass "
+        f"--session-id {lease.get('session_id')!r} -- never a name you have "
+        f"not actually run under; if it is still working, leave this plan "
+        f"alone; if you know it is gone, `claim --session-id <yours> "
+        f"--claimed-by <role> --force --reason \"<what you know>\"` takes "
+        f"over and records the handover"
     )
 
 
@@ -1298,14 +1354,37 @@ def release(cl: dict, session_id: str, force: bool = False, reason: str | None =
 
 
 def _lease_line(cl: dict) -> str | None:
-    """Human-readable active-lease summary for `current`, or None if no lease."""
+    """Human-readable active-lease summary for `current`, or None if no lease.
+
+    A3 (deficiency cleanup batch A+B): renders `HELD`, never `active` --
+    `active` in the stored data means only "not released", a bookkeeping
+    state, and printing it as a liveness word is what let a lease 22 days
+    dead read as a run in progress. Renders an AGE (via the existing
+    `_format_age` helper, the same one used for the trip/gauge advisories
+    elsewhere in this file), never a STALE/LIVE verdict: pid corroboration is
+    unavailable for the overwhelming majority of leases in this corpus, so
+    this renderer is not positioned to make that call -- only
+    `require_session`'s write-path gate decides staleness, using `_is_stale`,
+    for an actual refusal. A Commander thinking hard for 31 minutes and one
+    dead for 22 days render with the SAME shape, deliberately: the reader
+    supplies the verdict, the engine supplies the fact. The stored `status`
+    string is never rewritten -- only this render changes."""
     sess = cl.get("engine_session")
     if not isinstance(sess, dict):
         return None
     status = sess.get("status")
-    if status == "active":
-        return f"LEASE active: {sess.get('session_id')} (by {sess.get('claimed_by')}, heartbeat {sess.get('last_heartbeat')})"
-    return f"LEASE {status}: {sess.get('session_id')}"
+    if status != "active":
+        return f"LEASE {status}: {sess.get('session_id')}"
+    hb = sess.get("last_heartbeat")
+    try:
+        age = _format_age(_parse_ts(_now()) - _parse_ts(hb))
+        age_text = f"{age} ago"
+    except (ValueError, TypeError):
+        # An absent/unparseable heartbeat is untrustworthy, not evidence of
+        # any particular age -- say so rather than printing a wrong number.
+        age_text = "unknown"
+    return (f"LEASE HELD: {sess.get('session_id')} "
+            f"(by {sess.get('claimed_by')}, last heartbeat {age_text})")
 
 
 # --------------------------------------------------------------------------- #
@@ -2431,6 +2510,13 @@ def state(cl: dict) -> dict:
         "kind": kind,
         "active": active,
         "lease_line": _lease_line(cl),
+        # A4 (deficiency cleanup batch A+B): whether ANY session currently
+        # holds this plan -- used only to relabel the `next:` hint below, so
+        # it is addressed to "the holder" rather than silently assuming the
+        # reader IS the holder. True regardless of who is asking (`current`
+        # takes no caller identity to compare against), which keeps this
+        # truthful for the owner too: the owner IS the holder.
+        "lease_held": _active_lease(cl) is not None,
         "why_text": _why_suffix(cl, aid),
         "consolidation_pending": consolidation_pending,
         "waived_postconditions": waived_postconditions,
@@ -2576,7 +2662,11 @@ def render_human(view: dict) -> str:
         lines.append("directives:")
         lines.extend(directive_lines)
     if active.get("next_verbs"):
-        lines.append("next: " + " | ".join(active["next_verbs"]))
+        # A4: when a lease is held, the hint is addressed to whoever holds
+        # it -- a non-owner reading a plan it does not run must not read
+        # this as an instruction meant for it.
+        next_label = "next (for the holder):" if view.get("lease_held") else "next:"
+        lines.append(next_label + " " + " | ".join(active["next_verbs"]))
     body = "\n".join(lines)
     return prefix + body + view.get("why_text", "")
 
@@ -3542,14 +3632,25 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         # self-heals. A refused verb never gets here.
         if v in MUTATING_VERBS:
             _refresh_owner_heartbeat(cl, session_id)
+    # A2: a plan filed under `.agent-work/archive/` is finished by definition, so
+    # the rail -- which exists to push an agent toward the NEXT step of a run
+    # still in flight -- never applies there, for every railed verb, not just
+    # `current`. Checked BEFORE the rail below so the suppression covers it.
+    archived = _is_archived_path(base_dir)
     # Doctrine rail (#138 channel A): prepend the position-derived doctrine block
     # to the railed verbs' success output. The verb functions above stay pure; the
     # rail rides only this CLI-boundary chokepoint. `_rail_prefix` returns "" for
     # non-gated checklists. FRONT, not suffix (#227 gate g3, item b/constraint 4):
     # the operative result line must land LAST on the stream so `tail -1` reads
     # it, not the banner -- the field defect this fixes.
-    if v in RAIL_VERBS:
+    if v in RAIL_VERBS and not archived:
         message = _rail_prefix(v, cl) + message
+    # A2: the banner is a path fact, front-loaded like the rail it replaces, and
+    # printed for every verb dispatched against an archived-path plan -- not
+    # only `current` -- so a claim/start/advance attempted there is told the
+    # same fact the read surface is.
+    if archived:
+        message = f"{_ARCHIVED_BANNER}\n\n{message}"
     return message
 
 

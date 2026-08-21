@@ -673,6 +673,25 @@ class Leasing(unittest.TestCase):
         with self.assertRaises(E.EngineError):
             E.require_session(cl, "start", "s2", {})
 
+    def test_active_non_stale_refusal_teaches_the_qualified_remedy(self):
+        # A6 (deficiency cleanup batch A+B): the refusal for a DIFFERENT,
+        # still-active (non-stale) session must not hand out either filed
+        # defect's remedy as a bare, unconditional command -- #632 (passing
+        # the holder's --session-id with no qualifier) or #369 (reaching
+        # straight for claim --force --reason). Both remedies still appear,
+        # each now WITH the condition that makes it correct, plus the
+        # honest third option: leave it alone.
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        E.claim(cl, "s1", "commander", ".", {})
+        with self.assertRaises(E.EngineError) as ctx:
+            E.require_session(cl, "start", "s2", {})
+        msg = str(ctx.exception)
+        self.assertIn("if that is YOU resuming", msg)
+        self.assertIn("never a name you have not actually run under", msg)
+        self.assertIn("if it is still working, leave this plan alone", msg)
+        self.assertIn("if you know it is gone", msg)
+        self.assertIn("--session-id 's1'", msg)
+
     def test_mutating_verb_allowed_with_matching_session(self):
         cl = gated(g1=gate("g1", command=PASS_COMMAND))
         E.claim(cl, "s1", "commander", ".", {})
@@ -833,10 +852,14 @@ class Leasing(unittest.TestCase):
         self.assertEqual(cl["engine_session"]["status"], "released")
 
     def test_current_reports_active_lease_without_session(self):
+        # A3 (deficiency cleanup batch A+B): `active` is rendered as `HELD`
+        # plus an age, never a raw verdict word.
         cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
         E.claim(cl, "s1", "commander", ".", {})
         out = E.current(cl)  # read-only, no session needed
-        self.assertIn("LEASE active: s1", out)
+        self.assertIn("LEASE HELD: s1", out)
+        self.assertIn("last heartbeat", out)
+        self.assertNotIn("LEASE active", out)
         self.assertIn("ACTIVE g1", out)
 
     def test_cli_claim_then_advance_with_session(self):
@@ -2039,12 +2062,16 @@ class DoctrineRail(unittest.TestCase):
     are frozen/verbatim; these tests pin the exact asserted substrings."""
 
     def test_rail_verbs_set_is_exact(self):
-        # Only these six verbs are railed; heartbeat/release/record/skip are not.
+        # Only these five verbs are railed. `current` was removed (A1, deficiency
+        # cleanup batch A+B): it is the only railed verb a NON-OWNER routinely
+        # calls, so railing it told a reader who had not yet decided a dead plan
+        # was its own to "Run it." heartbeat/release/record/skip are still not
+        # railed either.
         self.assertEqual(
             E.RAIL_VERBS,
-            {"claim", "current", "start", "advance", "attest", "attach"},
+            {"claim", "start", "advance", "attest", "attach"},
         )
-        for unrailed in ("heartbeat", "release", "record", "skip", "consolidate"):
+        for unrailed in ("heartbeat", "release", "record", "skip", "consolidate", "current"):
             self.assertNotIn(unrailed, E.RAIL_VERBS)
 
     def test_rail_marker_and_leading_newlines(self):
@@ -2199,11 +2226,15 @@ class DoctrineRail(unittest.TestCase):
 
 class RailPositionOrdering(unittest.TestCase):
     """Item 4 / constraint 4 (issue #227 gate g3): the RAIL banner moves to
-    the FRONT for every railed verb (including `current`), and to the front
-    of the REFUSED path in main() -- the operative result/refusal line lands
-    LAST on its stream, so `tail -1` reads the result, not the banner. This
-    is the exact field defect: the Admiral piped engine output through
-    `tail -1` and saw only the banner, silently hiding a real REFUSED line."""
+    the FRONT for every railed verb, and to the front of the REFUSED path in
+    main() -- the operative result/refusal line lands LAST on its stream, so
+    `tail -1` reads the result, not the banner. This is the exact field
+    defect: the Admiral piped engine output through `tail -1` and saw only
+    the banner, silently hiding a real REFUSED line.
+
+    `current` was removed from `RAIL_VERBS` (A1, deficiency cleanup batch
+    A+B) and no longer carries any RAIL banner at all -- see
+    `test_current_carries_no_rail_banner` below."""
 
     def test_success_output_rail_banner_is_first_operative_line_is_last(self):
         cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND), g2=gate("g2"))
@@ -2213,13 +2244,16 @@ class RailPositionOrdering(unittest.TestCase):
         self.assertTrue(lines[0].startswith("RAIL: "), lines)
         self.assertEqual(lines[-1], "g1 -> complete")
 
-    def test_current_rail_banner_is_first_suffix_ordering_after_body_unchanged(self):
+    def test_current_carries_no_rail_banner(self):
+        # A1: `current` is unrailed. A plan whose owner is long gone must not
+        # tell a mere reader "you are N steps from done... Run it." -- the
+        # body starts directly with the ACTIVE line, no RAIL: banner at all.
         cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND),
                    g2=gate("g2"), g3=gate("g3"))
         code, out, err = _run_main(cl, ["current"])
         self.assertEqual(code, 0)
-        self.assertTrue(out.startswith("RAIL: "))
-        self.assertLess(out.index("RAIL: "), out.index("ACTIVE g1"))
+        self.assertNotIn("RAIL: ", out)
+        self.assertTrue(out.startswith("ACTIVE g1"), out)
 
     def test_refused_output_rail_banner_is_first_operative_refused_line_is_last(self):
         cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND))
@@ -2254,6 +2288,101 @@ class RailPositionOrdering(unittest.TestCase):
         self.assertNotIn("RAIL:", err)
         tail_1 = [ln for ln in err.splitlines() if ln.strip()][-1]
         self.assertIn("REFUSED:", tail_1)
+
+
+def _run_at_archived(cl, argv, work="run1"):
+    """Like `_run_main`, but the checklist file's own directory sits under a
+    literal `.agent-work/archive/<work>/` path -- so `_is_archived_path`'s
+    predicate (a lexical fact about `--file`, not the tempdir's parent) reads
+    True, exactly as it would for a real archived plan."""
+    import contextlib
+    import io
+    with tempfile.TemporaryDirectory() as d:
+        archive_dir = Path(d) / ".agent-work" / "archive" / work
+        archive_dir.mkdir(parents=True)
+        f = archive_dir / "c.json"
+        E.save(f, cl)
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = E.main(["--file", str(f)] + argv)
+        return code, out.getvalue(), err.getvalue()
+
+
+class ArchivedPathBannerAndRailSuppression(unittest.TestCase):
+    """A2 (deficiency cleanup batch A+B): a plan filed under `.agent-work/
+    archive/` is finished by definition. It gets the ARCHIVED banner and the
+    rail is suppressed -- a path fact, no liveness claim, refuses nothing."""
+
+    def test_current_on_archived_plan_shows_banner_and_no_rail(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND), g2=gate("g2"))
+        code, out, err = _run_at_archived(cl, ["current"])
+        self.assertEqual(code, 0)
+        self.assertTrue(out.startswith(E._ARCHIVED_BANNER), out)
+        self.assertNotIn("RAIL:", out)
+        self.assertIn("ACTIVE g1", out)
+
+    def test_current_on_non_archived_plan_shows_no_banner(self):
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        code, out, err = _run_main(cl, ["current"])
+        self.assertEqual(code, 0)
+        self.assertNotIn("ARCHIVED", out)
+
+    def test_railed_mutating_verb_on_archived_plan_still_works_no_rail_banner_shown(self):
+        # The banner and suppression apply to EVERY railed verb dispatched
+        # against an archived-path plan, not only the read-only `current` --
+        # the verb itself still runs; only the advice around it changes.
+        cl = gated(g1=gate("g1", "pending"))
+        code, out, err = _run_at_archived(cl, ["start", "g1"])
+        self.assertEqual(code, 0)
+        self.assertTrue(out.startswith(E._ARCHIVED_BANNER), out)
+        self.assertNotIn("RAIL:", out)
+        self.assertIn("g1 -> in-progress", out)
+
+    def test_non_railed_verb_on_archived_plan_still_gets_the_banner(self):
+        # `block` is a MUTATING verb but not in RAIL_VERBS, so the banner here
+        # is proof it is applied independently of the rail-suppression branch,
+        # not by riding along inside it.
+        cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
+        code, out, err = _run_at_archived(
+            cl, ["block", "g1", "--blocker", "x1 result", "--authority", "parent agent"])
+        self.assertEqual(code, 0)
+        self.assertTrue(out.startswith(E._ARCHIVED_BANNER), out)
+
+    def test_is_archived_path_is_a_lexical_fact_not_a_resolve(self):
+        self.assertTrue(E._is_archived_path(Path("/anything/.agent-work/archive/x")))
+        self.assertTrue(E._is_archived_path(Path("/anything/.agent-work/archive")))
+        self.assertFalse(E._is_archived_path(Path("/anything/.agent-work/run1")))
+        self.assertFalse(E._is_archived_path(Path("/agent-work/archive/x")))
+        self.assertFalse(E._is_archived_path(None))
+
+
+class NextForTheHolder(unittest.TestCase):
+    """A4 (deficiency cleanup batch A+B): the `next:` hint is addressed to
+    whoever holds the plan's lease -- relabeled to `next (for the holder):`
+    whenever a lease is held, true for the owner and a stranger alike, and
+    left exactly as `next:` when no lease exists (the common, majority
+    shape -- see A2/A3's own tests)."""
+
+    def test_next_relabeled_when_a_lease_is_held(self):
+        cl = gated(g1=gate("g1", "pending"))
+        E.claim(cl, "s1", "commander", ".", {})
+        out = E.current(cl)
+        self.assertIn("next (for the holder): start g1", out)
+        self.assertNotIn("\nnext: start g1", out)
+
+    def test_next_unrelabeled_with_no_lease(self):
+        cl = gated(g1=gate("g1", "pending"))
+        out = E.current(cl)
+        self.assertIn("next: start g1", out)
+        self.assertNotIn("for the holder", out)
+
+    def test_next_unrelabeled_after_release(self):
+        cl = gated(g1=gate("g1", "pending"))
+        E.claim(cl, "s1", "commander", ".", {})
+        E.release(cl, "s1")
+        out = E.current(cl)
+        self.assertIn("next: start g1", out)
+        self.assertNotIn("for the holder", out)
 
 
 class RecoveryGoldenOutput(unittest.TestCase):
