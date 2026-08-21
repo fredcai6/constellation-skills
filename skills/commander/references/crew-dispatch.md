@@ -60,6 +60,16 @@ also pass `--reasoning-effort <level>`, which the `cli` backend forwards to the 
 `--effort` flag. `--resume` and a bare `--abandon` construct no `CrewSpec` and so need no `--model`
 at all — the refusal, and this instruction, apply only to a fresh or relaunched dispatch.
 
+## Name your dispatcher: --parent is required, and it is your own SPINE_SESSION
+
+`run_crew.py` refuses a fresh or relaunched dispatch that names no `--parent` at all
+(`CrewSpec.__post_init__`) — `crew-runs.json:parent` is what `verify_declared_dispatch.py`
+checks a crew's dispatch against, and an absent value cannot be checked. Pass your own
+`SPINE_SESSION` (the identity you were bound with, read from your own environment) as
+`--parent`: `run_crew.py --parent "$SPINE_SESSION" ...`. `--resume` and a bare `--abandon`
+construct no `CrewSpec` and so need no `--parent` at all — the refusal, like the model
+requirement above, applies only to a fresh or relaunched dispatch.
+
 ## Crew recovery
 
 External recovery is out-of-band: `SendMessage` to the crew's `agentId` to resume it in place, else `--abandon … --relaunch`. Key the recovery decision to `recover_crews.py`'s state vocabulary:
