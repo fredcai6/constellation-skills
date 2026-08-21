@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r4a-verifier",
+  "files": [],
+  "repo_rev": {
+    "commit": "24b4665bcad01074b5a851d67797fd0864838ab6"
+  },
+  "run": {
+    "work_id": "<work-id>",
+    "generated_at": "2026-08-20T16:36:52Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills",
+      "repo": "/home/tommy/projects/constellation-skills",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills"
+    }
+  }
+}

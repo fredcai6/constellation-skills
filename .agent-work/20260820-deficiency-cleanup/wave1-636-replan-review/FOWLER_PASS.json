@@ -1,0 +1,20 @@
+{
+  "work_id": "20260820-deficiency-cleanup/wave1-636-replan-review",
+  "diff_ref": "REPLAN_INPUT.json, REPLAN_RESULT.json, NEXT_WAVE.json, CURRENT_TRUTH.md, and WAVE_REVIEW.md planning artifacts; no source-code diff",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, constellation-reviewer/references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "No method changed in this transition packet.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No class changed in this transition packet.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "No executable code changed in this transition packet.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No runtime module interaction changed.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "Repeated issue fields follow the strict Replan schema.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "No executable type or interface design changed.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No callable interface changed.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The packet applies no source change across callers.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "The packet records one bounded repair transition.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No runtime object navigation changed.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "Forecast work is held and no new implementation lane is created.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The Markdown renders planning fields and does not mask executable complexity.", "override": null}
+  ],
+  "rail_exception": null
+}

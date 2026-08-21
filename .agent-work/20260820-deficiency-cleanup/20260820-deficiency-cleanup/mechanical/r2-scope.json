@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup-r2-scope@9e0f3ecb6578d0304f7262a3ed58eb51062b3e97",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup",
+    "generated_at": "2026-08-20T17:39:09Z"
+  }
+}

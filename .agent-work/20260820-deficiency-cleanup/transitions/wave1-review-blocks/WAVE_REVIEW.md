@@ -1,0 +1,3 @@
+## Wave review - combined Wave 1 review blocks
+
+**Exit: repair.** #500 remains approved and locally integrated. #636 fixes the original concurrent lost update but must repair one wrong-target case: absent seeded X cannot fall through to same-session Y. Mechanical #638 passes all functional evidence and preserves lifecycle state on readiness refusal, but the Admiral-authored reviewer contract incorrectly forbade the mandatory #541 rejection ledger and episode delta. Repair that contract and strengthen the regression; do not suppress telemetry or redesign finish_work. Resume the two existing issue identities in their existing worktrees, then obtain fresh independent reviews. Wave 2 and all forecast work remain held.

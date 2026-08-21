@@ -1,0 +1,20 @@
+{
+  "work_id": "20260820-deficiency-cleanup/initial-replan-rereview",
+  "diff_ref": "Planning-only review of REPLAN_INPUT.json, REPLAN_RESULT.json, and LATITUDE_CONTRACT.md; no code diff",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "No code methods are changed by the bounded packet.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No code classes are changed by the bounded packet.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "No code is added or duplicated by the bounded packet.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No code behavior is moved across module boundaries.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "The packet uses the required Replan schema and adds no code data structure.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "No code representation is introduced.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No callable signature is changed.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The packet plans separate bounded lanes and makes no scattered code edit.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "No module receives unrelated implementation responsibilities in this planning packet.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No object navigation or call chain is introduced.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "The packet keeps future architecture nonbinding and does not implement speculative seams.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "No code comments are used to mask implementation complexity.", "override": null}
+  ],
+  "rail_exception": null
+}

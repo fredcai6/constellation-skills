@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup/wave1-636-replan-review",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup/wave1-636-replan-review-r2-scope@d414cf4a0d345ffa327558a8712100e8b1adee0f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup/wave1-636-replan-review",
+    "generated_at": "2026-08-20T17:33:24Z"
+  }
+}

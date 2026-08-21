@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q2",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 0,
+    "spine-step": "q2",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup-q2@30c5dc3a97e4ba7b3e0bc424035176b10091f5af",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup",
+    "generated_at": "2026-08-20T16:10:20Z"
+  }
+}

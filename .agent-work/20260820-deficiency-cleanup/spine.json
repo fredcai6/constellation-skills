@@ -1,0 +1,305 @@
+{
+  "work_id": "20260820-deficiency-cleanup",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "latitude",
+    "execute",
+    "closeout"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up epic work area",
+      "imperative": "Claim the engine session lease on this spine: call the spine_lease MCP tool with action=claim, claimed_by=admiral, worktree=. -- this is your own spine, so the door needs no session id argument: it reads the spine it is bound to, and the session it drives that spine under, from its own environment. Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded and ADMIRAL_LOG created",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/projects/constellation-skills/scripts/init_work_area.py 20260820-deficiency-cleanup && test -f .agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-1"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/scripts/init_work_area.py 20260820-deficiency-cleanup && test -f .agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "bookend": true
+    },
+    "latitude": {
+      "id": "latitude",
+      "title": "Confirm authorization and latitude with the human",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md if present. In this context, load constellation-interrogator and settle the latitude contract with the human: epic intent and success shape (honest-null acceptability), checkpoint protocol (stop-and-present vs cleared-through), decision classes delegated vs surfaced, float-up routing for Commander user-decisions, comms style, budget/model parameters, pre-rulings, and contract expiry (time or event). Fill templates/LATITUDE_CONTRACT.template.md into .agent-work/20260820-deficiency-cleanup/LATITUDE_CONTRACT.md. Decisions fitting no listed class are out-of-taxonomy and always escalate. Get explicit human confirmation of the contract.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "work area ready",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "latitude contract written with decision classes, float-up routing, and expiry",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "latitude contract confirmed by the human",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-latitude-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-latitude-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "Autonomous local execution through Wave 2; stop before architecture selection, GitHub mutation, publication, or merge to main.",
+            "confirmed_by": "Tommy"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Run the epic",
+      "imperative": "Before entering this step and before EACH detached wave launch, (re)write the crash-resume state note at .agent-work/20260820-deficiency-cleanup/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md, or the bundled skills/workbench/templates/STATE_NOTE.template.md when the project has no .agent-work/templates/ overlay \u2014 a wave dies to all three kill vectors, and the engine refuses to start execute until it is filled (precondition p2). Then do what the epic needs within the latitude contract: plan waves, dispatch one Commander per issue (each in an isolated worktree, each with a completed templates/LAUNCH_ORDER.template.md carrying pasted prior-wave verdicts, pre-rulings, honest-null clause, findings-file assignment, stop conditions, and inherited latitude), adjudicate what Commanders float (inside delegated classes as logged RULINGs, otherwise escalate), merge green reviewed PRs sequentially gated on check exit codes, and stop at wave checkpoints per the contract. Treat forecast as provisional. At every wave boundary or material exception, write .agent-work/20260820-deficiency-cleanup/NEXT_WAVE.json with the exact boundary_id, launch_id, and trigger; consume exact ../constellation-replan/templates/REPLAN_INPUT.template.json and ../constellation-replan/templates/REPLAN_RESULT.template.json packets under .agent-work/20260820-deficiency-cleanup/transitions/<boundary-id>/; append exactly one '- TRANSITION | boundary=<boundary-id> | decision=<decision> | verified' line to ADMIRAL_LOG.md; and run python /home/tommy/projects/constellation-skills/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id 20260820-deficiency-cleanup in the foreground before any next launch. A nonzero result refuses launch. The verifier requires a unique advance|repair|replan|stop exit, enforces repair safety, and writes CURRENT_TRUTH.md plus WAVE_REVIEW.md from revised_epic_body and wave_review_comment. Planning makes no direct gh/network mutation; future posting goes only through the authorized tracker port after normal gates. Log every ruling, incident, wave launch, transition exit, merge, and owned error in the ADMIRAL_LOG as it happens \u2014 an unlogged ruling didn't happen. Never run a Commander's issue yourself; never put two Commanders in one worktree. If the contract expires, a fixed-boundary proposal exceeds latitude, or the ground shifts under it, surface a contract-refresh or human decision before continuing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "latitude contract confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached wave launch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/projects/constellation-skills/scripts/verify_state_note.py 20260820-deficiency-cleanup"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, transition exits, and errors logged",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "NEXT_WAVE names a boundary whose exact transition is uniquely audit-recorded, G2-verified, repair-safe, and rendered before launch",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/projects/constellation-skills/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id 20260820-deficiency-cleanup"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": {
+        "wave_transition": {
+          "input_template": "../constellation-replan/templates/REPLAN_INPUT.template.json",
+          "result_template": "../constellation-replan/templates/REPLAN_RESULT.template.json",
+          "next_wave": ".agent-work/20260820-deficiency-cleanup/NEXT_WAVE.json",
+          "transition_root": ".agent-work/20260820-deficiency-cleanup/transitions/<boundary-id>",
+          "audit": ".agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md",
+          "triggers": [
+            "wave_boundary",
+            "material_exception"
+          ],
+          "decisions": [
+            "advance",
+            "repair",
+            "replan",
+            "stop"
+          ],
+          "one_exit_before_next_launch": true,
+          "forecast_is_provisional": true,
+          "repair_holds_forecast": true,
+          "render": [
+            "revised_epic_body",
+            "wave_review_comment"
+          ],
+          "posting": "authorized-tracker-port-after-gates",
+          "direct_gh_or_network_mutation": false,
+          "check": "verify_iterative_role_artifacts.py admiral-prelaunch"
+        }
+      },
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/scripts/verify_state_note.py 20260820-deficiency-cleanup",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "closeout": {
+      "id": "closeout",
+      "title": "Lessons audit, reconcile, hygiene, acceptance",
+      "imperative": "The run cannot close without a record of what happened. 1) Write the epic retrospective as EPISODES: one episode per distinct thing that happened across the epic \u2014 not one per wave, and not a summary \u2014 each stating its task-intent, expected-behavior, observed-behavior, impact-cost and workaround, and each harvesting what the ADMIRAL_LOG, the crew Workflow Feedback and the Commander returns actually recorded. An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow \u2014 a rule to follow belongs in docs/agents/* and is a human's call. Write the delta to .agent-work/20260820-deficiency-cleanup/episode-delta.json and apply it deterministically: python /home/tommy/projects/constellation-skills/scripts/apply_episode_delta.py --delta .agent-work/20260820-deficiency-cleanup/episode-delta.json --store-root episodes. Pass --store-root on every invocation: the writer's default resolves relative to the installed skill directory, so an installed copy would silently build a store at ~/.claude/skills/constellation-admiral/episodes \u2014 outside the repo \u2014 while every gate reported green. Never hand-edit a file under episodes/: that writer is the only write path into it. Then run the capture gate before advancing: python /home/tommy/projects/constellation-skills/scripts/verify_episode_captured.py 20260820-deficiency-cleanup --store-root episodes --phase feedback. 2) When any part of this closeout edits a shipped compact-format JSON template, edit the raw text surgically (never round-trip it through json.load/json.dump, which reflows the file and destroys blame) and re-validate with json.load afterward. 3) Hand the epic's net change to a constellation-cartographer subagent for architecture reconcile. 4) Hygiene: every branch merged or dispositioned, worktrees swept, ADMIRAL_LOG archived under .agent-work/archive/. 5) Present the epic summary and get user acceptance. Then release the lease: call the spine_lease MCP tool with action=release (your own spine; no session id argument needed).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the epic's observations recorded as episodes \u2014 what was observed, with no rule written for a future agent to follow",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "at least one episode in the store records this epic's work id",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/projects/constellation-skills/scripts/verify_episode_captured.py 20260820-deficiency-cleanup --store-root episodes --phase feedback"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "architecture reconciled for the epic's net change",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c5",
+          "statement": "epic summary accepted by the human",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "bookend": true
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "origin": {
+    "work_id": "20260820-deficiency-cleanup",
+    "worktree": "/home/tommy/projects/constellation-skills",
+    "opened_by": "init_work_area"
+  },
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/20260820-deficiency-cleanup",
+    "status": "active",
+    "claimed_at": "2026-08-21T12:35:05.405354+00:00",
+    "last_heartbeat": "2026-08-21T14:57:12.223919+00:00",
+    "claimed_by": "admiral",
+    "worktree": "/home/tommy/projects/constellation-skills",
+    "previous_session_id": "admiral-20260820-deficiency-cleanup-root",
+    "takeover_reason": "Prior session admiral-20260820-deficiency-cleanup-root died at the #613 repair-review seam on 2026-08-20T19:13 local and never released. Human directed takeover on 2026-08-21 to resume Wave 2 from the approved wave1-complete-map-repair packet."
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": "Initialized the repository-native Admiral spine, claimed the lease, created the audit log, and recorded the source/install template-path mismatch.",
+      "mechanical": false,
+      "ts": "2026-08-20T15:35:17.800974+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "latitude",
+      "why": "Signed Interrogator record and confirmed latitude contract freeze the approved AFK-wave boundary.",
+      "mechanical": false,
+      "ts": "2026-08-20T16:10:32.641769+00:00"
+    }
+  ]
+}

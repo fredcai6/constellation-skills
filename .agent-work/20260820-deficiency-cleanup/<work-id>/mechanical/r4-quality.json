@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "<work-id>",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 0,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-<work-id>-r4-quality@73bd8570a5e4f3d42c335049e21bdd06d5844c52",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "<work-id>",
+    "generated_at": "2026-08-20T16:32:54Z"
+  }
+}

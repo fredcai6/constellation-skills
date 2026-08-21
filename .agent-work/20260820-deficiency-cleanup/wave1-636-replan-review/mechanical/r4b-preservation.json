@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4b-preservation",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup/wave1-636-replan-review",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 0,
+    "spine-step": "r4b-preservation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup/wave1-636-replan-review-r4b-preservation@a4ac30a1dc2bc6f4322b5530ba496bc7f7dd3938",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup/wave1-636-replan-review",
+    "generated_at": "2026-08-20T17:37:02Z"
+  }
+}

@@ -1,0 +1,3 @@
+## Current planning truth
+
+Wave 1 is in a combined bounded repair. #500 is approved and merged only to the isolated AFK integration branch. #636 must select seeded records by identity plus worktree, append absent X, preserve same-session Y, and pass fresh review. Mechanical #638's production behavior is green; its repair is a corrected atomicity contract and stronger regression proving gates, leases, bindings, and archive stay unchanged while mandatory rejection telemetry is written, followed by fresh review. No #613 work, architecture selection, GitHub mutation, publication, or merge to main is authorized.

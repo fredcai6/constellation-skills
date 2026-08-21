@@ -1,0 +1,20 @@
+{
+  "work_id": "20260820-deficiency-cleanup/wave1-complete-map-repair-review",
+  "diff_ref": "Structured transition repair: wave1-complete -> wave1-complete-map-repair REPLAN_INPUT.json, REPLAN_RESULT.json, CURRENT_TRUTH.md, and WAVE_REVIEW.md",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "No executable method changed; the structured planning fields remain bounded and single-purpose.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No class changed.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "The two Markdown files are exact projections of canonical result fields, not independent implementations.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No executable object collaboration changed.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "The repeated sequence and authority terms are required planning contract fields rather than an unmodeled runtime data group.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "Issue and revision identifiers remain within the strict Replan schema and do not replace a missing executable type.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No callable signature changed.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The repair changes one canonical packet and its two exact rendered views; no production callers changed.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "The transition packet has one reason to change: correcting the Wave 2 boundary after the map-freshness blocker.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No runtime navigation chain changed.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "Every added field directly carries measured map evidence or an authorized Wave 2 gate; no unused future abstraction was added.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The Markdown is the required human-facing projection of planning truth, not commentary hiding unclear executable code.", "override": null}
+  ],
+  "rail_exception": null
+}

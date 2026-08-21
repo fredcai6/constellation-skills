@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4a-exit",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup/initial-replan-review",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 0,
+    "spine-step": "r4a-exit",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup/initial-replan-review-r4a-exit@7e1b342f04f326aa871ec05ecfcf89a9ad18c972",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup/initial-replan-review",
+    "generated_at": "2026-08-20T16:25:20Z"
+  }
+}

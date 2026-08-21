@@ -1,0 +1,20 @@
+{
+  "work_id": "20260820-deficiency-cleanup/initial-replan-review",
+  "diff_ref": "REPLAN_INPUT.json, REPLAN_RESULT.json, and LATITUDE_CONTRACT.md planning artifacts; no source-code diff",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, constellation-reviewer/references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "No methods are introduced or changed by this planning packet.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No classes are introduced or changed by this planning packet.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "No executable code is introduced or changed by this planning packet.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No executable module interaction is introduced or changed.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "The repeated issue fields are required by the Replan schema, not a new code interface.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "No executable type or interface design is introduced.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No functions or callable interfaces are introduced.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The packet does not implement a change across callers.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "The packet records one launch decision and does not modify an executable module.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No runtime object navigation is introduced.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "Wave 2 is explicitly labeled provisional forecast and architecture implementation is withheld.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The Markdown explains current planning truth rather than masking executable complexity.", "override": null}
+  ],
+  "rail_exception": null
+}

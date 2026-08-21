@@ -1,0 +1,276 @@
+{
+  "work_id": "<work-id>",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-verifier",
+    "r4b-identities",
+    "r4c-boundaries",
+    "r4d-truth",
+    "r4e-authority"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded reviewer and replan doctrine, crew context, glossary, workflow reference, handoff, full transition packet, latitude contract, and repository state at 24b4665bcad01074b5a851d67797fd0864838ab6. Optional docs/agents/AGENT_GUIDE.md is absent.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The repaired packet satisfies the bounded handoff: all three Wave 1 issue appetites now say direct Implementer followed by independent Reviewer, while the latitude contract continues to forbid push, PR creation, GitHub mutation, architecture selection, and merge to main. The installed Replan verifier exits 0. The fixed good_enough phrase about commands named by each Commander is stale terminology but does not alter lane authority or evidence requirements.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The transition stays inside the confirmed local-only scope. Open Wave 1 identities are preserved exactly; #613 and architecture work remain unlaunched; #639 remains parked under #572; the #638 lane excludes parent authority and one-spine work; and the result proposes no fixed-boundary change or external action.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Evidence is sufficient for an initial transition: the installed verifier succeeds; all cited anchors exist; source inspection confirms the #500 pending-request seam and settled design, multiple registry load/save call sites in run_crew.py, and an existing finish_work composition in spine_lifecycle.py with no corresponding MCP finish_work exposure. This check validates launch evidence only, not implementation outcomes that have not run yet.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Appended five explicit checks covering the verifier rail, identity dispositions, fixed boundaries, current-vs-forecast truth and negative space, and repaired launch authority.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "This packet changes planning truth only and does not alter repository architecture. It explicitly leaves Cartographer reconciliation until after integration and keeps architecture selection outside Wave 1, so no current map divergence or triage candidate is introduced by this transition.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/initial-replan-rereview/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 12 baseline smells are absent because the bounded packet changes planning records only and introduces no code methods, classes, signatures, object navigation, or speculative implementation seam. The vendored and installed Fowler verifiers both accepted the complete record; the survey postcondition now targets the vendored verifier through an audited engine amendment.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/initial-replan-rereview/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-verifier": {
+      "id": "r4a-verifier",
+      "title": "Replan rail",
+      "imperative": "Re-run the installed Replan verifier and confirm the packet renders successfully.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Installed verify_replan.py exited 0 and rendered decision advance, all seven unlaunched dispositions, and both nonempty Markdown surfaces.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-identities": {
+      "id": "r4b-identities",
+      "title": "Identity preservation",
+      "imperative": "Confirm every open launched identity is unchanged and every unlaunched identity has exactly one disposition.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "A jq equality/totality assertion exited 0: current_wave is byte-semantic JSON-equal across input and result, the seven input unlaunched ids equal the seven result disposition ids, and the result ids are unique.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-boundaries": {
+      "id": "r4c-boundaries",
+      "title": "Fixed boundaries",
+      "imperative": "Confirm fixed intent and constraints are unchanged or carry the required typed human escalation.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The result is applicable=true with material_changes=[] and escalation=null; the verifier accepts it, so intent_and_why, definition_of_done, good_enough, hard_constraints, and fixed_decisions remain the input plan boundaries rather than being silently revised.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d-truth": {
+      "id": "r4d-truth",
+      "title": "Planning truth",
+      "imperative": "Confirm Markdown surfaces distinguish current Wave 1 truth from nonbinding Wave 2 forecast and state negative space.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The Markdown surfaces state Wave 1 as current, label Wave 2 a provisional forecast, keep #639 under #572, preserve #636-before-#613, reserve architecture selection for the human, and explicitly forbid GitHub mutation, publication, architecture selection, and main merge before the checkpoint.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4e-authority": {
+      "id": "r4e-authority",
+      "title": "Launch authority",
+      "imperative": "Confirm each current issue uses a launch shape compatible with the latitude contract and prior repair.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All three current issues now carry the exact bounded direct-Implementer then independent-Reviewer appetite. That launch shape stays within delegated local edits, branches, commits, and temporary integration while requiring no forbidden push, PR, GitHub mutation, main merge, or architecture decision.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "The repaired initial Replan packet verifies, preserves fixed boundaries and identities, distinguishes current Wave 1 from provisional Wave 2, states negative space, and assigns all three current lanes to a direct Implementer followed by independent review."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "reviewer-initial-replan-rereview",
+    "status": "released",
+    "claimed_at": "2026-08-20T16:29:25.999766+00:00",
+    "last_heartbeat": "2026-08-20T16:39:19.392586+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-20T16:39:43.462453+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-20T16:34:57.052281+00:00",
+      "reason": "The review survey was mechanically copied without resolving its work-id token; point the required Fowler rail at this review work area.",
+      "authority": "Admiral /root",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-20T16:36:20.843110+00:00",
+      "reason": "The first repaired command assumed a per-skill scripts directory; this source repository vendors the verifier at scripts/verify_fowler_pass.py.",
+      "authority": "Admiral /root",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

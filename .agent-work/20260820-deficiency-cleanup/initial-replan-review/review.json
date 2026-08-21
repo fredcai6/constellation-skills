@@ -1,0 +1,289 @@
+{
+  "work_id": "20260820-deficiency-cleanup/initial-replan-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-exit",
+    "r4b-completion",
+    "r4c-negative",
+    "r4d-identity",
+    "r4e-fixed",
+    "r4f-markdown"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global crew/everyone doctrine, project crew context and glossary, the Replan contracts, latitude contract, complete Replan packet, settled DESIGN_500, live GitHub issues #500/#636/#638/#613/#639/#572/#575, and pinned source at 24b4665bcad01074b5a851d67797fd0864838ab6.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The packet answers every assigned criterion: advance judgment, measurable completion, explicit negative space, complete identity disposition, fixed-boundary preservation, and Markdown that labels Wave 2 provisional. The source-repo verifier/renderer exited 0 at pinned rev 24b4665b.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCK: each current-wave issue says appetite 'One bounded Commander lane', but the latitude contract forbids push and PR before checkpoint while the full Commander workflow closes through a pushed/reviewed PR. Admiral SKILL.md line 80 allows direct implementer-with-plan dispatch for small bounded work. Launching direct Implementer+Reviewer lanes without correcting the packet would be workflow/decomposition drift; launching full Commanders cannot complete inside latitude. Correct the current planning truth before launch. Epic intent and fixed decisions need not change.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required planning evidence is present and reproducible: source-repo verify_replan.py exited 0 and rendered both Markdown surfaces; live GitHub issue bodies confirm #500/#636/#638/#613/#639/#572/#575 scope; source at 24b4665b confirms distinct Wave 1 seams, #636/#613 run_crew.py overlap, finish_work existence, and MCP exposure limited to close_work.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The structural Replan packet is sharp, but its declared Commander execution appetite conflicts with the no-push/no-PR latitude and therefore is not currently runnable to completion. Detailed criterion checks are appended; the repair is to state direct Implementer+Reviewer lane execution before launch.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture drift is applied. The packet names #638 as only the mechanical half, parks parent authority/one-spine selection for Wave 2 evidence and human convergence, and does not claim full closure of live #638. Cartographer reconciliation remains an explicit post-integration obligation.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards - an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone - the same substitution you already make everywhere else in this survey (line 2) - so no separate placeholder to fill and no way to leave it stale. REPAIR PATH - only if the record path ever needs to move off that fixed convention, correct it through the engine with amend --delta <file> whose single op is retext-check on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record - refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/projects/constellation-skills/scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/initial-replan-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 12 Fowler baseline smells were visited. The packet is planning JSON/Markdown with no source-code diff; no executable smell was present. The verifier exited 0 after the engine-recorded dogfood path correction.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/initial-replan-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-exit": {
+      "id": "r4a-exit",
+      "title": "Exit judgment",
+      "imperative": "Check whether advance is the supported launch-boundary exit from the observed evidence, including whether the execution mechanism can complete inside latitude.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCK: advance is structurally supported by issue/source evidence, but not executable as written because each issue budgets a full Commander lane whose terminal push/PR contract conflicts with latitude. Direct Implementer+Reviewer dispatch is permitted, but must be made the stated launch truth first.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-completion": {
+      "id": "r4b-completion",
+      "title": "Completion sharpness",
+      "imperative": "Check whether each Wave 1 exit criterion is behavior-specific, falsifiable, and sufficient for its issue slice.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Each Wave 1 exit is behavior-specific and falsifiable: #500 pending/consumption states, #636 lossless concurrent preservation, and mechanical #638 one-verb door closeout with zero active lease/binding.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-negative": {
+      "id": "r4c-negative",
+      "title": "Negative space",
+      "imperative": "Check whether scope exclusions and unauthorized external or architecture actions are explicit.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Negative space is explicit in issue no-gos, current-plan hard constraints, and revised Markdown: no #613 in #636, no authority architecture in mechanical #638, no GitHub mutation, push, PR, main merge, or architecture selection.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d-identity": {
+      "id": "r4d-identity",
+      "title": "Identity disposition",
+      "imperative": "Check whether every open current-wave and unlaunched identity has exactly one preserved disposition.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The verifier confirms every current-wave identity remains open and exact, every unlaunched identity has one keep disposition, and no discrepancy identity is omitted or duplicated.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4e-fixed": {
+      "id": "r4e-fixed",
+      "title": "Fixed boundary preservation",
+      "imperative": "Check whether intent, definition of done, good enough, hard constraints, and fixed decisions remain unchanged or have typed human escalation.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The applicable result preserves intent, definition of done, good-enough terms, hard constraints, and fixed decisions exactly; material_changes is empty and no human escalation is needed for the bounded wrapper correction.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4f-markdown": {
+      "id": "r4f-markdown",
+      "title": "Current-truth Markdown",
+      "imperative": "Check whether wave_review_comment and revised_epic_body state current truth without laundering forecast into commitment.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both Markdown surfaces are nonempty. The epic body states Wave 1 as current work, labels Wave 2 a provisional forecast, parks #639 under #572, and repeats the no-publication/no-architecture boundary.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r2-scope: BLOCK: each current-wave issue says appetite 'One bounded Commander lane', but the latitude contract forbids push and PR before checkpoint while the full Commander workflow closes through a pushed/reviewed PR. Admiral SKILL.md line 80 allows direct implementer-with-plan dispatch for small bounded work. Launching direct Implementer+Reviewer lanes without correcting the packet would be workflow/decomposition drift; launching full Commanders cannot complete inside latitude. Correct the current planning truth before launch. Epic intent and fixed decisions need not change.",
+      "r4-quality: The structural Replan packet is sharp, but its declared Commander execution appetite conflicts with the no-push/no-PR latitude and therefore is not currently runnable to completion. Detailed criterion checks are appended; the repair is to state direct Implementer+Reviewer lane execution before launch.",
+      "r4a-exit: BLOCK: advance is structurally supported by issue/source evidence, but not executable as written because each issue budgets a full Commander lane whose terminal push/PR contract conflicts with latitude. Direct Implementer+Reviewer dispatch is permitted, but must be made the stated launch truth first."
+    ],
+    "summary": "BLOCK: the Replan packet is structurally valid and all substantive issue, boundary, identity, evidence, and Markdown checks pass, but its declared full-Commander lane appetite cannot complete inside the no-push/no-PR latitude. Correct Wave 1 to direct Implementer+Reviewer execution and request fresh review."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "reviewer-initial-replan-20260820",
+    "status": "released",
+    "claimed_at": "2026-08-20T16:15:29.576742+00:00",
+    "last_heartbeat": "2026-08-20T16:27:27.216608+00:00",
+    "claimed_by": "constellation-reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-20T16:27:52.735467+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-20T16:24:41.333040+00:00",
+      "reason": "Dogfood project template resolves reviewer-skill-dir to the repository root; the instantiated check pointed at a non-existent skills/reviewer/scripts path.",
+      "authority": "Admiral /root",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "20260820-deficiency-cleanup/wave1-complete-replan-review",
+  "diff_ref": "Wave1-complete REPLAN_INPUT/REPLAN_RESULT, NEXT_WAVE, and exact Markdown projections; workflow artifacts only, with no production-code diff",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, skills/replan/references/contracts.md",
+  "smells": [
+    {"smell":"long-method","verdict":"absent","finding":"No method or function is changed by this transition.","override":null},
+    {"smell":"large-class","verdict":"absent","finding":"No class is changed by this transition.","override":null},
+    {"smell":"duplicated-code","verdict":"absent","finding":"The Markdown projections exactly render their single JSON source fields; they do not duplicate executable logic.","override":null},
+    {"smell":"feature-envy","verdict":"absent","finding":"No executable object reaches into another object's state.","override":null},
+    {"smell":"data-clumps","verdict":"absent","finding":"Repeated issue fields are the strict Replan/G1 schema, not an emergent parameter cluster in code.","override":null},
+    {"smell":"primitive-obsession","verdict":"absent","finding":"Issue and boundary identifiers are typed by the strict Replan schema and are not replacing a missing code abstraction.","override":null},
+    {"smell":"long-parameter-list","verdict":"absent","finding":"No callable signature changes.","override":null},
+    {"smell":"shotgun-surgery","verdict":"absent","finding":"The transition does not change production behavior across multiple owners.","override":null},
+    {"smell":"divergent-change","verdict":"absent","finding":"The transition packet has one reason to change: the Wave1 boundary decision.","override":null},
+    {"smell":"message-chains","verdict":"absent","finding":"No runtime call or property chain changes.","override":null},
+    {"smell":"speculative-generality","verdict":"absent","finding":"Every Wave2 lane corresponds to a named residual issue, evidence prerequisite, critique, or checkpoint deliverable.","override":null},
+    {"smell":"comments-as-deodorant","verdict":"absent","finding":"The prose states planning truth and constraints; it does not mask confusing executable code.","override":null}
+  ],
+  "rail_exception": null
+}

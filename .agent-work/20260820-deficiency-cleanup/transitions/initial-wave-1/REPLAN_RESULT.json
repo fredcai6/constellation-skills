@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "decision": "advance",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 1 has three measurable issue exits and no unresolved cross-lane ordering.",
+    "epic_done": "The epic is not complete; Wave 2 and the human architecture checkpoint remain.",
+    "good_enough": "The launch preserves bounded scope, independent review, and the no-publication boundary."
+  },
+  "discrepancy_dispositions": [],
+  "current_wave": {
+    "objective": "Complete the three independent bounded cleanup repairs approved for Wave 1.",
+    "exit_criteria": [
+      "#500 proves refresh requests remain pending until a later claim and are consumed by same-session relaunch.",
+      "#636 proves concurrent registry mutations preserve every crew entry.",
+      "The mechanical #638 lane exposes the existing finish_work lifecycle through the MCP door and proves one-verb closeout."
+    ],
+    "issues": [
+      {
+        "id": "issue-500",
+        "title": "Consume a refresh request only after a later claim",
+        "desired_outcome": "Refresh request state is served and consumed by the next claim, including a same-session relaunch.",
+        "useful_now": "It closes the remaining live defect-ledger item around same-session relaunch.",
+        "appetite": "One bounded direct Implementer lane followed by an independent Reviewer.",
+        "acceptance_or_falsification_evidence": "Targeted checklist-engine and governor tests demonstrate pending and consumed states.",
+        "implementation_latitude": "Choose local implementation details; preserve the confirmed DESIGN_500 behavior.",
+        "hard_constraints_no_gos": [
+          "Do not widen refresh semantics beyond the settled design.",
+          "Do not edit unrelated workflow doctrine."
+        ],
+        "local_unknowns": [
+          "Exact helper boundary for comparing the request stamp with the active claim."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          ".agent-work/archive/2026-08-16-cleanup-b-context-identity/DESIGN_500.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "issue-636",
+        "title": "Make concurrent crew registry mutation lossless",
+        "desired_outcome": "Every concurrent registry update reloads current state under a lock and commits atomically by stable crew identity.",
+        "useful_now": "It removes the data-loss race before #613 changes the same launcher module.",
+        "appetite": "One bounded direct Implementer lane followed by an independent Reviewer.",
+        "acceptance_or_falsification_evidence": "A multi-process regression fails on the old load-modify-save path and passes on the transactional path.",
+        "implementation_latitude": "Choose the lock and transaction helpers within scripts/run_crew.py and its tests.",
+        "hard_constraints_no_gos": [
+          "Do not implement #613 in this lane.",
+          "Do not change external registry shape without evidence."
+        ],
+        "local_unknowns": [
+          "Smallest cross-platform locking seam already supported by the repository."
+        ],
+        "anchors": [
+          "scripts/run_crew.py",
+          "tests"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "issue-638-mechanical",
+        "title": "Expose one-verb mechanical finish_work closeout",
+        "desired_outcome": "The MCP door invokes the existing release-before-archive lifecycle and role instructions stop requiring the deadlocking manual sequence.",
+        "useful_now": "It closes the mechanical half of #638 without deciding parent authority or one-spine architecture.",
+        "appetite": "One bounded direct Implementer lane followed by an independent Reviewer.",
+        "acceptance_or_falsification_evidence": "An end-to-end door test proves archive succeeds with no remaining active lease or binding.",
+        "implementation_latitude": "Wire the existing lifecycle through the MCP door and update only the instructions that expose mechanical closeout.",
+        "hard_constraints_no_gos": [
+          "Do not decide parent-child authority.",
+          "Do not absorb #632, #369, or other one-spine architecture work."
+        ],
+        "local_unknowns": [
+          "Exact MCP tool name and minimal role-instruction surface that currently exposes the manual sequence."
+        ],
+        "anchors": [
+          "scripts/mcp_spine_server.py",
+          "scripts/spine_lifecycle.py",
+          "skills"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Implement residual #613, produce two architecture candidates, cold-critique them, and reconcile the remaining issue graph.",
+      "why_likely": "Wave 1 removes the run_crew overlap and leaves the architecture choice as the only deliberate human convergence point.",
+      "entry_conditions": [
+        "All Wave 1 lanes are reviewed and integrated on the temporary epic branch.",
+        "The #636 result is the base for #613.",
+        "No Wave 1 evidence invalidates the mechanical/architecture split."
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether one-spine elimination or explicit parent capability produces the smallest coherent architecture.",
+      "affects": "The disposition of #634, #638, #632, #357, #369, and #615.",
+      "settle_by": "Human convergence at the end-of-Wave-2 checkpoint.",
+      "current_evidence": "The issue graph shows both duplicated state and missing authority as plausible roots.",
+      "next_probe": "Produce two independent candidates and a cold critique against current code and map truth."
+    }
+  ],
+  "revised_parked": [
+    "Implement #639 inside epic #572 after #575 supplies Windows proof.",
+    "Mutate GitHub issue scope and status after the human checkpoint.",
+    "Apply reusable doctrine lessons discovered during this epic."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "issue-613",
+      "action": "keep",
+      "reason": "Run after #636 on its integrated base."
+    },
+    {
+      "id": "architecture-candidates",
+      "action": "keep",
+      "reason": "Two candidates are required before human convergence."
+    },
+    {
+      "id": "architecture-critique",
+      "action": "keep",
+      "reason": "Cold critique follows both independent candidates."
+    },
+    {
+      "id": "issue-reconciliation",
+      "action": "keep",
+      "reason": "The checkpoint needs explicit dispositions for the ledger and live issue graph."
+    },
+    {
+      "id": "wave-2-forecast",
+      "action": "keep",
+      "reason": "The forecast remains supported but nonbinding until the Wave 1 boundary."
+    },
+    {
+      "id": "architecture-choice",
+      "action": "keep",
+      "reason": "The human checkpoint is the named settlement mechanism."
+    },
+    {
+      "id": "issue-639-route",
+      "action": "keep",
+      "reason": "The human routed #639 to #572 outside this cleanup execution."
+    }
+  ],
+  "material_changes": [],
+  "wave_review_comment": "## Initial wave review\n\nCurrent source and issue evidence support three bounded Wave 1 lanes. The launch preserves #636 before #613 and leaves architecture selection for the human checkpoint.",
+  "revised_epic_body": "## Current planning truth\n\nWave 1 implements #500, #636, and the mechanical closeout half of #638. Wave 2 remains a provisional forecast: residual #613, two architecture candidates, cold critique, and issue reconciliation. #639 belongs to #572. No GitHub mutation, publication, architecture selection, or merge to main is authorized before the checkpoint.",
+  "escalation": null
+}

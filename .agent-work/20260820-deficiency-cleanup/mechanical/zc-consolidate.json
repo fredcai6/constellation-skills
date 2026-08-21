@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "zc-consolidate",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 0,
+    "spine-step": "zc-consolidate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup-zc-consolidate@379fb8932c7e7f4e4a21038cb965fa07edd3ef41",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup",
+    "generated_at": "2026-08-20T15:54:01Z"
+  }
+}

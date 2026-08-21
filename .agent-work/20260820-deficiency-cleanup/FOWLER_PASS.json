@@ -1,0 +1,20 @@
+{
+  "work_id": "20260820-deficiency-cleanup",
+  "diff_ref": "Combined Replan packet at .agent-work/20260820-deficiency-cleanup/transitions/wave1-review-blocks plus root NEXT_WAVE.json",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, Replan v1 contracts",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

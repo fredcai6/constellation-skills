@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "latitude",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "refusals": 0,
+    "spine-step": "latitude",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup-latitude@de380e10ea3877b8905f7c7e154c99083d44ac1b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup",
+    "generated_at": "2026-08-20T16:10:32Z"
+  }
+}

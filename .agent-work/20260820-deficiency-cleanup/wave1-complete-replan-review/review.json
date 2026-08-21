@@ -1,0 +1,303 @@
+{
+  "work_id": "20260820-deficiency-cleanup/wave1-complete-replan-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-schema-renders",
+    "r4b-partition-intent",
+    "r4c-wave2-sequencing",
+    "r4d-authority-boundary",
+    "r4e-wave1-freshness",
+    "r4f-route-639"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global Reviewer/Workbench/crew doctrine, project CREW_CONTEXT and GLOSSARY, the delegated handoff, complete Wave1-complete transition packet, actual LATITUDE_CONTRACT.md, Admiral log, three fresh Wave1 review results, and integration revision d3d0c9ac. AGENT_GUIDE.md is absent.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "BLOCK: the frozen advance packet says Wave 1 is complete and green, but full-suite reproduction at integration d3d0c9ac fails tracked derived code-map freshness: map/INDEX.md has 1258 committed entities versus 1274 from a fresh build. The same test passes at base 24b4665b, so this is Wave1 integration drift. Root map/ is distinct from the empty curated docs/architecture map and is not explicitly owned by the proposed Cartographer lane.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Transition writes are confined to the Admiral work area. main remains 24b4665b; all four AFK branches have no upstream; user-owned gauge and CONSTELLATION_DEFECTS.md changes remain untouched. No production/current architecture/GitHub/push/main-merge action is present. The stale root map is a missing integration artifact, not scope drift by the transition author.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Selected affected-suite evidence reproduces exactly at d3d0c9ac: 1352 passed, 3 skipped, 663 subtests in 16.60s; Replan verifier, exact renders, diff hygiene, commit inclusion, and all three fresh review artifacts also check out. BLOCK remains because the packet describes the integration as green without disclosing that the ordinary full suite fails newly on stale tracked map/INDEX.md. Required repair must distinguish selected-suite green from full-suite red and add the root map freshness repair before advance.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The transition preserves fixed authority and valid Replan mechanics, but it misses the repository's ordinary-suite current-map invariant. Wave2 sequencing also needs refinement: residual #613 first, then regenerate/check root map/ and verify/rebuild curated docs/architecture on the post-#613 integration base, only then launch the two independent candidates, critic, and issue reconciliation.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Wave1 source-shape changes diverge from tracked current code-map truth: the freshness gate fails on map/INDEX.md. This is not a future triage candidate; it is an in-scope transition repair prerequisite. Curated docs/architecture is separately empty and correctly requires Cartographer, but both map surfaces must be named and ordered after #613 so candidates read one post-implementation baseline.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/20260820-deficiency-cleanup/wave1-complete-replan-review/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/wave1-complete-replan-review/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from 20260820-deficiency-cleanup/wave1-complete-replan-review alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Admiral named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/projects/constellation-skills/scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/wave1-complete-replan-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Visited all 12 Fowler smells against the transition artifact structure. No production code changed; all smells are absent, the strict schema is not treated as a smell, and the repository-native Fowler verifier exits 0. The command path required an engine-recorded dogfood amendment.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/skills/reviewer/scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/wave1-complete-replan-review/FOWLER_PASS.json",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/wave1-complete-replan-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-schema-renders": {
+      "id": "r4a-schema-renders",
+      "title": "Replan schema and projections",
+      "imperative": "Verify the repository-native Replan schema and exact CURRENT_TRUTH/WAVE_REVIEW projections.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Repository-native verify_replan.py exits 0. CURRENT_TRUTH.md exactly equals revised_epic_body and WAVE_REVIEW.md exactly equals wave_review_comment.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-partition-intent": {
+      "id": "r4b-partition-intent",
+      "title": "Partition and fixed intent",
+      "imperative": "Verify completed/open/unlaunched identities are complete and fixed intent is preserved.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Current Wave1 identities partition exactly into completed issue-500, issue-636, and issue-638-mechanical with no open identity. All seven unlaunched identities have exactly one disposition. Intent, definition of done, quality bar, hard constraints, fixed decisions, uncertainty, and human checkpoint remain substantively fixed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-wave2-sequencing": {
+      "id": "r4c-wave2-sequencing",
+      "title": "Wave2 sequencing",
+      "imperative": "Verify #613 sequencing, both map baselines, two independent candidates, critic, and reconciliation ordering.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "#613 is correctly residual-only: its checklist-engine atomic-save half is already on the c70f7e7b lineage, leaving the redundant shared-spine heartbeat writer. But the packet does not require one post-#613 baseline or name root map/. Repair ordering must be #613 implementation/review/integration first; regenerate and check root map/ plus Cartographer verify/rebuild docs/architecture second; then two independent candidates; then cold critic and issue reconciliation for the checkpoint.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d-authority-boundary": {
+      "id": "r4d-authority-boundary",
+      "title": "Authority boundary",
+      "imperative": "Verify no architecture selection, GitHub mutation, publication, push, or main merge is authorized.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "LATITUDE_CONTRACT, current wave exit criteria, no-gos, forecast, uncertainty, WAVE_REVIEW, CURRENT_TRUTH, and NEXT_WAVE consistently stop before architecture selection/implementation, GitHub mutation, publication, push, or merge to main. Local AFK branches have no upstream and main remains at 24b4665b.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4e-wave1-freshness": {
+      "id": "r4e-wave1-freshness",
+      "title": "Wave1 integration freshness",
+      "imperative": "Verify the integration revision satisfies the repository current-map freshness invariant before advance.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "At d3d0c9ac, tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build fails: map/INDEX.md records 1258 entities while a fresh build finds 1274. At base 24b4665b the same check passes. Repository doctrine says this ordinary-suite test is the sole owner that keeps the tracked code-map entry point current.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4f-route-639": {
+      "id": "r4f-route-639",
+      "title": "Fixed issue 639 route",
+      "imperative": "Verify issue #639 remains deferred to epic #572 with #575 as its Windows proof obligation.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The human-fixed route is preserved everywhere: #639 is absent from Wave2, dispositioned defer, parked under epic #572, and #575 remains its Windows proof obligation. No GitHub mutation is authorized.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r1-handoff: BLOCK: the frozen advance packet says Wave 1 is complete and green, but full-suite reproduction at integration d3d0c9ac fails tracked derived code-map freshness: map/INDEX.md has 1258 committed entities versus 1274 from a fresh build. The same test passes at base 24b4665b, so this is Wave1 integration drift. Root map/ is distinct from the empty curated docs/architecture map and is not explicitly owned by the proposed Cartographer lane.",
+      "r3-evidence: Selected affected-suite evidence reproduces exactly at d3d0c9ac: 1352 passed, 3 skipped, 663 subtests in 16.60s; Replan verifier, exact renders, diff hygiene, commit inclusion, and all three fresh review artifacts also check out. BLOCK remains because the packet describes the integration as green without disclosing that the ordinary full suite fails newly on stale tracked map/INDEX.md. Required repair must distinguish selected-suite green from full-suite red and add the root map freshness repair before advance.",
+      "r4-quality: The transition preserves fixed authority and valid Replan mechanics, but it misses the repository's ordinary-suite current-map invariant. Wave2 sequencing also needs refinement: residual #613 first, then regenerate/check root map/ and verify/rebuild curated docs/architecture on the post-#613 integration base, only then launch the two independent candidates, critic, and issue reconciliation.",
+      "r5-reconciliation: Wave1 source-shape changes diverge from tracked current code-map truth: the freshness gate fails on map/INDEX.md. This is not a future triage candidate; it is an in-scope transition repair prerequisite. Curated docs/architecture is separately empty and correctly requires Cartographer, but both map surfaces must be named and ordered after #613 so candidates read one post-implementation baseline.",
+      "r4c-wave2-sequencing: #613 is correctly residual-only: its checklist-engine atomic-save half is already on the c70f7e7b lineage, leaving the redundant shared-spine heartbeat writer. But the packet does not require one post-#613 baseline or name root map/. Repair ordering must be #613 implementation/review/integration first; regenerate and check root map/ plus Cartographer verify/rebuild docs/architecture second; then two independent candidates; then cold critic and issue reconciliation for the checkpoint.",
+      "r4e-wave1-freshness: At d3d0c9ac, tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build fails: map/INDEX.md records 1258 entities while a fresh build finds 1274. At base 24b4665b the same check passes. Repository doctrine says this ordinary-suite test is the sole owner that keeps the tracked code-map entry point current."
+    ],
+    "summary": "BLOCK: selected Wave1 suites reproduce green, but ordinary-suite map freshness is newly red at d3d0c9ac. Repair order is residual #613; regenerate/check root map and Cartographer-curate docs/architecture on the post-#613 base; two independent candidates; cold critic and issue reconciliation; human checkpoint."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "reviewer-wave1-complete-20260820",
+    "status": "released",
+    "claimed_at": "2026-08-20T18:20:07.635805+00:00",
+    "last_heartbeat": "2026-08-20T18:32:11.882448+00:00",
+    "claimed_by": "constellation-reviewer",
+    "worktree": "/home/tommy/projects/constellation-skills",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-20T18:32:19.239107+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-20T18:30:09.885932+00:00",
+      "reason": "Dogfood source checkout keeps the Fowler verifier at repository-root scripts/, not under skills/reviewer/scripts/.",
+      "authority": "Admiral /root",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

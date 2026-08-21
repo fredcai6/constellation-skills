@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4a-schema-renders",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup/wave1-complete-replan-review",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 1,
+    "spine-step": "r4a-schema-renders",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup/wave1-complete-replan-review-r4a-schema-renders@0bb0e47aa28fa665b407f72a368b610aa1f30bef",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup/wave1-complete-replan-review",
+    "generated_at": "2026-08-20T18:30:20Z"
+  }
+}

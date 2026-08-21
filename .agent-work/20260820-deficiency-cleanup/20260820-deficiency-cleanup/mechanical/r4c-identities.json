@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4c-identities",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4c-identities",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup-r4c-identities@2cd176509b03ccfb1e775232707e6d6b3d66a2bd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup",
+    "generated_at": "2026-08-20T17:44:36Z"
+  }
+}

@@ -1,0 +1,3 @@
+## Current planning truth
+
+Wave 1 is complete and green on isolated integration commit d3d0c9ac: #500, repaired #636, and mechanical #638 all have fresh independent approval. Wave 2 is an evidence wave. Implement and independently review residual #613 on that base. Because the generated architecture map is empty, run Cartographer first; then produce two independent future-state candidates, cold-critique them, and reconcile the defect ledger plus live issue graph. Stop at the human architecture checkpoint. No architecture selection or implementation, GitHub mutation, publication, push, or merge to main is authorized.

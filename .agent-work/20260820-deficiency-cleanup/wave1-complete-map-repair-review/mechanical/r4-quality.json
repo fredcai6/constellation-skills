@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup/wave1-complete-map-repair-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup/wave1-complete-map-repair-review-r4-quality@3b74f6830e8ba5618d2946d65bfff0e1d8b23e88",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup/wave1-complete-map-repair-review",
+    "generated_at": "2026-08-20T18:41:32Z"
+  }
+}

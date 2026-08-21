@@ -1,0 +1,32 @@
+{
+  "goal": "Reconcile the recent defect ledger and GitHub follow-ups, then run the bounded cleanup work in AFK waves while preserving the architecture decisions for a human checkpoint.",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "decision",
+      "question": "What belongs in this cleanup epic, and where should it checkpoint?",
+      "status": "resolved",
+      "resolution": "Route issue #639 into epic #572; run the remaining bounded work and architecture evidence autonomously through the Wave 2 checkpoint.",
+      "code_evidence": "",
+      "human_answer": "#639 goes into #572; the proposed Wave 1 and Wave 2 plan is approved; continue making decisions until the architecture checkpoint."
+    },
+    {
+      "id": "q2",
+      "kind": "fact",
+      "question": "What concrete work remains, how does it overlap, and which slices are safe for unattended execution?",
+      "status": "resolved",
+      "resolution": "Wave 1: implement #500, #636, and the mechanical-closeout half of #638. Wave 2: implement #613 and produce independently criticized architecture candidates for the #634/#638/#632/#357/#369/#615 cluster, plus reconcile #457 and the local defect ledger. #636 and #613 are sequential because both edit scripts/run_crew.py. Architecture implementation waits for the human checkpoint.",
+      "code_evidence": "CONSTELLATION_DEFECTS.md; scripts/checklist_engine.py; scripts/run_crew.py; scripts/mcp_spine_server.py; scripts/spine_lifecycle.py; scripts/hooks/spine_rail.py; .agent-work/archive/2026-08-16-cleanup-b-context-identity/DESIGN_500.md; GitHub issues #500, #613, #632, #634, #636, #638, #357, #369, #457, #615, #639, and epic #572."
+    }
+  ],
+  "signoff": {
+    "by": "Tommy",
+    "statement": "The plan sounds great; return at the architecture checkpoint, and until then make good decisions and keep pushing."
+  },
+  "consolidated": true,
+  "rail_exception": {
+    "reviewer_cosign": "",
+    "log": ""
+  }
+}

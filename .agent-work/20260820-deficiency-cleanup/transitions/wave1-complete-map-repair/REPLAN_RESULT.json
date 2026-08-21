@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "decision": "advance",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 1's three functional lanes are complete and independently approved. Its selected combined suite is green, but ordinary-suite map freshness is a bounded carried defect that must be repaired after #613 and before architecture candidates.",
+    "epic_done": "The epic is not complete; residual #613, current-truth architecture evidence, cold critique, and issue reconciliation remain before the human checkpoint.",
+    "good_enough": "Advance is safe only with strict sequencing: #613 first; Cartographer then refreshes root map/ and verifies or curates docs/architecture on that final implementation base; candidates, critique, and reconciliation follow. Full repository verification gates the evidence wave."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D-ROOT-MAP-STALE",
+      "action": "repair_current_wave",
+      "reason": "Carry map freshness as an explicit Wave 2 repair after #613 and before architecture candidates; require the ordinary suite to pass.",
+      "issue_created": false
+    },
+    {
+      "id": "D-MAP-EMPTY",
+      "action": "amend_forecast_or_parked",
+      "reason": "Make the Cartographer current-truth baseline an explicit prerequisite for both architecture candidates.",
+      "issue_created": false
+    },
+    {
+      "id": "D-CROSS-WORKTREE-IDENTITY",
+      "action": "amend_forecast_or_parked",
+      "reason": "Carry the observed composite identity constraint into candidate and reconciliation evidence; do not reopen #636.",
+      "issue_created": false
+    },
+    {
+      "id": "D-WORKFLOW-FRICTION",
+      "action": "record_evidence_only",
+      "reason": "Retain for epic retrospective and later maintenance without widening this wave.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Finish residual #613, repair both current-map surfaces on its integrated base, and produce the verified architecture and issue evidence needed for a human convergence checkpoint.",
+    "exit_criteria": [
+      "#613 is independently approved and locally integrated on the Wave 1 base.",
+      "Cartographer regenerates and verifies tracked root map/ and establishes nonempty or explicitly evidenced curated current truth under docs/architecture on the post-#613 base.",
+      "The ordinary repository suite and map-freshness tests pass on the resulting integration state.",
+      "Two independent architecture candidates start only after that baseline.",
+      "A cold critic compares both candidates and the status quo.",
+      "Every defect-ledger item and related issue has an explicit evidence-backed disposition.",
+      "No architecture is selected or implemented and no external publication occurs."
+    ],
+    "issues": [
+      {
+        "id": "issue-613",
+        "title": "Remove the redundant inherited parent-heartbeat writer",
+        "desired_outcome": "A child launch does not start a second heartbeat writer when it inherits the same SPINE_FILE and SPINE_SESSION, while explicit parent-heartbeat behavior remains intact where ownership differs.",
+        "useful_now": "It completes the residual scripts/run_crew.py cleanup on the reviewed #636 transaction foundation.",
+        "appetite": "One bounded direct Implementer lane followed by an independent Reviewer, based on integration commit d3d0c9ac.",
+        "acceptance_or_falsification_evidence": "A focused regression proves same-spine inheritance has one writer, compatibility cases retain their heartbeat, and the full launcher suite passes.",
+        "implementation_latitude": "Choose the smallest guard in _parent_lease_heartbeat or launch wiring consistent with current contracts.",
+        "hard_constraints_no_gos": [
+          "Do not redesign registry identity or parent authority.",
+          "Do not absorb the architecture candidate work.",
+          "Do not push, publish, mutate GitHub, or merge to main."
+        ],
+        "local_unknowns": [
+          "The exact current launch predicate that distinguishes inherited same-spine ownership from a genuinely separate parent heartbeat."
+        ],
+        "anchors": [
+          "scripts/run_crew.py",
+          "tests/test_crew_launcher.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "architecture-candidates",
+        "title": "Build current-truth baseline and two independent architecture candidates",
+        "desired_outcome": "After #613 is integrated, Cartographer regenerates and verifies tracked root map/ and establishes the curated current-only baseline under docs/architecture; only then do two independent proposals describe one-spine elimination and explicit parent-capability transitions without selecting either.",
+        "useful_now": "The unresolved #634/#638/#632/#357/#369/#615 cluster needs comparable evidence before the human checkpoint.",
+        "appetite": "After #613 review and integration: one gated Cartographer baseline owning both map surfaces, followed by two independent evidence lanes.",
+        "acceptance_or_falsification_evidence": "Fresh root map/ artifacts matching a clean build, a nonempty or explicitly justified curated current-truth report under docs/architecture, an ordinary-suite green run, and two self-contained candidates covering boundaries, ownership, failure semantics, migration, issue dispositions, risks, and tests.",
+        "implementation_latitude": "Correct current-only map artifacts locally if evidence requires it; future-state work is artifact-only.",
+        "hard_constraints_no_gos": [
+          "Do not begin Cartographer reconciliation until #613 is locally integrated; do not begin candidates until Cartographer completes.",
+          "Do not choose or implement an architecture.",
+          "Do not rewrite issue scope on GitHub.",
+          "Do not treat the empty generated map as evidence."
+        ],
+        "local_unknowns": [
+          "Whether the dominant root is duplicated plan state, missing parent authority, or an interaction between them."
+        ],
+        "anchors": [
+          "map",
+          "docs/architecture",
+          "scripts/checklist_engine.py",
+          "scripts/mcp_spine_server.py",
+          "scripts/spine_lifecycle.py",
+          "skills"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "architecture-critique",
+        "title": "Cold-critique both architecture candidates",
+        "desired_outcome": "A fresh critic compares both candidates and the status quo against verified current truth and the entire related issue cluster.",
+        "useful_now": "It exposes hidden assumptions before the human is asked to converge.",
+        "appetite": "One independent critic after both candidates are complete.",
+        "acceptance_or_falsification_evidence": "A comparison matrix names tradeoffs, falsifiers, migration hazards, unresolved questions, and what evidence would change the recommendation.",
+        "implementation_latitude": "Challenge both proposals and recommend questions; do not select on the human's behalf.",
+        "hard_constraints_no_gos": [
+          "Do not edit production code or current architecture truth.",
+          "Do not collapse disagreement by inventing a hybrid without evidence."
+        ],
+        "local_unknowns": [
+          "Which candidate best explains and disposes the issue cluster with the fewest new invariants."
+        ],
+        "anchors": [
+          ".agent-work/20260820-deficiency-cleanup",
+          "docs/architecture"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "issue-reconciliation",
+        "title": "Reconcile the defect ledger and live issue graph for the checkpoint",
+        "desired_outcome": "Every observed defect and related open issue has an explicit fixed, covered, deferred, routed, or architecture-dependent disposition, including #457 and the #639 to #572/#575 route.",
+        "useful_now": "The human checkpoint needs the complete picture rather than a design comparison detached from issue reality.",
+        "appetite": "One evidence lane after the architecture candidates are available.",
+        "acceptance_or_falsification_evidence": "A source-linked table records current mechanism, overlap, next owner, and recommended issue action without performing external mutations.",
+        "implementation_latitude": "Inspect current GitHub and repository evidence read-only; identify missing links or contradictions.",
+        "hard_constraints_no_gos": [
+          "Do not close, edit, label, or comment on GitHub issues.",
+          "Do not select the architecture."
+        ],
+        "local_unknowns": [
+          "Which older issues are already mechanically covered but still need documentation or closure decisions."
+        ],
+        "anchors": [
+          "CONSTELLATION_DEFECTS.md",
+          "GitHub issue graph",
+          ".agent-work/20260820-deficiency-cleanup"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "The human selects, rejects, or redirects the architecture candidates and authorizes any follow-on implementation and GitHub updates.",
+      "why_likely": "Wave 2 will provide current-truth mapping, two independent candidates, cold critique, and complete issue reconciliation.",
+      "entry_conditions": [
+        "The post-#613 root map and curated architecture baseline are current and the ordinary suite is green.",
+        "Residual #613 has fresh independent review.",
+        "Both candidates and the cold critique are complete.",
+        "The issue-disposition table is current and source-linked."
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether one-spine elimination, explicit parent capability, or neither is the appropriate architecture.",
+      "affects": "The disposition of #634, #638, #632, #357, #369, and #615.",
+      "settle_by": "Human convergence at the end-of-Wave-2 checkpoint.",
+      "current_evidence": "Wave 1 proves mechanical closeout and registry safety but does not settle ownership. The root code map is stale and the curated generated architecture map is empty; both must be reconciled on the post-#613 base first.",
+      "next_probe": "Compare both independent candidates and the status quo through a cold critique."
+    }
+  ],
+  "revised_parked": [
+    "Implement #639 inside epic #572 after #575 supplies Windows proof.",
+    "Mutate GitHub issue scope and status after the human checkpoint.",
+    "Apply reusable doctrine lessons discovered during this epic."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "issue-613",
+      "action": "keep",
+      "reason": "Launch now on the reviewed #636 integration base."
+    },
+    {
+      "id": "architecture-candidates",
+      "action": "keep",
+      "reason": "Launch Cartographer first, then two independent candidate lanes."
+    },
+    {
+      "id": "architecture-critique",
+      "action": "keep",
+      "reason": "Launch only after both candidates exist."
+    },
+    {
+      "id": "issue-reconciliation",
+      "action": "keep",
+      "reason": "Complete for the checkpoint after candidate evidence is available."
+    },
+    {
+      "id": "wave-2-forecast",
+      "action": "keep",
+      "reason": "Realize now as the bounded Wave 2 evidence wave."
+    },
+    {
+      "id": "architecture-choice",
+      "action": "keep",
+      "reason": "Reserve selection for the returning human."
+    },
+    {
+      "id": "issue-639-route",
+      "action": "defer",
+      "reason": "The human fixed its route to epic #572 with #575 as Windows proof; no work belongs in this cleanup wave."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave",
+      "before": "Wave 1 bounded repairs",
+      "after": "Wave 2 residual implementation and architecture evidence",
+      "reason": "All Wave 1 exit criteria are independently approved and locally integrated."
+    },
+    {
+      "surface": "wave_forecast",
+      "before": "Wave 2 evidence production",
+      "after": "Human architecture convergence checkpoint",
+      "reason": "The forecasted work is now the current wave."
+    },
+    {
+      "surface": "wave_2_sequence",
+      "before": "Cartographer could run alongside residual #613 and only docs/architecture was named.",
+      "after": "Residual #613 lands first; Cartographer then owns root map/ freshness plus docs/architecture current truth before candidates.",
+      "reason": "Independent review found the ordinary suite failing root map freshness at d3d0c9ac."
+    }
+  ],
+  "wave_review_comment": "## Wave review - Wave 1 complete, map repair carried\n\n**Exit: advance with corrected ordering.** #500, #636, and mechanical #638 are independently approved and merged only to the isolated AFK integration branch. Their selected combined suite passes 1352 tests, 3 skips, and 663 subtests. Independent review also found the ordinary suite fails because tracked `map/INDEX.md` is stale: 1274 fresh script entities versus 1258 committed. Wave 2 therefore runs residual #613 first, then Cartographer refreshes root `map/` and curates `docs/architecture` on the post-#613 base; only after the ordinary suite is green may two independent candidates begin. Cold critique and issue reconciliation follow. No architecture selection, GitHub mutation, publication, push, or merge to main is authorized.",
+  "revised_epic_body": "## Current planning truth\n\nWave 1's three functional lanes are complete and independently approved on isolated integration commit d3d0c9ac. The selected combined suite is green, but independent review found tracked `map/INDEX.md` stale while `docs/architecture/generated/map.json` is empty. Wave 2 is strictly ordered: implement and independently review residual #613; integrate it locally; then Cartographer refreshes root `map/`, establishes curated current truth under `docs/architecture`, and restores ordinary-suite green. Only then produce two independent future-state candidates, cold-critique them, and reconcile the defect ledger plus live issue graph. Stop at the human architecture checkpoint. No architecture selection or implementation, GitHub mutation, publication, push, or merge to main is authorized.",
+  "escalation": null
+}

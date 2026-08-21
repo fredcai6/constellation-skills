@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4c-wave2-sequencing",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup/wave1-complete-replan-review",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 1,
+    "spine-step": "r4c-wave2-sequencing",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup/wave1-complete-replan-review-r4c-wave2-sequencing@c43bc99072c811694a89e4e03a01130ee3468946",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup/wave1-complete-replan-review",
+    "generated_at": "2026-08-20T18:30:43Z"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "r6-fowler",
+      "cond": "c1",
+      "which": "postconditions",
+      "command": "python scripts/verify_fowler_pass.py .agent-work/20260820-deficiency-cleanup/initial-replan-rereview/FOWLER_PASS.json"
+    }
+  ]
+}

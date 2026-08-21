@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "init",
+  "mechanical": {
+    "run": "20260820-deficiency-cleanup",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "refusals": 0,
+    "spine-step": "init",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260820-deficiency-cleanup-init@8b65a120e4624bad2f3ed4ed2d7892ad8d9dc3c1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260820-deficiency-cleanup",
+    "generated_at": "2026-08-20T15:34:58Z"
+  }
+}
