@@ -48,7 +48,7 @@ The Pocock mirror symlinks under `~/.claude/skills/` are currently **dangling** 
 | systematic-debugging | ★ | diagnose (#4) |
 | test-driven-development | covered | implementer |
 | using-git-worktrees | covered | workbench / admiral (baked in) |
-| using-superpowers | *declined* | skill-router; SKILL_INDEX + when-to-use descriptions suffice solo |
+| using-superpowers | *declined* | skill-router; when-to-use descriptions + README's skill table suffice solo |
 | verification-before-completion | covered | engine command-rails + reviewer |
 | writing-plans | covered | commander plan step |
 | writing-skills | ★ | write-a-skill (#6) + shared goodness criteria |
@@ -73,7 +73,7 @@ The Pocock mirror symlinks under `~/.claude/skills/` are currently **dangling** 
 
 | External | Status | Constellation home |
 |---|---|---|
-| find-skills | *declined* | skill-router/discovery; SKILL_INDEX + when-to-use descriptions suffice solo (same class as `using-superpowers`) |
+| find-skills | *declined* | skill-router/discovery; when-to-use descriptions + README's skill table suffice solo (same class as `using-superpowers`) |
 
 ## What the human accepts at uninstall
 

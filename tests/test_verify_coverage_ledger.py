@@ -24,7 +24,7 @@ def _well_formed_ledger():
         "ledger": [
             {"external": "systematic-debugging", "source": "sp", "status": "new", "home_skill": "diagnose", "reason": None},
             {"external": "tdd", "source": "mp", "status": "covered", "home_skill": "implementer", "reason": None},
-            {"external": "using-superpowers", "source": "sp", "status": "declined", "home_skill": None, "reason": "router; SKILL_INDEX suffices solo"},
+            {"external": "using-superpowers", "source": "sp", "status": "declined", "home_skill": None, "reason": "router; when-to-use descriptions suffice solo"},
         ]
     }
 

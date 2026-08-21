@@ -1344,7 +1344,7 @@ class PathTraversalGuardTests(unittest.TestCase):
     id already returned None before this fix too, which would be a check that cannot
     fail)."""
 
-    TRAVERSAL_TARGET = ROOT / "SKILL_INDEX.md"
+    TRAVERSAL_TARGET = ROOT / "README.md"
 
     def setUp(self):
         self.m = load()
@@ -1352,7 +1352,7 @@ class PathTraversalGuardTests(unittest.TestCase):
         # Anchored directly under the repo root (dir=str(ROOT)), NOT the system
         # tempdir the other tests' EpisodeStoreTestCase.setUp uses — so a fixed,
         # small number of ".." segments deterministically reaches
-        # ROOT/SKILL_INDEX.md regardless of where the OS places its temp
+        # ROOT/README.md regardless of where the OS places its temp
         # directory. self.root is 2 levels below ROOT (ROOT/tmpXXXX/episodes), so
         # root/active is 3 levels below ROOT.
         self.tmp = tempfile.TemporaryDirectory(dir=str(ROOT))
@@ -1373,7 +1373,7 @@ class PathTraversalGuardTests(unittest.TestCase):
             "real, tracked file as the traversal target and update this test.",
         )
 
-        episode_id = "../../../SKILL_INDEX"
+        episode_id = "../../../README"
 
         # 1. Prove the exposure: joined the OLD (pre-fix) way -- root / sub /
         #    f"{episode_id}.md", with no format check first -- the crafted id

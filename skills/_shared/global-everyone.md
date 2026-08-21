@@ -2,7 +2,7 @@
 
 Inherited platform and engine doctrine for **every** Constellation role, bundled with the skill at
 install. This is the baseline the whole fleet shares; a project never restates it, only departs from it.
-Project orientation is the local overlay — read `docs/agents/AGENT_GUIDE.md` (repo map) and
+Project orientation is the local overlay — read `docs/agents/AGENT_GUIDE.md` (project purpose and repo map) and
 `docs/agents/GLOSSARY.md` if they exist.
 
 Agent-facing. Dense by design.

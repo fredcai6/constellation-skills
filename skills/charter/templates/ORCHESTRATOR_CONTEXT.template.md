@@ -10,7 +10,8 @@ Agent-facing context. Use bullets, tables, and fragments. Omit prose that does n
 
 ## Project Purpose
 
-`<What this project exists to do. Include what it explicitly is not trying to do.>`
+Owned by `docs/agents/AGENT_GUIDE.md` § Why This Exists — every agent reads it there, not here. Do not
+restate it. This file starts at the stakes.
 
 ## Scope And Exceptions
 

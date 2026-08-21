@@ -23,7 +23,6 @@ Delegation is first-class, not a fallback: every tier can ask up the chain, and 
 
 Constellation deliberately holds native, rigor-flavored versions of the capabilities you would otherwise reach into the **superpowers** plugin or **Matt Pocock** skills for — so those externals can be removed from the box without losing a capability. The one-line difference: superpowers ships reusable *technique* skills and Pocock ships grilling-led "real engineer" skills, while constellation is **rigor-first, engine-enforced, and delegation-native** — a coordinated team with an independent-reviewer safety net and hard rails.
 
-- The full seat-by-seat comparison and the workflow chains are in [`docs/POSITIONING.md`](docs/POSITIONING.md).
 - The external → constellation-home coverage record (what replaces each external skill, and what is deliberately declined) is the **removability ledger**: [`docs/REMOVABILITY_LEDGER.md`](docs/REMOVABILITY_LEDGER.md), machine-checked by [`scripts/verify_coverage_ledger.py`](scripts/verify_coverage_ledger.py).
 
 ## Skill set
@@ -52,6 +51,28 @@ The corpus is **20 skills**. `skills/_shared/` is **not a skill** — it is shar
 | `constellation-docent` | Generate a self-contained static HTML explainer site for humans from Cartographer map truth, stamped with the source-map digest so a stale site is visibly flagged. |
 | `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey); the substrate every other skill uses. |
 | `constellation-how-to-talk` | Keep an agent's prose clear, concise, and grounded — each sentence one point in the plainest words — so meaning stays consistent across artifacts, agents, and sessions. Applies to any human-facing output, so it is not tier-specific. |
+
+## Choosing an entry point
+
+Pick by how the problem feels, not by how big it is on paper.
+
+**Vague idea → `explorer`.** Let it breathe. Exploration cycles using interrogator doctrine, excursions (research / prototype / design-it-twice), a cold critic panel, and a hard human-only confirmation gate. Out: a confirmed shaped brief. Explorer stays pure exploration — it files no issues; `to-initial-issues` cuts the runnable wave.
+
+**Big but AFK-friendly → `admiral`.** Runs a whole epic in waves of delegated commanders. You can enter here directly; the interrogator checks the idea is fully fledged first. Closeout is episode capture plus a cartographer reconcile.
+
+**Hard or into-the-weeds → `commander` (human-run).** Focused interrogation that will not quit early, with joint understanding as the gate. Two crew in cycles: `implementer` (TDD, vertical-slice chunks) and `reviewer` (validates intent *and* implementation, plus a Fowler code-smell pass). Repeated implementer ⇄ reviewer cycles are design-it-twice, built in.
+
+### The spine that connects them
+
+```text
+idea → EXPLORER → [confirmed shaped brief] → TO-INITIAL-ISSUES (cut) → ADMIRAL (epic) / COMMANDER (issue)
+                                                              → IMPLEMENTER ⇄ REVIEWER
+                                                              → DIAGNOSE (when something breaks)
+                                                              → CARTOGRAPHER (update network)
+                                                              → closeout: retire the spec's WHY into the network
+```
+
+`to-initial-issues` is the cut-work seam between exploration and execution: it turns a confirmed shaped brief into one runnable, typed current wave while keeping forecast and uncertainty nonbinding.
 
 ## Repo layout vs. installed layout
 

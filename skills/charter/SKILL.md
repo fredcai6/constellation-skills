@@ -17,7 +17,7 @@ Durable outputs:
 docs/agents/ORCHESTRATOR_CONTEXT.md   # project deltas over inherited global-orchestrator doctrine
 docs/agents/CREW_CONTEXT.md           # project deltas over inherited global-crew doctrine
 docs/agents/GLOSSARY.md               # shared terms only
-docs/agents/AGENT_GUIDE.md            # single repo-orientation guide (TOC, repo layout, doc map); the shared middle of the two contexts
+docs/agents/AGENT_GUIDE.md            # repo-orientation guide: why the project exists, repo layout, doc map. Method-free and role-free; every agent reads it, Constellation or not
 docs/agents/PLATFORM_NOTES.md         # verbatim copy of the bundled windows.md; resolvable by general agents that never load a Constellation skill
 AGENTS.md, CLAUDE.md                  # root pointer files that redirect to docs/agents/AGENT_GUIDE.md
 docs/agents/engine-config.json        # rework cap, rigor checkpoints, rules root, repo guidance
@@ -26,6 +26,6 @@ docs/agents/engine-config.json        # rework cap, rigor checkpoints, rules roo
 
 ## Compile
 
-The global approach baseline is **inherited, not authored here**: roles load `references/global-orchestrator.md` / `references/global-crew.md` / `references/global-everyone.md` (bundled with each skill at install) at their context-read step. Charter writes only the **project deltas** over that baseline — never restate inherited doctrine. ORCHESTRATOR deltas cover project facts (purpose, authority), non-default rigor, and planning/evidence/stop-ask departures; CREW deltas cover project rules that change implementation or review. Optimize for density: minimize tokens, maximize information per token, sacrifice grammar when meaning stays clear. Keep durable context to decisions, free of process history.
+The global approach baseline is **inherited, not authored here**: roles load `references/global-orchestrator.md` / `references/global-crew.md` / `references/global-everyone.md` (bundled with each skill at install) at their context-read step. Charter writes only the **project deltas** over that baseline — never restate inherited doctrine. ORCHESTRATOR deltas cover project stakes and authority, non-default rigor, and planning/evidence/stop-ask departures — not project purpose, which `AGENT_GUIDE.md` owns for every agent; CREW deltas cover project rules that change implementation or review. Optimize for density: minimize tokens, maximize information per token, sacrifice grammar when meaning stays clear. Keep durable context to decisions, free of process history.
 
 Templates: `templates/CHARTER.template.json`, `templates/CHARTER_STARTING_QUESTIONS.template.md`, `templates/ENGINE_CONFIG.template.json`, `templates/ORCHESTRATOR_CONTEXT.template.md`, `templates/CREW_CONTEXT.template.md`, `templates/GLOSSARY.template.md`, `templates/AGENT_GUIDE.template.md`, `templates/AGENTS.pointer.template.md`, `templates/CLAUDE.pointer.template.md`, `templates/CHARTER_OPEN_QUESTIONS.template.md`. References: `references/rigorous-default.md`, `references/engineering-rubric.md`, `references/interrogation-protocol.md`, `references/scenario-bank.md`.

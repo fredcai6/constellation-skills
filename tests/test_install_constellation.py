@@ -1050,27 +1050,30 @@ class InstallConstellationTests(unittest.TestCase):
                 (target_root / "constellation-curator" / "SKILL.md").is_file()
             )
 
-    def test_every_discovered_skill_is_pinned_in_skill_index(self):
-        # issue-116: SKILL_INDEX.md is a hand-maintained roster; this pins it
-        # against the SAME enumeration install_constellation.py itself uses
-        # (discover_skills()), never a second hardcoded list -- a silently
-        # stale index (a skill added to skills/ but never documented) would
+    def test_every_discovered_skill_is_pinned_in_readme(self):
+        # issue-116: README.md's skill table is the hand-maintained roster; this
+        # pins it against the SAME enumeration install_constellation.py itself
+        # uses (discover_skills()), never a second hardcoded list -- a silently
+        # stale roster (a skill added to skills/ but never documented) would
         # otherwise go unnoticed.
+        # The roster moved here when SKILL_INDEX.md was retired as a duplicate:
+        # it listed the same 20 skills with the same descriptions, and nothing
+        # -- no skill, no script -- routed anyone to it.
         # Falsification: add/rename a skill under skills/ without a matching
-        # `skills/<source_name>/SKILL.md` path landing in SKILL_INDEX.md's text
-        # -> this reds, naming exactly the missing skill(s).
+        # `constellation-<name>` entry landing in README.md's text -> this reds,
+        # naming exactly the missing skill(s).
         installer = load_installer()
         skills = installer.discover_skills()
-        index_text = (ROOT / "SKILL_INDEX.md").read_text(encoding="utf-8")
+        readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
 
         missing = sorted(
             skill.install_name
             for skill in skills
-            if f"skills/{skill.source_name}/SKILL.md" not in index_text
+            if skill.install_name not in readme_text
         )
         self.assertEqual(
             [], missing,
-            f"SKILL_INDEX.md is missing entries for: {missing}",
+            f"README.md's skill table is missing entries for: {missing}",
         )
 
     def test_shared_sync_integrity_installed_references_match_source_bytes(self):
