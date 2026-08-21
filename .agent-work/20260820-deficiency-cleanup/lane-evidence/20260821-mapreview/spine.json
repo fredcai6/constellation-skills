@@ -1,0 +1,254 @@
+{
+  "work_id": "20260821-mapreview",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and\nreferences/global-everyone.md), then the project deltas if present:\ndocs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the\ndiff, and the relevant packet. Record pass when loaded.\n\nTHE DOOR IS HOW YOU DRIVE THIS SURVEY, and these items are the survey -- there\nis nothing else to drive. A reviewer dispatched with a spine of its own starts\nwith SPINE_FILE and SPINE_SESSION already in its environment, so the door\nresolves to that spine by itself and no session id is passed anywhere. The\nsurvey dialect is not the gated one: spine_status reads where you are,\nspine_survey_result records each item pass or fail AND consolidates the verdict\nat the end -- spine_advance is the gated plan's closing verb and is not yours --\nwhile spine_evidence, spine_lease, spine_capture, spine_halt and spine_amend\nare shared with every other plan. A reviewer dispatched WITHOUT a spine of its\nown holds no lease, and an unbound door binds one spine and then drives it\nidentically -- the identity comes from that spine's own work id, never from a\nstring you supply.\n\nWHAT YOU MAY NOT DO IS DRIVE A SECOND CHECKLIST FROM THIS PROCESS, and the\nreason is a measured refusal rather than an oversight. One door drives one\nspine at a time (`decision:one-spine-per-process-stands`). Measured in a fresh\nprocess: with your own lease held, binding a second checklist is REFUSED --\n\"one door drives one spine at a time ... Release it first\" -- and that\nescape is not yours to take: your role skill holds the lease open until\nyour last action, because the lease must cover every journaled action, and\nreleasing it early fails the terminal provenance check. Dispatched without\na spine of your own you arrive holding no lease -- nothing to release, and\nthe escape never arises. Read the two halves together and the rule is\none rule, not a limitation: the door reaches the spine you hold a lease on, and\nyou hold a lease on exactly one. So do not author a survey of your own beside\nthis one. If these items are wrong for the diff in front of you, that is what\nspine_amend and spine_halt are for, and r6-fowler's own REPAIR PATH below is\nthe worked example.\n",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context + glossary + handoff + diff + packet loaded -- QUALITATIVE: no doctrine mechanically verifies an agent's comprehension of prose it read; this stated form is what `record --result pass` points at, since a survey item's postcondition list is otherwise empty here",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, REVIEWER_HANDOFF.md, git show --stat efe92791, and Cartographer wave2 result."
+        }
+      ],
+      "constraints": [
+        "The door is this role's whole interface to its spine -- no session id is passed to it, because this process is already bound to exactly one spine",
+        "Author no second survey beside these items: one door drives one spine at a time, and while you hold your own lease the door refuses to bind another -- measured, not assumed",
+        "A survey item closes through spine_survey_result, never spine_advance -- the engine refuses the gated verb here"
+      ],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "<parent>",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, project CREW_CONTEXT.md/GLOSSARY.md, handoff, git show --stat efe92791, and Cartographer wave2-cartographer-result.md.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "<parent>",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All independent checks confirm the handoff's narrow claim. (1) `git show --stat efe92791` = single file, `map/INDEX.md | 16 ++++++++--------, 1 file changed, 8 insertions(+), 8 deletions(-)`. (2) `git diff efe92791^ efe92791` read in full: exactly 8 paired lines, every one a numeric entity/hole count on an already-existing listing line (scripts 1258->1274, tests 5266->5291, scripts.run_crew 68->84/12->23 holes, tests.test_crew_launcher 322->338/245->259 holes, tests.test_checklist_engine 648->653/495->500 holes, tests.test_mcp_lifecycle 44->48/24->28 holes) plus the two section-header totals restating the same scripts/tests counts -- no module added/removed, no link/path changed, no docstring text touched. (3) `python -m pytest -q tests/test_code_map.py -k MapTreeFreshness` = 2 passed, 146 deselected. (4) `python -m pytest -q` (env -u CREW_SCRATCH_DIR, since this reviewer is itself a dispatched crew whose own CREW_SCRATCH_DIR leaks into tests/test_crew_launcher.py::ScratchDirResumeTests via os.environ) = 3447 passed, 6 skipped, 1222 subtests passed -- matches Cartographer's claim exactly. Without excluding that var, one unrelated pre-existing test fails on env leakage, confirmed reproducible/fixable by unsetting CREW_SCRATCH_DIR alone -- not a defect in efe92791. (5) `git diff efe92791^ efe92791 -- map/ids.jsonl` empty, exit 0 -- genuinely no diff, not missed. (6) `.gitignore:73` has `map/*`; `git ls-files map/` shows only `INDEX.md` and `ids.jsonl` tracked; no per-module subdir exists on disk in this worktree and none is in the commit -- untracked-by-design, unchanged. (7) Worktree-integrity risk independently verified, not taken on the Admiral's word: `git -C /tmp/constellation-20260820-integration` (the worktree where the cp -r/checkout -f incident happened) HEAD = efe92791 matching branch afk/20260820-deficiency-integration; `git diff efe92791^ efe92791 -- scripts/ tests/` = empty (0 lines) -- no source or test content was altered by the incident. (8) test_mcp_lifecycle attribution independently confirmed: `git show --stat 8137814e` (#613) touches only scripts/run_crew.py + tests/test_crew_launcher.py + .agent-work files, never tests/test_mcp_lifecycle.py or scripts/mcp_spine_server.py; `git log --oneline 24b4665b..896b3610 -- tests/test_mcp_lifecycle.py scripts/mcp_spine_server.py` = 7b55c477, 5891e80f, both touching tests/test_mcp_lifecycle.py directly and predating #613 -- Cartographer's attribution to Wave 1/#638 rather than #613 is correct.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "<parent>",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Commit efe92791 stayed inside scope: `git diff efe92791^ efe92791 -- docs/architecture/` = empty (0 lines) -- the honest-null architecture map was not touched, respecting the human ruling that authoring it is out of scope. `git diff efe92791^ efe92791 --stat` confirmed earlier as map/INDEX.md only -- no source or test file in the commit. This review session itself respected its own scope fence: `git status --porcelain` shows only the untracked `.agent-work/20260821-mapreview/` scratch dir (my own result/evidence area); no source, test, or map/ file was edited; no commit was made; no push/PR/GitHub mutation occurred.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "<parent>",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced the generated-artifact claim rather than trusting the Cartographer's report. Used `git worktree add --detach /tmp/map-review-freshbuild 896b3610` (the sanctioned method named in the Cartographer's own incident lesson -- never `cp -r` a linked worktree) so as not to risk this review's own worktree metadata. Ran `python -m scripts.code_map build --root .` there; it succeeded (exit 0). `diff /tmp/map-review-freshbuild/map/INDEX.md <(git show efe92791:map/INDEX.md)` -> empty, IDENTICAL. `diff /tmp/map-review-freshbuild/map/ids.jsonl <(git show efe92791:map/ids.jsonl)` -> empty, IDENTICAL. The regenerated map committed at efe92791 is byte-for-byte what a fresh build from this repo's own tracked source at the stated base (896b3610) produces -- not merely \"shape-consistent\" but exactly reproduced. Scratch worktree removed cleanly afterward (`git worktree remove --force`), confirmed via `git worktree list`. Freshness-test and full-suite evidence already covered under r1-handoff (2 passed for MapTreeFreshness; 3447 passed/6 skipped/1222 subtests for the ordinary suite, reproduced independently with CREW_SCRATCH_DIR unset).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "<parent>",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against CREW_CONTEXT.md's project-specific rules. \"Check that cannot fail is indistinguishable from one that passed\": red-proofed `MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build` myself rather than relying on the Cartographer's before/after report -- in a scratch worktree (`git worktree add --detach /tmp/map-review-redproof efe92791`), overwrote map/INDEX.md with the pre-regen (stale, parent) version via `git show efe92791^:map/INDEX.md > map/INDEX.md`, confirmed the mutation applied (`diff` against the parent version = empty match, `git diff --stat` showed the expected 8+/8- lines), then ran the freshness test and got `1 failed, 1 passed` with the exact expected AssertionError (\"map/INDEX.md is stale: rerun ... and commit the result\"). Restored nothing manually since the whole scratch worktree was discarded (`git worktree remove --force`), confirmed via `git worktree list` showing no residual entry. This proves the guard genuinely discriminates stale vs fresh, not a check that always passes. \"Python invocation\" rule: confirmed `python` resolves to pytest 9.1.1 before running anything (per CREW_CONTEXT.md's per-host warning). \"Record stores never hand-edited\": I drove this review's own spine exclusively through `mcp__spine__*` engine verbs, never opened or hand-edited spine.json; map/ids.jsonl and map/INDEX.md were read-only inspected in this worktree and only mutated inside disposable scratch worktrees that were removed. No engine/hook code was touched, so the \"two engines alive\" hazard does not apply.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "<parent>",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence to reconcile. This commit is a pure regenerated-artifact update (entity/hole counts only, verified byte-identical to a fresh build under r3-evidence) -- it introduces no module, removes no module, changes no link target, and makes no structural or docstring claim. The `docs/architecture/` honest null was confirmed untouched (`git diff efe92791^ efe92791 -- docs/architecture/` empty under r2-scope) -- reconciling/authoring that packet map is explicitly out of scope per the handoff (settled by human ruling 2026-08-21, per the Cartographer's wave2 result). Nothing here for Commander to reconcile; nothing to flag as a triage candidate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a\nverdict on each Fowler baseline smell (long method, large class, duplicated\ncode, feature envy, data clumps, primitive obsession, long parameter list,\nshotgun surgery, divergent change, message chains, speculative generality,\ncomments-as-deodorant): flagged / overridden / absent. Smells are judgment\ncalls, ALWAYS subordinate to the repo's documented standards -- an override\nneeds a logged standard + reason. Record the pass to\n.agent-work/20260821-mapreview/FOWLER_PASS.json (from\ntemplates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py\n.agent-work/20260821-mapreview/FOWLER_PASS.json (it refuses a skipped smell or an\nunlogged override), then record pass/fail with a finding. This item's\npostcondition command resolves the record path from 20260821-mapreview alone -- the\nsame substitution you already make everywhere else in this survey -- so no\nseparate placeholder to fill and no way to leave it stale. REPAIR PATH -- only\nif the record path ever needs to move off that fixed convention, correct it\nthrough the engine with `amend --delta <file>` whose single op is\n`retext-check` on this item's c1, never by hand-editing this survey. There,\n--authority is the dispatching Commander named in your reviewer handoff (never\na string you invent), and --reason is why the path changed. Do NOT silently\nskip this item.\n",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "cd /tmp/constellation-20260821-mapreview && python scripts/verify_fowler_pass.py '.agent-work/20260821-mapreview/FOWLER_PASS.json'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": {
+        "handback": {
+          "purpose": "where this gate hands something back -- these are the engine's real, persistent channels, not a field to write prose into",
+          "belief_worth_recording": "spine_evidence attach -- lands in this gate's own evidence[]",
+          "open_question_out_of_scope": "spine_capture flag-candidate -- lands in the top-level triage_candidates[]",
+          "concern_that_must_stop_this_gate": "spine_halt block -- sets status blocked and appends to the top-level blockers[], bubbling to the parent named below",
+          "hand_back_to": "<parent>",
+          "note": "there is NO engine verb that appends to a directives field on an active gate (amend rescope touches pending gates only), so this contract names verbs that persist rather than offering arrays that would render empty forever"
+        },
+        "claim": {
+          "magnitude": "large",
+          "text": "The Fowler-pass verdict spans the ENTIRE diff, not one narrow question the way the survey's other six items do -- a false 'absent' or an unlogged override lets a real code smell through with no other checkpoint behind it. It is the one item in either role spec whose scope is genuinely broad rather than narrowly targeted, which is why the escalation belongs here and not on a throwaway stand-in.",
+          "enforcement": "NOT machine-enforced here -- no postcondition is injected for a large claim on a `survey` spec. `checklist_engine.record()` on a survey item evaluates only command-kind postconditions (survey-record-check-scope, #422) and leaves an artifact-kind postcondition like the one `gated` specs inject permanently unevaluated; `checklist_engine.consolidate()` reads only each item's stored `result` field and nothing else (#328). An injected postcondition here would be silently inert, not a real gate -- so none is injected. The tier this gate hands back to (see `directives.handback.hand_back_to`) must adjudicate this claim itself.",
+          "note": "no postcondition was injected -- this gate carries a large claim on a `survey` spec, and nothing on a survey item's execution path would ever consult an injected one; see directives.claim.enforcement"
+        },
+        "claims_rollup": {
+          "r6-fowler": {
+            "magnitude": "large",
+            "text": "The Fowler-pass verdict spans the ENTIRE diff, not one narrow question the way the survey's other six items do -- a false 'absent' or an unlogged override lets a real code smell through with no other checkpoint behind it. It is the one item in either role spec whose scope is genuinely broad rather than narrowly targeted, which is why the escalation belongs here and not on a throwaway stand-in.",
+            "enforcement": "NOT machine-enforced here -- no postcondition is injected for a large claim on a `survey` spec. `checklist_engine.record()` on a survey item evaluates only command-kind postconditions (survey-record-check-scope, #422) and leaves an artifact-kind postcondition like the one `gated` specs inject permanently unevaluated; `checklist_engine.consolidate()` reads only each item's stored `result` field and nothing else (#328). An injected postcondition here would be silently inert, not a real gate -- so none is injected. The tier this gate hands back to (see `directives.handback.hand_back_to`) must adjudicate this claim itself."
+          }
+        }
+      },
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ran the Fowler refactoring/code-smell pass over the full diff (efe92791^..efe92791, map/INDEX.md, the only changed file). Recorded to .agent-work/20260821-mapreview/FOWLER_PASS.json: all 12 baseline smells visited, all verdict `absent` (long-method, large-class, duplicated-code, feature-envy, data-clumps, primitive-obsession, long-parameter-list, shotgun-surgery, divergent-change, message-chains, speculative-generality, comments-as-deodorant), each with a finding explaining why it does not apply to a generated-count-only diff with no code, no function, no class, no comment. No override was needed since no smell was present -- override subordination did not arise. `python scripts/verify_fowler_pass.py .agent-work/20260821-mapreview/FOWLER_PASS.json` -> exit 0, stdout \"fowler pass ok: ... (smells=12, flagged=[], overridden=[])\". No smell was skipped; no rail_exception was needed or used.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /tmp/constellation-20260821-mapreview && python scripts/verify_fowler_pass.py '.agent-work/20260821-mapreview/FOWLER_PASS.json'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "Commit efe92791 (\"chore: regenerate root map/ (post Wave1+#613 integration base)\") is APPROVED. All six survey items pass. Independent verification (not the Cartographer's word) confirmed: (1) single-file scope, map/INDEX.md only; (2) every changed line across the full diff is a numeric entity/hole count on an already-existing listing line -- no module added/removed, no link changed, no docstring rewritten; (3) MapTreeFreshness test passes green, and was red-proofed by restoring the stale parent version in a scratch worktree to confirm the guard genuinely discriminates; (4) the ordinary suite is green at 3447 passed, 6 skipped, 1222 subtests passed, matching the Cartographer's claim exactly once this reviewer's own dispatched-crew CREW_SCRATCH_DIR env leakage into an unrelated pre-existing test is excluded (confirmed as environment pollution, not a defect in efe92791, by toggling the var and reproducing pass/fail both ways); (5) map/ids.jsonl genuinely has no diff; (6) per-module subdirectories under map/ remain untracked by design (gitignored via map/*) and none was added; (7) the worktree-metadata incident left no residue -- independently confirmed the integration worktree's HEAD/branch and the scripts/tests content are unaffected; (8) the test_mcp_lifecycle count-movement attribution to Wave 1 commits 7b55c477/5891e80f (not #613) is independently confirmed via git log/git show; (9) a from-scratch rebuild via git worktree add produced a byte-identical map/INDEX.md and map/ids.jsonl to what's committed; (10) the Fowler refactoring pass visited all 12 baseline smells, all absent (this is a generated-count-only diff with no code), verify_fowler_pass.py exits 0. No blockers, no triage candidates, no architecture reconciliation needed."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "origin": {
+    "work_id": "20260821-mapreview",
+    "worktree": "/tmp/constellation-20260821-mapreview",
+    "opened_by": "init_work_area"
+  }
+}

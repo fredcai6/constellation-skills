@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "ab-reviewer",
+    "refusals": 1,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-r3-evidence@95669181b3c26d50a2e12cbc3b4dc7f6cf9e8318",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:29:52Z"
+  }
+}

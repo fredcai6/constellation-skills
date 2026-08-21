@@ -1,0 +1,14 @@
+{"ops": [
+  {"op": "add", "id": "r1-stop-hook-render",
+   "title": "R1: reconstruct_current renders A3 shape",
+   "imperative": "scripts/hooks/spine_rail.py:654 -- reconstruct_current's lease-line still emits 'LEASE active: {sid} (by {by}, heartbeat {hb})', the exact string A3 killed on the current path. Render the same HELD + age shape, reusing checklist_engine's age formatter if importable, else document explicitly why not. Add a regression proving the Stop-hook render no longer says active for a stale lease.",
+   "postconditions": [
+     {"id": "c2", "statement": "reconstruct_current renders HELD + age, no verdict word, for an active lease; regression test proves it for a stale lease; full spine_rail + checklist_engine suites green", "check": {"kind": "command", "command": "python -m pytest -q tests/test_spine_rail.py tests/test_checklist_engine.py"}, "satisfied": false}
+   ]},
+  {"op": "add", "id": "r2-map-regen", "after": "r1-stop-hook-render",
+   "title": "R2: regenerate map/INDEX.md",
+   "imperative": "Run python -m scripts.code_map build --root . Only map/INDEX.md and map/ids.jsonl are tracked. Sanity-check the diff is entity-count/module-listing only; commit map/ alone, separate from R1.",
+   "postconditions": [
+     {"id": "c2", "statement": "map/INDEX.md regenerated and committed alone; diff is entity-count/module-listing shape only; full suite green with zero failures", "check": {"kind": "command", "command": "python -m pytest -q"}, "satisfied": false}
+   ]}
+]}

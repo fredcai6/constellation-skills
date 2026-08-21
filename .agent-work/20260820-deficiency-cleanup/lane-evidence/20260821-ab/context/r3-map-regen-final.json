@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r3-map-regen-final",
+  "files": [],
+  "repo_rev": {
+    "commit": "ee59a7b91d277e59dd3625390916943f8481e784"
+  },
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:56:47Z",
+    "roots": {
+      "skill": "/tmp/constellation-20260821-ab",
+      "repo": "/tmp/constellation-20260821-ab",
+      "durable": "/tmp/constellation-20260821-ab"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/tmp/constellation-20260821-ab"
+    }
+  }
+}

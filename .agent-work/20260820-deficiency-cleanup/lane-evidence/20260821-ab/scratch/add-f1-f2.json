@@ -1,0 +1,14 @@
+{"ops": [
+  {"op": "add", "id": "f2-parent-optional-regression",
+   "title": "F2: prove --resume/--abandon/--verify-result work with no --parent",
+   "imperative": "The AST patches added --parent to --resume/--verify-result test calls that construct no CrewSpec and never needed it. Add a regression pinning that --resume, a bare --abandon, and --verify-result all succeed with NO --parent supplied -- the test that would catch someone later tidying the enforcement into argparse required=True and silently breaking all three.",
+   "postconditions": [
+     {"id": "c2", "statement": "new regression proves --resume/--abandon/--verify-result succeed with no --parent; full run_crew suite green", "check": {"kind": "command", "command": "python -m pytest -q tests/test_crew_launcher.py"}, "satisfied": false}
+   ]},
+  {"op": "add", "id": "f1-parent-doctrine", "after": "f2-parent-optional-regression",
+   "title": "F1: document --parent in crew-dispatch.md",
+   "imperative": "skills/commander/references/crew-dispatch.md (scope-fence extended for this item only) contains zero mentions of --parent, which B2 made required. Add a short doctrine paragraph, in the shape of the existing 'Name a tier' section, saying what to pass and where the value comes from. Keep it short -- reference, not tutorial.",
+   "postconditions": [
+     {"id": "c2", "statement": "crew-dispatch.md documents --parent; corpus-freshness/prose tests (if any) still pass; map/ untouched", "check": {"kind": "command", "command": "python -m pytest -q"}, "satisfied": false}
+   ]}
+]}

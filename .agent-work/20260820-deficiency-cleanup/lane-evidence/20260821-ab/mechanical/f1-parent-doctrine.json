@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "f1-parent-doctrine",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 17,
+    "spine-step": "f1-parent-doctrine",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-f1-parent-doctrine@f39203939c4e5f2b2061e1ad7f355bfa713103be",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:44:24Z"
+  }
+}

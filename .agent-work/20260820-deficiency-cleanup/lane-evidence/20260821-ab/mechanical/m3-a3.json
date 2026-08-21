@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-a3",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 6,
+    "spine-step": "m3-a3",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-m3-a3@f35e6d03ab59e090507f333482fc47400a335f70",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T15:19:26Z"
+  }
+}

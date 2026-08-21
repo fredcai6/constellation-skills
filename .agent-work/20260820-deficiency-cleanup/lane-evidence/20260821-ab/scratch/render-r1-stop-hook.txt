@@ -1,0 +1,7 @@
+=== BEFORE (Stop hook, efe92791) ===
+LEASE active: charter-refresh-20260728 (by charter, heartbeat 2026-07-29T21:05:17.862438+00:00)
+ACTIVE g1 [in-progress] -- keep going
+
+=== AFTER (Stop hook, R1 fix) ===
+LEASE HELD: charter-refresh-20260728 (by charter, last heartbeat 547h00m ago)
+ACTIVE g1 [in-progress] -- keep going

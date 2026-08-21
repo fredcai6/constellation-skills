@@ -1,0 +1,1345 @@
+{
+  "work_id": "20260821-ab",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-a1",
+    "m2-a2",
+    "m3-a3",
+    "m4-a4",
+    "m5-a5",
+    "m6-a6",
+    "m7-b1",
+    "m8-b2",
+    "m9-suite",
+    "r1-stop-hook-render",
+    "r2-map-regen",
+    "f2-parent-optional-regression",
+    "f1-parent-doctrine",
+    "r3-map-regen-final"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the handoff (crew-handoffs/wave3-ab-implementer-handoff.md) in full, the governing criterion (no bad actors, ease of use is success), and the three named traps (A1 frozen strings, A3 no verdict, B1 waive-journaling). Confirm scope fence and workspace. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff read in full; scope fence, exclusions, and evidence requirements understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-a1": {
+      "id": "m1-a1",
+      "title": "A1: remove current from RAIL_VERBS",
+      "imperative": "scripts/checklist_engine.py:457 \u2014 remove \"current\" from RAIL_VERBS, leaving _RAIL_STRINGS byte-identical (frozen for #145). Update the pinned test_rail_verbs_set_is_exact to match. Run the DoctrineRail test class and confirm current's CLI output no longer carries a RAIL: suffix.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded in m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "RAIL_VERBS == {claim,start,advance,attest,attach}; _RAIL_STRINGS unchanged; pinned test updated; DoctrineRail suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py -k DoctrineRail"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-a1-2"
+        }
+      ],
+      "constraints": [
+        "never edit _RAIL_STRINGS text"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-a1-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-a1",
+            "why_ref": "<why-id>",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-a1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py -k DoctrineRail",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-a2": {
+      "id": "m2-a2",
+      "title": "A2: archive banner + rail suppression",
+      "imperative": "In dispatch()'s rail chokepoint, add a path-fact predicate: when the plan's own base_dir sits under .agent-work/archive/, prepend an ARCHIVED banner and suppress the rail for every railed verb. No liveness claim, refuses nothing. Add a focused test and demonstrate before/after against a real archived plan copied to scratch.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "A1 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "A1 landed, full suite green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "archived-path plan prints ARCHIVED banner with no RAIL suffix; non-archived plan unaffected; focused test green; before/after render captured",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py -k Archive"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-a2-2"
+        }
+      ],
+      "constraints": [
+        "path fact only, never a liveness verdict",
+        "never mutate a plan another run owns -- work on a scratch copy"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-a2-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-a2",
+            "why_ref": "w-2",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-a2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py -k Archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-a3": {
+      "id": "m3-a3",
+      "title": "A3: HELD not active, render age never a verdict",
+      "imperative": "Rewrite _lease_line (checklist_engine.py:~1300) to render HELD plus an age computed via the existing _format_age helper, never the word active and never a STALE/LIVE verdict. Update every test asserting the old LEASE active: ... string (test_checklist_engine.py and the MCP door tests that exercise this same render). Demonstrate before/after against the real archived charter plan copied to scratch.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "A2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "A2 landed, suites green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "lease line renders HELD + age, no verdict word anywhere; full checklist_engine + mcp test files green; before/after render captured",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-a3-2"
+        }
+      ],
+      "constraints": [
+        "render age, never STALE/LIVE",
+        "a 31-minute-old lease must not read as abandoned"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-a3-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-a3",
+            "why_ref": "w-3",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-a3-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-a4": {
+      "id": "m4-a4",
+      "title": "A4: next (for the holder)",
+      "imperative": "In render_human/state, relabel the next: hint to \"next (for the holder):\" whenever the plan carries an active lease (regardless of who is asking, since current takes no caller identity) -- truthful either way, no new argument. Add a focused test for both the held and unheld cases.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "A3 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "A3 landed, full suites green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "next: relabeled only when a lease is held; unheld render unchanged; focused test green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py -k NextForTheHolder",
+            "evidence_hint": "adjust selector to the actual test name chosen"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-a4-3"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-a4-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-a4",
+            "why_ref": "w-4",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-a4-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py -k \"next_for_the_holder or NextForHolder\"",
+            "exit": 5,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-a4-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py -k NextForTheHolder",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-a5": {
+      "id": "m5-a5",
+      "title": "A5: staleness in _scan_active_spine",
+      "imperative": "scripts/hooks/spine_rail.py -- gate _scan_active_spine's fallback match loop on lease staleness (mirror checklist_engine._is_stale's threshold/fail-toward-stale rule locally, stdlib-only, no engine import). Leave the owned-binding resume path untouched (the owner is never blocked by its own staleness). Fix test_spine_rail.py's make_spine fixture default heartbeat (currently a fixed past date) to a fresh timestamp so unrelated tests are unaffected, and add a focused staleness test.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "A4 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "A4 landed, suites green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "a stale active-leased spine is excluded from _scan_active_spine's matches and from decide_session_start's fallback injection; full spine_rail suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_spine_rail.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-a5-2"
+        }
+      ],
+      "constraints": [
+        "this is the one item not to defer",
+        "owner's own resume path stays ungated by staleness"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-a5-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-a5",
+            "why_ref": "w-5",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-a5-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_spine_rail.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-a6": {
+      "id": "m6-a6",
+      "title": "A6: rewrite require_session's refusal text",
+      "imperative": "checklist_engine.py:~1148-1152 -- rewrite the active-non-stale-session refusal so it no longer unconditionally recommends impersonating the holder's --session-id (#632 hazard) or reaches straight for claim --force --reason (#369 concern). Teach the correct next action: pass --session-id only if you truly are that same run resuming; otherwise leave it alone or claim --force --reason only when you know it is gone.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "A5 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "A5 landed, suites green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "new refusal text teaches the correct action and does not recommend either filed-defect remedy unconditionally; existing require_session tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-a6-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-a6-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m6-a6",
+            "why_ref": "w-6",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-a6-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-b1": {
+      "id": "m7-b1",
+      "title": "B1: exempt waive from the session gate",
+      "imperative": "checklist_engine.py require_session (:1136) -- exempt verb == 'waive' from the session-ownership check specifically, leaving waive in MUTATING_VERBS untouched (line ~3798 still journals it). Add a test proving a parent can waive a child's condition without holding its session AND that the waiver is journaled. Run the PreToolUse self-waive tests in test_crew_launcher.py unmodified and confirm they still pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "A6 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "A6 landed, suites green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "cross-session waive succeeds and is journaled; waive still in MUTATING_VERBS; self-waive PreToolUse denial test still passes unmodified",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py -k waive"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-b1-2"
+        }
+      ],
+      "constraints": [
+        "do not remove waive from MUTATING_VERBS",
+        "PreToolUse self-waive denial in run_crew.py must keep working unchanged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-b1-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m7-b1",
+            "why_ref": "w-7",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-b1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py -k waive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-b2": {
+      "id": "m8-b2",
+      "title": "B2: make --parent required",
+      "imperative": "scripts/run_crew.py -- remove --parent's optionality at CrewSpec.__post_init__ (the one choke point every dispatch path already passes through, same pattern as the handoff/result requirements), matching the existing gate_enforced usage in verify_declared_dispatch.py. A caller that omits it must get a clear CrewLaunchError naming what to pass. Update every in-repo caller/test that constructs a CrewSpec or dispatches via the CLI without --parent.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "B1 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "B1 landed, suites green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "a dispatch/relaunch/external-record with no parent refuses with a clear message; full run_crew test suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_crew_launcher.py tests/test_crew_delivery_addressing.py tests/test_work_id_nesting.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-b2-2"
+        }
+      ],
+      "constraints": [
+        "remove the optionality, do not add a second lineage edge"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m8-b2-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m8-b2",
+            "why_ref": "w-8",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-b2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_crew_launcher.py tests/test_crew_delivery_addressing.py tests/test_work_id_nesting.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m9-suite": {
+      "id": "m9-suite",
+      "title": "Full suite, evidence integration, commits, result",
+      "imperative": "Run the full ordinary suite (python -m pytest -q) and confirm no regressions against the efe92791 baseline (3447 passed, 6 skipped, 1222 subtests). Run git diff --check (must exit 0). Commit in logical units (A items separable from B items). Write .agent-work/20260821-ab/crew-handoffs/ab-implementer-result.md per the handoff's required evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "B2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "B2 landed, all sub-suites green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "full suite green with matching or better counts; git diff --check clean; commits made; result file written",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q --deselect tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-suite-2"
+        }
+      ],
+      "constraints": [
+        "no push, no PR, no mcp__spine__* calls"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m9-suite-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m9-suite",
+            "why_ref": "w-9",
+            "lease_claimed_at": "2026-08-21T15:12:40.273121+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-suite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q --deselect tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r1-stop-hook-render": {
+      "id": "r1-stop-hook-render",
+      "title": "R1: reconstruct_current renders A3 shape",
+      "imperative": "scripts/hooks/spine_rail.py:654 -- reconstruct_current's lease-line still emits 'LEASE active: {sid} (by {by}, heartbeat {hb})', the exact string A3 killed on the current path. Render the same HELD + age shape, reusing checklist_engine's age formatter if importable, else document explicitly why not. Add a regression proving the Stop-hook render no longer says active for a stale lease.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "reconstruct_current renders HELD + age, no verdict word, for an active lease; regression test proves it for a stale lease; full spine_rail + checklist_engine suites green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_spine_rail.py tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r1-stop-hook-render-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r1-stop-hook-render-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "r1-stop-hook-render",
+            "why_ref": "w-10",
+            "lease_claimed_at": "2026-08-21T16:02:25.896981+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r1-stop-hook-render-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_spine_rail.py tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r2-map-regen": {
+      "id": "r2-map-regen",
+      "title": "R2: regenerate map/INDEX.md",
+      "imperative": "Run python -m scripts.code_map build --root . Only map/INDEX.md and map/ids.jsonl are tracked. Sanity-check the diff is entity-count/module-listing only; commit map/ alone, separate from R1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "map/INDEX.md regenerated and committed alone; diff is entity-count/module-listing shape only; full suite green with zero failures",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r2-map-regen-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r2-map-regen-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "r2-map-regen",
+            "why_ref": "w-11",
+            "lease_claimed_at": "2026-08-21T16:02:25.896981+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r2-map-regen-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "f2-parent-optional-regression": {
+      "id": "f2-parent-optional-regression",
+      "title": "F2: prove --resume/--abandon/--verify-result work with no --parent",
+      "imperative": "The AST patches added --parent to --resume/--verify-result test calls that construct no CrewSpec and never needed it. Add a regression pinning that --resume, a bare --abandon, and --verify-result all succeed with NO --parent supplied -- the test that would catch someone later tidying the enforcement into argparse required=True and silently breaking all three.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "new regression proves --resume/--abandon/--verify-result succeed with no --parent; full run_crew suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_crew_launcher.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-f2-parent-optional-regression-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-f2-parent-optional-regression-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "f2-parent-optional-regression",
+            "why_ref": "w-12",
+            "lease_claimed_at": "2026-08-21T16:40:59.574291+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-f2-parent-optional-regression-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_crew_launcher.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "f1-parent-doctrine": {
+      "id": "f1-parent-doctrine",
+      "title": "F1: document --parent in crew-dispatch.md",
+      "imperative": "skills/commander/references/crew-dispatch.md (scope-fence extended for this item only) contains zero mentions of --parent, which B2 made required. Add a short doctrine paragraph, in the shape of the existing 'Name a tier' section, saying what to pass and where the value comes from. Keep it short -- reference, not tutorial.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "crew-dispatch.md documents --parent; corpus-freshness/prose tests (if any) still pass; map/ untouched",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q --deselect tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-f1-parent-doctrine-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-f1-parent-doctrine-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "f1-parent-doctrine",
+            "why_ref": "w-13",
+            "lease_claimed_at": "2026-08-21T16:40:59.574291+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-f1-parent-doctrine-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q --deselect tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r3-map-regen-final": {
+      "id": "r3-map-regen-final",
+      "title": "R3: regenerate map/INDEX.md after F1/F2",
+      "imperative": "Coordinator authorized regenerating map/ now that F1/F2 are committed. Run python -m scripts.code_map build --root . Sanity-check the diff is entity-count/module-listing shape only (expected: tests entities 5319->5323). Commit map/ alone. Then full ordinary suite must be zero failures.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "map/INDEX.md regenerated, diff sanity-checked as entity-count/module-listing only, committed alone; full suite zero failures",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r3-map-regen-final-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r3-map-regen-final-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "r3-map-regen-final",
+            "why_ref": "w-14",
+            "lease_claimed_at": "2026-08-21T16:56:21.484503+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r3-map-regen-final-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 18,
+  "engine_session": {
+    "session_id": "ab-implementer-20260821",
+    "status": "released",
+    "claimed_at": "2026-08-21T16:56:21.484503+00:00",
+    "last_heartbeat": "2026-08-21T17:02:40.958578+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-21T17:02:48.603568+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-21T15:12:51.044011+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-a1",
+      "why": "RAIL_VERBS shrunk to 5, current unrailed, pinned test + RailPositionOrdering test updated, full checklist_engine + mcp suites green",
+      "mechanical": false,
+      "ts": "2026-08-21T15:15:46.422193+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-a2",
+      "why": "ARCHIVED banner + rail suppression added at dispatch() chokepoint, path-fact only; 5 focused tests + full checklist_engine/mcp suites green; before/after captured against a scratch copy of the real archived charter plan under a preserved .agent-work/archive/ path",
+      "mechanical": false,
+      "ts": "2026-08-21T15:19:16.234752+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-a3",
+      "why": "LEASE active -> HELD + age via _format_age, no verdict; 8 mcp/door + checklist_engine test call sites updated; before/after on scratch archive copy shows HELD + 549h29m ago (22 days) with no STALE/LIVE word",
+      "mechanical": false,
+      "ts": "2026-08-21T15:22:27.363273+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-a4",
+      "why": "next relabeled to next (for the holder): whenever a lease is held; unheld/released cases unchanged; NextForTheHolder test class + full checklist_engine/mcp suites green",
+      "mechanical": false,
+      "ts": "2026-08-21T15:24:46.661549+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-a5",
+      "why": "_scan_active_spine now excludes stale/unparseable-heartbeat leases (mirrors checklist_engine._is_stale, no engine import); owned-binding resume path left ungated (owner never blocked by own staleness); make_spine's fixed-past default heartbeat replaced with a fresh-per-call default plus optional override, one existing test fixed for a legitimate byte-identity comparison; 6 new focused tests + full spine_rail suite green",
+      "mechanical": false,
+      "ts": "2026-08-21T15:27:52.720638+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-a6",
+      "why": "require_session's active-non-stale refusal rewritten: both remedies (--session-id <holder> and claim --force --reason) kept but each now stated WITH the qualifying condition, plus the honest leave-it-alone option; no test asserted the old exact text; 1 new focused test + full checklist_engine suite green",
+      "mechanical": false,
+      "ts": "2026-08-21T15:29:19.174784+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-b1",
+      "why": "waive exempted from require_session's session-ownership check specifically (not removed from MUTATING_VERBS); 4 new focused tests prove cross-session waive succeeds, is journaled, MUTATING_VERBS membership intact, and other mutating verbs remain session-gated; the 4 PreToolUse self-waive denial tests in test_crew_launcher.py pass unmodified; full checklist_engine suite green",
+      "mechanical": false,
+      "ts": "2026-08-21T15:31:25.927333+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-b2",
+      "why": "CrewSpec.__post_init__ refuses a blank/missing parent with a clear message naming what to pass; --parent help text updated; UNKNOWN_PARENT retained for display of legacy entries only. Fixed 39 CrewSpec/launch_crew/record_external_attempt call sites + argv lists across 4 test files (mostly scripted, some hand-verified); 4 tests whose whole premise was the old no-parent-still-works behavior rewritten to test the new refusal/inheritance shape instead. Full run_crew test suite (776 tests, 524 subtests) + 10 other potentially-affected test files green; no non-test in-repo caller constructs CrewSpec directly",
+      "mechanical": false,
+      "ts": "2026-08-21T15:42:40.907567+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m9-suite",
+      "why": "Full ordinary suite: 3465 passed, 1 failed (tests/test_code_map.py MapTreeFreshnessTests -- map/ is explicitly out of scope for this batch and my source changes shift the map's entity count; disclosed as a known residual, not a functional regression), 6 skipped, 1222 subtests -- matches baseline subtest count exactly, +18 net new passing tests from this batch's focused coverage. git diff --check clean against efe92791 and against the working tree. Two commits made: a790ab7c (batch A, A1-A6) and 1fd593ac (batch B, B1-B2), separable in history. No push, no PR, no mcp__spine__* calls.",
+      "mechanical": false,
+      "ts": "2026-08-21T15:56:16.584136+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "r1-stop-hook-render",
+      "why": "reconstruct_current now renders HELD + age via a local COPY of _format_age (this module is stdlib-only by design and may gain none -- the same law _worktree_from_spine's docstring states); 6 new regression tests including one pinning both renderers' output against each other so future drift is caught; before/after captured against a real stale-shaped lease; full spine_rail + checklist_engine suites green (668 passed, 1 skipped, 180 subtests)",
+      "mechanical": false,
+      "ts": "2026-08-21T16:05:37.306285+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "r2-map-regen",
+      "why": "python -m scripts.code_map build --root . regenerated map/INDEX.md; only map/INDEX.md changed (map/ids.jsonl identical, per-module subdirs untracked by design). Diff is entity-count and module-listing shape only -- scripts 1274->1277, tests 5291->5319, scripts.hooks 87->89, scripts.checklist_engine 112->113, scripts.hooks.spine_rail 65->67, tests.test_checklist_engine 653->670, tests.test_spine_rail 220->231 -- all attributable to this batch's own new functions/tests, no structural anomaly. Full ordinary suite: 3469 passed, 0 failed, 6 skipped, 1224 subtests -- zero failures, as required. Ready to commit map/ alone.",
+      "mechanical": false,
+      "ts": "2026-08-21T16:11:43.111157+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "f2-parent-optional-regression",
+      "why": "Added ParentOptionalForRecoveryVerbsTests (3 tests) proving --resume, bare --abandon, and --verify-result all succeed with no --parent supplied -- mirrors the existing MandatoryModelTests pattern for the same class of concern. Full test_crew_launcher.py suite: 248 passed. git diff --check clean.",
+      "mechanical": false,
+      "ts": "2026-08-21T16:44:14.255999+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "f1-parent-doctrine",
+      "why": "Added a new doctrine section to skills/commander/references/crew-dispatch.md, matching the shape of the existing 'Name a tier' section: states the refusal (CrewSpec.__post_init__), what to pass (--parent), where the value comes from (the Commander's own SPINE_SESSION), and the --resume/bare-abandon exemption. Verified by an independent research pass that no prior doctrine named this and that SPINE_SESSION is the literal available identity. Full suite minus the known map test: green. map/INDEX.md is now stale again (F2's 3 new test methods shifted entity counts; F1's own edit is a markdown file, never indexed, and contributes zero delta) -- NOT regenerated this round per the explicit do-not-touch-map instruction; disclosed as a new residual for the coordinator's adjudication.",
+      "mechanical": false,
+      "ts": "2026-08-21T16:51:07.187076+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "r3-map-regen-final",
+      "why": "map/INDEX.md regenerated; diff sanity-checked as entity-count only (tests 5319->5323 x2, tests.test_crew_launcher 338->342/259->262 holes) -- exactly the predicted narrow shape, no module added/removed, no link retargeted, no docstring rewritten. tests/test_crew_dispatch_doctrine.py (content-pins crew-dispatch.md) still passes unmodified. Committed map/INDEX.md alone (8957d925). Full ordinary suite: 3472 passed, 0 failed, 6 skipped, 1224 subtests -- zero failures. git diff --check clean against efe92791. Base unmoved, no rebase/merge of main.",
+      "mechanical": false,
+      "ts": "2026-08-21T17:02:40.958558+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m1-a1",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1929,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-21T15:12:55.443509+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "m1-a1",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2016,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-21T15:14:08.454506+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "m1-a1",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2016,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-21T15:14:13.197328+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "m2-a2",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2121,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-21T15:15:51.968040+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "m2-a2",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2121,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-21T15:15:56.721845+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "m3-a3",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.234,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-21T15:19:21.707438+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "m3-a3",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.234,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-21T15:19:26.131361+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "m4-a4",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2565,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-21T15:22:32.798565+00:00"
+    },
+    {
+      "id": "tl-9",
+      "gate": "m4-a4",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.257,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-21T15:22:38.324627+00:00"
+    },
+    {
+      "id": "tl-10",
+      "gate": "m5-a5",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2678,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-21T15:24:52.239385+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "m5-a5",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2683,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-21T15:24:57.069022+00:00"
+    },
+    {
+      "id": "tl-12",
+      "gate": "m6-a6",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2895,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-21T15:27:57.603971+00:00"
+    },
+    {
+      "id": "tl-13",
+      "gate": "m6-a6",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2901,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-21T15:28:03.007049+00:00"
+    },
+    {
+      "id": "tl-14",
+      "gate": "m7-b1",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2966,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-21T15:29:25.137733+00:00"
+    },
+    {
+      "id": "tl-15",
+      "gate": "m7-b1",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.2971,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-21T15:29:29.585869+00:00"
+    },
+    {
+      "id": "tl-16",
+      "gate": "m8-b2",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3088,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-21T15:31:31.261718+00:00"
+    },
+    {
+      "id": "tl-17",
+      "gate": "m8-b2",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3094,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-21T15:31:36.050005+00:00"
+    },
+    {
+      "id": "tl-18",
+      "gate": "m9-suite",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.3793,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-21T15:42:46.391512+00:00"
+    },
+    {
+      "id": "tl-19",
+      "gate": "m9-suite",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.3798,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-21T15:42:51.380555+00:00"
+    },
+    {
+      "id": "tl-20",
+      "gate": "r1-stop-hook-render",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.4123,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-10",
+      "ts": "2026-08-21T16:02:37.272860+00:00"
+    },
+    {
+      "id": "tl-21",
+      "gate": "r1-stop-hook-render",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4123,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-10",
+      "ts": "2026-08-21T16:02:42.267991+00:00"
+    },
+    {
+      "id": "tl-22",
+      "gate": "r2-map-regen",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.4282,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-11",
+      "ts": "2026-08-21T16:05:57.724146+00:00"
+    },
+    {
+      "id": "tl-23",
+      "gate": "r2-map-regen",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4291,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-11",
+      "ts": "2026-08-21T16:06:03.010574+00:00"
+    },
+    {
+      "id": "tl-24",
+      "gate": "f2-parent-optional-regression",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.4518,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-12",
+      "ts": "2026-08-21T16:41:24.037289+00:00"
+    },
+    {
+      "id": "tl-25",
+      "gate": "f2-parent-optional-regression",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4522,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-12",
+      "ts": "2026-08-21T16:41:29.027377+00:00"
+    },
+    {
+      "id": "tl-26",
+      "gate": "f1-parent-doctrine",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.4714,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-13",
+      "ts": "2026-08-21T16:44:19.769259+00:00"
+    },
+    {
+      "id": "tl-27",
+      "gate": "f1-parent-doctrine",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.4718,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-13",
+      "ts": "2026-08-21T16:44:24.647661+00:00"
+    },
+    {
+      "id": "tl-28",
+      "gate": "r3-map-regen-final",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.4907,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-14",
+      "ts": "2026-08-21T16:56:41.516041+00:00"
+    },
+    {
+      "id": "tl-29",
+      "gate": "r3-map-regen-final",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.491,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-14",
+      "ts": "2026-08-21T16:56:47.396531+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-21T15:24:40.764477+00:00",
+      "reason": "postcondition command in the plan draft used a typo'd -k selector (NextForHolder vs the actual class NextForTheHolder); correcting to the real test command",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m4-a4.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-21T15:46:17.796531+00:00",
+      "reason": "python -m pytest -q genuinely has one failure -- tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build -- because map/ is explicitly out of scope for this batch (scope fence) and my source changes (new module-level functions in checklist_engine.py and spine_rail.py) legitimately shift the map's entity count. This is a known, reported residual, not a functional regression; deselecting it isolates the postcondition to the ordinary suite the handoff asked me to run and report",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m9-suite.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-21T16:02:32.511292+00:00",
+      "reason": "Coordinator adjudicated both disclosed residuals (R1: reconstruct_current still renders the pre-A3 LEASE active shape; R2: map/INDEX.md staleness) as fix-now, bounded to already-allowed files. Adding two plan items to drive them through the engine rather than doing the work off-plan.",
+      "authority": "admiral",
+      "ops": [
+        "added r1-stop-hook-render",
+        "added r2-map-regen"
+      ]
+    },
+    {
+      "ts": "2026-08-21T16:41:17.826407+00:00",
+      "reason": "Independent review approved efe92791..99a46a08 and raised two non-blocking findings; Admiral ruled both fix-now on this branch. F2 (test coverage the AST patches accidentally removed) first since it has no doctrine-wording dependency; F1 (crew-dispatch.md doctrine gap) second, scope fence explicitly extended by the coordinator for this one file.",
+      "authority": "admiral",
+      "ops": [
+        "added f2-parent-optional-regression",
+        "added f1-parent-doctrine"
+      ]
+    },
+    {
+      "ts": "2026-08-21T16:48:39.557631+00:00",
+      "reason": "Full suite has one failure again: MapTreeFreshnessTests. Root-caused it: F1's doctrine edit (a markdown file, never indexed by code_map) contributes ZERO map delta -- confirmed by git status showing only crew-dispatch.md and test_crew_launcher.py dirty. The delta is entirely F2's 3 new test methods (tests entity count 5319->5323), same expected-side-effect class as the batch's own A-E items and the already-adjudicated R2 map regen. The coordinator's instruction this round was explicit not to touch map/ and to stop and report if anything moves it -- deselecting the known test to isolate the rest of the suite, and disclosing this as a new residual rather than silently regenerating without authorization.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check f1-parent-doctrine.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-21T16:56:36.585417+00:00",
+      "reason": "Coordinator authorized the map regen this round now that F1/F2 are committed and verified; same terms as R2 (map/INDEX.md + ids.jsonl only, commit alone, sanity check diff shape first).",
+      "authority": "admiral",
+      "ops": [
+        "added r3-map-regen-final"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+[
+  {
+    "crew_id": "constellation/20260821-mapreview/map-review/reviewer/attempt-1",
+    "work_id": "20260821-mapreview",
+    "gate": "map-review",
+    "role": "reviewer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/20260821-mapreview/map-review/reviewer/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 1823466,
+    "worktree": "/tmp/constellation-20260821-mapreview",
+    "handoff": ".agent-work/20260821-mapreview/REVIEWER_HANDOFF.md",
+    "result": ".agent-work/20260821-mapreview/crew-handoffs/map-reviewer-result.md",
+    "spine": ".agent-work/20260821-mapreview/spine.json",
+    "parent": null,
+    "stdout": ".agent-work/20260821-mapreview/crew-runs/map-review-reviewer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/20260821-mapreview/crew-runs/map-review-reviewer-attempt-1.stderr.txt",
+    "started_at": "2026-08-21T13:40:38.260920+00:00",
+    "last_heartbeat": "2026-08-21T13:50:59.196890+00:00",
+    "completed_at": "2026-08-21T13:50:59.196890+00:00",
+    "abandoned": false,
+    "model": "sonnet",
+    "scratch_dir": ".agent-work/20260821-mapreview/crew-scratch/map-review-reviewer-attempt-1-8fdd68f8a6d6",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "f2-parent-optional-regression",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 16,
+    "spine-step": "f2-parent-optional-regression",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-f2-parent-optional-regression@a74333d75f691db46169dafc3104f0475063c5b7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:41:29Z"
+  }
+}

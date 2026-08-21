@@ -1,0 +1,8 @@
+{"ops": [
+  {"op": "add", "id": "r3-map-regen-final",
+   "title": "R3: regenerate map/INDEX.md after F1/F2",
+   "imperative": "Coordinator authorized regenerating map/ now that F1/F2 are committed. Run python -m scripts.code_map build --root . Sanity-check the diff is entity-count/module-listing shape only (expected: tests entities 5319->5323). Commit map/ alone. Then full ordinary suite must be zero failures.",
+   "postconditions": [
+     {"id": "c2", "statement": "map/INDEX.md regenerated, diff sanity-checked as entity-count/module-listing only, committed alone; full suite zero failures", "check": {"kind": "command", "command": "python -m pytest -q"}, "satisfied": false}
+   ]}
+]}

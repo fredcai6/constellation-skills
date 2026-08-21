@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "ab-reviewer",
+    "refusals": 1,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-r4-quality@06b1cd51cec210d46b7f879b6eea8660ee353b4e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:30:26Z"
+  }
+}

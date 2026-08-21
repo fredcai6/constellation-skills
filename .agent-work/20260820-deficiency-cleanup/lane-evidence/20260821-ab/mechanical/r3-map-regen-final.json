@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-map-regen-final",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 18,
+    "spine-step": "r3-map-regen-final",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-r3-map-regen-final@1229af365fa269f13ee40be00f4384fc9529b37f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:56:47Z"
+  }
+}

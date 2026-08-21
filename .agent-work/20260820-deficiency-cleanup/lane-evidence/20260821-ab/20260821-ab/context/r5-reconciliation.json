@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "files": [],
+  "repo_rev": {
+    "commit": "99a46a08fc164facdb88eeee43368d50b6f0b08b"
+  },
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:30:45Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-reviewer",
+      "repo": "/tmp/constellation-20260821-ab",
+      "durable": "/tmp/constellation-20260821-ab"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/.claude/skills/constellation-reviewer/scripts"
+    }
+  }
+}

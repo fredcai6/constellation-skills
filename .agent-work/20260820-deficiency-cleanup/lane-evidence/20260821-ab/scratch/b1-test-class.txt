@@ -1,0 +1,65 @@
+class WaiveExemptFromSessionGate(unittest.TestCase):
+    """B1 (deficiency cleanup batch A+B): `waive` is exempt from the SESSION
+    gate specifically -- not removed from `MUTATING_VERBS`, so the audit
+    trail (journaling) still fires. This is what used to force the five-step
+    handshake (release -> claim -> waive -> release -> reclaim) for the
+    sanctioned case: a parent waiving a child's condition while the child
+    holds a fresh lease of its own."""
+
+    def test_cross_session_waive_succeeds_while_a_different_session_holds_the_lease(self):
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, cl)
+            # the CHILD claims its own fresh (non-stale) lease
+            self.assertEqual(
+                E.main(["--file", str(f), "claim", "--session-id", "child-1",
+                        "--claimed-by", "implementer"]), 0)
+            # the PARENT -- a DIFFERENT session, no takeover, no --force --
+            # waives the child's condition. Before B1 this was refused by
+            # the session gate exactly as a `start`/`advance` would be.
+            code = E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                            "--authority", "human", "--reason", "accepted risk",
+                            "--session-id", "parent-1"])
+            self.assertEqual(code, 0)
+            reloaded = E.load(f)
+            self.assertTrue(reloaded["tasks"]["g1"]["postconditions"][0]["waived"])
+            # the CHILD's lease itself is untouched -- waive is not a takeover
+            self.assertEqual(reloaded["engine_session"]["session_id"], "child-1")
+
+    def test_cross_session_waive_is_journaled(self):
+        # waive stays in MUTATING_VERBS (B1's explicit constraint), so
+        # main()'s journaling branch -- which reads that same set -- still
+        # appends a line for it. This is the audit trail B1 must not delete.
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, cl)
+            E.main(["--file", str(f), "claim", "--session-id", "child-1",
+                    "--claimed-by", "implementer"])
+            code = E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                            "--authority", "human", "--reason", "accepted risk",
+                            "--session-id", "parent-1"])
+            self.assertEqual(code, 0)
+            jp = Path(str(f) + ".journal")
+            self.assertTrue(jp.is_file(), "waive must still append a journal line")
+            lines = [json.loads(ln) for ln in jp.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            waive_entries = [ln for ln in lines if ln.get("verb") == "waive"]
+            self.assertEqual(len(waive_entries), 1)
+            self.assertEqual(waive_entries[0]["session_id"], "parent-1")
+            self.assertEqual(waive_entries[0]["task"], "g1")
+
+    def test_waive_still_in_mutating_verbs(self):
+        self.assertIn("waive", E.MUTATING_VERBS)
+
+    def test_other_mutating_verbs_still_session_gated(self):
+        # the exemption is narrow: waive alone, not the whole gate.
+        cl = gated(g1=gate("g1", "pending", command=PASS_COMMAND))
+        E.claim(cl, "child-1", "implementer", ".", {})
+        with self.assertRaises(E.EngineError):
+            E.require_session(cl, "start", "parent-1", {})
+        with self.assertRaises(E.EngineError):
+            E.require_session(cl, "advance", "parent-1", {})
+        E.require_session(cl, "waive", "parent-1", {})  # does not raise
+
+

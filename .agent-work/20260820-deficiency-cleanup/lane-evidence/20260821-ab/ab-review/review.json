@@ -1,0 +1,184 @@
+{
+  "work_id": "20260821-ab",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md; read handoff and implementer result in full; confirmed diff scope (14 files) matches allowed set exactly, no excluded paths appear.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 8 items (A1-A6,B1-B2) plus R1/R2 verified against source: A1 RAIL_VERBS shrunk correctly, _RAIL_STRINGS byte-identical (verified by diff). A2 archived-path is genuinely lexical, banner makes no liveness claim. A3/R1 both renderers verified byte-matching HELD+age shape via independent render reproduction and mutation-tested cross-renderer regression. A4 lease_held/next-label confirmed. A5 owner-resume-path confirmed exempt from staleness gate via code trace + mutation test that breaks the dedicated regression when gate is wrongly applied to owned bindings. A6 refusal text independently triggered and read -- genuinely conditions each remedy instead of unconditional recommendation. B1 waive confirmed still in MUTATING_VERBS (byte-identical to base), journaling test passes, cross-session waive works in one call, PreToolUse self-waive denial byte-identical to base + its 4 tests pass unmodified. B2 CrewSpec.__post_init__ refusal fires with correct message; --resume/--verify-result/--abandon independently reproduced working with NO --parent (confirms implementer claim architecturally: CliBackend.resume and verify paths build no CrewSpec). Full suite independently reproduced: 3469 passed/6 skipped/1224 subtests/0 failures, matching claim exactly. git diff --check clean. Map commit is INDEX.md-only, entity-counts only. Option C and R9/R10 confirmed absent from diff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff name-status across efe92791..99a46a08 is exactly: map/INDEX.md, scripts/checklist_engine.py, scripts/hooks/spine_rail.py, scripts/run_crew.py, and 10 test files (test_checklist_engine.py, test_crew_delivery_addressing.py, test_crew_launcher.py, test_crew_worktree_cwd.py, test_mcp_door_unbound.py, test_mcp_identity.py, test_mcp_spine_bind.py, test_mcp_spine_server.py, test_spine_rail.py, test_work_id_nesting.py) -- exactly the allowed file set. git diff --stat against skills/charter, skills/_shared/global-everyone.md, tests/data/store_mentions.approved.txt, docs/ returns nothing (exit 0) -- none of the excluded human-owned paths appear anywhere in this branch's diff. git status --short in the worktree shows only the untracked .agent-work/20260821-ab/ work directory, explicitly in scope. Option C (lease demotion) and R9/R10 leaseless hole: grep for demot/leaseless/R9/R10 across the three source files' diff returns nothing -- confirmed not implemented.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All required evidence independently reproduced, not merely trusted: (1) full suite py -m pytest -q -> 3469 passed, 6 skipped, 1224 subtests passed, 0 failures -- exact match to claim; (2) git diff --check efe92791..99a46a08 exits 0; (3) before/after render on both checklist_engine.render_human and spine_rail.reconstruct_current against an identical synthetic 22d19h-stale lease -- both produce 'LEASE HELD: ... last heartbeat 547h00m ago', base produces 'LEASE active: ... heartbeat <raw-ISO>'; (4) mutation tests: broke spine_rail's HELD string -> ReconstructCurrentLeaseShapeMatchesA3 catches it; broke A5's owned-binding exemption -> test_owned_binding_resume_is_not_gated_by_staleness catches it; both restored clean (git diff --stat empty after). (5) Red/green check on the two reversed-premise B2 tests: swapping in base run_crew.py makes both genuinely fail (AssertionError / CrewLaunchError not raised), confirming they are not tautologies. FINDING (non-blocking, recorded as triage candidate): the AST patch scripts blindly added --parent to every RC.main(...) call including --resume/--verify-result calls that do not need it (CliBackend.resume and the verify-result path build no CrewSpec). This means the shipped suite no longer contains a test that calls --resume/--verify-result/bare --abandon WITHOUT --parent to lock in the 'these paths still work' guarantee the handoff asked to confirm. I independently reproduced all three working with no --parent (exit 0 in each case), so the underlying claim is TRUE, but the regression coverage for it is gone forward -- a future accidental requirement of --parent on these paths would not be caught by this suite.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against CREW_CONTEXT's verification-discipline rules: (1) 'a check that cannot fail is indistinguishable from a passed one' -- I independently mutation-tested the two load-bearing new regressions (ReconstructCurrentLeaseShapeMatchesA3, test_owned_binding_resume_is_not_gated_by_staleness) and both genuinely fail on a reintroduced defect, then restored clean; red/green-checked the two reversed-premise B2 tests against base code, both genuinely fail there. (2) 'assert against behaviour, never text describing it' -- A6's teaches_the_qualified_remedy test asserts substrings of the actual raised EngineError message (an f-string built at raise time), not a docstring; B2's refusal test asserts stderr content from a real CLI invocation. (3) No new hand-maintained-list guards or unasserted-loop guards introduced by this batch (RAIL_VERBS is pre-existing frozen design, unchanged in kind). _RAIL_STRINGS and MUTATING_VERBS confirmed byte/set-identical to base by direct diff, not by re-reading prose. No violations found.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence in the reviewed diff itself: no new verb, no new schema field, no new file; structural anchors match the implementer's own Map Impact notes, confirmed against the diff. R1/R2 (the Admiral-adjudicated residuals) closed both disclosed trust-limitations from the original batch cleanly, on the same branch, with no scope creep. FINDING (real, out-of-scope, flagged as triage candidate not a blocker): grepped the entire skills/ corpus and docs/agents/ for --parent -- ZERO hits. skills/commander/references/crew-dispatch.md (the doctrine a Commander is instructed to read before every dispatch) documents --model/--reasoning-effort/--backend/--resume/--abandon in detail but never mentions --parent at all, even though B2 makes it a hard requirement at CrewSpec construction. Every real Commander/Admiral dispatch going forward will hit the new refusal until this doctrine is updated to teach passing --parent (e.g. the dispatching session's own identity). Materially mitigated (not a blocker) because the refusal message is self-teaching -- 'pass the identifier of whoever is dispatching this crew (e.g. a Commander/Admiral session name)' -- so the first refusal a Commander hits is directly actionable without needing the doc fixed first. Still, this is exactly the doc-staleness blast-radius the authoring-tier doctrine warns about (global-everyone.md 'enumerate the blast radius of your own change') and squarely a Commander-reconciliation item: route crew-dispatch.md's --parent gap to Triage or fix it directly in the next doc-touching pass.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/20260821-ab/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/20260821-ab/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from 20260821-ab alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/20260821-ab/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Walked the Fowler baseline catalog against the full diff. 10 of 12 smells absent. 2 overridden with a logged repo standard + reason: duplicated-code (spine_rail.py's pre-existing, base-commit-documented stdlib-only/no-subprocess law forces the _format_age/lease-line duplication; mitigated by a mutation-tested cross-renderer pinning regression) and comments-as-deodorant (the dense rationale comments extend this repo's pre-existing house style, sit next to simple code, and explain design history rather than compensate for confusing logic). verify_fowler_pass.py exits 0 on the record at .agent-work/20260821-ab/FOWLER_PASS.json (smells=12, flagged=[], overridden=[duplicated-code, comments-as-deodorant]).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/20260821-ab/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "Batch A+B (efe92791..99a46a08, afk/20260821-ab) independently verified. All 8 items (A1-A6, B1-B2) plus the R1/R2 Admiral-adjudicated residuals hold against direct source inspection, byte-for-byte diffs, mutation tests, red/green checks, and independent reproduction of the full suite (3469 passed/6 skipped/1224 subtests/0 failures) and both renderers' before/after output. Scope is clean: diff matches the allowed file set exactly, no excluded human-owned path appears anywhere. Two non-blocking findings routed to triage: (tc1) B2's mechanical AST patch pass added --parent to --resume/--verify-result/--abandon test call sites that do not need it, leaving no regression test that exercises those paths WITHOUT --parent -- the underlying claim is independently verified TRUE, only the forward-looking test coverage for it is gone; (tc2) skills/commander/references/crew-dispatch.md never mentions --parent even though B2 now requires it for a fresh/relaunched dispatch -- real doc staleness, substantially mitigated by a self-teaching refusal message. Neither bars this change. APPROVE."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r3-evidence",
+      "statement": "B2's mechanical AST patch pass (patch_main_argv_parent.py etc.) added --parent to every RC.main(...) test call including --resume/--verify-result/bare --abandon call sites that architecturally don't need it (CliBackend.resume and the verify-result path build no fresh CrewSpec). No test in the shipped suite now exercises --resume/--verify-result/--abandon WITHOUT --parent, so the 'these paths still work without --parent' guarantee has no regression coverage going forward, even though it is currently true (independently verified by direct reproduction). Recommend a follow-on: add 1-2 focused tests exercising --resume and --verify-result with no --parent to lock the guarantee in."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "skills/commander/references/crew-dispatch.md has zero mentions of --parent even though B2 (this batch) made it a hard requirement for a fresh/relaunched run_crew.py dispatch. Update crew-dispatch.md to teach Commander/Admiral to pass --parent (the dispatching session's own identity) alongside its existing --model/--backend guidance, before the first real-world dispatch hits the new refusal cold."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "ab-reviewer-1787328950",
+    "status": "released",
+    "claimed_at": "2026-08-21T16:15:50.723856+00:00",
+    "last_heartbeat": "2026-08-21T16:33:38.934727+00:00",
+    "claimed_by": "ab-reviewer",
+    "worktree": "/tmp/constellation-20260821-ab",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-21T16:34:35.439312+00:00"
+  }
+}

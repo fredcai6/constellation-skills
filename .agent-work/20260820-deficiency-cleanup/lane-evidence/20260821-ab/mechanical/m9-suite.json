@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m9-suite",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 13,
+    "spine-step": "m9-suite",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-m9-suite@b06860d2b38029cb33c81bcc8d5f249f04c6694e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T15:42:51Z"
+  }
+}

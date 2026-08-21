@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-stop-hook-render",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 14,
+    "spine-step": "r1-stop-hook-render",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-r1-stop-hook-render@81e544fe5bb978eadce655f7901123078dd9caa4",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:02:42Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "20260821-ab",
+    "project": "constellation-skills",
+    "role": "ab-reviewer",
+    "refusals": 1,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-20260821-ab-r2-scope@e782749e6ddf178ec432af1cf08cc057aad66923",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:29:32Z"
+  }
+}

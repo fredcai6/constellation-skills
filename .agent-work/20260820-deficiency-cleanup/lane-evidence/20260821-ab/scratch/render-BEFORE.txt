@@ -1,0 +1,9 @@
+RAIL: A working solution is the MIDDLE of this run — you are 7 steps from done. Next: the ACTIVE line above. Run it.
+
+LEASE active: charter-refresh-20260728 (by charter, heartbeat 2026-07-29T17:52:38.525498+00:00)
+ACTIVE orchestrator-context [in-progress] — Write docs/agents/ORCHESTRATOR_CONTEXT.md as project DELTAS over the inherited global doctrine — do not restate references/global-orchestrator.md or references/global-everyone.md; capture only project facts (purpose, authority), non-default rigor, and where this project departs. Confirm it with the user.
+postconditions:
+  c1 [unmet] artifact — ORCHESTRATOR_CONTEXT written and confirmed
+1/2 met
+next: attest orchestrator-context --cond c1 --which postconditions --evidence <evidence-id>
+DIGEST: The project needs durable rigor while remaining lightweight in its real-work feedback loop. Standard checkpoints preserve human authority without adding additional confirmation gates.

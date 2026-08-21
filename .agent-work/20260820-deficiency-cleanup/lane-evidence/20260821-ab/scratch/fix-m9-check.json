@@ -1,0 +1,1 @@
+{"ops": [{"op": "retext-check", "id": "m9-suite", "cond": "c2", "command": "python -m pytest -q --deselect tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build"}]}

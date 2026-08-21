@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r1-stop-hook-render",
+  "files": [],
+  "repo_rev": {
+    "commit": "1fd593acc9e338efe25ab6390a3f444db737692f"
+  },
+  "run": {
+    "work_id": "20260821-ab",
+    "generated_at": "2026-08-21T16:02:42Z",
+    "roots": {
+      "skill": "/tmp/constellation-20260821-ab",
+      "repo": "/tmp/constellation-20260821-ab",
+      "durable": "/tmp/constellation-20260821-ab"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/tmp/constellation-20260821-ab"
+    }
+  }
+}
