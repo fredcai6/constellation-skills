@@ -29,7 +29,7 @@ No inbound Map Anchors were supplied. This is a local liveness constraint change
 
 ## Test mode
 
-**Required:** test-first  
+**Required:** test-first
 **Satisfied:** yes
 
 ## Evidence
