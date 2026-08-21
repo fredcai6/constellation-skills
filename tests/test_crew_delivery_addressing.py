@@ -151,6 +151,7 @@ class JobAddressedDeliverySurvivesRelaunch(unittest.TestCase):
                 work_id=work_id, gate=gate, role=role, handoff=handoff,
                 result=result, worktree=".", model="sonnet", attempt=1,
                 root=root, entries=entries,
+                parent="test-parent",
             )
             session = entry["session_name"]
             self.assertIsNone(

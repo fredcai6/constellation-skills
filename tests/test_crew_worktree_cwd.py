@@ -96,6 +96,7 @@ class CrewSpawnCwdTests(unittest.TestCase):
                     handoff=handoff, result=result, worktree=defaults.worktree,
                     model="sonnet", launcher="claude", attempt=1,
                     root=defaults.root, entries=[],
+                    parent="test-parent",
                 )
 
             spawned_cwd = Path(calls[0]["cwd"])
@@ -140,6 +141,7 @@ class CrewSpawnCwdTests(unittest.TestCase):
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, worktree=str(worktree),
                     model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
+                    parent="test-parent",
                 )
             self.assertEqual(1, len(calls))
             self.assertEqual(worktree, Path(calls[0]["cwd"]),
@@ -156,6 +158,7 @@ class CrewSpawnCwdTests(unittest.TestCase):
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, worktree="sub",
                     model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
+                    parent="test-parent",
                 )
             self.assertEqual(root / "sub", Path(calls[0]["cwd"]))
 
@@ -217,6 +220,7 @@ class CrewSpawnCwdTests(unittest.TestCase):
                     work_id="issue-1", gate="g1", role="implementer",
                     handoff=handoff, result=result, worktree=str(worktree),
                     model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
+                    parent="test-parent",
                 )
             self.assertEqual(Path(entry["worktree"]), Path(calls[0]["cwd"]))
 

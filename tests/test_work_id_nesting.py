@@ -79,6 +79,7 @@ def _record_external(root: Path, work_id: str, gate="g2", role="reviewer"):
         work_id=work_id, gate=gate, role=role, handoff=handoff, result=result,
         worktree=".", model="sonnet", attempt=1, root=root,
         entries=RC.load_registry(RC.registry_path(work_id, root)),
+        parent="test-parent",
     )
 
 

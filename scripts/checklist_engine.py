@@ -1171,8 +1171,24 @@ def require_session(cl: dict, verb: str, session_id: str | None, config: dict) -
     liveness signal (the stamp `_refresh_owner_heartbeat` records it). So the
     owner always passes; a non-owner is refused — with a `claim` instruction if
     the lease is stale, or an ownership instruction if it is a different,
-    still-active lease."""
-    if verb not in MUTATING_VERBS:
+    still-active lease.
+
+    B1 (deficiency cleanup batch A+B): `waive` is exempted from this gate
+    specifically, NOT removed from `MUTATING_VERBS` (`main()` reads that same
+    set to decide journaling, so removing it there would silently drop the
+    waiver's audit trail too). This gate is what forced the five-step
+    handshake -- release, claim, waive, release, reclaim -- for the
+    sanctioned case the human ruling names verbatim: "agent cannot waive
+    itself... commander waives crew, admiral waives commander... always ask
+    up." A parent waiving a child's condition is exactly that ruling in
+    motion, and it was being refused because the CHILD held a fresh lease at
+    the moment the PARENT needed to act. The actual guard against a crew
+    waiving its OWN bound spine's check lives one layer up, in the
+    `PreToolUse` hook `run_crew.py` installs on every spawned crew
+    (`WAIVE_DENY_REASON`) -- this session gate was never that guard; it only
+    ever asked "do you hold the lease," which a legitimate parent-waiving-
+    child call was never going to answer yes to."""
+    if verb not in MUTATING_VERBS or verb == "waive":
         return
     lease = _active_lease(cl)
     if lease is None:
