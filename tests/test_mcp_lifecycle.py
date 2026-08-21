@@ -2,8 +2,8 @@
 (`scripts/mcp_spine_server.py`'s `call_lifecycle_tool`, issue #559, C3/g3).
 
 Frozen contract: `.agent-work/archive/2026-08-12-epic-418-followon-closeout/epic-559/c3-lifecycle/LIFECYCLE_CONTRACT.md` section 6.
-`scripts/spine_lifecycle.py`'s `open_work`/`close_work` are g1/g2's, frozen; this
-file tests the DOOR wiring onto them, never their own behaviour (that lives in
+`scripts/spine_lifecycle.py` owns `open_work` and the existing `finish_work`
+composition. This file tests the door wiring onto them, not their own behavior in
 `tests/test_spine_lifecycle.py`).
 
 The existing pin in `tests/test_mcp_identity.py`
@@ -28,9 +28,9 @@ ships the lifecycle surface's OWN containment pin instead, per
 
 Plus a full stdio JSON-RPC round trip (required evidence): `spine_open`
 creates a real worktree and spine in a throwaway git repo under `tmp_path`;
-that spine is driven to terminal through the existing engine door tools;
-`spine_close` archives it; the verdict names the branch, the commit, and
-"ready to PR".
+the existing engine door tools prepare the final gate; one `spine_close` call
+releases parent and child leases, reaps their binding entries, advances the
+parent, and archives the work area without a push or PR.
 """
 
 from __future__ import annotations
@@ -50,6 +50,9 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "scripts" / "mcp_spine_server.py"
 ENGINE = ROOT / "scripts" / "checklist_engine.py"
+
+sys.path.insert(0, str(ROOT / "scripts" / "hooks"))
+import spine_rail  # noqa: E402
 
 SOURCE = SERVER.read_text(encoding="utf-8")
 
@@ -192,6 +195,68 @@ class CallLifecycleToolChokePointPinTests(unittest.TestCase):
             "the lifecycle choke-point detector did not flag a mutate-then-return leak "
             "-- it is incapable of failing and is therefore not evidence",
         )
+
+    def test_spine_close_routes_bound_identity_through_finish_work(self):
+        tree = ast.parse(SOURCE)
+        fn = _find_funcdef(tree, "_spine_close")
+        calls = [
+            node for node in ast.walk(fn)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "spine_lifecycle"
+            and node.func.attr == "finish_work"
+        ]
+        self.assertEqual(1, len(calls), "spine_close must call finish_work exactly once")
+        call = calls[0]
+        self.assertTrue(
+            call.args and isinstance(call.args[0], ast.Name) and call.args[0].id == "SPINE",
+            "finish_work must receive the spine bound to this door",
+        )
+        session = next((kw.value for kw in call.keywords if kw.arg == "session_id"), None)
+        self.assertIsInstance(session, ast.Name)
+        self.assertEqual("SESSION", session.id, "finish_work must receive the bound session")
+
+    def test_spine_close_schema_migrates_readiness_without_identity_redirect(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            module = _load_module(Path(tmp) / ".agent-work" / "schema" / "spine.json")
+        tool = next(item for item in module.LIFECYCLE_TOOLS if item["name"] == "spine_close")
+        schema = tool["inputSchema"]
+        self.assertEqual(
+            {"tree_clean", "episodes_captured", "push", "open_pr"},
+            set(schema["required"]),
+        )
+        self.assertEqual(
+            {"why", "tree_clean", "episodes_captured", "push", "open_pr"},
+            set(schema["properties"]),
+        )
+        self.assertNotIn("spine_file", schema["properties"])
+        self.assertNotIn("session_id", schema["properties"])
+        self.assertFalse(schema["additionalProperties"])
+        description = tool["description"]
+        self.assertIn("old no-argument call", description)
+        self.assertIn("SPINE and SESSION only", description)
+
+    def test_spine_close_readiness_errors_are_actionable_before_root_or_mutation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            spine = Path(tmp) / ".agent-work" / "schema" / "spine.json"
+            module = _load_module(spine, "schema-session")
+            before = spine.read_bytes()
+
+            missing = module._spine_close({})
+            self.assertTrue(missing["isError"], missing)
+            text = missing["content"][0]["text"]
+            for name in ("tree_clean", "episodes_captured", "push", "open_pr"):
+                self.assertIn(name, text)
+            self.assertEqual(before, spine.read_bytes())
+
+            wrong_type = module._spine_close({
+                "tree_clean": "yes", "episodes_captured": True,
+                "push": False, "open_pr": False,
+            })
+            self.assertTrue(wrong_type["isError"], wrong_type)
+            self.assertIn("tree_clean must be boolean", wrong_type["content"][0]["text"])
+            self.assertEqual(before, spine.read_bytes())
 
 
 # --------------------------------------------------------------------------- #
@@ -422,11 +487,9 @@ class _McpRpcClient:
 @requires_git
 class FullStdioRoundTripTests(unittest.TestCase):
     """Required evidence (criterion 4): `tools/call spine_open` creates a real
-    worktree and spine in a throwaway git repo under `tmp_path`; that spine is
-    driven to terminal through the door's own existing engine tools
-    (`spine_lease`, `spine_start`, `spine_evidence`, `spine_advance`); `tools/call
-    spine_close` archives it; the verdict names the branch, the commit, and
-    "ready to PR"."""
+    worktree and spine in a throwaway git repo under `tmp_path`; the engine
+    tools prepare its final gate; one `tools/call spine_close` releases parent
+    and child leases, reaps their bindings, advances the parent, and archives."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -487,27 +550,190 @@ class FullStdioRoundTripTests(unittest.TestCase):
         attached = door_b.call("spine_evidence", action="attach", task_id="m1",
                                 evidence_type="user-decision", fields={"decision": "go"})
         self.assertFalse(attached["isError"], attached)
-        advanced = door_b.call("spine_advance", task_id="m1", mechanical=True)
-        self.assertFalse(advanced["isError"], advanced)
-        released = door_b.call("spine_lease", action="release")
-        self.assertFalse(released["isError"], released)
 
-        closed_raw = door_b.call("spine_close")
+        child_path = new_spine.parent / "child-plan.json"
+        child = {
+            "work_id": f"{work_id}-child", "type": "gated",
+            "config_ref": "docs/agents/engine-config.json", "items": ["child"],
+            "tasks": {"child": {
+                "id": "child", "title": "child", "imperative": "done",
+                "preconditions": [],
+                "postconditions": [{"id": "c1", "statement": "done", "check": None,
+                                    "satisfied": True}],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "complete", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            }},
+            "consolidation": None, "triage_candidates": [], "blockers": [],
+        }
+        child_path.write_text(json.dumps(child, indent=2) + "\n", encoding="utf-8", newline="\n")
+        claimed_child = subprocess.run(
+            [sys.executable, str(ENGINE), "--file", str(child_path), "claim",
+             "--session-id", "child-session", "--claimed-by", "test", "--worktree", "."],
+            cwd=str(new_worktree), capture_output=True, text=True,
+        )
+        self.assertEqual(0, claimed_child.returncode, claimed_child.stderr)
+        parent = json.loads(new_spine.read_text(encoding="utf-8"))
+        parent["tasks"]["m1"]["child_checklist"] = child_path.name
+        new_spine.write_text(json.dumps(parent, indent=2) + "\n", encoding="utf-8", newline="\n")
+        claimed_at = "2026-08-20T00:00:00+00:00"
+        entries = {str(path): {
+            "spine": str(path), "engine_session": {"session_id": session},
+            "worktree": str(new_worktree), "claimed_at": claimed_at,
+        } for path, session in ((new_spine, opened["SPINE_SESSION"]), (child_path, "child-session"))}
+        spine_rail.save_binding(new_worktree, {"roundtrip-session": entries})
+        active_before = sum(
+            1 for path in (new_worktree / ".agent-work").rglob("*.json")
+            if isinstance((data := json.loads(path.read_text(encoding="utf-8"))), dict)
+            and isinstance(data.get("engine_session"), dict)
+            and data["engine_session"].get("status") == "active"
+        )
+        self.assertEqual(2, active_before, "fixture must hold active parent and child leases")
+
+        closed_raw = door_b.call(
+            "spine_close", why="round-trip complete", tree_clean=True,
+            episodes_captured=True, push=False, open_pr=False,
+        )
         self.assertFalse(closed_raw["isError"], closed_raw)
         closed = json.loads(closed_raw["content"][0]["text"])
 
         self.assertEqual(work_id, closed["work_id"])
         self.assertEqual(work_id, closed["branch"])
         self.assertTrue(closed["head"], "the verdict must name the new commit")
-        message = closed["message"]
-        self.assertIn(work_id, message, "the verdict does not name the branch")
-        self.assertIn(closed["head"], message, "the verdict does not name the commit")
-        self.assertIn("ready to PR", message)
+        self.assertFalse(closed["pushed"], "push=False must prevent a network push")
+        self.assertIsNone(closed["push_error"])
+        self.assertIsNone(closed["pr"], "open_pr=False must prevent PR creation")
 
         archive_dir = Path(closed["archive"])
         self.assertTrue(archive_dir.is_dir())
         self.assertTrue((archive_dir / "spine.json").is_file(),
                          "the spine itself must have moved into the archive")
+        self.assertTrue((archive_dir / child_path.name).is_file())
+        active_after = sum(
+            1 for path in (new_worktree / ".agent-work").rglob("*.json")
+            if isinstance((data := json.loads(path.read_text(encoding="utf-8"))), dict)
+            and isinstance(data.get("engine_session"), dict)
+            and data["engine_session"].get("status") == "active"
+        )
+        self.assertEqual(0, active_after, "spine_close must release parent and child leases")
+        self.assertEqual({}, spine_rail.load_binding(new_worktree),
+                         "spine_close must reap released binding entries")
+
+    def test_spine_close_not_ready_refuses_without_partial_archive(self):
+        work_id = "roundtrip-refusal"
+        door_a = self._client(self.repo / ".agent-work" / "driving" / "spine.json",
+                              "driving-session")
+        spec = {
+            "work_id": work_id, "type": "gated",
+            "gate": [{
+                "id": "m1", "title": "do it", "imperative": "do the thing",
+                "postconditions": [{
+                    "id": "c1", "statement": "human decided", "kind": "artifact",
+                    "evidence_type": "user-decision",
+                }],
+            }],
+        }
+        opened_raw = door_a.call("spine_open", work_id=work_id, spec=spec, base="HEAD")
+        self.assertFalse(opened_raw["isError"], opened_raw)
+        opened = json.loads(opened_raw["content"][0]["text"])
+        spine_path = Path(opened["SPINE_FILE"])
+        worktree = Path(opened["worktree"])
+        door_b = self._client(spine_path, opened["SPINE_SESSION"])
+        claimed = door_b.call("spine_lease", action="claim", claimed_by="test", worktree=".")
+        self.assertFalse(claimed["isError"], claimed)
+        started = door_b.call("spine_start", task_id="m1")
+        self.assertFalse(started["isError"], started)
+
+        child_path = spine_path.parent / "child-plan.json"
+        child = {
+            "work_id": f"{work_id}-child", "type": "gated",
+            "config_ref": "docs/agents/engine-config.json", "items": ["child"],
+            "tasks": {"child": {
+                "id": "child", "title": "child", "imperative": "done",
+                "preconditions": [],
+                "postconditions": [{"id": "c1", "statement": "done", "check": None,
+                                    "satisfied": True}],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "complete", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            }},
+            "consolidation": None, "triage_candidates": [], "blockers": [],
+        }
+        child_path.write_text(json.dumps(child, indent=2) + "\n", encoding="utf-8", newline="\n")
+        claimed_child = subprocess.run(
+            [sys.executable, str(ENGINE), "--file", str(child_path), "claim",
+             "--session-id", "child-session", "--claimed-by", "test", "--worktree", "."],
+            cwd=str(worktree), capture_output=True, text=True,
+        )
+        self.assertEqual(0, claimed_child.returncode, claimed_child.stderr)
+        parent = json.loads(spine_path.read_text(encoding="utf-8"))
+        parent["tasks"]["m1"]["child_checklist"] = child_path.name
+        spine_path.write_text(json.dumps(parent, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+        claimed_at = "2026-08-20T00:00:00+00:00"
+        entries = {str(path): {
+            "spine": str(path), "engine_session": {"session_id": session},
+            "worktree": str(worktree), "claimed_at": claimed_at,
+        } for path, session in ((spine_path, opened["SPINE_SESSION"]),
+                                (child_path, "child-session"))}
+        spine_rail.save_binding(worktree, {"refusal-session": entries})
+
+        work_area = spine_path.parent
+        rejection_log = work_area / "mcp_rejections.jsonl"
+        episode_deltas_before = set(work_area.glob("mcp_rejection_episode_delta_*.json"))
+        parent_before = spine_path.read_bytes()
+        child_before = child_path.read_bytes()
+        binding_before = spine_rail.load_binding(worktree)
+        parent_state_before = json.loads(parent_before)
+        child_state_before = json.loads(child_before)
+        self.assertEqual("in-progress", parent_state_before["tasks"]["m1"]["status"])
+        self.assertEqual("active", parent_state_before["engine_session"]["status"])
+        self.assertEqual("complete", child_state_before["tasks"]["child"]["status"])
+        self.assertEqual("active", child_state_before["engine_session"]["status"])
+        self.assertEqual({str(spine_path), str(child_path)},
+                         set(binding_before["refusal-session"]))
+
+        refused = door_b.call(
+            "spine_close", why="not ready", tree_clean=False,
+            episodes_captured=True, push=False, open_pr=False,
+        )
+        self.assertTrue(refused["isError"], refused)
+        refusal_text = refused["content"][0]["text"]
+        self.assertIn("working tree has uncommitted changes", refusal_text)
+
+        self.assertEqual(parent_before, spine_path.read_bytes(),
+                         "verify refusal must not mutate the parent spine")
+        self.assertEqual(child_before, child_path.read_bytes(),
+                         "verify refusal must not release or mutate the declared child spine")
+        self.assertEqual(binding_before, spine_rail.load_binding(worktree),
+                         "verify refusal must not reap parent or child binding entries")
+        self.assertTrue(work_area.is_dir(), "verify refusal must leave the work area in place")
+        self.assertTrue(spine_path.is_file())
+        self.assertTrue(child_path.is_file())
+        self.assertFalse((worktree / ".agent-work" / "archive").exists())
+
+        rejection_records = [
+            json.loads(line) for line in rejection_log.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(1, len(rejection_records),
+                         "one refused door call must append one rejection ledger record")
+        self.assertEqual("spine_close", rejection_records[0]["tool"])
+        self.assertEqual("close-refused", rejection_records[0]["class"])
+        self.assertEqual(refusal_text, rejection_records[0]["detail"])
+
+        episode_deltas_after = set(work_area.glob("mcp_rejection_episode_delta_*.json"))
+        new_episode_deltas = episode_deltas_after - episode_deltas_before
+        self.assertEqual(1, len(new_episode_deltas),
+                         "one new rejection shape must create exactly one episode delta")
+        delta = json.loads(new_episode_deltas.pop().read_text(encoding="utf-8"))
+        self.assertEqual(work_id, delta["work_id"])
+        self.assertEqual(1, len(delta["ops"]))
+        self.assertEqual("create", delta["ops"][0]["op"])
+        assertions = delta["ops"][0]["agent_supplied"]
+        self.assertEqual("Called `spine_close` through the MCP door.",
+                         assertions["task-intent"]["statement"])
+        self.assertEqual(refusal_text, assertions["observed-behavior"]["statement"])
 
 
 # --------------------------------------------------------------------------- #

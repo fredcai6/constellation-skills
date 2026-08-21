@@ -1,0 +1,38 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "m2",
+      "title": "Run required evidence",
+      "imperative": "Run the handoff's full crew-launcher test file, atomic-save confirmatory test, git diff --check, and heartbeat call-site search. Record exact outputs in the durable result. Advance only after all command evidence passes.",
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Required and confirmatory tests pass",
+          "check": {"kind": "command", "command": "python -m pytest -q tests/test_crew_launcher.py && python -m pytest -q tests/test_checklist_engine_atomic_save.py"},
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "Diff is whitespace-clean and heartbeat seam audit is recorded",
+          "check": {"kind": "command", "command": "git diff --check && rg -n '_parent_lease_heartbeat' scripts/run_crew.py tests/test_crew_launcher.py"},
+          "satisfied": false
+        }
+      ]
+    },
+    {
+      "op": "add",
+      "id": "m3",
+      "title": "Record and commit result",
+      "imperative": "Write IMPLEMENTER_RESULT with scope, red/green/full evidence, map impact, workflow feedback, and commit locally. Attest c1 after independently confirming the result and commit exist; advance only then.",
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Durable result written and local commit created",
+          "check": null,
+          "satisfied": false
+        }
+      ]
+    }
+  ]
+}

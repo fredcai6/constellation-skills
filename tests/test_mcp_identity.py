@@ -276,8 +276,8 @@ class DC2SeparateReadingsTests(unittest.TestCase):
 
         text_a = self.inst_a.status_text()
         text_b = self.inst_b.status_text()
-        self.assertIn("LEASE active: dc2-sess-a (by agent-A", text_a)
-        self.assertNotIn("LEASE active", text_b, "instance B's own reading must not show A's lease")
+        self.assertIn("LEASE HELD: dc2-sess-a (by agent-A", text_a)
+        self.assertNotIn("LEASE HELD", text_b, "instance B's own reading must not show A's lease")
 
         # Corroborate against the underlying files directly, not just the
         # server's own text projection.
@@ -409,7 +409,7 @@ class DC2ConcurrencyAndCollisionControlTests(unittest.TestCase):
             text_via_proc2 = proc2.status_text()
             self.assertIsNotNone(text_via_proc2)
             self.assertIn(
-                "LEASE active: collide-parent-session (by via-proc1", text_via_proc2,
+                "LEASE HELD: collide-parent-session (by via-proc1", text_via_proc2,
                 "collision did not reproduce on a genuinely shared spine file -- "
                 "this control is not sensitive enough to have caught a real DC2 leak",
             )
@@ -428,7 +428,7 @@ class DC2ConcurrencyAndCollisionControlTests(unittest.TestCase):
             self.assertFalse(claimed.get("isError"))
             text_b = inst_b.status_text()
             self.assertIsNotNone(text_b)
-            self.assertNotIn("LEASE active", text_b,
+            self.assertNotIn("LEASE HELD", text_b,
                               "genuinely separate spine files must show no cross-visibility")
         finally:
             inst_a.close()
@@ -668,7 +668,7 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
 
             assert_door_is_up_and_serving(self, self.parent, "PARENT-MARK")
             parent_text = self.parent.status_text()
-            self.assertIn("LEASE active: parent-session#parent-agent (by parent-agent", parent_text)
+            self.assertIn("LEASE HELD: parent-session#parent-agent (by parent-agent", parent_text)
         finally:
             subagent.close()
 
@@ -696,7 +696,7 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
             assert_door_is_up_and_serving(self, leaked_subagent, "PARENT-MARK")
             text = leaked_subagent.status_text()
             self.assertIn(
-                "LEASE active: parent-session#parent-agent (by parent-agent", text,
+                "LEASE HELD: parent-session#parent-agent (by parent-agent", text,
                 "the ambient-leak counterfactual did not reproduce -- this control is "
                 "not sensitive enough to have caught a real DC3 leak",
             )

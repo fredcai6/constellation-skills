@@ -497,7 +497,7 @@ class BindOnOpenTests(unittest.TestCase):
 
         # 4. The door is now genuinely driving the NEW spine.
         self.assertFalse(run.is_error(5))
-        self.assertIn("LEASE active: " + opened["SPINE_SESSION"], run.tool_text(5))
+        self.assertIn("LEASE HELD: " + opened["SPINE_SESSION"], run.tool_text(5))
 
     def test_a_rebind_is_refused_while_this_process_holds_an_active_lease(self):
         """`decision:one-spine-per-process-stands`. Rebinding out from under a

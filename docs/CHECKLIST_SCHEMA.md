@@ -416,14 +416,15 @@ The read-only `current` verb appends up to two why-capture lines to its output (
 
 ### Refresh requests — `has_pending_refresh_request` (why_ref-aware, #190)
 
-A **`refresh-request`** is a `refresh-request`-typed evidence item (attached via the ordinary `attach` verb, e.g. `attach <gate> --type refresh-request --field seam=<gate> --field why_ref=<why-id>`) whose payload is **pointers only** (`{seam, why_ref}`, above) — never copies of state. A `superseded` marker (set by the `reopen` cascade) makes a refresh-request **inert**, exactly as it does for any other evidence.
+A **`refresh-request`** is a `refresh-request`-typed evidence item attached through the ordinary `attach` verb, e.g. `attach <gate> --type refresh-request --field seam=<gate> --field why_ref=<why-id>`. Its payload contains pointers only: `seam`, `why_ref`, and, when an active lease exists, the engine-stamped `lease_claimed_at`. Callers do not supply the claim stamp. A `superseded` marker (set by the `reopen` cascade) makes a refresh-request **inert**, exactly as it does for any other evidence.
 
 ```
 has_pending_refresh_request(cl, gate, why_ref=None) -> bool
 ```
 
-A **pure predicate** (no side effects): **true** while a non-superseded `refresh-request` targets `gate`. Its optional **`why_ref` identity filter** (#190) is the subtle part:
+A **pure predicate** (no side effects): **true** while a non-superseded `refresh-request` targets `gate` and any claim stamp still matches the active lease. Its filters are:
 
+- **`lease_claimed_at` present** — the request is pending only while the active lease has the same `claimed_at`. Any later claim, including a same-session re-claim, consumes it. A legacy unstamped request keeps the earlier gate-and-supersession behavior.
 - **`why_ref=None` (default)** — the **DISPLAY semantic** used by `current`: *any* pending request for this gate matches. Unchanged from the pre-#190 gate-only behavior.
 - **`why_ref` given** — an **identity check**: the pending request must **also** carry the matching `payload.why_ref`. The **HARD band keys its release on the current-digest why-record id** (`_latest_why_record`), so a **distinct new trip on a still-open gate cannot ride an earlier/stale request's coattails**. A `None` current-why-id (no `why_trail` — e.g. a `why_exempt` gate) **degrades to the gate-only match**, preserving all prior behavior.
 
