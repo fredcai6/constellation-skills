@@ -239,7 +239,14 @@ class VocabularyRule(unittest.TestCase):
             text = path.read_text(encoding="utf-8")
             for phrase in _BANNED_PHRASES:
                 if phrase in text.lower():
-                    offenders.append(str(path.relative_to(ROOT)))
+                    # `.as_posix()`, not `str(...)`: on Windows a backslash
+                    # in `offenders` gets escaped to `\\` the moment the
+                    # f-string below renders the list (Python's `str(list)`
+                    # calls `repr()` on each element) -- which then breaks
+                    # the negative self-test's plain-text `assertIn`, since
+                    # that side never doubles its backslash. A portable
+                    # forward-slash path never triggers repr's escaping.
+                    offenders.append(path.relative_to(ROOT).as_posix())
         self.assertEqual(
             offenders, [],
             f"file(s) {offenders} use a banned enforcement claim "
@@ -250,7 +257,11 @@ class VocabularyRule(unittest.TestCase):
     def test_no_bare_rail_claims_outside_legitimate_doctrine_files(self):
         offenders = []
         for path in _prose_files():
-            rel = str(path.relative_to(ROOT))
+            # `.as_posix()`, not `str(...)`: `_LEGITIMATE_RAIL_FILES` is
+            # written as forward-slash literals, but `relative_to(ROOT)` on
+            # Windows returns a backslash-separated `WindowsPath` whose
+            # `str()` would never match one of those literals.
+            rel = path.relative_to(ROOT).as_posix()
             if rel in _LEGITIMATE_RAIL_FILES:
                 continue
             text = path.read_text(encoding="utf-8")
@@ -292,4 +303,4 @@ class VocabularyRule(unittest.TestCase):
             ):
                 with self.assertRaises(AssertionError) as caught:
                     self.test_no_mechanically_enforced_claims()
-        self.assertIn(str(planted.relative_to(ROOT)), str(caught.exception))
+        self.assertIn(planted.relative_to(ROOT).as_posix(), str(caught.exception))

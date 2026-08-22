@@ -437,6 +437,24 @@ def _resolve_confined(
     return p, escapes
 
 
+def _fmt_path(value) -> str:
+    """A path (or path-shaped value) for a REFUSAL/diagnostic message,
+    single-quoted and UNESCAPED -- never `!r`.
+
+    `repr()` doubles every backslash, so on Windows a message built with
+    `f"...{_fmt_path(some_path)}..."` renders `'C:\\\\Users\\\\...'` in the
+    ACTUAL text (not merely its repr) -- two backslashes per separator, not
+    one. That is cosmetically wrong on its own, and it breaks every caller
+    that asserts a refusal NAMES the path it refers to
+    (`assertIn(str(path), message)`), since the path being searched for
+    never has doubled separators. Every call site below already wraps the
+    value in the single quotes this returns explicitly (there is nothing
+    left for `!r` to add), so this is simply correct on Windows AND
+    unchanged on POSIX, where a bare backslash never appears in a path.
+    """
+    return f"'{value}'"
+
+
 _HOW_TO_BIND = (
     "Call `spine_bind` with the path to a spine that already exists, or `spine_open` to "
     "mint a spine and bind this process to it."
@@ -517,7 +535,7 @@ def _unbound_refusal() -> str | None:
     if why is None:
         return None
     return (
-        f"REFUSED: this door was pointed at {str(spine)!r}, but {why} -- so no spine is "
+        f"REFUSED: this door was pointed at {_fmt_path(spine)}, but {why} -- so no spine is "
         f"bound that this tool could act on. {_HOW_TO_REBIND}"
     )
 
@@ -597,7 +615,7 @@ def _identity_violation(argv: list[str]) -> str | None:
     if resolved_file != str(SPINE):
         return (
             f"REFUSED: this door is bound to one spine for the life of its process, and "
-            f"this call resolves --file to {resolved_file!r}, not the bound {str(SPINE)!r}. "
+            f"this call resolves --file to {_fmt_path(resolved_file)}, not the bound {_fmt_path(SPINE)}. "
             f"Identity is not a per-call argument here (see IDENTITY_TRADE.md); if you need "
             f"to drive a different spine, launch a door bound to it, or use the CLI."
         )
@@ -630,7 +648,7 @@ def _identity_violation(argv: list[str]) -> str | None:
         if escapes:
             return (
                 f"REFUSED: --delta names a delta file INSIDE the bound spine's own directory "
-                f"({str(SPINE.parent)!r}); this call resolves it to {str(resolved)!r}, which is "
+                f"({_fmt_path(SPINE.parent)}); this call resolves it to {_fmt_path(resolved)}, which is "
                 f"outside. `amend` applies the delta's ops to the bound spine's own gates, so a "
                 f"path outside the binding could feed re-planning ops read from anywhere on disk."
             )
@@ -844,14 +862,14 @@ def _capture_refusal_episode(tool: str, rejection_class: str, message: str) -> N
         checklist = json.loads(SPINE.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         sys.stderr.write(
-            f"EPISODE CAPTURE SKIPPED: could not read bound spine {str(SPINE)!r} "
+            f"EPISODE CAPTURE SKIPPED: could not read bound spine {_fmt_path(SPINE)} "
             f"({type(exc).__name__}: {exc}); tool={tool!r} class={rejection_class!r}\n"
         )
         sys.stderr.flush()
         return
     if not isinstance(checklist, dict):
         sys.stderr.write(
-            f"EPISODE CAPTURE SKIPPED: bound spine {str(SPINE)!r} does not hold a JSON "
+            f"EPISODE CAPTURE SKIPPED: bound spine {_fmt_path(SPINE)} does not hold a JSON "
             f"object; tool={tool!r} class={rejection_class!r}\n"
         )
         sys.stderr.flush()
@@ -875,7 +893,7 @@ def _capture_refusal_episode(tool: str, rejection_class: str, message: str) -> N
     if missing:
         sys.stderr.write(
             f"EPISODE CAPTURE SKIPPED: mechanical_fields() could not derive required "
-            f"field(s) {missing} for spine {str(SPINE)!r} -- refuse rather than fabricate "
+            f"field(s) {missing} for spine {_fmt_path(SPINE)} -- refuse rather than fabricate "
             f"(docs/EPISODE_STORE.md); tool={tool!r} class={rejection_class!r}\n"
         )
         sys.stderr.flush()
@@ -942,7 +960,7 @@ def _capture_refusal_episode(tool: str, rejection_class: str, message: str) -> N
         delta_path.write_text(json.dumps(delta, ensure_ascii=False), encoding="utf-8")
     except OSError as exc:
         sys.stderr.write(
-            f"EPISODE CAPTURE FAILED: could not write delta file {str(delta_path)!r} "
+            f"EPISODE CAPTURE FAILED: could not write delta file {_fmt_path(delta_path)} "
             f"({type(exc).__name__}: {exc}); tool={tool!r} class={rejection_class!r}\n"
         )
         sys.stderr.flush()
@@ -1469,7 +1487,7 @@ def _rebind_refusal(acting_tool: str = "spine_open") -> str | None:
     if lease is None or lease.get("session_id") != SESSION:
         return None
     return (
-        f"REFUSED: this door still holds an active lease on {str(spine)!r} as "
+        f"REFUSED: this door still holds an active lease on {_fmt_path(spine)} as "
         f"{SESSION!r}, and one door drives one spine at a time. Rebinding this door now "
         f"would leave that lease held by nobody. Release it first (`spine_lease` with "
         f"action 'release'), then call `{acting_tool}` again."
@@ -1741,7 +1759,7 @@ def _spine_bind(args: dict) -> dict:
     if escapes:
         return _tool_error(
             f"REFUSED: this door may only bind a spine inside its OWN checkout's work area "
-            f"({str(work_area)!r}); spine_file resolves to {str(candidate.resolve() if candidate.is_absolute() else candidate)!r}, "
+            f"({_fmt_path(work_area)}); spine_file resolves to {_fmt_path(candidate.resolve() if candidate.is_absolute() else candidate)}, "
             f"which is outside. One checkout's work-area tree per process: a spine elsewhere "
             f"-- including a sibling worktree of this same repository -- belongs to work whose "
             f"worktrees, hooks and tests this door knows nothing about, and binding it would "
@@ -1752,7 +1770,7 @@ def _spine_bind(args: dict) -> dict:
     why = _unusable_spine_reason(candidate)
     if why is not None:
         return _tool_error(
-            f"REFUSED: spine_bind was given {str(candidate)!r}, but {why} -- so there is no "
+            f"REFUSED: spine_bind was given {_fmt_path(candidate)}, but {why} -- so there is no "
             f"spine there to bind. Name a spine file that exists, or call `spine_open` to "
             f"mint one.",
             tool="spine_bind", rejection_class="no-spine-there",
@@ -1777,13 +1795,13 @@ def _spine_bind(args: dict) -> dict:
         candidate_checkout = _checkout_containing(resolved.parent)
     except (OSError, RuntimeError) as exc:
         return _tool_error(
-            f"spine_bind: could not resolve which checkout {str(resolved)!r} belongs to: {exc}",
+            f"spine_bind: could not resolve which checkout {_fmt_path(resolved)} belongs to: {exc}",
             tool="spine_bind", rejection_class="root-resolution-failed",
         )
     if candidate_checkout != checkout:
         return _tool_error(
-            f"REFUSED: {str(resolved)!r} sits inside a DIFFERENT checkout "
-            f"({str(candidate_checkout)!r}) than this door's own ({str(checkout)!r}), even "
+            f"REFUSED: {_fmt_path(resolved)} sits inside a DIFFERENT checkout "
+            f"({_fmt_path(candidate_checkout)}) than this door's own ({_fmt_path(checkout)}), even "
             f"though its path is under this door's work area -- a checkout nested there is "
             f"still another repository. One checkout's work-area tree per process. "
             f"{_THE_CLI_IS_PER_CALL}",
@@ -1794,14 +1812,14 @@ def _spine_bind(args: dict) -> dict:
         payload = json.loads(candidate.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         return _tool_error(
-            f"REFUSED: {str(candidate)!r} does not hold a JSON object, so it is not a spine "
+            f"REFUSED: {_fmt_path(candidate)} does not hold a JSON object, so it is not a spine "
             f"this door could drive ({type(exc).__name__}). Name the SPINE_FILE `spine_open` "
             f"returned, or call `spine_open` to mint one.",
             tool="spine_bind", rejection_class="not-a-spine",
         )
     if not isinstance(payload, dict):
         return _tool_error(
-            f"REFUSED: {str(candidate)!r} does not hold a JSON object (it holds a "
+            f"REFUSED: {_fmt_path(candidate)} does not hold a JSON object (it holds a "
             f"{type(payload).__name__}), so it is not a spine this door could drive. Name the "
             f"SPINE_FILE `spine_open` returned, or call `spine_open` to mint one.",
             tool="spine_bind", rejection_class="not-a-spine",
@@ -1822,7 +1840,7 @@ def _spine_bind(args: dict) -> dict:
         work_id = _derivable_work_id(payload)
         if work_id is None:
             return _tool_error(
-                f"REFUSED: {str(candidate)!r} carries neither `origin.work_id` nor a top-level "
+                f"REFUSED: {_fmt_path(candidate)} carries neither `origin.work_id` nor a top-level "
                 f"`work_id`, so this door cannot derive the session identity that spine is driven "
                 f"under -- and a door bound with no session cannot `claim` "
                 f"(`checklist_engine.claim` refuses an empty --session-id), which means it would "
@@ -1847,7 +1865,7 @@ def _spine_bind(args: dict) -> dict:
         config = checklist_engine.load_config(payload, candidate.parent)
         if not checklist_engine._is_stale(lease, config):
             return _tool_error(
-                f"REFUSED: {str(candidate)!r} is under an active lease held as {session!r}, and "
+                f"REFUSED: {_fmt_path(candidate)} is under an active lease held as {session!r}, and "
                 f"that is the very identity this bind would take (it is derived from the "
                 f"spine's own work id, never supplied). Two processes under one session id are "
                 f"indistinguishable to the engine, so this bind would put two agents on one "
@@ -1890,7 +1908,7 @@ def _spine_bind(args: dict) -> dict:
         _, gate_id, role = lineage
         result["child_of"] = {"spine": str(parent_before_bind), "gate": gate_id, "role": role}
         result["note"] = (
-            f"this door now drives {role!r}, the child plan {str(parent_before_bind)!r} declares "
+            f"this door now drives {role!r}, the child plan {_fmt_path(parent_before_bind)} declares "
             f"on gate {gate_id!r}; its identity is inherited from that declaration, not invented. "
             f"Call spine_status to see where it is. When you are done: release this lease, then "
             f"spine_bind back to the parent -- it recovers the lease it still holds."

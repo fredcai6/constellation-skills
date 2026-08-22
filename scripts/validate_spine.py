@@ -392,8 +392,12 @@ def _collects_zero(interpreter: str | None, args: list[str], repo_root: Path) ->
     python = _resolve_interpreter(interpreter)
     if python is None:
         named = interpreter or sys.executable
+        # Not `{named!r}`: `repr()` doubles every backslash, so on Windows this
+        # message would name the interpreter with `\\` where the caller (and
+        # `_fake_interpreter` in the test that pins this) has a single `\` --
+        # breaking the plain-text `in` check the reason exists to satisfy.
         return _CollectOutcome.UNDECIDABLE, (
-            f"no interpreter named {named!r} resolved with pytest importable"
+            f"no interpreter named '{named}' resolved with pytest importable"
         )
     targets = _pytest_targets(args)
     cmd = [python, "-m", "pytest", "--collect-only", "-q", "-k", selector, *targets]

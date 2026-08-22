@@ -110,6 +110,26 @@ def load_demo_generator():
     return module
 
 
+def _bash_argv(command: str) -> list[str]:
+    """`[shell, "-c", command]`, resolved through `checklist_engine._find_posix_shell()`
+    -- never a bare "bash". On Windows, `subprocess.run` given a bare program
+    name is resolved by Win32's CreateProcess search order, which checks
+    `%SystemRoot%\\System32` BEFORE the PATH directories, so a literal
+    `["bash", "-c", ...]` silently runs the built-in WSL launcher stub instead
+    of Git for Windows' real bash, even with Git's bin earlier in PATH.
+    `_find_posix_shell()` uses `shutil.which` (a plain left-to-right PATH
+    scan) and is not subject to that quirk -- loaded from `ENGINE` by path,
+    like `load_demo_generator` loads the demo generator above, since this
+    file does not otherwise import `scripts/` modules."""
+    spec = importlib.util.spec_from_file_location("checklist_engine", ENGINE)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    shell = module._find_posix_shell()
+    assert shell, "no POSIX shell found -- cannot run this compiled command"
+    return [shell, "-c", command]
+
+
 def read_text_or_none(path: Path) -> str | None:
     try:
         return path.read_text(encoding="utf-8")
@@ -184,7 +204,13 @@ class ShippedExamplesNameOnlyPathsThatExistTests(unittest.TestCase):
 
         checked, dead, examined = 0, [], []
         for path in shipped_example_files():
-            relative = str(path.relative_to(ROOT))
+            # `.as_posix()`, not `str(...)`: `ADDRESSES_ANOTHER_REPO` is a
+            # forward-slash literal, but `relative_to(ROOT)` on Windows
+            # returns a backslash-separated `WindowsPath` -- unnormalized,
+            # `sync-constellation-skills.yml` would never be recognized as
+            # exempt, and its (deliberately foreign) paths would be flagged
+            # dead in THIS repo.
+            relative = path.relative_to(ROOT).as_posix()
             if relative in ADDRESSES_ANOTHER_REPO:
                 continue
             text = read_text_or_none(path)
@@ -286,7 +312,7 @@ class DemoSpineIsGeneratedNotHandEditedTests(unittest.TestCase):
                 path = re.search(r'test -f "([^"]+)"', command)
                 self.assertIsNotNone(path, f"unrecognised check shape: {command}")
                 expanded = subprocess.run(
-                    ["bash", "-c", f'printf %s "{path.group(1)}"'],
+                    _bash_argv(f'printf %s "{path.group(1)}"'),
                     capture_output=True, text=True, check=True,
                     cwd=tempfile.gettempdir(),
                 ).stdout

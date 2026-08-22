@@ -49,6 +49,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from checklist_engine import _find_posix_shell  # noqa: E402
 from init_work_area import _RESOLVER_OWNED_TOKEN_RE  # noqa: E402
 from validate_spine import ACCEPTED_ARTIFACT_TYPES_WITHOUT_MATCH, validate  # noqa: E402
 
@@ -942,8 +943,22 @@ def _probe_population(gid: str, cid: str, cond: dict, *, repo_root: Path) -> tup
     where = f"{gid}.{cid}"
     check = _compile_population(cond, str(repo_root))
     command = check["command"]
+    # `_find_posix_shell()`, never a bare "bash": on Windows, `subprocess.run`
+    # given a bare program name resolves it through Win32's CreateProcess
+    # search order, which checks `%SystemRoot%\System32` BEFORE the PATH
+    # directories -- so a bare "bash" silently runs the built-in WSL launcher
+    # stub (`bash.exe`) instead of Git for Windows' real bash, even when
+    # Git's own bin directory is earlier in PATH. That stub exits nonzero
+    # ("Windows Subsystem for Linux has no installed distributions") on any
+    # host with the WSL feature enabled but no distro installed, which reads
+    # here as every population probe failing. `shutil.which`, which
+    # `_find_posix_shell()` uses, does a plain left-to-right PATH scan and is
+    # not subject to that search-order quirk.
+    shell = _find_posix_shell()
+    if shell is None:
+        return [], [Undecidable("undecidable-population-probe", where, "no POSIX shell found to execute the compiled check")]
     try:
-        proc = subprocess.run(["bash", "-c", command], cwd=str(repo_root), capture_output=True, timeout=60)
+        proc = subprocess.run([shell, "-c", command], cwd=str(repo_root), capture_output=True, timeout=60)
     except (OSError, subprocess.TimeoutExpired) as exc:
         return [], [Undecidable("undecidable-population-probe", where, f"could not execute the compiled check: {exc}")]
     if proc.returncode != 0:

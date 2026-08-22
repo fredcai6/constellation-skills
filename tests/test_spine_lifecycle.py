@@ -241,8 +241,13 @@ class TestDefaultLayoutAgainstAConstructedTopology:
 
         assert Path(got).resolve() == created.resolve()
         # And git agrees it is a real linked worktree, not just a directory.
-        assert str(created.resolve()) in _porcelain(primary).replace("\\", "/") or \
-            str(created) in _porcelain(primary)
+        # `_porcelain` is git's own output, which git always renders with
+        # forward slashes -- even on Windows, even for a worktree that was
+        # `add`ed with a backslash-separated path. Fold BOTH sides to `/`
+        # before comparing: normalizing only the porcelain text (the old
+        # form here) leaves a Windows `str(created...)`, which is
+        # backslash-separated, unable to ever match.
+        assert created.resolve().as_posix() in _porcelain(primary).replace("\\", "/")
 
     def test_a_nested_work_id_lands_beside_its_siblings(self, tmp_path):
         """`worktree_path_for` takes only the last segment, so an epic-scoped

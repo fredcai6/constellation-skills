@@ -27,6 +27,23 @@ import generate_spine as gs  # noqa: E402
 from validate_spine import ACCEPTED_ARTIFACT_TYPES_WITHOUT_MATCH, validate  # noqa: E402
 
 
+def _bash_argv(command: str) -> list[str]:
+    """`[shell, "-c", command]` through `checklist_engine._find_posix_shell()`,
+    never a bare "bash": on Windows a bare program name is resolved by Win32's
+    CreateProcess search order, which checks `%SystemRoot%\\System32` BEFORE
+    PATH -- so a literal `["bash", "-c", ...]` silently runs the built-in WSL
+    launcher stub instead of Git for Windows' real bash, even when Git's bin
+    directory is earlier in PATH. `_find_posix_shell()` uses `shutil.which`,
+    a plain left-to-right PATH scan, and is not subject to that quirk -- it is
+    the SAME resolution `checklist_engine` itself runs compiled command checks
+    through, so a test invoking the compiled command "exactly as the engine
+    would run it" has to go through the identical call, not a closer-looking
+    one that finds a different binary on Windows."""
+    shell = checklist_engine._find_posix_shell()
+    assert shell, "no POSIX shell found -- cannot run this compiled command"
+    return [shell, "-c", command]
+
+
 # --------------------------------------------------------------------------- #
 # Fixture builders -- minimal valid spec dicts (already TOML-parsed shape),
 # one per check kind, plus a minimal full spec.
@@ -220,7 +237,7 @@ class TestCompilePopulation:
         cond = _population_cond(root="specs", glob="*.toml", expected=3)
         out = gs.compile_condition(cond, repo_root_token=str(tmp_path))
         cmd = out["check"]["command"]
-        proc = subprocess.run(["bash", "-c", cmd], cwd=str(tmp_path), capture_output=True)
+        proc = subprocess.run(_bash_argv(cmd), cwd=str(tmp_path), capture_output=True)
         assert proc.returncode == 0, proc.stderr
 
 
@@ -651,7 +668,7 @@ class TestDeclaredDispatchDrivenThroughEngine:
 
         # 1. The compiled command, run exactly as the engine would run it:
         #    nonzero exit, message naming the offending entry.
-        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        proc = subprocess.run(_bash_argv(command), capture_output=True, text=True)
         assert proc.returncode != 0, proc.stdout + proc.stderr
         assert offending_parent in proc.stdout
 
@@ -676,7 +693,7 @@ class TestDeclaredDispatchDrivenThroughEngine:
         }])
         spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
         command = self._resolve_repo_root(spine, "g4", fake_repo)
-        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        proc = subprocess.run(_bash_argv(command), capture_output=True, text=True)
         assert proc.returncode != 0, proc.stdout + proc.stderr
         assert "haiku" in proc.stdout
 
@@ -684,7 +701,7 @@ class TestDeclaredDispatchDrivenThroughEngine:
         declared_parent = "constellation/w1/execute/commander/attempt-1"
         spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
         command = self._resolve_repo_root(spine, "g4", fake_repo)
-        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        proc = subprocess.run(_bash_argv(command), capture_output=True, text=True)
         assert proc.returncode != 0, proc.stdout + proc.stderr
 
     def test_matching_entry_passes_the_compiled_command_and_advance(self, fake_repo):
@@ -701,7 +718,7 @@ class TestDeclaredDispatchDrivenThroughEngine:
         spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
         command = self._resolve_repo_root(spine, "g4", fake_repo)
 
-        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        proc = subprocess.run(_bash_argv(command), capture_output=True, text=True)
         assert proc.returncode == 0, proc.stdout + proc.stderr
 
         checklist_engine.start(spine, "g4")
@@ -738,7 +755,7 @@ class TestDeclaredDispatchDrivenThroughEngine:
         spine = self._spine_with_dispatch(work_id="w1", parent=declared_parent)
         command = self._resolve_repo_root(spine, "g4", fake_repo)
 
-        proc = subprocess.run(["bash", "-c", command], capture_output=True, text=True)
+        proc = subprocess.run(_bash_argv(command), capture_output=True, text=True)
         assert proc.returncode == 0, proc.stdout + proc.stderr
         assert "attempt-2" in proc.stdout
 
@@ -1913,7 +1930,12 @@ class TestFalsificationFloor:
         mutant_dir = tmp_path / "mutant_scripts"
         mutant_dir.mkdir()
         (mutant_dir / "generate_spine.py").write_text(mutated, encoding="utf-8")
-        for name in ("init_work_area.py", "validate_spine.py"):
+        # `checklist_engine.py` joins the two siblings below because
+        # `generate_spine.py` now imports `_find_posix_shell` from it (the
+        # Windows-safe POSIX-shell resolver population probes run compiled
+        # checks through) -- omitted here, the mutant copy fails to import
+        # and this floor cannot tell a real kill from a harness error.
+        for name in ("init_work_area.py", "validate_spine.py", "checklist_engine.py"):
             (mutant_dir / name).write_text((ROOT / "scripts" / name).read_text(encoding="utf-8"), encoding="utf-8")
 
         proc = self._run_against(mutant_dir, tmp_path / "mutant")
@@ -1980,7 +2002,12 @@ class TestSurveyGatedDistinctionFloor:
         mutant_dir = tmp_path / "mutant_scripts"
         mutant_dir.mkdir()
         (mutant_dir / "generate_spine.py").write_text(mutated, encoding="utf-8")
-        for name in ("init_work_area.py", "validate_spine.py"):
+        # `checklist_engine.py` joins the two siblings below because
+        # `generate_spine.py` now imports `_find_posix_shell` from it (the
+        # Windows-safe POSIX-shell resolver population probes run compiled
+        # checks through) -- omitted here, the mutant copy fails to import
+        # and this floor cannot tell a real kill from a harness error.
+        for name in ("init_work_area.py", "validate_spine.py", "checklist_engine.py"):
             (mutant_dir / name).write_text((ROOT / "scripts" / name).read_text(encoding="utf-8"), encoding="utf-8")
 
         proc = self._run_against(mutant_dir, tmp_path / "mutant")

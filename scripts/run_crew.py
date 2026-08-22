@@ -1242,8 +1242,12 @@ def launch_process(
     only the errno and reads like the agent CLI itself is missing -- a wrong
     diagnosis for a worktree that was never created."""
     if cwd is not None and not Path(cwd).is_dir():
+        # Not `{str(cwd)!r}`: `repr()` doubles every backslash, so on Windows
+        # this message would name the worktree with `\\` where the caller
+        # (and any test asserting the refusal NAMES the path) has a single
+        # `\` -- breaking the plain-text `in` check the name exists to satisfy.
         raise CrewLaunchError(
-            f"refusing to spawn a crew in {str(cwd)!r}: that worktree does not exist "
+            f"refusing to spawn a crew in '{cwd}': that worktree does not exist "
             f"(or is not a directory). Create the worktree first, or dispatch with a "
             f"--worktree that does exist."
         )
