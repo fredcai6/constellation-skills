@@ -87,11 +87,8 @@ def _render(args):
 
 
 def _build(args):
-    for stage in (_extract, _render):
-        status = stage(args)
-        if status:
-            return status
-    return 0
+    from .build import build
+    return build(args.root, artifacts=args.artifacts, out=args.out)
 
 
 def _check(args):

@@ -1,0 +1,25 @@
+{
+  "work_id": "w2-reindex",
+  "diff_ref": "g3-review: tests/test_code_map_precommit_e2e.py (new file, ~520 lines), uncommitted working tree diff in /home/tommy/projects/569-w2-reindex",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md, g3-review-handoff.md Map Anchors",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The 'shared, wt = _fresh_scratch_worktree(tmp, \"wt-X\", testcase=self); self.assertEqual(_run_real_cli_install(wt).returncode, 0)' two-line pattern recurs verbatim across 4 test methods (cases 4, 5, 6, 8). Non-blocking: each occurrence is already a call into shared helpers (_fresh_scratch_worktree, _run_real_cli_install), so the duplication is call-site boilerplate, not duplicated logic, and each test method staying an explicit, self-contained arrange-act-assert narrative is a deliberate readability property of integration tests (a shared setUp/fixture combining install with worktree creation would hide which cases install and which do not -- case1 deliberately skips it). Worth a shared setUp helper only if a 5th+ case makes the boilerplate-to-signal ratio worse.",
+      "override": null
+    },
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "w2-reindex-g3-implement",
+    "project": "constellation-skills",
+    "role": "g3-implement-implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-g3-implement-m0-context@997b1d5a5956be70d74c679b555bc614ae0d48db",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex-g3-implement",
+    "generated_at": "2026-08-22T18:46:57Z"
+  }
+}

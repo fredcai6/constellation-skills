@@ -1,0 +1,173 @@
+{
+  "work_id": "w2-reindex",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md; GLOSSARY.md present. Read the g2-review handoff, g1-review result, and g2-implement result.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "resolve_git_hooks_dir/install_git_precommit_hook implemented and wired into main() via keyword-only install_git_pre_commit_hook/git_repo_root, mirroring wire_repo_mcp_config/mcp_config_path exactly (same self-install-only gate shape: install_git_pre_commit_hook and (git_repo_root is not None or is_self_install(args))). Independently reproduced resolve_git_hooks_dir against this actual checkout (a real linked worktree): resolves to /home/tommy/projects/constellation-skills/.git/hooks, matching a direct git rev-parse call and 8+ sibling worktrees per git worktree list. Wrapper text read directly: resolves toplevel at run time via git rev-parse --show-toplevel, execs $toplevel/scripts/hooks/code_map_precommit.py -- no absolute path baked in. SCRIPT_SOURCE_SUBDIRS one-line fix confirmed genuinely needed (ScriptsPackageBundlingTests fails without it: AssertionError scripts/hooks/ is neither in NON_INSTALLABLE_PACKAGES nor fully declared -- verified by removing the line, re-running, restoring, diff-confirmed identical to original).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff --name-only lists exactly 3 tracked files: scripts/code_map/cli.py (gate 1's already-approved delegation refactor, byte-diff confirmed unchanged/matches g1-implement-implementer-result.md's own description), scripts/install_constellation.py, tests/test_install_constellation.py -- both in Allowed Scope. No specific-exclusion files touched (generate_spine.py, specs/, scripts/checklist_engine.py, any shipped spine template -- zero matches). No real git commit or .git/hooks install against this repo's own state: shared hooks dir at /home/tommy/projects/constellation-skills/.git/hooks has no pre-commit file.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced, not just trusted: 'python -m pytest tests/test_install_constellation.py -k GitPreCommitHookWiringTests -q' -> 14 passed (matches claim). 'python -m pytest tests/test_install_constellation.py -q' -> 230 passed, 519 subtests passed (matches claim exactly, zero regressions). Wiring grep for skills/SKILL.md and required_scripts references to code_map_precommit.py -> zero matches, confirming the SCRIPT_SOURCE_SUBDIRS fix is inert as claimed. Confirmed the guard this fix satisfies (ScriptsPackageBundlingTests) is a real, mutation-sensitive check: removed the added line, reran, got the exact predicted AssertionError, restored, reran green, diffed byte-identical to original.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraint 'never raise on a git failure -- report-only': resolve_git_hooks_dir catches (OSError, subprocess.TimeoutExpired) and returns None on nonzero returncode; install_git_precommit_hook checks hooks_dir is None and reports+returns before touching the filesystem -- covered by test_resolve_git_hooks_dir_returns_none_on_git_failure and test_install_git_precommit_hook_reports_and_noops_when_hooks_dir_unresolvable. Constraint 'stdlib only': diff adds zero new imports -- subprocess/Path/Callable were already imported at module top for existing functions. Constraint 'zero changes to existing test bodies': git diff shows the entire tests/test_install_constellation.py diff is a pure insertion (one new class + helper) after RepoMcpConfigWiringTests's closing blank line; nothing above the insertion point differs. CREW_CONTEXT verification discipline (mutation-sensitive guard, behavior not text) followed for both the SCRIPT_SOURCE_SUBDIRS fix and spot-checked for the new tests themselves (test_install_git_precommit_hook_refuses_to_clobber_a_foreign_hook asserts byte-equality of the foreign hook's content, not just a log line).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes in g2-implement-implementer-result.md verified against the diff: structural anchors (two new functions, two new main() params, one SCRIPT_SOURCE_SUBDIRS entry, one __main__ arg) match exactly. Constraint claim (self-install-only mirrors .mcp.json wiring) verified by direct code comparison of the two guard expressions -- identical shape. Evidence claim (resolves against this actual checkout) independently reproduced, not just trusted. No decision candidates forced -- wiring shape was pre-decided in the handoff's Authority section and followed as specified. No architecture divergence Commander must reconcile: capability is additive (new opt-in main() params, defaulting off), no existing installed behavior changed for any of the ~230 pre-existing tests. Out-of-scope observation already surfaced by implementer (gate 1's ScriptsPackageBundlingTests gap, worth a note to whoever tracks gate 1 closeout) is a legitimate triage candidate, correctly routed rather than fixed silently.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to .agent-work/w2-reindex/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass recorded to .agent-work/w2-reindex/FOWLER_PASS.json, 12 smells rendered. flagged=long-parameter-list (main() 7->9 kwargs, non-blocking, all keyword-only, rule-of-three not crossed). overridden=duplicated-code (the new git-hook wiring block in main() structurally mirrors the pre-existing .mcp.json wiring block; override reason: handoff's own Map Anchors name that block as 'the precedent this gate mirrors', and global-everyone.md's no-speculative-abstraction posture argues against extracting a 2-instance helper). All other 10 smells absent. verify_fowler_pass.py exits 0 (smells=12, flagged=['long-parameter-list'], overridden=['duplicated-code']).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g2-review APPROVE: resolve_git_hooks_dir/install_git_precommit_hook correctly wired into main() mirroring the .mcp.json precedent exactly, self-install-only, independently re-verified against this actual checkout (real linked worktree, shared hooks dir), run-time toplevel resolution confirmed by reading the wrapper text directly, refuse-foreign/idempotent/dry-run mechanics test-covered, full pre-existing suite green (230 passed, 519 subtests) with zero body changes, SCRIPT_SOURCE_SUBDIRS fix confirmed genuinely needed via mutation test and confirmed inert via grep. Fowler pass: 10 absent, 1 flagged (long-parameter-list, non-blocking), 1 overridden (duplicated-code, logged reason: handoff-named precedent mirror + no-speculative-abstraction doctrine)."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/w2-reindex/g2-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T18:35:27.952058+00:00",
+    "last_heartbeat": "2026-08-22T18:39:23.488070+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T18:40:04.169933+00:00"
+  }
+}
