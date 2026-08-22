@@ -204,10 +204,35 @@ def verify_explorer(work_id: str, skills_root: str | Path | None = None) -> None
 
 
 def verify_commander(work_id: str, skills_root: str | Path | None = None) -> None:
+    """Verify the run's REPLAN_INPUT against whichever of G2's two admissible
+    packets it is, chosen by the artifact itself.
+
+    A packet carrying ``current_plan`` is an epic-level replanning input and
+    gets the full check. A packet without one is a single-issue delegated run's
+    evidence packet (#594): a Commander under a frozen launch order has no
+    wave, no forecast, no uncertainty register and no parked possibilities,
+    because nothing in its run produced any -- requiring those fields could
+    only be satisfied by inventing structure nobody decided, which is the exact
+    habit every other evidence rule here exists to suppress. Both packets share
+    the same clauses for the three evidence field-sets, so this narrows scope
+    without weakening a single check.
+
+    The presence of ``current_plan`` is the discriminator rather than a flag
+    because the artifact is the only thing this verifier can see: a flag would
+    let a caller ask for the reduced check over a packet that plainly has a
+    plan in it."""
     artifact = _read_json(_work_area(work_id) / "REPLAN_INPUT.json", "Commander REPLAN_INPUT")
     verifier = _replan_verifier(_installed_skills_root(skills_root))
+    single_run = isinstance(artifact, dict) and "current_plan" not in artifact
+    check = getattr(verifier, "verify_run_evidence", None) if single_run else verifier.verify_replan_input
+    if check is None:
+        raise RoleArtifactError(
+            "Commander REPLAN_INPUT has no current_plan, so it is a single-issue run "
+            "packet, but the installed constellation-replan predates that shape (#594) "
+            "-- reinstall the corpus, or author the full epic-level packet"
+        )
     try:
-        verifier.verify_replan_input(artifact)
+        check(artifact)
     except verifier.ReplanError as exc:
         raise RoleArtifactError(f"Commander REPLAN_INPUT violates G2: {exc}") from exc
 

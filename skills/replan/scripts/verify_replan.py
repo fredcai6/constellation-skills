@@ -110,19 +110,10 @@ def _validate_parked(value: object, path: str) -> list[str]:
     return _strings(value, path)
 
 
-def verify_replan_input(packet: object) -> dict:
-    """Fail fast unless ``packet`` is the exact v1 replanning input."""
-    fields = {
-        "schema_version", "current_plan", "completed_outcomes", "wave_evidence",
-        "discrepancies", "open_current_wave_issue_ids", "unlaunched_items", "repo_state",
-    }
-    packet = _object(packet, "input", fields)
-    _version(packet["schema_version"], "input.schema_version")
-    plan = _validate_plan(packet["current_plan"], "input.current_plan")
-    current_ids = {issue["id"] for issue in plan["current_wave"]["issues"]}
-
-    outcomes = packet["completed_outcomes"]
+def _validate_completed_outcomes(outcomes: object) -> list[str]:
+    """The `completed_outcomes` clause, shared by both admissible packets."""
     _require(isinstance(outcomes, list), "input.completed_outcomes must be an array")
+    assert isinstance(outcomes, list)
     completed_ids: list[str] = []
     for index, entry in enumerate(outcomes):
         path = f"input.completed_outcomes[{index}]"
@@ -131,17 +122,24 @@ def verify_replan_input(packet: object) -> dict:
         _string(item["outcome"], f"{path}.outcome")
         _string(item["evidence"], f"{path}.evidence")
     _require(len(completed_ids) == len(set(completed_ids)), "completed outcome issue ids must be unique")
+    return completed_ids
 
-    evidence = packet["wave_evidence"]
+
+def _validate_wave_evidence(evidence: object) -> None:
+    """The `wave_evidence` clause, shared by both admissible packets."""
     _require(isinstance(evidence, list) and bool(evidence), "input.wave_evidence must be a nonempty array")
+    assert isinstance(evidence, list)
     for index, entry in enumerate(evidence):
         path = f"input.wave_evidence[{index}]"
         item = _object(entry, path, {"claim", "expected", "observed", "source"})
         for field in ("claim", "expected", "observed", "source"):
             _string(item[field], f"{path}.{field}")
 
-    discrepancies = packet["discrepancies"]
+
+def _validate_discrepancies(discrepancies: object) -> list[str]:
+    """The `discrepancies` clause, shared by both admissible packets."""
     _require(isinstance(discrepancies, list), "input.discrepancies must be an array")
+    assert isinstance(discrepancies, list)
     discrepancy_ids: list[str] = []
     fields = {"id", "signal", "classification", "affects", "evidence", "reason"}
     for index, entry in enumerate(discrepancies):
@@ -153,6 +151,64 @@ def verify_replan_input(packet: object) -> dict:
         _require(item["classification"] in CLASSIFICATION_ACTIONS, f"{path}.classification is invalid")
         _string(item["reason"], f"{path}.reason", nonempty=item["classification"] == "drop")
     _require(len(discrepancy_ids) == len(set(discrepancy_ids)), "input.discrepancy ids must be unique")
+    return discrepancy_ids
+
+
+def verify_run_evidence(packet: object) -> dict:
+    """Fail fast unless ``packet`` is the exact v1 SINGLE-RUN evidence packet.
+
+    Issue #594. The full G2 input below assumes an epic-level wave plan --
+    ``current_plan``, a typed ``current_wave``, ``wave_forecast``,
+    ``uncertainty_register``, ``parked_possibilities``. A Commander running ONE
+    bounded issue under a frozen Admiral launch order has none of those,
+    because nothing in its run ever produced any, and yet every field still had
+    to be filled to pass its own ``execute`` gate. The lane that surfaced this
+    named exactly what came out the other side: "the authored packet is a
+    plausible-sounding artifact standing in for structure that was never
+    decided by anyone."
+
+    That is a gate applying fabrication pressure, and it is the reverse of this
+    repo's whole evidence posture -- cite something real or say plainly that
+    there is nothing. A check that can only be passed by making things up
+    teaches the habit the rest of the system exists to suppress.
+
+    So a single-issue run returns what it actually observed and nothing else:
+    the three evidence field-sets the Commander's own directive names
+    (``completed_outcomes``, ``wave_evidence``, ``discrepancies``), each
+    validated by the SAME clauses the full packet uses -- this is a narrower
+    scope, never a weaker check. The full input stays the default for genuine
+    epic-level runs, and stays the only shape ``verify_replan_result`` will
+    reconcile against, since a result disposes of ``unlaunched_items`` and
+    plan structure a single-issue packet does not have.
+    """
+    fields = {"schema_version", "completed_outcomes", "wave_evidence", "discrepancies"}
+    packet = _object(packet, "input", fields)
+    _version(packet["schema_version"], "input.schema_version")
+    _validate_completed_outcomes(packet["completed_outcomes"])
+    _validate_wave_evidence(packet["wave_evidence"])
+    _validate_discrepancies(packet["discrepancies"])
+    return packet
+
+
+def verify_replan_input(packet: object) -> dict:
+    """Fail fast unless ``packet`` is the exact v1 replanning input.
+
+    This is the EPIC-level packet: it carries a wave plan and partitions that
+    plan's current-wave issue ids across completed and open. A single-issue
+    delegated run has no wave plan and returns ``verify_run_evidence``'s
+    packet instead (#594)."""
+    fields = {
+        "schema_version", "current_plan", "completed_outcomes", "wave_evidence",
+        "discrepancies", "open_current_wave_issue_ids", "unlaunched_items", "repo_state",
+    }
+    packet = _object(packet, "input", fields)
+    _version(packet["schema_version"], "input.schema_version")
+    plan = _validate_plan(packet["current_plan"], "input.current_plan")
+    current_ids = {issue["id"] for issue in plan["current_wave"]["issues"]}
+
+    completed_ids = _validate_completed_outcomes(packet["completed_outcomes"])
+    _validate_wave_evidence(packet["wave_evidence"])
+    _validate_discrepancies(packet["discrepancies"])
 
     open_ids = _strings(packet["open_current_wave_issue_ids"], "input.open_current_wave_issue_ids")
     _require(len(open_ids) == len(set(open_ids)), "open current-wave issue ids must be unique")

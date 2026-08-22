@@ -94,14 +94,25 @@ Pick subagent model tier from gate complexity, scope, ambiguity, and risk. Wait 
 
 Execution discrepancies are evidence before they are issues. As gates close,
 record completed outcomes, observed-vs-expected `wave_evidence`, and each
-discrepancy in the exact sibling
-`../constellation-replan/templates/REPLAN_INPUT.template.json` fields and write
-the packet to `.agent-work/<work-id>/REPLAN_INPUT.json`. Classify every signal
-as `blocks_current_wave_exit`, `invalidates_forecast_or_decomposition`,
-`later_only`, `evidence_only`, or `drop`; include its evidence and reason.
-Preserve the current-wave identity partition and describe unlaunched items, but
+discrepancy in the exact sibling template's fields and write the packet to
+`.agent-work/<work-id>/REPLAN_INPUT.json`. Classify every signal as
+`blocks_current_wave_exit`, `invalidates_forecast_or_decomposition`,
+`later_only`, `evidence_only`, or `drop`; include its evidence and reason, and
 do not file a discrepancy automatically. Return the verified packet to the
-Admiral. Issue creation, when a disposition warrants it, remains behind the
+Admiral.
+
+**Which template.** A run that is reshaping an epic's wave plan fills
+`../constellation-replan/templates/REPLAN_INPUT.template.json`, which carries
+that plan and partitions its current-wave issue ids across completed and open.
+A single bounded issue under a frozen Admiral launch order fills
+`../constellation-replan/templates/RUN_EVIDENCE.template.json` instead — the
+three evidence field-sets and nothing else. That run has no wave, no forecast
+and no uncertainty register because nothing in it produced any, and filling
+those fields anyway would mean authoring a plausible-sounding artifact standing
+in for structure nobody decided (#594). Report what you observed; where there
+is nothing, the list is empty. The verifier picks its check from the packet —
+`current_plan` present means the full shape — so the two are never confused,
+and every shared field is checked by exactly the same clauses either way. Issue creation, when a disposition warrants it, remains behind the
 normal authority, triage, independent-review, and tracker-port gates.
 
 The execute gate runs

@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VERIFIER = ROOT / "skills" / "replan" / "scripts" / "verify_replan.py"
 INPUT_TEMPLATE = ROOT / "skills" / "replan" / "templates" / "REPLAN_INPUT.template.json"
 RESULT_TEMPLATE = ROOT / "skills" / "replan" / "templates" / "REPLAN_RESULT.template.json"
+RUN_EVIDENCE_TEMPLATE = ROOT / "skills" / "replan" / "templates" / "RUN_EVIDENCE.template.json"
 
 
 def load_verifier():
@@ -135,6 +136,21 @@ def replan_input(*, open_ids=None):
     }
 
 
+def run_evidence():
+    """The single-issue delegated run's packet: the three evidence field-sets
+    a Commander under a frozen launch order actually produced, and nothing
+    else."""
+    return {
+        "schema_version": 1,
+        "completed_outcomes": [{"issue_id": "#594", "outcome": "Done", "evidence": "Test output"}],
+        "wave_evidence": [
+            {"claim": "The gate is satisfiable honestly", "expected": "It refuses invention",
+             "observed": "It accepts observed evidence alone", "source": "tests/test_replan.py"}
+        ],
+        "discrepancies": [],
+    }
+
+
 def replan_result(decision="repair", *, source=None):
     source = source or replan_input()
     dispositions = []
@@ -168,6 +184,74 @@ def replan_result(decision="repair", *, source=None):
         "revised_epic_body": "## Current planning truth\n\nThe current wave and nonbinding forecast are explicit.",
         "escalation": None,
     }
+
+
+@unittest.skipUnless(VERIFIER.is_file(), "awaiting the test-led replan implementation")
+class SingleRunEvidencePacketTests(unittest.TestCase):
+    """Issue #594: G2's full input assumes an epic-level wave plan. A Commander
+    running ONE bounded issue under a frozen launch order has no wave, no
+    forecast, no uncertainty register and no parked possibilities, so every one
+    of those fields could only be filled by inventing structure nobody decided
+    -- a gate that can only be passed by making things up. The single-run
+    packet returns what the run observed and nothing else, checked by the SAME
+    clauses: narrower scope, not a weaker check."""
+
+    def setUp(self):
+        self.replan = load_verifier()
+
+    def test_checked_in_template_is_directly_valid(self):
+        packet = json.loads(RUN_EVIDENCE_TEMPLATE.read_text(encoding="utf-8"))
+        self.replan.verify_run_evidence(packet)
+
+    def test_evidence_alone_verifies_with_no_plan_skeleton(self):
+        self.assertEqual(run_evidence(), self.replan.verify_run_evidence(run_evidence()))
+
+    def test_empty_discrepancies_are_an_honest_null(self):
+        packet = run_evidence()
+        packet["discrepancies"] = []
+        self.replan.verify_run_evidence(packet)
+
+    def test_plan_fields_are_refused_not_ignored(self):
+        # The reduced packet is a different shape, not a lenient one: smuggling
+        # an epic skeleton back in is an error, so the two never blur.
+        for field, value in (
+            ("current_plan", current_plan()),
+            ("unlaunched_items", []),
+            ("repo_state", {"anchors": [], "map_status": "none"}),
+        ):
+            with self.subTest(field=field):
+                packet = run_evidence()
+                packet[field] = value
+                with self.assertRaises(self.replan.ReplanError):
+                    self.replan.verify_run_evidence(packet)
+
+    def test_shared_clauses_are_enforced_identically(self):
+        # Each of these is exactly the mistake the full packet catches; the
+        # narrow packet must catch it too, or this became a weakening.
+        cases = {
+            "malformed_outcome": lambda p: p["completed_outcomes"].append({"issue_id": "#1"}),
+            "empty_wave_evidence": lambda p: p.__setitem__("wave_evidence", []),
+            "stray_key_in_evidence": lambda p: p["wave_evidence"][0].__setitem__("issue", "#594"),
+            "bad_classification": lambda p: p["discrepancies"].append({
+                "id": "D0", "signal": "s", "classification": "not-a-classification",
+                "affects": "a", "evidence": "e", "reason": "r"}),
+            "duplicate_outcome_ids": lambda p: p["completed_outcomes"].append(
+                dict(p["completed_outcomes"][0])),
+            "bad_version": lambda p: p.__setitem__("schema_version", 2),
+        }
+        for name, mutate in cases.items():
+            with self.subTest(case=name):
+                packet = run_evidence()
+                mutate(packet)
+                with self.assertRaises(self.replan.ReplanError):
+                    self.replan.verify_run_evidence(packet)
+
+    def test_full_epic_packet_is_untouched(self):
+        self.replan.verify_replan_input(replan_input())
+        packet = replan_input()
+        del packet["current_plan"]
+        with self.assertRaises(self.replan.ReplanError):
+            self.replan.verify_replan_input(packet)
 
 
 class MissingBehaviorTest(unittest.TestCase):

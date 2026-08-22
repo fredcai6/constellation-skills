@@ -5704,6 +5704,7 @@ class RenderDirectives(unittest.TestCase):
             "\ndirectives:\n"
             "  replan_input:\n"
             "    template: ../constellation-replan/templates/REPLAN_INPUT.template.json\n"
+            "    single_issue_template: ../constellation-replan/templates/RUN_EVIDENCE.template.json\n"
             "    output: .agent-work/<work-id>/REPLAN_INPUT.json\n"
             "    evidence_fields: completed_outcomes, wave_evidence, discrepancies\n"
             "    classifications: blocks_current_wave_exit, invalidates_forecast_or_decomposition, later_only, evidence_only, drop\n"

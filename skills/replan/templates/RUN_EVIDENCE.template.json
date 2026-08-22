@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "#000",
+      "outcome": "What the run actually achieved, stated as an outcome.",
+      "evidence": "Where that can be checked: a test name, a command, a path."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A claim the run's own execution tested.",
+      "expected": "What the launch order or the plan said would happen.",
+      "observed": "What happened, cited to something a reader can open.",
+      "source": "tests/test_x.py::TestY, or the command that produced it"
+    }
+  ],
+  "discrepancies": []
+}
