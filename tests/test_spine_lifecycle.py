@@ -373,7 +373,11 @@ class TestOpenWorkOccupiedRefusal:
         occupied.mkdir(parents=True)
         with pytest.raises(sl.SpineLifecycleError) as excinfo:
             sl.open_work("w1", _spec("w1"), root=repo, base="HEAD", parent="unknown", wt_root=wt_root)
-        assert str(occupied) in str(excinfo.value)
+        # `.as_posix()`, not `str(...)`: `worktree_path_for` always joins with
+        # `/` (it is compared against git's own forward-slash porcelain
+        # output elsewhere), so the refusal names the forward-slash form even
+        # though `wt_root` itself is the OS-native `str(tmp_path / "wt")`.
+        assert occupied.as_posix() in str(excinfo.value)
         assert _porcelain(repo).count("worktree ") == 1  # no worktree was registered
 
     def test_innocent_free_path_succeeds(self, repo, wt_root):

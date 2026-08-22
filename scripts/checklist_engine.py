@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import errno
 import hashlib
 import importlib.util
 import json
@@ -317,6 +318,28 @@ _replace_with_retry.__doc__ = _replace_with_retry.__doc__ % (
 )
 
 
+def _read_busy_on_windows(exc: OSError) -> bool:
+    """Whether `exc` is the transient Windows sharing violation
+    `_read_text_with_retry` should retry, rather than a real failure.
+
+    Matches `winerror` when the OS supplied one -- the same
+    `_WINDOWS_REPLACE_BUSY` codes `_replace_with_retry` matches for the writer
+    side of this exact race. But an ordinary `open()`/`read_text()` failure on
+    Windows does not always populate `.winerror` the way `os.replace()`'s
+    does (measured: a concurrent-reader `PermissionError` from a plain
+    `read_text()` in CI carried only `errno=13`, `winerror=None`) -- so on
+    Windows ONLY, a bare `PermissionError` (`errno.EACCES`) is ALSO treated as
+    busy. Scoped to `os.name == "nt"`: on POSIX a `read_text()` racing a
+    concurrent `os.replace()` never raises at all (`rename(2)` does not
+    invalidate an open reader), so a `PermissionError` there is a REAL
+    permission problem (see `test_an_unreadable_spine_file_is_refused`) and
+    must not be retried into a slow success-that-should-have-failed.
+    """
+    if getattr(exc, "winerror", None) in _WINDOWS_REPLACE_BUSY:
+        return True
+    return os.name == "nt" and isinstance(exc, PermissionError) and exc.errno == errno.EACCES
+
+
 def _read_text_with_retry(path: Path) -> str:
     """`path.read_text(encoding="utf-8")`, retrying on the SAME narrow Windows
     sharing violation `_replace_with_retry` retries for the writer.
@@ -326,16 +349,16 @@ def _read_text_with_retry(path: Path) -> str:
     concurrent `open()` for reading can itself raise `PermissionError` /
     `ERROR_SHARING_VIOLATION` on Windows, not only the writer racing an open
     reader (`_replace_with_retry`'s case). Same constants, same backoff, same
-    narrow match on `winerror`: this is the other half of #613's fix, not a
-    second design. POSIX is unaffected (`winerror` never matches), so the
-    loop runs exactly once there, identical to a bare `.read_text()`.
+    narrow-busy predicate (`_read_busy_on_windows`): this is the other half of
+    #613's fix, not a second design. POSIX is unaffected (never busy there),
+    so the loop runs exactly once, identical to a bare `.read_text()`.
     """
     last: OSError | None = None
     for attempt in range(_REPLACE_ATTEMPTS):
         try:
             return path.read_text(encoding="utf-8")
         except OSError as exc:
-            if getattr(exc, "winerror", None) not in _WINDOWS_REPLACE_BUSY:
+            if not _read_busy_on_windows(exc):
                 raise
             last = exc
             if attempt < _REPLACE_ATTEMPTS - 1:

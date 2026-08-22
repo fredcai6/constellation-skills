@@ -24,7 +24,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -316,8 +316,16 @@ class DemoSpineIsGeneratedNotHandEditedTests(unittest.TestCase):
                     capture_output=True, text=True, check=True,
                     cwd=tempfile.gettempdir(),
                 ).stdout
+                # `PurePosixPath`, not `Path`: `expanded` is bash's own
+                # expansion of a check text bash itself will run (via
+                # `checklist_engine._find_posix_shell()`) -- on Windows a
+                # native `Path("/tmp/...")` is NOT absolute (`PureWindowsPath`
+                # needs a drive letter, which an MSYS-rooted `/tmp` never
+                # has), even though it is genuinely absolute to the bash that
+                # actually evaluates `test -f "..."`. Judge it the way the
+                # thing that runs it will.
                 self.assertTrue(
-                    Path(expanded).is_absolute(),
+                    PurePosixPath(expanded).is_absolute(),
                     f"check path did not expand to an absolute location: {expanded!r}")
 
 
