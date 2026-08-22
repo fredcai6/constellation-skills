@@ -3554,19 +3554,49 @@ def waive(
         reason = (reason or "").strip() or None
         if (policy.get("reason_required") or forced) and not reason:
             raise EngineError("waive requires a non-empty --reason")
+        # #503 (report-only, promotion trigger below): a declared
+        # override_policy.authority is compared, never enforced. On a mismatch we
+        # record it on both the evidence payload and the waived marker so it is
+        # auditable, but waive() itself never refuses or blocks -- this is a
+        # brand-new refusal candidate and the standing epic rule requires any new
+        # refusal to ship report-only first. Absence of a declared authority (or a
+        # match) means nothing to compare, so no new field is added at all --
+        # matches this codebase's existing convention that absence is meaningful.
+        #
+        # waive-authority-mismatch/authority_mismatch stays report-only until BOTH
+        # (a) a corpus census across at least one full epic-wave shows every
+        # historical mismatch was a genuine violation with zero legitimate
+        # cross-role cases (e.g. an Admiral waiving on a condition declared
+        # authority: "commander", which is presumably fine and would falsify a
+        # blanket refusal); AND (b) docs/CHECKLIST_SCHEMA.md's
+        # override_policy.authority field (currently documented as "advisory") is
+        # explicitly upgraded to a documented enforceable contract in the SAME
+        # change that promotes the check.
+        expected_authority = policy.get("authority")
+        mismatch = bool(
+            (expected_authority or "").strip()
+            and (expected_authority or "").strip().casefold() != authority.strip().casefold()
+        )
         eid = _new_evidence_id(t)
+        payload = {"cond": cond_id, "authority": authority, "reason": reason, "forced": forced}
+        waived_marker = {"authority": authority, "reason": reason, "evidence": eid, "forced": forced}
+        if mismatch:
+            payload["authority_mismatch"] = True
+            payload["expected_authority"] = expected_authority
+            waived_marker["authority_mismatch"] = True
+            waived_marker["expected_authority"] = expected_authority
         t.setdefault("evidence", []).append(
             {
                 "id": eid,
                 "type": "waiver",
-                "payload": {"cond": cond_id, "authority": authority, "reason": reason, "forced": forced},
-                "produced_by": "human",
+                "payload": payload,
+                "produced_by": authority,
                 "ts": "",
             }
         )
         c["satisfied"] = True
         c["satisfied_by"] = eid
-        c["waived"] = {"authority": authority, "reason": reason, "evidence": eid, "forced": forced}
+        c["waived"] = waived_marker
         tag = " (FORCED)" if forced else ""
         return f"waived {iid}.{cond_id}{tag} by {authority} -> {eid}"
     raise EngineError(f"{which} {cond_id!r} not found on {iid}")
@@ -3720,9 +3750,27 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
     if v == "heartbeat":
         return heartbeat(cl, args.session_id)
     if v == "release":
+        # override_ledger chokepoint (g2): capture the owning session BEFORE
+        # release() mutates status -- release() leaves session_id in place, so
+        # this is a safe read of pre-call state. A force-release is one where
+        # --force was passed AND the caller is not the recorded owner; append
+        # ahead of the return so the early-return control flow (deliberately
+        # NOT a fall-through -- release never gets the archived-path banner)
+        # stays exactly as it was.
+        force = getattr(args, "force", False)
+        prior_owner = None
+        existing_session = cl.get("engine_session")
+        if isinstance(existing_session, dict):
+            prior_owner = existing_session.get("session_id")
+        if force and prior_owner is not None and prior_owner != args.session_id:
+            _append_override_entry(
+                cl, "force-release", verb="release",
+                session_id=args.session_id, previous_session_id=prior_owner,
+                takeover_reason=getattr(args, "reason", None),
+            )
         return release(
             cl, args.session_id,
-            force=getattr(args, "force", False), reason=getattr(args, "reason", None),
+            force=force, reason=getattr(args, "reason", None),
         )
     if v == "current":
         # Trip SOFT/HARD advisory (#182) rides the read-only `current` at the gate
@@ -3734,6 +3782,19 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
             cl, args.session_id, args.claimed_by, args.worktree, config,
             force=getattr(args, "force", False), reason=getattr(args, "reason", None),
         )
+        # override_ledger chokepoint (g2): read state claim() already produced --
+        # a genuine takeover is force=true AND a non-null previous_session_id (a
+        # no-op --force with nothing to take over records nothing).
+        if getattr(args, "force", False):
+            session = cl.get("engine_session") or {}
+            previous_session_id = session.get("previous_session_id")
+            if previous_session_id:
+                _append_override_entry(
+                    cl, "force-claim", verb="claim",
+                    session_id=session.get("session_id"),
+                    previous_session_id=previous_session_id,
+                    takeover_reason=session.get("takeover_reason"),
+                )
     else:
         # Actor-authority gate: once an active lease exists, a mutating verb must
         # carry the owning --session-id. No lease -> legacy behavior (no session).
@@ -3753,6 +3814,28 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         # so it never refreshes the lease even though main() persists on the error
         # path. Only a verb that returns successfully reaches the stamp below.
         message = _run_verb(cl, args, base_dir)
+        # override_ledger chokepoint (g2): a successful waive is recorded here,
+        # EVERY time, not only forced/mismatched ones -- a plain policy-allowed
+        # matched-authority waive is still "a human accepting risk to skip a
+        # control." Re-find the SAME condition waive() itself just set, using
+        # the SAME which-only lookup (no preconditions/postconditions
+        # fallback) -- a cond id that exists in both lists with different
+        # override_policy would otherwise let dispatch's re-lookup diverge
+        # from the one waive() actually acted on.
+        if v == "waive":
+            waived_task = task(cl, args.id)
+            for cond in waived_task.get(args.which, []):
+                if cond["id"] != args.cond:
+                    continue
+                marker = cond.get("waived") or {}
+                fields = {"task": args.id, "cond": args.cond, "evidence": marker.get("evidence"),
+                          "authority": marker.get("authority"), "reason": marker.get("reason"),
+                          "forced": marker.get("forced")}
+                if "authority_mismatch" in marker:
+                    fields["authority_mismatch"] = marker["authority_mismatch"]
+                    fields["expected_authority"] = marker["expected_authority"]
+                _append_override_entry(cl, "waive", **fields)
+                break
         # Owner activity = liveness: a SUCCESSFUL mutating verb by the owner refreshes
         # the lease, so an actively-working session never goes stale and an idle gap
         # self-heals. A refused verb never gets here.

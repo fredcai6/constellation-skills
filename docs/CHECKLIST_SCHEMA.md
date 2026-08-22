@@ -289,6 +289,10 @@ A condition opts into being waivable with an optional sibling field `override_po
 
 When `waive` succeeds it does three durable things on the condition: sets `satisfied: true`, sets `satisfied_by` to the new waiver evidence id, and stamps a `waived` marker `{authority, reason, evidence, forced}`. The marker matters because `command`/`artifact` checks are **re-evaluated at every `advance`**: the engine short-circuits a waived condition (honors it without re-running its check) so the waiver is not silently overwritten and un-waived. A `reopen` clears the `waived` marker — rework re-evaluates from scratch, so a prior waiver does not carry over.
 
+**`produced_by` and the report-only `authority_mismatch` (g2).** The waiver evidence record's `produced_by` echoes the actual `--authority` passed to `waive` (never a hardcoded `"human"`). When the condition carries a declared `override_policy.authority` and the passed `--authority` disagrees with it (case/whitespace-normalized), `waive` additionally stamps `authority_mismatch: true` and `expected_authority: "<declared>"` on both the evidence payload and the `waived` marker — **report-only**: `waive` never refuses or blocks on a mismatch, and when there is nothing to compare (no declared `override_policy.authority`, or it matches) neither field is added at all, so absence stays meaningful.
+
+**Named promotion trigger.** `waive-authority-mismatch`/`authority_mismatch` stays report-only until BOTH (a) a corpus census across at least one full epic-wave shows every historical mismatch was a genuine violation with zero legitimate cross-role cases (e.g. an Admiral waiving on a condition declared `authority: "commander"`, which is presumably fine and would falsify a blanket refusal); AND (b) the `authority` field above (currently documented as "advisory") is explicitly upgraded to a documented enforceable contract in the SAME change that promotes the check.
+
 ### Qualitative conditions (`check: null`) — trust but verify
 
 Most conditions, especially **preconditions**, are qualitative. The engine records the agent's assertion and leans on the tiers for truth. A precondition is verified by **the very agent that depends on it**: told "you need an interface that does X," its first job is to confirm that interface exists — which doubles as a second review of the upstream work. We chose this over mechanical id-chaining: trust but verify, and keep the engine simple.
@@ -631,17 +635,17 @@ every override the engine records, not just trip events. `override_ledger` ids a
 **across all kinds** — not per-kind — so an entry's id alone recovers its place in the ledger's own
 order, mirroring `trip_ledger`'s `tl-<n>` idiom.
 
-As of this gate, `trip` is the only kind actually written — `_append_trip_entry` now calls
+All four kinds are written as of this gate. `_append_trip_entry` calls
 `_append_override_entry(cl, "trip", ...)` instead of writing `trip_ledger` directly, so a fresh trip
-event lands here, not in the legacy key. Three more kinds are named now so this schema documents the
-target shape, though nothing writes them yet — they land in a later gate:
+event lands here, not in the legacy key. `dispatch()` writes the other three directly — never a
+verb's own function body (see *engine-written-only*, below):
 
 | kind | written by | meaning |
 |---|---|---|
-| `trip` | `_append_trip_entry` (this gate) | a BEGIN judged at/over the hard line — see *The trip ledger* above; field shape unchanged |
-| `force-claim` | *landed in a later gate* | an actor force-claiming a lease against another actor's hold |
-| `force-release` | *landed in a later gate* | an actor force-releasing a lease it does not hold |
-| `waive` | *landed in a later gate* | a human waiving a `git-change-policy`/override-policy check (see *Override policy*) |
+| `trip` | `_append_trip_entry`, called from `_trip_hard_gate` | a BEGIN judged at/over the hard line — see *The trip ledger* above; field shape unchanged |
+| `force-claim` | `dispatch()`'s `claim` branch | a genuine takeover: `--force` passed AND a prior owner existed |
+| `force-release` | `dispatch()`'s `release` branch | a genuine forced release: `--force` passed AND the caller is not the recorded owner |
+| `waive` | `dispatch()`'s generic verb branch | EVERY successful waive, not only forced/mismatched ones — a plain policy-allowed matched-authority waive is still a human accepting risk to skip a control |
 
 ```json
 "override_ledger": [
@@ -649,19 +653,26 @@ target shape, though nothing writes them yet — they land in a later gate:
    "gate": "g2", "verb": "start", "outcome": "begin-refused",
    "fill": 0.95, "hard": 0.9, "model": "claude-opus-4-8", "why_ref": "w-1"},
   {"id": "ov-2", "kind": "force-claim", "ts": "2026-08-09T09:00:00+00:00",
-   "gate": "g3", "actor": "commander", "prior_actor": "implementer"},
+   "verb": "claim", "session_id": "commander-2", "previous_session_id": "commander-1",
+   "takeover_reason": "stale lease reclaimed"},
   {"id": "ov-3", "kind": "force-release", "ts": "2026-08-09T09:05:00+00:00",
-   "gate": "g3", "actor": "commander"},
+   "verb": "release", "session_id": "commander-2", "previous_session_id": "commander-1",
+   "takeover_reason": "commander-1 abandoned mid-gate"},
   {"id": "ov-4", "kind": "waive", "ts": "2026-08-09T10:00:00+00:00",
-   "gate": "g4", "actor": "human", "check_id": "c2",
-   "reason": "artifact intentionally overrides the policy"}
+   "task": "g4", "cond": "c2", "evidence": "e5", "authority": "commander",
+   "reason": "artifact intentionally overrides the policy", "forced": false}
 ]
 ```
 
 The `trip` entry above is exactly what `_append_trip_entry` emits today: the same field set
 `trip_ledger`'s own example carries, plus the `kind`/envelope shape every `override_ledger` entry
-now has. The other three entries are **illustrative shapes only** — marked above as landed in a
-later gate — so their exact fields are not yet decided by this schema.
+now has. `force-claim`/`force-release` carry `verb`, `session_id`, `previous_session_id`,
+`takeover_reason` — read from the `engine_session` state `claim()`/`release()` already wrote, not
+re-decided by `dispatch()`. `waive` carries `task`, `cond`, `evidence`, `authority`, `reason`,
+`forced`, plus `authority_mismatch`/`expected_authority` when present (see *Override policy*,
+below) — mirrored from the condition's own `waived` marker, using the same `--which`-scoped lookup
+`waive()` itself used, so dispatch's re-lookup can never diverge from the condition `waive()`
+actually touched.
 
 **The one read path — `_override_entries(cl, kind=None)`.** Every engine read over either ledger
 goes through this single merge function: it yields every `trip_ledger` entry first, each retagged

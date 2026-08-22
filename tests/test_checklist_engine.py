@@ -659,6 +659,64 @@ class Waiver(unittest.TestCase):
         self.assertEqual(ev["payload"]["authority"], "human")
         self.assertEqual(ev["payload"]["reason"], "pyright non-blocking")
 
+    def test_waiver_evidence_produced_by_echoes_authority(self):
+        # #503: produced_by must echo the actual authority passed, never the
+        # hardcoded literal "human".
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        E.waive(cl, "g1", "c1", "postconditions", "commander", "accepted risk")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["produced_by"], "commander")
+
+    def test_waiver_authority_mismatch_is_report_only(self):
+        t = _waivable_gate("g1", FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"]["authority"] = "commander"
+        cl = gated(g1=t)
+        msg = E.waive(cl, "g1", "c1", "postconditions", "implementer", "accepted risk")
+        # never refuses or blocks on the mismatch -- same success shape as before
+        self.assertIn("waived g1.c1", msg)
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertTrue(ev["payload"]["authority_mismatch"])
+        self.assertEqual(ev["payload"]["expected_authority"], "commander")
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertTrue(cond["waived"]["authority_mismatch"])
+        self.assertEqual(cond["waived"]["expected_authority"], "commander")
+        self.assertTrue(cond["satisfied"])
+
+    def test_waiver_authority_mismatch_is_case_and_whitespace_normalized(self):
+        t = _waivable_gate("g1", FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"]["authority"] = "  Commander  "
+        cl = gated(g1=t)
+        E.waive(cl, "g1", "c1", "postconditions", "commander", "accepted risk")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertNotIn("authority_mismatch", ev["payload"])
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertNotIn("authority_mismatch", cond["waived"])
+
+    def test_waiver_no_mismatch_fields_when_authority_matches(self):
+        t = _waivable_gate("g1", FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"]["authority"] = "human"
+        cl = gated(g1=t)
+        E.waive(cl, "g1", "c1", "postconditions", "human", "accepted risk")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertNotIn("authority_mismatch", ev["payload"])
+        self.assertNotIn("expected_authority", ev["payload"])
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertNotIn("authority_mismatch", cond["waived"])
+        self.assertNotIn("expected_authority", cond["waived"])
+
+    def test_waiver_no_mismatch_fields_when_policy_authority_absent(self):
+        # policy.get("authority") absent entirely -- nothing to compare against,
+        # today's silent pass stays unchanged.
+        t = gate("g1", "in-progress", command=FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"] = {"allowed": True, "reason_required": True}
+        cl = gated(g1=t)
+        self.assertNotIn("authority", cl["tasks"]["g1"]["postconditions"][0]["override_policy"])
+        E.waive(cl, "g1", "c1", "postconditions", "human", "accepted risk")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertNotIn("authority_mismatch", ev["payload"])
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertNotIn("authority_mismatch", cond["waived"])
+
     def test_reopen_clears_waiver(self):
         cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
         E.waive(cl, "g1", "c1", "postconditions", "human", "accepted")
@@ -7632,12 +7690,17 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
         legacy `trip_ledger` key is centralized in `_override_entries` — the only
         function naming `trip_ledger` at all, and the only caller of both
         selectors below. Facts asserted mechanically: (1) exactly which functions
-        name each key; (2) the writer's call chain is
-        `_append_override_entry` <- `_append_trip_entry` <- `_trip_hard_gate` <-
-        `dispatch`; (3) `_run_verb` — the function every CLI verb is dispatched
-        through — reaches none of the three writer-side functions. So no verb can
-        create, edit, or delete an entry, and the new reader is exactly that: a
-        reader, called from the same two selector sites as before."""
+        name each key; (2) `_append_override_entry`'s only callers are
+        `_append_trip_entry` (trip kind, via `_trip_hard_gate` <- `dispatch`) and
+        `dispatch` itself (g2: the claim/release/generic-verb branches call it
+        directly for `force-claim`/`force-release`/`waive` kinds); (3) `_run_verb`
+        — the function every CLI verb (`waive`/`claim`/`release` included) is
+        dispatched through — reaches none of the four writer-side functions
+        (`_append_override_entry`, `_append_trip_entry`, `_trip_hard_gate`, and
+        `waive`/`claim`/`release` themselves never call it either). So no verb's
+        own body can create, edit, or delete an entry — only `dispatch`, the CLI
+        chokepoint, can — and the new reader is exactly that: a reader, called
+        from the same two selector sites as before."""
         import ast
         tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
         funcs = {n.name: n for n in ast.walk(tree)
@@ -7661,16 +7724,20 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
         self.assertEqual(
             sorted(f for f, n in funcs.items() if names_the_key(n, "trip_ledger")),
             ["_override_entries"])
-        self.assertEqual(callers_of("_append_override_entry"), ["_append_trip_entry"])
+        self.assertEqual(callers_of("_append_override_entry"), ["_append_trip_entry", "dispatch"])
         self.assertEqual(callers_of("_append_trip_entry"), ["_trip_hard_gate"])
         self.assertEqual(callers_of("_trip_hard_gate"), ["dispatch"])
         self.assertEqual(callers_of("_override_entries"),
                          ["begin_over_line_records", "begin_over_line_records_historical"])
         self.assertEqual(callers_of("begin_over_line_records"), ["_trip_advisory"])
         self.assertEqual(callers_of("begin_over_line_records_historical"), ["_trip_advisory"])
+        # the append call sites live in `dispatch` around `_run_verb`, never
+        # inside it -- and never inside `waive`/`claim`/`release`'s own bodies.
         run_verb_calls = calls_within(funcs["_run_verb"])
         for unreachable in ("_append_override_entry", "_append_trip_entry", "_trip_hard_gate"):
             self.assertNotIn(unreachable, run_verb_calls)
+        for verb_fn in ("waive", "claim", "release"):
+            self.assertNotIn("_append_override_entry", calls_within(funcs[verb_fn]))
 
     def _write_gauge(self, d, fill, observed_at):
         (Path(d) / "gauge.json").write_text(json.dumps({
@@ -7856,6 +7923,207 @@ class OverrideLedgerMigration(unittest.TestCase):
         self.assertEqual([e["id"] for e in merged], ["tl-1", "tl-2", "ov-1"])
         self.assertEqual(merged[-1]["kind"], "trip")
         self.assertEqual(merged[-1]["outcome"], "begin-refused")
+
+
+class OverrideLedgerG2ClaimReleaseWiring(unittest.TestCase):
+    """g2 PART B (claim/release branches): force-claim/force-release append to
+    override_ledger from dispatch()'s claim/release arms ONLY, never from
+    claim()/release()'s own bodies -- exercised through the real CLI (`main`)
+    so the whole chokepoint is proven, not just the pure verb functions."""
+
+    def _one_gate(self):
+        return gated(g1=gate("g1", "pending"))
+
+    def test_force_claim_over_genuine_takeover_appends_entry(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, self._one_gate())
+            self.assertEqual(
+                E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                        "--claimed-by", "implementer"]), 0)
+            self.assertEqual(
+                E.main(["--file", str(f), "claim", "--session-id", "session-2",
+                        "--claimed-by", "implementer", "--force",
+                        "--reason", "predecessor abandoned"]), 0)
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "force-claim"]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["session_id"], "session-2")
+            self.assertEqual(entries[0]["previous_session_id"], "session-1")
+            self.assertEqual(entries[0]["takeover_reason"], "predecessor abandoned")
+            self.assertEqual(entries[0]["verb"], "claim")
+
+    def test_force_claim_noop_with_nothing_to_take_over_appends_nothing(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, self._one_gate())
+            # first-ever claim, no existing lease -- --force has nothing to take over
+            self.assertEqual(
+                E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                        "--claimed-by", "implementer", "--force",
+                        "--reason", "belt and suspenders"]), 0)
+            cl = E.load(f)
+            self.assertNotIn("override_ledger", cl)
+
+    def test_force_release_by_non_owner_appends_entry_before_return(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, self._one_gate())
+            E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                    "--claimed-by", "implementer"])
+            self.assertEqual(
+                E.main(["--file", str(f), "release", "--session-id", "session-2",
+                        "--force", "--reason", "orphaned lease"]), 0)
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "force-release"]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["session_id"], "session-2")
+            self.assertEqual(entries[0]["previous_session_id"], "session-1")
+            self.assertEqual(entries[0]["takeover_reason"], "orphaned lease")
+            self.assertEqual(entries[0]["verb"], "release")
+            self.assertEqual(cl["engine_session"]["status"], "released")
+
+    def test_owner_release_appends_nothing(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, self._one_gate())
+            E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                    "--claimed-by", "implementer"])
+            self.assertEqual(
+                E.main(["--file", str(f), "release", "--session-id", "session-1"]), 0)
+            cl = E.load(f)
+            self.assertNotIn("override_ledger", cl)
+
+    def test_force_release_against_archived_path_gets_zero_banner_decoration(self):
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as d:
+            archive_dir = Path(d) / ".agent-work" / "archive" / "run1"
+            archive_dir.mkdir(parents=True)
+            f = archive_dir / "c.json"
+            E.save(f, self._one_gate())
+            E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                    "--claimed-by", "implementer"])
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                code = E.main(["--file", str(f), "release", "--session-id", "session-2",
+                                "--force", "--reason", "orphaned lease"])
+            self.assertEqual(code, 0)
+            self.assertNotIn(E._ARCHIVED_BANNER, out.getvalue())
+            self.assertNotIn("ARCHIVED", out.getvalue())
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "force-release"]
+            self.assertEqual(len(entries), 1)
+
+
+class OverrideLedgerG2WaiveWiring(unittest.TestCase):
+    """g2 PART B (generic/waive branch): every successful waive is recorded
+    from dispatch(), not from waive()'s own body -- and the condition dispatch
+    re-reads for the ledger entry uses the SAME which-only lookup waive()
+    itself exercises (no preconditions/postconditions fallback)."""
+
+    def _one_gate(self):
+        return gated(g1=gate("g1", "in-progress"))
+
+    def test_every_successful_waive_is_recorded_including_plain_matched_authority(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, gated(g1=_waivable_gate("g1", FAIL_COMMAND)))
+            self.assertEqual(
+                E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                        "--authority", "human", "--reason", "accepted risk"]), 0)
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "waive"]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["task"], "g1")
+            self.assertEqual(entries[0]["cond"], "c1")
+            self.assertEqual(entries[0]["authority"], "human")
+            self.assertEqual(entries[0]["reason"], "accepted risk")
+            self.assertFalse(entries[0]["forced"])
+            self.assertNotIn("authority_mismatch", entries[0])
+
+    def test_forced_and_mismatched_waive_carries_those_fields_on_the_ledger_entry(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            t = _waivable_gate("g1", FAIL_COMMAND)
+            t["postconditions"][0]["override_policy"]["authority"] = "commander"
+            E.save(f, gated(g1=t))
+            self.assertEqual(
+                E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                        "--authority", "implementer", "--reason", "accepted", "--force"]), 0)
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "waive"]
+            self.assertEqual(len(entries), 1)
+            self.assertTrue(entries[0]["forced"])
+            self.assertTrue(entries[0]["authority_mismatch"])
+            self.assertEqual(entries[0]["expected_authority"], "commander")
+
+    def test_dispatch_waive_lookup_matches_waive_own_which_only_lookup(self):
+        """Divergence trap: cond id "c1" exists in BOTH preconditions and
+        postconditions with DIFFERENT override_policy.authority. waive() itself
+        only ever searches the requested `which` list (no fallback) -- so
+        waiving preconditions.c1 with authority "alpha" (which matches the
+        PRECONDITION's policy, not the postcondition's "beta") must record a
+        ledger entry carrying the precondition's own waived marker. If
+        dispatch's re-lookup defaulted to postconditions (or otherwise ignored
+        `which`), it would read the untouched postcondition's absent `waived`
+        marker instead and the entry would come out empty."""
+        t = gate("g1", "in-progress")
+        t["preconditions"] = [{
+            "id": "c1", "statement": "precond", "check": None, "satisfied": False,
+            "override_policy": {"allowed": True, "authority": "alpha"},
+        }]
+        t["postconditions"] = [{
+            "id": "c1", "statement": "postcond", "check": {"kind": "command", "command": FAIL_COMMAND},
+            "satisfied": False, "override_policy": {"allowed": True, "authority": "beta"},
+        }]
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, gated(g1=t))
+            self.assertEqual(
+                E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                        "--which", "preconditions",
+                        "--authority", "alpha", "--reason", "accepted"]), 0)
+            cl = E.load(f)
+            # the precondition was waived, the postcondition untouched
+            self.assertTrue(cl["tasks"]["g1"]["preconditions"][0].get("waived"))
+            self.assertFalse(cl["tasks"]["g1"]["postconditions"][0].get("waived"))
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "waive"]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["authority"], "alpha")
+            self.assertEqual(entries[0]["reason"], "accepted")
+            self.assertNotIn("authority_mismatch", entries[0])
+
+    def test_dispatch_call_records_waive_claim_release_direct_call_does_not(self):
+        """The chokepoint proof, behavioral half: driving waive/claim --force/
+        release --force through checklist_engine.dispatch() (the CLI path)
+        appends entries; calling waive()/claim()/release() directly, as
+        library functions -- simulating anything that is NOT the CLI
+        chokepoint -- leaves override_ledger untouched."""
+        # -- via dispatch() (CLI path) --
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            E.main(["--file", str(f), "claim", "--session-id", "s1", "--claimed-by", "x"])
+            E.main(["--file", str(f), "claim", "--session-id", "s2", "--claimed-by", "x",
+                    "--force", "--reason", "takeover"])
+            E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                    "--authority", "human", "--reason", "accepted",
+                    "--session-id", "s2"])
+            E.main(["--file", str(f), "release", "--session-id", "s3",
+                    "--force", "--reason", "orphaned"])
+            reloaded = E.load(f)
+            kinds = sorted(e["kind"] for e in reloaded.get("override_ledger", []))
+            self.assertEqual(kinds, ["force-claim", "force-release", "waive"])
+
+        # -- direct library calls (NOT the CLI chokepoint) --
+        direct = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        E.claim(direct, "s1", "x", ".", {})
+        E.claim(direct, "s2", "x", ".", {}, force=True, reason="takeover")
+        E.waive(direct, "g1", "c1", "postconditions", "human", "accepted")
+        E.release(direct, "s2", force=True, reason="orphaned")
+        self.assertNotIn("override_ledger", direct)
 
 
 class ShippedTemplateBookendDeclarations(unittest.TestCase):
