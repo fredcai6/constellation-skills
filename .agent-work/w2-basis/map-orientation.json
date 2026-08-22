@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "work_id": "w2-basis",
+  "root": "/home/tommy/projects/569-w2-basis",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "parses but carries no nodes[].id"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "0 packet(s), none non-empty"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "17dbbeec6376646bfb87b1a5a88a86e7dce6ebf1a9e444698e8a4e3a96721b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "abcda78662378ed72a35bfee7fdc85c4facebda96f1e02583556711d917c796b",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "ccc03657424cdec7ccaf98e88eea6770c23a1fbc73f2f08f6707328b4f9c5d89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "content_hash": "30e401e6ac3888dfa936d6aecdee99719fc778b4d64b9a1a77ea969fb12c757a"
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": true,
+      "content_hash": "3be528d65d4a3a982c19dd4acc9440316a69e834f7a1c6b99f87dd348ff63ebf"
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "docs/architecture packet map is empty (nodes: [], relationships: []) -- no Cartographer packet map exists for the checklist_engine/templates area this mission touches"
+  ],
+  "escalation": "none needed -- commander-core.md Architecture bookend names this as the expected skill-source-repo shape (no packet map); reconcile step folds structural change into schema/design docs directly rather than dispatching Cartographer against an absent map",
+  "emitted_at": "2026-08-22T17:11:46.118107+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

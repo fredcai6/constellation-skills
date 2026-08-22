@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-addendum",
+  "mechanical": {
+    "run": "w2-basis-g3",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m1-addendum",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-basis-g3-m1-addendum@536bd3177a64c9ba7fde2eb77d6d7ae98e857980",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-basis-g3",
+    "generated_at": "2026-08-22T18:17:35Z"
+  }
+}

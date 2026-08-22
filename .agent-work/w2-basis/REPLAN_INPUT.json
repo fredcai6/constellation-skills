@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "epic-569-w2-basis-1",
+      "outcome": "A qualitative (check: null) postcondition can now declare, at plan-authoring time, a resolvable locator (file or evidence_ref) that the engine renders at the active gate and resolves-and-records (report-only, never blocking) at attest -- the report-only half of the epic's thesis, shipped and reviewed.",
+      "evidence": "scripts/checklist_engine.py's basis field (render_human, attest guard, _resolve_basis_locator), tests/test_checklist_engine.py's BasisRendering and BasisAttestGuard classes (17 tests), docs/CHECKLIST_SCHEMA.md's 'Basis' subsection."
+    },
+    {
+      "issue_id": "epic-569-w2-basis-2",
+      "outcome": "Exactly one shipped template (skills/commander/templates/COMMANDER_SPINE.template.json) carries authored basis on plan.c2/plan.c4/plan.c5, proving the mechanism against real corpus content, not a fixture.",
+      "evidence": "tests/test_checklist_engine.py's CommanderSpineBasisFields class (3 tests), grep -c '\"basis\"' skills/commander/templates/COMMANDER_SPINE.template.json -> 3."
+    },
+    {
+      "issue_id": "epic-569-w2-basis-3",
+      "outcome": "decision:locator-definition-is-yours answered with measured numbers from the real 19 conditions, not a guess -- 3 independently-dispatched candidates converged on the same structural split (a minority of conditions have real locators; most preconditions are gate-order-guaranteed; a genuinely-judgment few earn a new mechanism).",
+      "evidence": ".agent-work/w2-basis/plan-candidate-structured-field.md, plan-candidate-statement-convention.md, plan-candidate-artifact-conversion.md, PLAN_ALTERNATIVES.md's convergence table."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The basis mechanism can be authored, rendered, AND required-at-attest together (decision:decorative-basis-is-a-failure), without a new attest refusal shipping blocking-live (decision:widening-live-refusal-report-only) absent an in-hand Admiral adjudication.",
+      "expected": "A basis field that renders (populated-only) and is checked at attest, never silently decorative.",
+      "observed": "attest() always attaches a basis-check evidence item (pass or fail) for a basis-bearing condition, and render_human emits the basis line only when populated -- both independently verified by g1's reviewer (INV-2 purity confirmed by grep: _resolve_basis_locator has exactly 1 production call site, inside attest()) and reproduced by this Commander.",
+      "source": "tests/test_checklist_engine.py -k Basis (17 passed); .agent-work/w2-basis/crew-handoffs/g1-reviewer-result.md"
+    },
+    {
+      "claim": "The launch order's Honest-Null Clause: a machine-checkable locator may not be expressible for most of the 65 conditions without degenerating into prose-in-a-different-field.",
+      "expected": "Either a locator design that covers most of the 19 conditions in COMMANDER_SPINE.template.json, or a measured negative reported plainly.",
+      "observed": "A measured negative, reported plainly: of 19 conditions, at most 11/19 (58%) express any real locator at all under any candidate's design, 8/19 are structurally guaranteed by gate order (untouched, correctly), and even within the 'genuine' band most degenerate to existence-only checks a plain check:artifact promotion would already give for free -- only 3/19 (plan.c2/c4/c5) earned a genuinely new mechanism, and its honest value turned out to be rollout safety (report-only staging), not expressiveness.",
+      "source": ".agent-work/w2-basis/PLAN_ALTERNATIVES.md's 'Independent convergence' table and 'Cold critic findings & disposition' section (finding 6)."
+    },
+    {
+      "claim": "A cold critic with no authoring context, reading only the converged plan and mission frame, would find real problems worth fixing before execute.json was authored.",
+      "expected": "Either the converged plan holds up, or real findings surface and get triaged.",
+      "observed": "6 fix-before-execute findings, all accepted: a misattributed/unbuildable init.c1 promotion, a mechanism-reuse-vs-behavior-preservation conflation justifying live-blocking without adjudication, a decorative reconcile.c1 conversion, a missing plan.c2 in the convergence table, an unmeasurable promotion trigger, and a locator that didn't earn its own schema as originally framed. All 6 resolved by narrowing scope (dropping the entire check-kind-promotion batch, adding plan.c2, persisting basis-check evidence always, reframing the field's justification as rollout-safety).",
+      "source": ".agent-work/w2-basis/PLAN_CRITIC.md; PLAN_ALTERNATIVES.md's 'Cold critic findings & disposition' section."
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "docs/CHECK_SCRIPT_CENSUS.md's original grep -c '\"because\"' ... -> 0 no longer holds after this wave: it now returns 3.",
+      "classification": "evidence_only",
+      "affects": "docs/CHECK_SCRIPT_CENSUS.md's generate_spine.py disposition section (an addendum, already applied)",
+      "evidence": "g3-implementer-result.md and g3-reviewer-result.md both independently derived and confirmed this; docs/CHECK_SCRIPT_CENSUS.md's addendum records the explanation.",
+      "reason": "The new basis object's optional 'because' rationale sub-field is a literal key-name collision with generate_spine.py's unrelated top-level 'because' convention the census originally measured -- not a defect and not a forecast/decomposition change, a genuine, correctly-diagnosed and now-documented measurement artifact."
+    },
+    {
+      "id": "D1",
+      "signal": "The check-kind-promotion batch (plan.c1 -> artifact, reconcile.c1 -> artifact, archive.c2 -> artifact, init.c1 -> command) is real, well-evidenced work that could not ship this wave.",
+      "classification": "later_only",
+      "affects": "skills/commander/templates/COMMANDER_SPINE.template.json's plan.c1/reconcile.c1/archive.c2/init.c1 -- a follow-up wave",
+      "evidence": ".agent-work/w2-basis/plan-candidate-artifact-conversion.md; PLAN_CRITIC.md findings 1-3; PLAN_ALTERNATIVES.md's Untaken-road record.",
+      "reason": "No report-only mode exists for artifact-kind checks, and init.c1's promotion would need an unwritten script against the highest-blast-radius gate in the corpus -- shipping needs an Admiral adjudication for the live-blocking behavior change, not available this run. Deliberately deferred, recorded as a triage candidate."
+    }
+  ]
+}

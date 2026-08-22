@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "mechanical": {
+    "run": "w2-basis",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 1,
+    "spine-step": "r0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-basis-r0-context@a6bf4be6ae2f2767f9f4bf04537b8698364a6da1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-basis",
+    "generated_at": "2026-08-22T18:24:06Z"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-review",
+  "mechanical": {
+    "run": "w2-basis-execute",
+    "project": "constellation-skills",
+    "spine-step": "g3-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-basis-execute-g3-review@4bc0d22cdb9fc7ef08e2bc7b9ae12cc233ad550a",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "w2-basis-execute",
+    "generated_at": "2026-08-22T18:22:56Z"
+  }
+}
