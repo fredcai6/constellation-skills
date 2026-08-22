@@ -29,6 +29,12 @@ id. Consequences you will observe and must not misdiagnose:
 An earlier version of this note claimed the hook resolved spines by walking the filesystem. That was
 wrong and is retracted; see the `ADMIRAL ERROR` entry in ADMIRAL_LOG.md for the full correction.
 
+**A transient `spine.json` read failure is NOT corruption.** The engine writes atomically (temp file,
+then install), so a concurrent read during a commander's engine verb can fail for a fraction of a
+second. Wave 1's monitor reported `spine-unreadable` for `w1-verdict` once; the spine was valid on
+immediate re-read. Re-read before concluding anything, and never "repair" a spine on a single failed
+read — hand-editing a spine is forbidden and would be far worse than the phantom problem.
+
 **Wave 2 must dispatch through `python3 scripts/run_crew.py --role commander`** (sanctioned, gives
 each commander its own session and spine door, and a durable recovery registry). The engine-access
 section of `.agent-work/569/crew-handoffs/WAVE2-PREAMBLE.md` has already been rewritten for this.
