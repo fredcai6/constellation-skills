@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 60 modules, 1296 entities
 skills: 1 modules, 22 entities
-tests: 100 modules, 5543 entities
+tests: 101 modules, 5559 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -116,7 +116,7 @@ tests: 100 modules, 5543 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (100 modules, 5543 entities)
+## tests (101 modules, 5559 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -130,6 +130,7 @@ tests: 100 modules, 5543 entities
 - [tests.test_check_corpus_freshness](tests.test_check_corpus_freshness/INDEX.md) (15 entities, 14 holes): HOLE: no docstring
 - [tests.test_check_role_spine_bookends](tests.test_check_role_spine_bookends/INDEX.md) (11 entities, 7 holes): #567 lane L: the role-spine-template bookend lint.
 - [tests.test_check_script_registration](tests.test_check_script_registration/INDEX.md) (13 entities, 8 holes): Registration lint + vocabulary rule for issue #345 ("built but not wired").
+- [tests.test_check_skill_freshness](tests.test_check_skill_freshness/INDEX.md) (13 entities, 7 holes): Coverage for `_resolved_interpreter()`'s sidecar-missing/malformed fallback (issue #532).
 - [tests.test_check_template_overlay_freshness](tests.test_check_template_overlay_freshness/INDEX.md) (14 entities, 3 holes): The overlay-freshness guard `scripts/check_template_overlay_freshness.py` was written to catch exactly what `tests/test_cli_retirement_guard.py`'s own docstring
 - [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (679 entities, 518 holes): HOLE: no docstring
 - [tests.test_checklist_engine_atomic_save](tests.test_checklist_engine_atomic_save/INDEX.md) (32 entities, 19 holes): #613 (atomicity half): `checklist_engine.save()` must install the new document by ATOMIC RENAME, never by writing over the live target in place.
@@ -169,8 +170,8 @@ tests: 100 modules, 5543 entities
 - [tests.test_in_harness_crew_isolation](tests.test_in_harness_crew_isolation/INDEX.md) (11 entities, 7 holes): #632: an in-harness subagent shares its dispatcher's harness session id, so the checklist engine's MCP door resolves to the DISPATCHER's spine. The guard is a d
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
-- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (297 entities, 170 holes): HOLE: no docstring
-- [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (34 entities, 10 holes): HOLE: no docstring
+- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (300 entities, 170 holes): HOLE: no docstring
+- [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (34 entities, 9 holes): HOLE: no docstring
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
