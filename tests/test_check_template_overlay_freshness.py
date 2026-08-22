@@ -38,20 +38,6 @@ _spec.loader.exec_module(CTOF)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-#: Measured on this tree the day this guard was written. Read alongside
-#: `test_real_repo_overlay_has_no_stale_templates` below.
-KNOWN_STALE_2026_08_21 = {
-    "ADMIRAL_SPINE.template.json",
-    "CHARTER.template.json",
-    "COMMANDER_SPINE.template.json",
-    "EXPLORER_SPINE.template.json",
-    "AGENT_GUIDE.template.md",
-    "AGENTS.pointer.template.md",
-    "CLAUDE.pointer.template.md",
-    "ORCHESTRATOR_CONTEXT.template.md",
-}
-
-
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
@@ -213,14 +199,22 @@ class TestTheRealRepoOverlay:
         )
 
     def test_real_repo_overlay_has_no_stale_templates(self):
-        """THE RED-PROOF. This assertion is EXPECTED TO FAIL on this tree right
-        now -- that failure is the deliverable, not a bug in this test. It is
-        produced by the real corpus this guard was written against, not by a
-        fixture this test chose, and it must name the same 8 files measured
-        by hand when this guard was authored (see the module docstring and
-        `KNOWN_STALE_2026_08_21` above). A parallel effort is refreshing the
-        overlay separately; once that lands this test goes green on its own
-        and needs no edit."""
+        """The standing guard, and it was RED when it was written -- by the
+        real corpus, not by a fixture this test chose. It named the 8 stale
+        files the module docstring records; the overlay refresh landed in the
+        same change and turned it green with no edit to this test.
+
+        It is now the tripwire: the next time `skills/` moves and the overlay
+        does not follow, this is what says so, on the day it starts rather
+        than 591 commits later.
+
+        A companion test pinning that historical set exactly was deleted with
+        the refresh. Once the drift was fixed it could never assert anything
+        again -- it skipped unconditionally, and a check that can only skip is
+        not evidence. The measurement it carried is preserved where a reader
+        will actually meet it: this module's docstring,
+        `scripts/check_template_overlay_freshness.py`, and the corrected
+        docstring in `tests/test_cli_retirement_guard.py`."""
         rows = CTOF.check(REPO_ROOT)
         stale = {Path(r["template"]).name for r in rows if r["status"] == "stale"}
         assert not stale, (
@@ -230,25 +224,6 @@ class TestTheRealRepoOverlay:
             f"`scripts/check_skill_freshness.py --update-baseline`-shaped work; do not "
             f"hand-edit .agent-work/templates/."
         )
-
-    def test_the_measured_stale_set_is_reproducible(self):
-        """A second, independent read of the same red-proof: if the corpus is
-        still at the state measured when this guard was authored, the stale
-        set is EXACTLY `KNOWN_STALE_2026_08_21` -- no more, no fewer. This is
-        allowed to stop matching the moment the overlay is refreshed (that is
-        the fix landing, not a break in this test) or if `skills/` drifts
-        again in a new place (that is this guard doing its job on a second
-        file). Either way, a maintainer reading a failure here should compare
-        the reported set to the constant above rather than guess."""
-        rows = CTOF.check(REPO_ROOT)
-        stale = {Path(r["template"]).name for r in rows if r["status"] == "stale"}
-        if stale != KNOWN_STALE_2026_08_21:
-            pytest.skip(
-                f"stale set has moved since this guard was authored -- now {sorted(stale)}, "
-                f"was {sorted(KNOWN_STALE_2026_08_21)}. Not a failure by itself: either the "
-                f"overlay was refreshed (expected direction) or skills/ drifted further "
-                f"(re-measure and update KNOWN_STALE_2026_08_21)."
-            )
 
     def test_default_and_workflow_closeout_are_the_known_no_skills_source_files(self):
         """The two overlay files #639 orphaned by retiring `workbench` as an

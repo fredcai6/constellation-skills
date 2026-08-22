@@ -4,9 +4,9 @@
 conftest: 1 modules, 3 entities
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 60 modules, 1287 entities
+scripts: 61 modules, 1292 entities
 skills: 1 modules, 22 entities
-tests: 97 modules, 5407 entities
+tests: 98 modules, 5421 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -41,7 +41,7 @@ tests: 97 modules, 5407 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (60 modules, 1287 entities)
+## scripts (61 modules, 1292 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -65,6 +65,7 @@ tests: 97 modules, 5407 entities
 - [scripts.check_corpus_freshness](scripts.check_corpus_freshness/INDEX.md) (11 entities, 7 holes): Report whether an installed constellation corpus is current with upstream main.
 - [scripts.check_role_spine_bookends](scripts.check_role_spine_bookends/INDEX.md) (6 entities, 4 holes): Lint: every role spine template declares at least one bookend, and the repo's declaration matches what is actually installed.
 - [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
+- [scripts.check_template_overlay_freshness](scripts.check_template_overlay_freshness/INDEX.md) (5 entities, 3 holes): Guard: a project's `.agent-work/templates/` overlay must never be STALE.
 - [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (115 entities, 24 holes): Workbench checklist engine: work one gated/survey plan through its gates.
 - [scripts.collect_feedback](scripts.collect_feedback/INDEX.md) (38 entities, 15 holes): Sweep consuming projects' CONSTELLATION_FEEDBACK.md exports into one report.
 - [scripts.context_manifest](scripts.context_manifest/INDEX.md) (14 entities): Deterministic projection substrate: what was made available to an agent, and at which revision.
@@ -116,7 +117,7 @@ tests: 97 modules, 5407 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (97 modules, 5407 entities)
+## tests (98 modules, 5421 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -129,6 +130,7 @@ tests: 97 modules, 5407 entities
 - [tests.test_bytecode_cache_provenance](tests.test_bytecode_cache_provenance/INDEX.md) (13 entities, 4 holes): #597 — a bytecode cache built in a different tree must be named, not suffered.
 - [tests.test_check_corpus_freshness](tests.test_check_corpus_freshness/INDEX.md) (15 entities, 14 holes): HOLE: no docstring
 - [tests.test_check_role_spine_bookends](tests.test_check_role_spine_bookends/INDEX.md) (11 entities, 7 holes): #567 lane L: the role-spine-template bookend lint.
+- [tests.test_check_template_overlay_freshness](tests.test_check_template_overlay_freshness/INDEX.md) (14 entities, 3 holes): The overlay-freshness guard `scripts/check_template_overlay_freshness.py` was written to catch exactly what `tests/test_cli_retirement_guard.py`'s own docstring
 - [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (670 entities, 510 holes): HOLE: no docstring
 - [tests.test_checklist_engine_atomic_save](tests.test_checklist_engine_atomic_save/INDEX.md) (32 entities, 19 holes): #613 (atomicity half): `checklist_engine.save()` must install the new document by ATOMIC RENAME, never by writing over the live target in place.
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
