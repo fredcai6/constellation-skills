@@ -1,0 +1,30 @@
+{
+  "work_id": "w1-wiring",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w1-wiring",
+        "role": "commander",
+        "project": "constellation-skills",
+        "spine-step": "plan",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/w1-wiring/PLAN_ALTERNATIVES.md", ".agent-work/w1-wiring/PLAN_CRITIC.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Determine whether real crew dispatch (independent implementer/reviewer/critic subagents, per commander-core.md's design-it-twice and crew-gate doctrine) was available in this dispatched context."},
+        "expected-behavior": {"strength": "medium", "statement": "Absence of a Task/Agent tool on the declared tool surface (Bash, Read, Write, Edit, WebFetch, WebSearch, Skill) means no independent crew can be raised at all."},
+        "observed-behavior": {"strength": "strong", "statement": "That conclusion was incomplete. scripts/run_crew.py -- reachable the whole time via the Bash tool -- has a `--backend cli` mode that spawns a headless `claude` CLI subprocess with its own bound spine door (`_crew_door_env`), needing no Task/Agent tool at all; only its `--backend external` mode needs an Agent-tool subagent. The Admiral confirmed the sibling commander w1-verdict used exactly this path and got real independent implementer and reviewer crews. This run instead self-authored every plan-alternatives candidate, the cold plan critic pass, and g4's disposition work in its own context, each time stating the deviation as 'no Task/Agent tool available' without checking whether run_crew.py's cli backend was a live alternative."},
+        "impact-cost": {"strength": "medium", "statement": "Every place design-it-twice and cold-critic review call for independent context was instead self-authored, weakening exactly the property those mechanisms exist for -- avoidable this run, not a genuine environmental constraint."},
+        "workaround": {"strength": "medium", "statement": "None applied retroactively this run -- the Admiral's clean-room review already substituted for the missing independent review, and the mission's substantive findings held up under it. Recorded here so the next Commander dispatched the same way checks run_crew.py's cli backend before concluding no dispatch is possible."}
+      },
+      "diagnosis": [
+        {"kind": "suspected-cause", "strength": "medium", "statement": "The launch order's own Engine access section named a CLI substitution for spine verbs but never named run_crew.py's cli backend as the crew-dispatch fallback for a context with no Task/Agent tool, so the absence of that tool was read as 'no dispatch is possible' rather than 'use the other backend' -- the Admiral named this as its own gap, not this run's, in the correction that produced this episode."}
+      ]
+    }
+  ]
+}

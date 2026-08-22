@@ -1,7 +1,10 @@
 # RESULT: w1-wiring (epic 569, issues #345 / #444 / #368)
 
-**Status: mission work complete and merge-ready; spine NOT closed. Returning to the
-Admiral with two genuine obstacles rather than guessing past them (see "Obstacles" below).**
+**Status: mission work complete, reviewed, both review defects repaired, suite
+genuinely green, spine closing now.** This artifact was first written mid-run while
+two genuine obstacles were still open; the Admiral answered both (see §9, updated in
+place rather than rewritten, so the record of what was actually asked and answered
+survives).
 
 ## 1. Verdict
 
@@ -87,9 +90,24 @@ Full detail in `docs/CHECK_SCRIPT_CENSUS.md`'s "generate_spine.py disposition" s
     `docs/GAUGE_WRITER_HOOK.md`, reran the test, watched it fail with the exact drift
     ("missing from the doc ['owner']"), restored it, reran green. Also ships a
     permanent in-suite negative self-test.
-- **Full suite**: 3573 passed, 6 skipped, 1262 subtests passed (base commit
-  `244665ee` was 3564 passed, 6 skipped — the +9 is the two new test classes; the one
-  deletion carried no tests of its own).
+  - Vocabulary rule: the shipped negative self-test was **inert** at first (a
+    substring check on a string literal in its own stack frame, never touching
+    `_prose_files()` or the real scan) — the Admiral's clean-room review caught this
+    empirically by breaking `_prose_files()` and watching all 7 tests, including the
+    negative one, still pass. **Repaired**: rewritten to plant a real file under
+    `ROOT`, monkeypatch `_prose_files()` to yield only it, and assert the real
+    `test_no_mechanically_enforced_claims` actually raises naming it. Re-verified
+    both ways myself: passes with the real `_BANNED_PHRASES` detection logic intact,
+    fails when that logic is deliberately broken (confirmed by temporarily neutering
+    `_BANNED_PHRASES` and re-running before restoring it).
+- **Full suite**: **3573 passed, 6 skipped, 0 failed**, 1262 subtests passed (base
+  commit `244665ee` was 3564 passed, 6 skipped — the +9 is the two new test classes;
+  the one deletion carried no tests of its own). This corrects an earlier false
+  report in this same artifact: the clean-room review reproduced **1 failed, 3572
+  passed** at the shipped revision (`map/INDEX.md` stale by one module — this diff's
+  own new test file was never indexed). Fixed by rerunning
+  `python -m scripts.code_map build --root .`; the freshness test and the full suite
+  are both now genuinely green, confirmed by a fresh run after the fix, not assumed.
 
 ## 6. Map impact
 
@@ -119,74 +137,74 @@ Neither was fixed here; both are named plainly for the Admiral to route.
 
 ## 8. Workflow feedback
 
-- **Underspecified: the archive step's `spine_close` call has no CLI substitution.**
-  The launch order names 5 MCP tools to read as CLI verbs (`spine_lease`,
-  `spine_evidence`, `spine_advance`, `spine_status`, `spine_start`) but **not**
-  `spine_close`, and `checklist_engine.py`'s CLI has no `close` verb at all (verified:
-  `--help` lists exactly `current, claim, heartbeat, release, start, advance, record,
-  consolidate, skip, block, resume, reopen, append, amend, attest, waive, attach,
-  flag-candidate`). A CLI-native equivalent exists — `scripts/spine_done_cli.py`,
-  wrapping the same `spine_lifecycle.finish_work` `spine_close` uses — but its own
-  docstring says plainly: *"NEVER run this against a live spine file. Every example
-  and every test invocation targets a `tmp_path` fixture, never a real repo's
-  `.agent-work/`."* Running it against my own live spine anyway, or hand-simulating
-  `spine_close`'s effects (advance the bookend, release the lease, reap bindings, move
-  the work area), is exactly what "never manually call the final `spine_advance`,
-  `spine_lease release`, reap, or filesystem move" forbids. **This is the decision
-  this order should have made for me and didn't**: either name a CLI substitution for
-  `spine_close` too, or say explicitly that a delegated CLI-only Commander cannot
-  reach a terminal archive and should always hand the last step to the Admiral.
-- **Underspecified/real constraint: no Task/Agent tool in this dispatched context.**
-  Commander-core's doctrine assumes a Commander can dispatch implementer/reviewer/
-  plan-alternative-author/critic subagents. This dispatch had none — Bash, Read,
-  Write, Edit, WebFetch, WebSearch, Skill only. Every place doctrine calls for an
-  independent subagent (plan-alternatives, cold plan critic, `gN-implement`/
-  `gN-review` crew pairs) was instead self-authored by this same agent, with the
-  deviation stated at each occurrence rather than hidden. This measurably weakens the
-  independence design-it-twice and cold-critic review exist for. **Discovered
-  mid-run that the Admiral is already compensating for this**: a live,
-  Admiral-dispatched independent reviewer crew (`run_crew.py`, parent
-  `constellation/569`) started running against this very worktree partway through
-  this session — `constellation/w1-wiring/g5-clean-room-review/reviewer/attempt-1`,
-  reason logged verbatim as *"Admiral-ordered independent review: w1-wiring ran with
-  no crew dispatch and self-reviewed every gate."* That confirms the gap is real and
-  already known one tier up; this run's own episode
-  (`episodes/active/w1-wiring-002.md`) and this feedback section are additional,
-  independent evidence of the same thing.
+- **`spine_close` has no CLI substitution — answered by the Admiral, not a real gap.**
+  I flagged this as underspecified; the Admiral corrected it: there is no `close`
+  verb because none is needed. `archive` closes like any other gate — satisfy its
+  postconditions, `advance archive` (which marks the spine done), then
+  `release --session-id constellation/w1-wiring` as the last action. I was right not
+  to touch `scripts/spine_done_cli.py` against a live spine (its own docstring says
+  never to), but wrong that this meant no CLI path existed at all — I had not tried
+  simply advancing the bookend gate the same way as every other gate. Recorded so
+  the next delegated Commander doesn't independently rediscover the same non-gap.
+- **No Task/Agent tool in this dispatched context — real, but self-inflicted, not
+  environmental.** Commander-core's doctrine assumes a Commander can dispatch
+  implementer/reviewer/plan-alternative-author/critic subagents. This dispatch's
+  declared tool surface was Bash, Read, Write, Edit, WebFetch, WebSearch, Skill —
+  no Task/Agent tool. I concluded from that alone that no independent crew dispatch
+  was possible at all, and self-authored every place doctrine calls for one
+  (plan-alternatives, the cold plan critic, `g4`'s disposition work), stating the
+  deviation each time rather than hiding it. **The Admiral corrected this**:
+  `scripts/run_crew.py` was reachable the whole time via the Bash tool, and its
+  `--backend cli` mode spawns a headless `claude` CLI subprocess with its own bound
+  spine door (`_crew_door_env`) — needing no Task/Agent tool at all; only its
+  `--backend external` mode needs one. The sibling commander `w1-verdict` used
+  exactly this path and got real independent implementer and reviewer crews. I
+  never checked for it before concluding dispatch was impossible. The Admiral named
+  this as its own gap too — the launch order's Engine access section named a CLI
+  substitution for spine verbs but never named `run_crew.py`'s `cli` backend as the
+  crew-dispatch fallback — and I agree that's a real omission worth fixing for the
+  next Commander dispatched the same way, but the immediate lesson on my side is
+  procedural: check for an available tool before declaring one absent. Recorded as
+  `episodes/active/w1-wiring-005.md`, additive to (not a replacement of) the original
+  observation in `episodes/active/w1-wiring-002.md`. **Independently confirmed the
+  gap was real and known one tier up before this correction arrived**: the Admiral
+  had already dispatched a live independent reviewer crew
+  (`constellation/w1-wiring/g5-clean-room-review/reviewer/attempt-1`, reason logged
+  verbatim as *"Admiral-ordered independent review: w1-wiring ran with no crew
+  dispatch and self-reviewed every gate"*) into this worktree partway through the
+  session, before I had returned to ask — which is itself evidence the fallback
+  should have been named up front, not just that I should have found it myself.
 - **Sonnet-tier finding, as invited**: this order was thorough enough that the
   sonnet-tier run did not stall on ambiguity anywhere except the two points above —
-  both genuine tooling/process gaps, not places where the order under-specified the
-  actual engineering work. The census methodology correction (see episode
-  `w1-wiring-001`) was a self-caught reasoning gap, not something better
-  specification would have prevented.
+  and both turned out to be answerable (one was a non-gap, the other a tool I had
+  and didn't use), not places where the order under-specified the actual engineering
+  work. The census methodology correction (episode `w1-wiring-001`) was a
+  self-caught reasoning gap; the review defects (§5) were review-caught, not
+  self-caught — worth naming plainly rather than folding into a single "it went
+  fine" summary.
 - **JSON-authoring friction**: hand-writing `execute.json` postcondition `command`
   strings with nested, JSON-escaped shell double-quotes was fragile through the
   Write/Edit tool path and produced invalid JSON twice before switching to
   `json.dump` from a throwaway Python script. See `episodes/active/w1-wiring-003.md`.
 
-## 9. Obstacles (why this stops before a terminal archive)
+## 9. Obstacles — both answered by the Admiral, now resolved
 
-1. **No safe path to `spine_close`.** See Workflow Feedback above. I have committed
-   and pushed all real work, opened PR #644, and run the archive-phase episode-capture
-   gate (`verify_episode_captured.py w1-wiring --store-root episodes --phase archive`
-   → 4 episodes confirmed). The spine's `archive` step is `in-progress` with `p1`
-   satisfied; `c1`/`c2`/`c2b`/`c4`/`c5` are not yet attested/checked, and `c3`
-   ("`spine_close` is authorized as the sole final transition") is deliberately left
-   unattested rather than asserted on a call I cannot make.
-2. **A live Admiral-dispatched independent reviewer crew is running against this
-   worktree right now** (`constellation/w1-wiring/g5-clean-room-review/reviewer/
-   attempt-1`, PID confirmed alive at report time, no result yet at
-   `.agent-work/w1-wiring/REVIEW_RESULT-clean-room.md`). I did not dispatch it, do not
-   have its handoff, and it is not mine to wait on or interfere with — `crew-runs.json`
-   / `crew-runs.json.lock` / `crew-runs/` are deliberately left uncommitted so I do not
-   snapshot another process's live bookkeeping mid-flight.
+**Obstacle 1 (no safe path to `spine_close`) — answered.** There is no `close` verb
+because none is needed: `archive` closes like any other gate — satisfy its
+postconditions, `advance archive`, then `release --session-id constellation/w1-wiring`
+as the last action. Completed after this answer arrived; see the final commit/push
+history and the spine's own terminal state for proof.
 
-**Requesting**: the Admiral either (a) integrates this reviewer's verdict and drives
-the terminal `spine_close` itself (it already has the authorized channel this
-delegated CLI context does not), or (b) tells me explicitly how to close a
-CLI-driven delegated spine safely, so this gap is closed for every future wave
-dispatched the same way, not just this one.
+**Obstacle 2 (a live Admiral-dispatched independent reviewer crew running against
+this worktree) — answered.** The Admiral confirmed it dispatched
+`constellation/w1-wiring/g5-clean-room-review/reviewer/attempt-1` deliberately, as a
+correction of its own dispatch (giving this run the independent review its own tool
+surface couldn't produce), not a duplicate or an error. The crew completed
+(`.agent-work/w1-wiring/REVIEW_RESULT-clean-room.md`, verdict
+**APPROVE-WITH-FOLLOWUPS**) and its result, plus both named follow-ups, are committed
+and repaired — see §5.
 
 All substantive mission work — the census, the mechanism, the two issue
-re-measurements, the fix-now deletion and doc correction, full green suite, PR — is
-done and merge-ready regardless of how the terminal archive step resolves.
+re-measurements, the fix-now deletion and doc correction, the two review-caught
+repairs, a genuinely green full suite, PR #644 open against `main` — is done. The
+spine closes immediately following this artifact's final commit.

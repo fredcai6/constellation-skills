@@ -54,11 +54,11 @@
     },
     {
       "id": "D-no-task-tool",
-      "signal": "This wave had no Task/Agent tool available in its dispatched context, so every plan-alternatives candidate, plan critic pass, and disposition gate that commander-core.md's doctrine would normally dispatch as a separate subagent was instead self-authored/self-driven by this same Commander, with the deviation stated at each occurrence.",
+      "signal": "This wave concluded no Task/Agent tool meant no independent crew dispatch was possible at all, so every plan-alternatives candidate, plan critic pass, and disposition gate that commander-core.md's doctrine would normally dispatch as a separate subagent was instead self-authored/self-driven by this same Commander. CORRECTED by the Admiral: scripts/run_crew.py's --backend cli mode spawns a headless claude CLI subprocess needing no Task/Agent tool at all (only --backend external does); the sibling commander w1-verdict used exactly this path. The conclusion was wrong, not the tool surface -- self-inflicted, not environmental.",
       "classification": "later_only",
-      "affects": "Design-it-twice and cold-critic rigor on every future delegated Commander dispatched into this same tool surface, not just this wave",
-      "evidence": ".agent-work/w1-wiring/PLAN_ALTERNATIVES.md, .agent-work/w1-wiring/PLAN_CRITIC.md, execute.json gate imperatives (each states 'crew-waived')",
-      "reason": "Not this wave's to fix -- it is an environmental/tooling constraint of the dispatch, not a plan defect. Named explicitly in this run's Workflow Feedback for the Admiral, since it affects every wave dispatched the same way, not just this one."
+      "affects": "Design-it-twice and cold-critic rigor on every future delegated Commander that concludes the same thing without checking run_crew.py's cli backend first, not just this wave",
+      "evidence": ".agent-work/w1-wiring/PLAN_ALTERNATIVES.md, .agent-work/w1-wiring/PLAN_CRITIC.md, execute.json gate imperatives (each states 'crew-waived'); episodes/active/w1-wiring-005.md (the correction)",
+      "reason": "Not fixed retroactively this wave -- the Admiral's clean-room review already substituted for the missing independent review and the mission's findings held up under it. The remaining, still-real gap is one tier up: the launch order's Engine access section names a CLI substitution for spine verbs but never names run_crew.py's cli backend as the crew-dispatch fallback for a context with no Task/Agent tool -- worth fixing in the launch-order template for the next Commander dispatched the same way."
     }
   ]
 }
