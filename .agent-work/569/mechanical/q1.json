@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q1",
+  "mechanical": {
+    "run": "569",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 3,
+    "spine-step": "q1",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-569-q1@467b99a70f7e5be7d5ca3d0ae8a2651887f556be",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "569",
+    "generated_at": "2026-08-22T20:49:04Z"
+  }
+}
