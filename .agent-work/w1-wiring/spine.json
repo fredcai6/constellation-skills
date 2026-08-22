@@ -710,13 +710,14 @@
   "refusals": 5,
   "engine_session": {
     "session_id": "constellation/w1-wiring",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-22T14:53:50.302883+00:00",
     "last_heartbeat": "2026-08-22T16:03:43.259054+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-22T16:08:00.719863+00:00"
   },
   "why_trail": [
     {
