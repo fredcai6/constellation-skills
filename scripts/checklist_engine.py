@@ -221,15 +221,35 @@ def lease_stale_seconds(config: dict) -> int:
 # state helpers
 # --------------------------------------------------------------------------- #
 def load(path: Path) -> dict:
-    # `_read_text_with_retry`, not a bare `.read_text()`: `save()` installs the
-    # new document with `os.replace`, and on Windows that same sharing
-    # violation `_replace_with_retry` retries FOR THE WRITER (see that
-    # function's docstring) can hit an ordinary concurrent reader's `open()`
-    # too -- `os.replace` briefly holds the destination name exclusively while
-    # it installs. `run_crew.py`'s parent-lease heartbeat is exactly this
-    # caller, reading a spine another process is actively `save()`-ing
-    # (#613's own scenario), so this is the other half of that same fix, not
-    # a new one.
+    """Read and parse the checklist at `path`.
+
+    **The contract under concurrent access (issue #647):** a call to `load()`
+    never returns a torn or partial document -- the complete old document or
+    the complete new one, never a half-written mixture, on every platform.
+
+    On Windows, a call CAN instead raise a recognized transient busy
+    `OSError` (`_read_busy_on_windows`) after `_read_text_with_retry`'s
+    bounded retry budget is exhausted, when a concurrent `save()`'s
+    `os.replace` is mid-install for longer than that budget allows. That is
+    not this function returning bad data -- it is this function correctly
+    refusing to guess, and the caller is expected to retry. On POSIX this
+    never occurs (`rename(2)` does not invalidate an open reader), so a
+    `load()` there either returns a complete document or raises a REAL
+    error; there is no busy case to retry into.
+
+    Any OTHER `OSError`, or a `json.JSONDecodeError` on well-formed input,
+    is a genuine failure and must propagate, not be swallowed here.
+
+    `_read_text_with_retry`, not a bare `.read_text()`: `save()` installs the
+    new document with `os.replace`, and on Windows that same sharing
+    violation `_replace_with_retry` retries FOR THE WRITER (see that
+    function's docstring) can hit an ordinary concurrent reader's `open()`
+    too -- `os.replace` briefly holds the destination name exclusively while
+    it installs. `run_crew.py`'s parent-lease heartbeat is exactly this
+    caller, reading a spine another process is actively `save()`-ing
+    (#613's own scenario), so this is the other half of that same fix, not
+    a new one.
+    """
     return json.loads(_read_text_with_retry(Path(path)))
 
 
@@ -252,6 +272,29 @@ def _dominant_newline(path: Path) -> bytes:
 _WINDOWS_REPLACE_BUSY = (5, 32)
 _REPLACE_ATTEMPTS = 12
 _REPLACE_BACKOFF_SECONDS = 0.01
+
+
+def _write_busy_on_windows(exc: OSError) -> bool:
+    """Whether `exc` is the transient Windows sharing violation
+    `_replace_with_retry` should retry, rather than a real failure.
+
+    Named and extracted (rather than left inline in `_replace_with_retry`) so a
+    caller outside this module -- concretely, a test asserting on the CLASS of
+    error a concurrent writer surfaced, not just that one occurred -- can ask
+    the identical question the writer's own retry loop asks, instead of
+    re-deriving a second definition that could quietly drift from it.
+
+    Deliberately narrower than the reader's `_read_busy_on_windows`: only the
+    two named `_WINDOWS_REPLACE_BUSY` codes, matched by `winerror`. The
+    reader's extra fallback (a bare `PermissionError` with no `winerror`, seen
+    from a plain `read_text()`) does not apply here -- `os.replace` is a
+    single lower-level Windows call, and every busy failure measured from it
+    in CI carried a populated `winerror`. Widening this to the reader's bare-
+    `PermissionError` fallback would make the writer retry (and a caller's
+    test tolerate) failures `_replace_with_retry` was never built to retry,
+    which is a correctness regression dressed as a simplification -- so it is
+    not done here without new CI evidence that `os.replace` needs it too."""
+    return getattr(exc, "winerror", None) in _WINDOWS_REPLACE_BUSY
 
 
 def _replace_with_retry(tmp_name: str, path: Path) -> None:
@@ -305,7 +348,7 @@ def _replace_with_retry(tmp_name: str, path: Path) -> None:
         except OSError as exc:
             # `winerror` exists only on Windows; on POSIX nothing matches, so this
             # loop runs exactly once and the behaviour is unchanged there.
-            if getattr(exc, "winerror", None) not in _WINDOWS_REPLACE_BUSY:
+            if not _write_busy_on_windows(exc):
                 raise
             last = exc
             if attempt < _REPLACE_ATTEMPTS - 1:
@@ -420,6 +463,29 @@ def save(path: Path, data: dict) -> None:
     durably unparseable document — worse than the tear this fixes), `fsync` it so the
     rename cannot become durable before the data is, then `os.replace` it into place.
     A reader now sees the complete old document or the complete new one.
+
+    **The contract under concurrent access (issue #647), stated plainly:** a
+    reader concurrent with `save()` never observes a torn or partial document
+    -- the complete old one or the complete new one, on every platform, always.
+    On Windows, where a lease-holder's writes race one or more readers'
+    `load()` calls, `save()`'s install step (`_replace_with_retry`) CAN raise a
+    recognized transient busy `OSError` (`_write_busy_on_windows`) after its
+    bounded retry budget is exhausted -- that is fail-loud, not fail-torn: the
+    document on disk is left exactly as it was before this `save()` began, and
+    the caller is expected to retry the whole `save()`. On POSIX this busy case
+    never occurs. Any OTHER `OSError` is a real failure and is not retried.
+
+    **This is a single-writer contract, not mutual exclusion between
+    writers.** The engine's ownership model IS the lease: where an active
+    lease is held, there is exactly one writer, and the guarantees above are
+    for that writer racing readers -- not for two writers racing each other.
+    On a spine with no active lease -- never claimed, or claimed and since
+    released (see the ownership-is-the-lease note at lines ~110-115 above) --
+    there is no single-writer guarantee, and concurrent `save()` calls there
+    are undefended by design: the LAST `os.replace` to land wins and an
+    earlier writer's update is silently gone, exactly as `Atomicity here is
+    not mutual exclusion` below already says about `load()`-mutate-`save()`
+    races in general.
 
     **Atomicity here is not mutual exclusion.** The WRITE is atomic; the
     read-modify-write is not. Two callers that each `load()` → mutate → `save()` still

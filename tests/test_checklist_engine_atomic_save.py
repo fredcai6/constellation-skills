@@ -363,6 +363,30 @@ class AtomicSaveTests(unittest.TestCase):
         UNDEFENDED BY DESIGN -- this test says nothing about that case, and
         neither does `save()`.
 
+        **The busy-vs-broken split (issue #647, second ruling).** Narrowing to
+        one writer did not make Windows contention disappear -- it moved it:
+        under a tight loop of 3 readers, `os.replace` can find the target open
+        by a reader on every one of `_replace_with_retry`'s attempts, exhaust
+        its budget, and raise. That is real, reproduced in CI, and it is
+        SYMMETRIC with the reader side (a reader's `open()` can equally lose
+        to a writer's `os.replace`) -- reducing either side's thread count
+        just shifts which side loses the race, so it is not a bug to chase
+        away by tuning. So this test now tells the two outcomes apart instead
+        of treating every `OSError` as a finding:
+
+        * A recognized transient busy `OSError` (`E._write_busy_on_windows` on
+          the writer side, `E._read_busy_on_windows` on the reader side -- the
+          SAME predicates `save()`/`load()` use internally, not a second
+          definition) is TOLERATED. It means the retry budget was exhausted
+          under load, not that a document tore.
+        * Anything else stays an absolute failure: a torn/partial document
+          (`JSONDecodeError`, or a parsed document with the wrong `work_id`)
+          NEVER passes, and neither does any OTHER `OSError` -- a real
+          permission problem or a vanished directory must still fail this
+          test loudly, on every platform, including POSIX where the busy
+          predicates are always `False` (`winerror` does not exist there), so
+          POSIX keeps demanding zero errors exactly as before.
+
         This test is TIMING-DEPENDENT and is therefore supporting evidence only.
         It is not what proves the fix; tests (1)-(3) are.
         """
@@ -374,6 +398,7 @@ class AtomicSaveTests(unittest.TestCase):
         stop = threading.Event()
         errors: list[str] = []
         reads = [0]
+        tolerated_busy = [0]
 
         def writer():
             payloads = (big, small)
@@ -381,8 +406,14 @@ class AtomicSaveTests(unittest.TestCase):
             while not stop.is_set():
                 try:
                     E.save(self.path, payloads[n % 2])
-                except OSError as exc:  # pragma: no cover -- would be a finding
-                    errors.append(f"writer OSError: {exc!r}")
+                except OSError as exc:
+                    if E._write_busy_on_windows(exc):
+                        # Exhausted _replace_with_retry's budget against an
+                        # open reader -- fail-loud, not fail-torn (save()'s
+                        # #647 contract). Not a finding.
+                        tolerated_busy[0] += 1
+                    else:
+                        errors.append(f"writer OSError: {exc!r}")
                 n += 1
 
         def reader():
@@ -400,7 +431,13 @@ class AtomicSaveTests(unittest.TestCase):
                 except json.JSONDecodeError as exc:
                     errors.append(f"TORN READ: {exc}")
                     return
-                except OSError as exc:  # pragma: no cover
+                except OSError as exc:
+                    if E._read_busy_on_windows(exc):
+                        # Exhausted _read_text_with_retry's budget against a
+                        # mid-install os.replace -- fail-loud, not fail-torn.
+                        # Not a finding; keep polling.
+                        tolerated_busy[0] += 1
+                        continue
                     errors.append(f"reader OSError: {exc!r}")
                     return
                 if doc.get("work_id") != "w":
@@ -417,7 +454,9 @@ class AtomicSaveTests(unittest.TestCase):
         for t in threads:
             t.join(timeout=5)
 
-        self.assertEqual(errors, [])
+        self.assertEqual(errors, [],
+                         f"({tolerated_busy[0]} recognized-busy OSErrors were "
+                         f"separately tolerated and are not counted above)")
         self.assertGreater(reads[0], 0, "the reader threads never read anything")
         self.assertEqual(self._tmp_siblings(), [],
                          "temp files survived the concurrent run")
