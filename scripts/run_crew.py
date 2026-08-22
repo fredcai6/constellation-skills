@@ -737,6 +737,60 @@ def spine_blocked_id(spine: str | os.PathLike[str], root: Path) -> str | None:
     return None
 
 
+def spine_parked(spine: str | os.PathLike[str], root: Path) -> bool:
+    """Whether the bound spine at `spine` was left in the shape a crew leaves
+    when it PARKS at the engine's context line: at least one gate closed, none
+    still in progress, and pending gates remaining.
+
+    The context-line handoff is the mechanism that lets a long run survive --
+    the HARD band tells an agent to close the gate it is inside
+    (`advance <gate> --why ...`) and stop, so a fresh agent can pick the spine
+    up. Every one of those correct stops used to be recorded `failed` and
+    exit 1, identical to a crash, because the only distinction the launcher
+    drew was terminal-or-not (#618). That inverts the incentive it should
+    create: an agent reading its own launcher output learns that parking costs
+    it the same record as crashing, and the way to avoid a `failed` line is to
+    run past the context line.
+
+    The distinguishing signal is read from the spine itself, not from a status
+    string anyone asserts. A parked crew closed its gate before stopping, so
+    NOTHING is `in-progress` and something is `complete`/`skipped`; a crew that
+    died mid-gate left the gate it was inside `in-progress`, and one that never
+    got started closed nothing. Both of those stay `failed`. This is an
+    approximation, not a proof -- a crash in the window between closing one
+    gate and starting the next reads as parked -- and it is deliberately the
+    generous side of that line: mislabelling a rare crash `partial` costs a
+    parent one look at the work area, which is exactly the cost the old
+    labelling imposed on EVERY correct park.
+
+    Same defensive parse as `spine_terminal`/`spine_blocked_id` (a missing,
+    unparseable or malformed spine is never parked), minus the archive retry:
+    `archive` is the last gate, so a genuinely parked spine has not been
+    relocated by it."""
+    path = Path(spine)
+    if not path.is_absolute():
+        path = root / path
+    try:
+        checklist = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(checklist, dict):
+        return False
+    tasks = checklist.get("tasks")
+    items = checklist.get("items")
+    if not isinstance(tasks, dict) or not isinstance(items, list) or not items:
+        return False
+    closed = 0
+    for iid in items:
+        task = tasks.get(iid)
+        status = task.get("status") if isinstance(task, dict) else None
+        if status == "in-progress":
+            return False
+        if status in checklist_engine.TERMINAL:
+            closed += 1
+    return 0 < closed < len(items)
+
+
 # --------------------------------------------------------------------------- #
 # injectable seams — argv construction (pure) and the real launch
 # --------------------------------------------------------------------------- #
@@ -1494,20 +1548,32 @@ def finalize_from_exit_code(
     success (`final = 0`) the same as `completed` -- a polling parent reads
     the DURABLE registry status, not the process exit code, to find it.
 
+    `partial` (issue #618) is the third legitimate non-failure outcome, checked
+    after both of the above and only when the child exited 0: a crew that
+    closed its gate at the engine's context line and stopped left a spine that
+    is not terminal but is visibly PARKED (`spine_parked`), and recording that
+    as `failed` made the correct long-run behaviour indistinguishable from a
+    crash. Like `blocked` it reports success (`final = 0`) and is read from the
+    durable registry, where `recover_crews` classifies it resumable -- being
+    picked up by a fresh agent is the whole point of parking.
+
     Sets `completed_at`/`last_heartbeat` (now), `status` (`completed` |
-    `blocked` | `failed`), `exit_code`, `result_present`, `result_fresh`
+    `blocked` | `partial` | `failed`), `exit_code`, `result_present`, `result_fresh`
     (blocked/no-spine cases leave the latter two at their `result`-based or
     `False` default, computed before the blocked check so they still reflect
     reality), `blocked_gate` when blocked, and `verdict_source` -- ALWAYS one
-    of `"blocked_gate"` | `"result"` | `"spine_terminal"` | `"none"`, naming
+    of `"blocked_gate"` | `"result"` | `"spine_terminal"` | `"spine_parked"` |
+    `"none"`, naming
     which path actually decided the verdict: `"blocked_gate"` when a blocked
     gate won outright (regardless of what the other two paths would have
     said); `"result"` when the result-artifact path decided it, whether fresh
     (`completed`) or stale/missing with no spine rescue (`failed`);
     `"spine_terminal"` when a `spine` was given and consulted -- either it
     rescued a missing/stale result into `completed`, or (when `result` is
-    `None`) it is the sole basis for the verdict either way; `"none"` only
-    when neither `result` nor `spine` was given at all. Returns the
+    `None`) it is the sole basis for the verdict either way; `"spine_parked"`
+    when neither of those said done but the spine's own shape said the crew
+    parked at the context line and the child exited 0; `"none"` only when
+    neither `result` nor `spine` was given at all. Returns the
     process-level exit code to report."""
     if result is not None:
         have_result = result_exists(result, root)
@@ -1535,6 +1601,10 @@ def finalize_from_exit_code(
         final = 0
     elif exit_code == 0 and done:
         entry["status"] = "completed"
+        final = 0
+    elif exit_code == 0 and spine is not None and spine_parked(spine, root):
+        entry["status"] = "partial"
+        verdict_source = "spine_parked"
         final = 0
     else:
         entry["status"] = "failed"
@@ -2311,13 +2381,18 @@ def abandon_crew(entries: list[dict], session: str, root: Path) -> dict:
 def _crew_status_line(prefix: str, entry: dict) -> str:
     """The launcher's own report of one crew's outcome. `blocked` names the
     gate and the parent being asked, right in this line -- the launcher must
-    say so plainly, not just leave it to the durable registry record."""
+    say so plainly, not just leave it to the durable registry record. `partial`
+    says the crew parked rather than crashed and that resuming is the next
+    move (#618), for the same reason: the terminal line is what a watching
+    parent actually reads, and "failed" there sent it to open the work area."""
     line = f"{prefix} {entry['session_name']} -> {entry['status']}"
     if entry.get("status") == "blocked":
         line += (
             f" (blocked at {entry.get('blocked_gate')}, asking parent "
             f"{entry.get('parent') or UNKNOWN_PARENT})"
         )
+    elif entry.get("status") == "partial":
+        line += " (parked at the context line with work left; resume it)"
     return line
 
 

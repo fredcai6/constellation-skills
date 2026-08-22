@@ -2242,6 +2242,38 @@ def _write_spine(path: Path, *, done: bool) -> None:
     }), encoding="utf-8")
 
 
+def _write_parked_spine(path: Path) -> None:
+    """The spine a crew leaves when it PARKS at the engine's context line: the
+    gate it was inside is closed (`advance --why ...`, what the HARD band tells
+    it to do) and the rest are still pending. Nothing is `in-progress`."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "work_id": "issue-1",
+        "type": "gated",
+        "items": ["w1", "w2"],
+        "tasks": {
+            "w1": {"id": "w1", "status": "complete"},
+            "w2": {"id": "w2", "status": "pending"},
+        },
+    }), encoding="utf-8")
+
+
+def _write_crashed_spine(path: Path) -> None:
+    """The spine a crew leaves when it dies MID-GATE: the gate it was inside is
+    still `in-progress`. Same non-terminal, same partly-done shape as a park --
+    the in-progress gate is the only thing that tells them apart."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({
+        "work_id": "issue-1",
+        "type": "gated",
+        "items": ["w1", "w2"],
+        "tasks": {
+            "w1": {"id": "w1", "status": "complete"},
+            "w2": {"id": "w2", "status": "in-progress"},
+        },
+    }), encoding="utf-8")
+
+
 def _write_blocked_spine(path: Path, *, blocked_id: str = "w1") -> None:
     """A minimal `checklist_engine`-shaped spine with one BLOCKED gate --
     what a real crew's spine looks like right after `spine_halt block`."""
@@ -3536,6 +3568,119 @@ class FinalizeFromExitCodeTests(unittest.TestCase):
             self.assertEqual("blocked", entry["status"])
             self.assertEqual("w1", entry["blocked_gate"])
             self.assertEqual("blocked_gate", entry["verdict_source"])
+
+
+class ParkedOutcomeTests(unittest.TestCase):
+    """Issue #618: a crew that parks at the engine's context line closed its
+    gate, wrote its handoff and stopped -- the behaviour the launch order asks
+    for. It used to be recorded `failed` with exit 1, the same line a crash
+    produces, so every correct long-run stop cost the parent a trip into the
+    work area to find out nothing was wrong."""
+
+    BASE = 1_700_000_000.0
+
+    def test_parked_spine_records_partial_and_exits_zero(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_parked_spine(root / "spine.json")
+            self.assertTrue(RC.spine_parked("spine.json", root))
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result=None, root=root, since=iso(self.BASE),
+                spine="spine.json",
+            )
+            self.assertEqual(0, final)
+            self.assertEqual("partial", entry["status"])
+            self.assertEqual("spine_parked", entry["verdict_source"])
+
+    def test_crash_mid_gate_still_records_failed(self):
+        # The other arm, and the one that must not move: an in-progress gate
+        # means nobody closed anything on the way out.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_crashed_spine(root / "spine.json")
+            self.assertFalse(RC.spine_parked("spine.json", root))
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result=None, root=root, since=iso(self.BASE),
+                spine="spine.json",
+            )
+            self.assertEqual(1, final)
+            self.assertEqual("failed", entry["status"])
+
+    def test_nonzero_exit_over_a_parked_spine_still_fails(self):
+        # A child that died loudly is failed regardless of how its spine reads.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_parked_spine(root / "spine.json")
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=3, result=None, root=root, since=iso(self.BASE),
+                spine="spine.json",
+            )
+            self.assertEqual(3, final)
+            self.assertEqual("failed", entry["status"])
+
+    def test_untouched_spine_is_not_parked(self):
+        # Nothing closed: the crew never got started, which is not a park.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_spine(root / "spine.json", done=False)
+            self.assertFalse(RC.spine_parked("spine.json", root))
+
+    def test_terminal_spine_is_not_parked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_spine(root / "spine.json", done=True)
+            self.assertFalse(RC.spine_parked("spine.json", root))
+
+    def test_missing_and_malformed_spines_are_not_parked(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "bad.json").write_text("{not json", encoding="utf-8")
+            (root / "shape.json").write_text(json.dumps({"items": []}), encoding="utf-8")
+            self.assertFalse(RC.spine_parked("absent.json", root))
+            self.assertFalse(RC.spine_parked("bad.json", root))
+            self.assertFalse(RC.spine_parked("shape.json", root))
+
+    def test_blocked_still_wins_over_parked(self):
+        # A spine with a closed gate AND a blocked one reads blocked: the
+        # blocked gate names a question for the parent, which outranks
+        # "there is work left".
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "spine.json").write_text(json.dumps({
+                "work_id": "issue-1", "type": "gated", "items": ["w1", "w2"],
+                "tasks": {"w1": {"id": "w1", "status": "complete"},
+                          "w2": {"id": "w2", "status": "blocked"}},
+            }), encoding="utf-8")
+            entry = {}
+            final = RC.finalize_from_exit_code(
+                entry, exit_code=0, result=None, root=root, since=iso(self.BASE),
+                spine="spine.json",
+            )
+            self.assertEqual(0, final)
+            self.assertEqual("blocked", entry["status"])
+
+    def test_status_line_says_parked_not_failed(self):
+        line = RC._crew_status_line("crew", {"session_name": "s1", "status": "partial"})
+        self.assertIn("partial", line)
+        self.assertIn("resume", line)
+
+    def test_recover_classifies_partial_without_result_as_resumable(self):
+        entry = {
+            "session_name": "constellation/issue-1/g1/commander/attempt-3",
+            "work_id": "issue-1", "gate": "g1", "role": "commander", "attempt": 3,
+            "worktree": ".", "status": "partial", "pid": 111, "result": None,
+        }
+        self.assertEqual(
+            REC.STATE_RESUMABLE,
+            REC.classify_entry(entry, lambda pid: False, lambda e: False),
+        )
+        self.assertEqual(
+            REC.STATE_COMPLETE,
+            REC.classify_entry(entry, lambda pid: False, lambda e: True),
+        )
 
 
 class EntryBackendTests(unittest.TestCase):

@@ -71,6 +71,14 @@ def classify_entry(
       * resumable, result missing              -> resumable
       * failed & result exists                 -> complete
       * failed, no result                      -> needs-abandon
+      * partial & result exists                -> complete
+      * partial, no result                     -> resumable
+
+    `partial` is the launcher's record of a crew that parked at the engine's
+    context line rather than crashing (#618). Parking exists so a fresh agent
+    can pick the spine up, so with nothing landed it classifies `resumable`,
+    not `needs-abandon` -- resuming IS the designed next move, and it used to
+    reach here as `failed` and be sent for an explicit abandon decision.
     """
     status = entry.get("status")
     has_result = bool(result_present(entry))
@@ -99,6 +107,13 @@ def classify_entry(
 
     if status == "failed":
         return STATE_COMPLETE if has_result else STATE_NEEDS_ABANDON
+
+    if status == "partial":
+        if has_result:
+            return STATE_COMPLETE
+        if is_alive:
+            return STATE_ACTIVE
+        return STATE_RESUMABLE if resumable else STATE_NEEDS_ABANDON
 
     # Unknown/missing status with a live pid is a conflicting active lock the
     # Commander/human must resolve; otherwise it needs an explicit decision.
