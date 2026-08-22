@@ -2369,6 +2369,59 @@ class _HookWiringFixture(unittest.TestCase):
         return {"matcher": matcher,
                 "hooks": [{"type": "command", "command": command, "timeout": 10}]}
 
+    @staticmethod
+    def _run_hook_command(
+        command: str, shell: str | None, stdin_payload: object = None,
+        *, env: dict | None = None,
+    ) -> subprocess.CompletedProcess:
+        """Execute `command` through the shell the ENTRY ITSELF declares --
+        never through `subprocess.run(command, shell=True, ...)`'s platform
+        default. `shell=True` means `sh -c` on POSIX but **cmd.exe** on
+        Windows, which does not perform POSIX `${VAR:-default}` expansion --
+        so a command that genuinely depends on it (every command this
+        installer emits, since `build_hook_command`) silently fails to run,
+        not because the command is wrong but because the test executed it a
+        different way than Claude Code does. That is exactly what broke on
+        Windows CI: the entry declared `"shell": "bash"` (`build_hook_entry`
+        pins it unconditionally) but three `test_*_actually_executes` tests
+        ran the command with `shell=True` anyway, ignoring the very field the
+        entry declares.
+
+        `shell` is a PARAMETER, read by the caller from the real emitted
+        entry (`hook.get("shell")` / `_all_commands`'s third tuple element),
+        never assumed here -- so this helper cannot silently diverge from
+        production again if the pin this installer writes ever changes: a
+        caller that stops passing the entry's own value is passing a lie, not
+        this helper inventing one.
+
+        This is a CORRECTION to match what actually runs, not a relaxation:
+        the assertion "the wired command actually executes" is exactly as
+        strong as before, and MUST still fail when the command genuinely does
+        not run (proved by
+        `test_wired_command_uses_the_probed_interpreter_and_documented_timeout`,
+        which overrides the interpreter to a bogus path and requires a
+        nonzero exit through this same helper).
+
+        Only `"bash"` is implemented, because that is the only value
+        `build_hook_entry` ever emits. A `shell` this helper does not
+        recognise is a REAL gap in test coverage, not something to paper over
+        by falling back to `shell=True` -- so it raises rather than
+        guessing."""
+        stdin_text = "{}" if stdin_payload is None else json.dumps(stdin_payload)
+        run_env = {**os.environ, "PYTHONIOENCODING": "utf-8", **(env or {})}
+        if shell == "bash":
+            return subprocess.run(
+                ["bash", "-c", command], input=stdin_text,
+                capture_output=True, text=True, env=run_env,
+            )
+        raise NotImplementedError(
+            f"_run_hook_command does not know how to honour shell={shell!r} for "
+            f"command {command!r} -- add support here rather than falling back to "
+            f"subprocess.run(shell=True), which uses the platform default shell "
+            f"(cmd.exe on Windows) and is exactly the defect this helper exists "
+            f"to prevent."
+        )
+
 
 class HookWiringDetectionTests(_HookWiringFixture):
     """Always-on, no-flag detection (#262). Three states -- wired / stale /
@@ -2640,10 +2693,14 @@ class HookWiringOptInTests(_HookWiringFixture):
             )
             # ...and the same env var actually overrides it at run time (real
             # shell expansion, not a string match) -- the whole point of wrapping.
-            result = subprocess.run(
-                hook["command"], shell=True, input="{}", capture_output=True, text=True,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8",
-                     installer.MCP_INTERPRETER_ENV_VAR: "/no/such/interpreter"},
+            # Run through the entry's OWN declared shell (_run_hook_command),
+            # not subprocess.run(shell=True)'s platform default: this is the
+            # positive-control proof that honouring the entry's shell does not
+            # WEAKEN this assertion -- a genuinely broken interpreter override
+            # must still fail through it, exactly as strongly as before.
+            result = self._run_hook_command(
+                hook["command"], hook.get("shell"),
+                env={installer.MCP_INTERPRETER_ENV_VAR: "/no/such/interpreter"},
             )
             self.assertNotEqual(
                 0, result.returncode,
@@ -2681,11 +2738,14 @@ class HookWiringOptInTests(_HookWiringFixture):
         every other assertion in this class."""
         with tempfile.TemporaryDirectory() as tmp:
             self._wire(tmp)
-            command = self._entries(tmp)[0]["hooks"][0]["command"]
-            result = subprocess.run(
-                command, shell=True, input="{}", capture_output=True, text=True,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-            )
+            hook = self._entries(tmp)[0]["hooks"][0]
+            command = hook["command"]
+            # Through the entry's OWN declared shell, not shell=True's
+            # platform default (cmd.exe on Windows, which never expands
+            # ${VAR:-default} -- the exact reason three of these
+            # actually-executes tests failed on Windows CI despite the
+            # command being correct).
+            result = self._run_hook_command(command, hook.get("shell"))
             self.assertEqual(
                 0, result.returncode,
                 f"the wired command did not run: {command!r}\n"
@@ -2977,14 +3037,18 @@ class _MultiHookFixture(_HookWiringFixture):
         return json.loads((Path(tmp) / name).read_text(encoding="utf-8"))
 
     def _all_commands(self, settings: dict) -> dict:
-        """{(event, matcher, script): (command, timeout)} for every hook."""
+        """{(event, matcher, script): (command, timeout, shell)} for every
+        hook. `shell` is carried alongside `command`/`timeout` (not dropped)
+        so a caller that executes the command can honour the entry's own
+        declared shell via `_run_hook_command` rather than guessing."""
         found = {}
         for event, entries in settings.get("hooks", {}).items():
             for entry in entries:
                 for hook in entry["hooks"]:
                     command = hook["command"]
                     script = Path(command.split('"')[1]).name
-                    found[(event, entry.get("matcher"), script)] = (command, hook.get("timeout"))
+                    found[(event, entry.get("matcher"), script)] = (
+                        command, hook.get("timeout"), hook.get("shell"))
         return found
 
 
@@ -3019,7 +3083,7 @@ class AllFourHookWiringTests(_MultiHookFixture):
             for spec in installer.HOOK_SPECS:
                 key = (spec.event, spec.matcher, spec.script)
                 self.assertIn(key, written, f"{spec.name} was not wired")
-                command, timeout = written[key]
+                command, timeout, _shell = written[key]
                 self.assertEqual(spec.timeout, timeout, spec.name)
                 # The event argument distinguishes the three rail entries from
                 # each other; without it all three would invoke the same
@@ -3089,15 +3153,14 @@ class AllFourHookWiringTests(_MultiHookFixture):
 
             env = {**os.environ, "PYTHONIOENCODING": "utf-8", "CLAUDE_PROJECT_DIR": str(project_dir)}
 
-            def run(command, stdin_payload):
-                return subprocess.run(
-                    command, shell=True, input=json.dumps(stdin_payload),
-                    capture_output=True, text=True, env=env,
-                )
+            def run(command, shell, stdin_payload):
+                # Through the entry's OWN declared shell, not shell=True's
+                # platform default -- see _run_hook_command's docstring.
+                return self._run_hook_command(command, shell, stdin_payload, env=env)
 
-            for (event, matcher, script), (command, _timeout) in written.items():
+            for (event, matcher, script), (command, _timeout, shell) in written.items():
                 if script == installer.SPINE_RAIL_HOOK_SCRIPT and event == "Stop":
-                    result = run(command, {"session_id": "resume-sid"})
+                    result = run(command, shell, {"session_id": "resume-sid"})
                     self.assertEqual(0, result.returncode, result.stderr)
                     self.assertIn(
                         "SPINE MID-FLIGHT", result.stdout,
@@ -3106,7 +3169,7 @@ class AllFourHookWiringTests(_MultiHookFixture):
                         f"stdout={result.stdout!r} stderr={result.stderr!r}",
                     )
                 elif script == installer.SPINE_RAIL_HOOK_SCRIPT and event == "SessionStart":
-                    result = run(command, {"session_id": "resume-sid"})
+                    result = run(command, shell, {"session_id": "resume-sid"})
                     self.assertEqual(0, result.returncode, result.stderr)
                     self.assertIn(
                         "RESUMING", result.stdout,
@@ -3119,7 +3182,7 @@ class AllFourHookWiringTests(_MultiHookFixture):
                         f'python checklist_engine.py --file "{spine_path}" '
                         f'claim --session-id eng-9'
                     )
-                    result = run(command, {
+                    result = run(command, shell, {
                         "session_id": "claim-sid",
                         "tool_input": {"command": claim_cmd},
                     })
@@ -3137,7 +3200,7 @@ class AllFourHookWiringTests(_MultiHookFixture):
                         "PostToolUse recorded the wrong spine path for the claim",
                     )
                 else:
-                    result = run(command, {})
+                    result = run(command, shell, {})
                     self.assertEqual(
                         0, result.returncode,
                         f"the wired command did not run: {command!r}\n"
@@ -3223,7 +3286,7 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
             self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
             written = self._all_commands(self._settings_json(tmp, "settings.local.json"))
             self.assertEqual(len(installer.HOOK_SPECS), len(written))
-            for (_event, _matcher, script), (command, _timeout) in written.items():
+            for (_event, _matcher, script), (command, _timeout, _shell) in written.items():
                 expected = installer.source_hook_path(script)
                 self.assertTrue(
                     expected.is_file(), f"wired a path with no file behind it: {expected}")
@@ -3252,7 +3315,7 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
             self.assertTrue(local.is_file())
             written = self._all_commands(json.loads(local.read_text(encoding="utf-8")))
             self.assertEqual(len(installer.HOOK_SPECS), len(written))
-            for (_event, _matcher, script), (command, _timeout) in written.items():
+            for (_event, _matcher, script), (command, _timeout, _shell) in written.items():
                 self.assertIn(f"${{CLAUDE_PROJECT_DIR}}/scripts/hooks/{script}", command)
                 self.assertNotIn(str(installer.REPO_ROOT), command)
 
@@ -3279,17 +3342,16 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
         with tempfile.TemporaryDirectory() as tmp:
             self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
             commands = [
-                c for c, _ in
+                (c, shell) for c, _timeout, shell in
                 self._all_commands(self._settings_json(tmp, "settings.local.json")).values()
             ]
             self.assertEqual(
                 len(installer.HOOK_SPECS), len(commands), "nothing was wired, so nothing was run"
             )
-            for command in commands:
-                result = subprocess.run(
-                    command, shell=True, input="{}", capture_output=True, text=True,
-                    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-                )
+            # Through each entry's OWN declared shell, not shell=True's
+            # platform default -- see _run_hook_command's docstring.
+            for command, shell in commands:
+                result = self._run_hook_command(command, shell)
                 self.assertEqual(
                     0, result.returncode,
                     f"the source-wired command did not run: {command!r}\n"
