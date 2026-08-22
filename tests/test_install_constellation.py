@@ -305,7 +305,7 @@ class InstallConstellationTests(unittest.TestCase):
                     "--skills",
                     "commander",
                     "cartographer",
-                    "workbench",
+                    "charter",
                 ],
                 env={},
                 out=lambda _: None,
@@ -562,7 +562,7 @@ class InstallConstellationTests(unittest.TestCase):
             base = ["--agent", "codex", "--scope", "user", "--dest", str(target_root)]
             self.assertEqual(0, installer.main(base, env={}, out=lambda _: None))
             installed_before = {p.name for p in target_root.iterdir()}
-            self.assertIn("constellation-workbench", installed_before)
+            self.assertIn("constellation-charter", installed_before)
             self.assertEqual(
                 0,
                 installer.main(base + ["--skills", "commander", "--force"],
@@ -1961,7 +1961,7 @@ class TemplateBaselineTests(unittest.TestCase):
             project = Path(tmp)
             exit_code = installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
-                 "--skills", "commander", "workbench"],
+                 "--skills", "commander", "charter"],
                 env={}, cwd=project, out=lambda _line: None,
             )
             self.assertEqual(0, exit_code)
@@ -1978,7 +1978,8 @@ class TemplateBaselineTests(unittest.TestCase):
                 self.assertEqual(len(entry["sha256"]), 64)
             names = {e["template"] for e in manifest["templates"]}
             self.assertIn("COMMANDER_SPINE.template.json", names)
-            self.assertIn("WORKFLOW_CLOSEOUT.template.md", names)
+            # a second skill's template, so this proves the manifest spans skills
+            self.assertIn("CHARTER.template.json", names)
 
     def test_reinstall_leaves_existing_baseline_untouched(self):
         installer = load_installer()
@@ -1986,7 +1987,7 @@ class TemplateBaselineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
             args = ["--agent", "claude", "--scope", "project", "--project", str(project),
-                    "--skills", "workbench"]
+                    "--skills", "charter"]
             installer.main(args, env={}, cwd=project, out=lambda _line: None)
             manifest_path = project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json"
             original = manifest_path.read_text(encoding="utf-8")
@@ -2005,19 +2006,19 @@ class TemplateBaselineTests(unittest.TestCase):
             base = ["--agent", "claude", "--scope", "project", "--project", str(project),
                     "--baseline-only"]
             # initial baseline tracks only workbench templates
-            installer.main(base + ["--skills", "workbench"], env={}, cwd=project, out=lambda _l: None)
+            installer.main(base + ["--skills", "charter"], env={}, cwd=project, out=lambda _l: None)
             troot = project / ".agent-work" / "templates"
             mpath = troot / "TEMPLATES_MANIFEST.json"
             before = {(e["skill"], e["template"]): e["sha256"]
                       for e in json.loads(mpath.read_text(encoding="utf-8"))["templates"]}
             self.assertTrue(before)
             self.assertFalse(any(s == "constellation-commander" for s, _ in before))
-            wb_baseline = (troot / ".baseline" / "constellation-workbench"
-                           / "WORKFLOW_CLOSEOUT.template.md").read_text(encoding="utf-8")
+            anchor_baseline = (troot / ".baseline" / "constellation-charter"
+                               / "CHARTER.template.json").read_text(encoding="utf-8")
 
             # a later install brings a skill whose templates the project never tracked
             messages = []
-            installer.main(base + ["--skills", "workbench", "commander"],
+            installer.main(base + ["--skills", "charter", "commander"],
                            env={}, cwd=project, out=messages.append)
             after = {(e["skill"], e["template"]): e["sha256"]
                      for e in json.loads(mpath.read_text(encoding="utf-8"))["templates"]}
@@ -2029,12 +2030,12 @@ class TemplateBaselineTests(unittest.TestCase):
             self.assertTrue(any("new template" in m for m in messages))
             # the genuinely-new template also gets an editable working copy
             self.assertTrue((troot / "COMMANDER_SPINE.template.json").is_file())
-            # existing workbench anchors are untouched (same shas, same baseline bytes)
+            # existing anchors are untouched (same shas, same baseline bytes)
             for key, sha in before.items():
                 self.assertEqual(after[key], sha)
             self.assertEqual(
-                wb_baseline,
-                (troot / ".baseline" / "constellation-workbench" / "WORKFLOW_CLOSEOUT.template.md")
+                anchor_baseline,
+                (troot / ".baseline" / "constellation-charter" / "CHARTER.template.json")
                 .read_text(encoding="utf-8"),
             )
 
@@ -2047,15 +2048,15 @@ class TemplateBaselineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
             args = ["--agent", "claude", "--scope", "project", "--project", str(project),
-                    "--baseline-only", "--skills", "workbench"]
+                    "--baseline-only", "--skills", "charter"]
             installer.main(args, env={}, cwd=project, out=lambda _l: None)
             troot = project / ".agent-work" / "templates"
-            closeout_wc = troot / "WORKFLOW_CLOSEOUT.template.md"
-            self.assertTrue(closeout_wc.is_file())  # fresh install seeded it
-            closeout_wc.unlink()  # project opts out of tracking it locally
+            tracked_wc = troot / "CHARTER.template.json"
+            self.assertTrue(tracked_wc.is_file())  # fresh install seeded it
+            tracked_wc.unlink()  # project opts out of tracking it locally
 
             installer.main(args, env={}, cwd=project, out=lambda _l: None)  # reinstall
-            self.assertFalse(closeout_wc.exists())  # not backfilled (already tracked)
+            self.assertFalse(tracked_wc.exists())  # not backfilled (already tracked)
 
     def test_user_scope_install_writes_no_baseline(self):
         installer = load_installer()
@@ -2064,7 +2065,7 @@ class TemplateBaselineTests(unittest.TestCase):
             dest = Path(tmp) / "skills"
             installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _line: None,
             )
             self.assertFalse((Path(tmp) / ".agent-work").exists())
@@ -2076,7 +2077,7 @@ class TemplateBaselineTests(unittest.TestCase):
             project = Path(tmp)
             installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
-                 "--skills", "commander", "workbench"],
+                 "--skills", "commander", "charter"],
                 env={}, cwd=project, out=lambda _line: None,
             )
             templates_root = project / ".agent-work" / "templates"
@@ -3157,7 +3158,7 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
                     f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
                 )
 
-    def test_source_wiring_does_not_need_the_workbench_skill_installed(self):
+    def test_source_wiring_does_not_need_an_installed_copy(self):
         """The installed-copy precondition is about the install; source wiring
         points somewhere else entirely, so requiring it would be refusing on a
         ground that does not apply."""
@@ -3433,7 +3434,7 @@ class ReadinessSkillsCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "skills"
             target.mkdir()
-            (target / "constellation-workbench").mkdir()  # skill dir with no CORPUS.json
+            (target / "constellation-charter").mkdir()  # skill dir with no CORPUS.json
             result = installer.check_skills_installed(target)
         self.assertFalse(result.ready)
         self.assertIn("CORPUS.json", result.reason)
@@ -3443,10 +3444,10 @@ class ReadinessSkillsCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "skills"
             target.mkdir()
-            (target / "constellation-workbench").mkdir()
+            (target / "constellation-charter").mkdir()
             (target / "CORPUS.json").write_text("{}", encoding="utf-8")
             result = installer.check_skills_installed(
-                target, expected_skills=["constellation-workbench", "constellation-implementer"])
+                target, expected_skills=["constellation-charter", "constellation-implementer"])
         self.assertFalse(result.ready)
         self.assertIn("constellation-implementer", result.reason)
 
@@ -3455,11 +3456,11 @@ class ReadinessSkillsCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "skills"
             target.mkdir()
-            (target / "constellation-workbench").mkdir()
+            (target / "constellation-charter").mkdir()
             (target / "constellation-implementer").mkdir()
             (target / "CORPUS.json").write_text("{}", encoding="utf-8")
             result = installer.check_skills_installed(
-                target, expected_skills=["constellation-workbench", "constellation-implementer"])
+                target, expected_skills=["constellation-charter", "constellation-implementer"])
         self.assertTrue(result.ready)
 
     def test_check_skills_installed_ready_with_no_expected_skills_given(self):
@@ -3469,7 +3470,7 @@ class ReadinessSkillsCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "skills"
             target.mkdir()
-            (target / "constellation-workbench").mkdir()
+            (target / "constellation-charter").mkdir()
             (target / "CORPUS.json").write_text("{}", encoding="utf-8")
             result = installer.check_skills_installed(target)
         self.assertTrue(result.ready)
@@ -3766,7 +3767,7 @@ class ReadinessTriStateTests(_MultiHookFixture):
                 ["git", "-c", "user.email=t@e.com", "-c", "user.name=T",
                  "commit", "-qm", "init"], cwd=str(project), capture_output=True)
             install = ["--agent", "claude", "--scope", "project",
-                       "--project", str(project), "--skills", "workbench"]
+                       "--project", str(project), "--skills", "charter"]
             self.assertEqual(0, installer.main(install, env={}, cwd=project, out=lambda _: None))
 
             lines = []
@@ -3835,7 +3836,7 @@ class NoInterpreterOnHostTests(unittest.TestCase):
                     with self.assertRaises(SystemExit) as raised:
                         installer.main(
                             ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                             "--skills", "workbench"],
+                             "--skills", "charter"],
                             env={}, out=lambda _: None,
                         )
             self.assertNotEqual(0, raised.exception.code)
@@ -3855,11 +3856,11 @@ class NoInterpreterOnHostTests(unittest.TestCase):
             dest = Path(tmp) / "skills"
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _: None,
             )
             self.assertEqual(0, code)
-            self.assertTrue((dest / "constellation-workbench").is_dir())
+            self.assertTrue((dest / "constellation-charter").is_dir())
 
     # -- caller 2: --dry-run --------------------------------------------------
 
@@ -3877,7 +3878,7 @@ class NoInterpreterOnHostTests(unittest.TestCase):
                     with self.assertRaises(SystemExit) as raised:
                         installer.main(
                             ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                             "--skills", "workbench", "--dry-run"],
+                             "--skills", "charter", "--dry-run"],
                             env={}, out=lambda _: None,
                         )
             self.assertNotEqual(0, raised.exception.code)
@@ -3889,7 +3890,7 @@ class NoInterpreterOnHostTests(unittest.TestCase):
             lines = []
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench", "--dry-run"],
+                 "--skills", "charter", "--dry-run"],
                 env={}, out=lines.append,
             )
             self.assertEqual(0, code)
@@ -3910,7 +3911,7 @@ class NoInterpreterOnHostTests(unittest.TestCase):
             with self._no_interpreter(installer):
                 code = installer.main(
                     ["--agent", "claude", "--scope", "project", "--project", str(project),
-                     "--skills", "workbench", "--baseline-only"],
+                     "--skills", "charter", "--baseline-only"],
                     env={}, cwd=project, out=lambda _: None,
                 )
             self.assertEqual(0, code, "--baseline-only refused despite needing no interpreter")
@@ -4017,7 +4018,7 @@ class ReadinessCLITests(unittest.TestCase):
             dest = Path(tmp) / "skills"
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                 "--skills", "workbench", "--wire-hooks"],
+                 "--skills", "charter", "--wire-hooks"],
                 env={}, out=lambda _: None,
             )
             self.assertEqual(0, code)
@@ -4025,7 +4026,7 @@ class ReadinessCLITests(unittest.TestCase):
             lines = []
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                 "--skills", "workbench", "--check-readiness", "--project", str(project)],
+                 "--skills", "charter", "--check-readiness", "--project", str(project)],
                 env={}, cwd=project, out=lines.append,
             )
         self.assertEqual(0, code)
@@ -4177,7 +4178,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             before = mcp_config.read_text(encoding="utf-8")
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _: None, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4191,7 +4192,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             lines = []
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lines.append, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4212,7 +4213,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             before = mcp_config.read_text(encoding="utf-8")
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4237,7 +4238,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             with mock.patch.object(installer.subprocess, "run", side_effect=only_py_answers):
                 code = installer.main(
                     ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                     "--skills", "workbench"],
+                     "--skills", "charter"],
                     env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
                 )
             self.assertEqual(0, code)
@@ -4253,7 +4254,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             mcp_config = Path(tmp) / "nonexistent" / ".mcp.json"
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4268,7 +4269,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             lines = []
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench", "--dry-run"],
+                 "--skills", "charter", "--dry-run"],
                 env={}, out=lines.append, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4303,7 +4304,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             before = mcp_config.read_text(encoding="utf-8")
             code = installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
-                 "--skills", "workbench", "--baseline-only"],
+                 "--skills", "charter", "--baseline-only"],
                 env={}, cwd=project, out=lambda _: None,
                 wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
@@ -4329,7 +4330,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
                     with self.assertRaises(SystemExit) as raised:
                         installer.main(
                             ["--agent", "claude", "--scope", "user",
-                             "--dest", str(Path(tmp) / "skills"), "--skills", "workbench"],
+                             "--dest", str(Path(tmp) / "skills"), "--skills", "charter"],
                             env={}, out=lambda _: None,
                             wire_repo_mcp_config=True, mcp_config_path=mcp_config,
                         )
@@ -4394,7 +4395,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             try:
                 code = installer.main(
                     ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                     "--skills", "workbench"],
+                     "--skills", "charter"],
                     env={}, out=lambda _: None, wire_repo_mcp_config=True,
                 )
             finally:

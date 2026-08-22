@@ -5,7 +5,7 @@ description: Run map-first architecture audit. Use when looking for bad patterns
 
 # Constellation Scout
 
-Find architecture trouble from map truth. Drive `templates/SCOUT.template.json` as a `gated` checklist through the engine (workbench `references/checklist-engine.md`).
+Find architecture trouble from map truth. Drive `templates/SCOUT.template.json` as a `gated` checklist through the engine (`references/checklist-engine.md`).
 
 Drive every step through the checklist engine and finish its sequence — final `advance`, then `release`, as journaled actions. Work the engine never saw did not happen. Full completion doctrine: `_shared/global-everyone.md`.
 

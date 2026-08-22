@@ -45,7 +45,7 @@ class CheckSkillFreshnessTests(unittest.TestCase):
         self.project.mkdir(parents=True)
         installer.main(
             ["--agent", "claude", "--scope", "project", "--project", str(self.project),
-             "--skills", "workbench"],
+             "--skills", "commander"],
             env={}, cwd=self.project, out=lambda _line: None,
         )
 
@@ -63,25 +63,28 @@ class CheckSkillFreshnessTests(unittest.TestCase):
     # deleting these tests would silently drop the only coverage of its upstream-changed,
     # baseline-promoted, project-customized and both-changed statuses. They are pointed at
     # two surviving workbench templates instead; not one assertion about the behaviour
-    # under test changed.
+    # under test changed. RETARGETED AGAIN by #639, for the same reason and with
+    # the same non-effect: `workbench` is retired, so the subject is now a
+    # template the commander skill ships. What is under test is
+    # check_skill_freshness's four statuses, never the template that carries them.
     def test_upstream_change_detected_and_baseline_promotion(self):
         upstream = (
-            self.skills_root / "constellation-workbench" / "templates" / "WORKFLOW_CLOSEOUT.template.md"
+            self.skills_root / "constellation-commander" / "templates" / "MISSION_FRAME.template.md"
         )
         upstream.write_text(upstream.read_text(encoding="utf-8") + "\nupstream change\n", encoding="utf-8")
 
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["WORKFLOW_CLOSEOUT.template.md"], "upstream-changed")
+        self.assertEqual(statuses["MISSION_FRAME.template.md"], "upstream-changed")
 
         self.m.update_baseline(self.project, self.skills_root)
         # A project-local working copy is now seeded at install, so promoting the
         # baseline alone leaves that copy stale (it reads project-customized until
         # reconciled). The reconcile step brings the working copy up to the new
         # upstream too; then it reads up-to-date.
-        local = self.project / ".agent-work" / "templates" / "WORKFLOW_CLOSEOUT.template.md"
+        local = self.project / ".agent-work" / "templates" / "MISSION_FRAME.template.md"
         local.write_text(upstream.read_text(encoding="utf-8"), encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["WORKFLOW_CLOSEOUT.template.md"], "up-to-date")
+        self.assertEqual(statuses["MISSION_FRAME.template.md"], "up-to-date")
         manifest = json.loads(
             (self.project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json").read_text(
                 encoding="utf-8"
@@ -93,14 +96,14 @@ class CheckSkillFreshnessTests(unittest.TestCase):
         local = self.project / ".agent-work" / "templates" / "CONSTELLATION_FEEDBACK.template.md"
         baseline = (
             self.project / ".agent-work" / "templates" / ".baseline"
-            / "constellation-workbench" / "CONSTELLATION_FEEDBACK.template.md"
+            / "constellation-commander" / "CONSTELLATION_FEEDBACK.template.md"
         )
         local.write_text(baseline.read_text(encoding="utf-8") + "\nproject custom field\n", encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
         self.assertEqual(statuses["CONSTELLATION_FEEDBACK.template.md"], "project-customized")
 
         upstream = (
-            self.skills_root / "constellation-workbench" / "templates" / "CONSTELLATION_FEEDBACK.template.md"
+            self.skills_root / "constellation-commander" / "templates" / "CONSTELLATION_FEEDBACK.template.md"
         )
         upstream.write_text(upstream.read_text(encoding="utf-8") + "\nupstream change\n", encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}

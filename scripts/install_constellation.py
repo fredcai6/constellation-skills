@@ -17,6 +17,7 @@ from typing import Callable, Iterable, Mapping, Sequence
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = REPO_ROOT / "skills"
 SHARED_REFERENCE_ROOT = SOURCE_ROOT / "_shared"
+SHARED_TEMPLATE_ROOT = SHARED_REFERENCE_ROOT / "templates"
 
 
 class InstallError(Exception):
@@ -30,6 +31,7 @@ class Skill:
     source_path: Path
     required_scripts: tuple[str, ...]
     required_references: tuple[str, ...]
+    required_templates: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -269,10 +271,34 @@ ENGINE_BUNDLE_SCRIPTS: tuple[str, ...] = expand_script_bundle(ENGINE_BUNDLE_ROOT
 # audience Venn is enforced by which buckets a skill carries: everyone-global is shared
 # by all; the tier buckets reach only their tier. A role reads its own bucket(s) at the
 # checklist context-read step; the project supplies thin local deltas under docs/agents/.
-_GLOBAL_EVERYONE = ("global-everyone.md", "windows.md")
-_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md", "design-it-twice-brief.md", "windows.md")
-_GLOBAL_CREW = ("global-everyone.md", "global-crew.md", "windows.md")
-_GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md", "windows.md")
+# Shared TEMPLATES, bundled into each skill's templates/ exactly as the shared
+# references are bundled into its references/ (#639). Before this table only
+# references had a shared-bundling mechanism: a skill's templates arrived solely
+# through the wholesale copytree of its own directory, so a template two skills
+# both needed had to live in a third skill they could point at -- which is one of
+# the things that kept `workbench` alive as a wrapper after its teaching was cut.
+# The alternative was a copy per consumer, and two copies of a file that must not
+# drift is the failure `_shared/` exists to prevent.
+SKILL_TEMPLATE_BUNDLES: dict[str, tuple[str, ...]] = {
+    # The crash-resume state note: both spine templates name it as the fallback
+    # when a project carries no .agent-work/templates/ overlay, and
+    # verify_state_note.py is the gate that reads what it produces.
+    "admiral": ("STATE_NOTE.template.md", "CONSTELLATION_FEEDBACK.template.md"),
+    "commander": ("STATE_NOTE.template.md", "CONSTELLATION_FEEDBACK.template.md"),
+    # commander-delegated cites the feedback template but never stands up a work
+    # area (the Admiral does it), so it needs no state note.
+    "commander-delegated": ("CONSTELLATION_FEEDBACK.template.md",),
+}
+
+# `checklist-engine.md` is in every tuple because `global-everyone.md` -- which
+# every skill carries -- cites it by name. Before #639 it lived under the
+# `workbench` skill and every citation was a CROSS-PACKAGE pointer that only
+# resolved if that skill happened to be installed; bundled here it is a local
+# `references/checklist-engine.md` in each skill that names it.
+_GLOBAL_EVERYONE = ("global-everyone.md", "windows.md", "checklist-engine.md")
+_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md", "design-it-twice-brief.md", "windows.md", "checklist-engine.md")
+_GLOBAL_CREW = ("global-everyone.md", "global-crew.md", "windows.md", "checklist-engine.md")
+_GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md", "windows.md", "checklist-engine.md")
 SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     # admiral and commander stand up a worktree/work area themselves (issue #610);
     # commander-delegated never does (the Admiral does it for them), so it stays on
@@ -280,14 +306,13 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "admiral": _GLOBAL_ORCHESTRATOR + ("stand-up-work-area.md",),
     "commander-delegated": _GLOBAL_ORCHESTRATOR,
     "charter": _GLOBAL_ALL_TIERS,  # the baseline Charter elicits project deltas from
-    "commander": _GLOBAL_ORCHESTRATOR + ("stand-up-work-area.md",),
-    "workbench": _GLOBAL_ALL_TIERS,  # generic driver for either tier
+    "commander": _GLOBAL_ORCHESTRATOR + ("stand-up-work-area.md", "status-model.md"),
     "interrogator": _GLOBAL_EVERYONE,
     "cartographer": _GLOBAL_ORCHESTRATOR,
     "docent": _GLOBAL_ORCHESTRATOR,
     "scout": _GLOBAL_ORCHESTRATOR,
-    "implementer": _GLOBAL_CREW,
-    "reviewer": _GLOBAL_CREW,
+    "implementer": _GLOBAL_CREW + ("status-model.md",),
+    "reviewer": _GLOBAL_CREW + ("status-model.md",),
     "triage": _GLOBAL_ORCHESTRATOR,
     "explorer": _GLOBAL_ORCHESTRATOR,
     "prototyper": _GLOBAL_CREW,
@@ -356,6 +381,7 @@ def discover_skills(source_root: Path = SOURCE_ROOT) -> list[Skill]:
                 required_scripts=expand_script_bundle(
                     SKILL_SCRIPT_BUNDLES.get(source_path.name, ())),
                 required_references=SKILL_REFERENCE_BUNDLES.get(source_path.name, ()),
+                required_templates=SKILL_TEMPLATE_BUNDLES.get(source_path.name, ()),
             )
         )
 
@@ -401,6 +427,18 @@ def validate_required_scripts(skills: Iterable[Skill], scripts_root: Path = REPO
                 missing.append(f"{skill.install_name}: {source}")
     if missing:
         raise InstallError(f"required script(s) missing: {'; '.join(missing)}")
+
+
+def validate_required_templates(
+    skills: Iterable[Skill], shared_root: Path = SHARED_TEMPLATE_ROOT
+) -> None:
+    missing: list[str] = []
+    for skill in skills:
+        for template in skill.required_templates:
+            if not (shared_root / template).is_file():
+                missing.append(f"{skill.install_name}: {shared_root / template}")
+    if missing:
+        raise InstallError(f"required template(s) missing: {'; '.join(missing)}")
 
 
 def validate_required_references(
@@ -2169,6 +2207,10 @@ def install_skills(
             reference_target = target / "references" / reference
             reference_target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(SHARED_REFERENCE_ROOT / reference, reference_target)
+        for template in skill.required_templates:
+            template_target = target / "templates" / template
+            template_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(SHARED_TEMPLATE_ROOT / template, template_target)
 
     if not dry_run:
         # Stamp the installed root with a CORPUS.json provenance marker, scoped to
@@ -2293,6 +2335,26 @@ def assert_corpus(run_skills_dir, expected_id: str) -> bool:
     return compute_corpus_id(run_skills_dir) == expected_id
 
 
+def skill_template_sources(skill: Skill) -> list[Path]:
+    """Every template file an install of `skill` writes into its templates/ dir.
+
+    Two sources since #639, not one: the skill's own `templates/` directory, and
+    the shared templates bundled into it from `_shared/templates/`. The three
+    baseline/working-copy walks below all read THIS, because a walk that saw only
+    the first source would anchor no baseline for a shared template -- and
+    check_skill_freshness, which reads the manifest, would then never report an
+    upstream change to one. Sorted by name so the manifest is stable run to run
+    regardless of which source a template came from.
+    """
+    found: dict[str, Path] = {}
+    own = skill.source_path / "templates"
+    if own.is_dir():
+        found.update({p.name: p for p in own.iterdir() if p.is_file()})
+    for name in skill.required_templates:
+        found[name] = SHARED_TEMPLATE_ROOT / name
+    return [found[name] for name in sorted(found)]
+
+
 def write_template_baselines(
     skills: Sequence[Skill],
     project_root: Path,
@@ -2329,12 +2391,7 @@ def write_template_baselines(
     entries: list[dict[str, str]] = []
     seeded: set[tuple[str, str]] = set()
     for skill in skills:
-        source_templates = skill.source_path / "templates"
-        if not source_templates.is_dir():
-            continue
-        for template in sorted(source_templates.iterdir()):
-            if not template.is_file():
-                continue
+        for template in skill_template_sources(skill):
             target = baseline_root / skill.install_name / template.name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(template, target)
@@ -2393,12 +2450,7 @@ def extend_template_baselines(
 
     added: set[tuple[str, str]] = set()
     for skill in skills:
-        source_templates = skill.source_path / "templates"
-        if not source_templates.is_dir():
-            continue
-        for template in sorted(source_templates.iterdir()):
-            if not template.is_file():
-                continue
+        for template in skill_template_sources(skill):
             if (skill.install_name, template.name) in tracked:
                 continue  # already tracked — never re-anchor an existing baseline
             target = baseline_root / skill.install_name / template.name
@@ -2455,12 +2507,7 @@ def write_template_working_copies(
     templates_root = project_root / ".agent-work" / "templates"
     seeded = 0
     for skill in skills:
-        source_templates = skill.source_path / "templates"
-        if not source_templates.is_dir():
-            continue
-        for template in sorted(source_templates.iterdir()):
-            if not template.is_file():
-                continue
+        for template in skill_template_sources(skill):
             if (skill.install_name, template.name) not in only:
                 continue  # only seed templates entering tracking this run
             target = templates_root / template.name
@@ -2605,6 +2652,7 @@ def main(
         skills = select_skills(args.skills, discover_skills())
         validate_required_scripts(skills)
         validate_required_references(skills)
+        validate_required_templates(skills)
 
         if args.wire_hooks:
             # Refuse EARLY, before anything is written. An installer that

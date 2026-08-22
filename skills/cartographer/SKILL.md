@@ -24,4 +24,4 @@ Scout reports map-quality audit candidates only; it never edits the map. For eac
 
 Promote only accepted current truth; reject what fails the Inclusion Rule; route the rest.
 
-Templates: `templates/CARTOGRAPHER.template.json`, `templates/ARCHITECTURE_PACKET.template.md`, `templates/ARCHITECTURE_INDEX.template.md`, `templates/ARCHITECTURE_DECISION.template.md`, `templates/MAP_BUILD.template.md`. References: `references/map-model.md`, workbench `references/checklist-engine.md`.
+Templates: `templates/CARTOGRAPHER.template.json`, `templates/ARCHITECTURE_PACKET.template.md`, `templates/ARCHITECTURE_INDEX.template.md`, `templates/ARCHITECTURE_DECISION.template.md`, `templates/MAP_BUILD.template.md`. References: `references/map-model.md`, `references/checklist-engine.md`.

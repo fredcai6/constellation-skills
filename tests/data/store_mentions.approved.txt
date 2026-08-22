@@ -160,14 +160,8 @@ skills/commander-delegated/SKILL.md:Commander-core's `archive` step is mode-neut
 # commander spine step table, feedback row: names the store's only write path and the capture gate that proves the write landed
 skills/commander/references/commander-core.md:| feedback | this context — reflect on the run, then record what happened as episodes and apply them via `scripts/apply_episode_delta.py` (the only write path; never hand-edit under `episodes/`), proved by `scripts/verify_episode_captured.py` |
 
-# workbench layout note: says a run's record lives in the store rather than under .agent-work/, names the write path, and states the record-not-a-rule property
-skills/workbench/SKILL.md:What a run learned is not kept here. It is recorded as **episodes** under the repo-root `episodes/` directory, written at the Commander's `feedback` step through `scripts/apply_episode_delta.py` — the store's only write path — and never hand-edited. An episode is a record of what happened, not a rule for a later agent to follow.
-
 # constellation-export template field: cites an originating episode id as the export's stable identity -- an identifier reference, not an instruction to read the store
-skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md:- **Episode:** `<originating episode id from episodes/ (stable identity), or n/a>`
-
-# closeout template, episode-capture section: names the write path and the capture gate the Commander confirms passed
-skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md:through `scripts/apply_episode_delta.py` and proved by `scripts/verify_episode_captured.py`.
+skills/_shared/templates/CONSTELLATION_FEEDBACK.template.md:- **Episode:** `<originating episode id from episodes/ (stable identity), or n/a>`
 
 # superseding header on a retired design record: names where the CURRENT loop lives so a reader of the history is not left following it -- a write path and a denial of the read path, not an instruction to consult the store
 docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> `episodes/`, written only through `scripts/apply_episode_delta.py` and proved by
