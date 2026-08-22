@@ -2370,8 +2370,36 @@ class _HookWiringFixture(unittest.TestCase):
                 "hooks": [{"type": "command", "command": command, "timeout": 10}]}
 
     @staticmethod
+    def _resolve_bash_executable() -> str:
+        """The real Git Bash executable to run a `"shell": "bash"` entry
+        under -- NEVER the bare string `"bash"` handed straight to
+        `subprocess.run`'s argv. On Windows, `subprocess.run(["bash", ...])`
+        resolves that bare name through Win32's `CreateProcess` search order,
+        which checks `%SystemRoot%\\System32` BEFORE the `PATH` directories
+        -- so a bare `"bash"` silently runs the built-in WSL launcher stub
+        instead of Git for Windows' real bash, even when Git's own `bin/` is
+        earlier in `PATH`. Confirmed on Windows CI by this exact class: rc=1,
+        `stdout="Windows Subsystem for Linux has no installed
+        distributions."` (UTF-16, the WSL stub's own console output),
+        `stderr=""` -- indistinguishable from "the command did not run" by
+        return code alone, but for the WRONG reason: bash itself never
+        launched the real command.
+
+        `shutil.which("bash")` does a plain left-to-right `PATH` scan and is
+        NOT subject to that search-order quirk -- the identical fix already
+        established in this repo for the identical hazard
+        (`scripts/checklist_engine.py` / `scripts/generate_spine.py`'s
+        `_find_posix_shell()`, not reused here directly since it resolves
+        ANY POSIX shell with a git-derived backstop, a broader question than
+        this helper -- which only ever needs to honour a literal `"bash"`
+        pin -- needs to ask). Falls back to the bare literal only when
+        `which` finds nothing at all, so a caller here still gets the same
+        honest `FileNotFoundError` it would have gotten before, rather than a
+        new, more confusing failure mode when no bash exists anywhere."""
+        return shutil.which("bash") or "bash"
+
     def _run_hook_command(
-        command: str, shell: str | None, stdin_payload: object = None,
+        self, command: str, shell: str | None, stdin_payload: object = None,
         *, env: dict | None = None,
     ) -> subprocess.CompletedProcess:
         """Execute `command` through the shell the ENTRY ITSELF declares --
@@ -2406,12 +2434,16 @@ class _HookWiringFixture(unittest.TestCase):
         `build_hook_entry` ever emits. A `shell` this helper does not
         recognise is a REAL gap in test coverage, not something to paper over
         by falling back to `shell=True` -- so it raises rather than
-        guessing."""
+        guessing. The bash EXECUTABLE it runs under is resolved by
+        `_resolve_bash_executable`, never a bare `"bash"` -- see that
+        method's docstring for the Windows CI failure this fixes (a second,
+        independent bug found underneath the first: bash resolving to the
+        WSL launcher stub instead of Git Bash)."""
         stdin_text = "{}" if stdin_payload is None else json.dumps(stdin_payload)
         run_env = {**os.environ, "PYTHONIOENCODING": "utf-8", **(env or {})}
         if shell == "bash":
             return subprocess.run(
-                ["bash", "-c", command], input=stdin_text,
+                [self._resolve_bash_executable(), "-c", command], input=stdin_text,
                 capture_output=True, text=True, env=run_env,
             )
         raise NotImplementedError(
@@ -2726,6 +2758,36 @@ class HookWiringOptInTests(_HookWiringFixture):
             self._wire(tmp)
             hook = self._entries(tmp)[0]["hooks"][0]
             self.assertEqual("bash", hook.get("shell"))
+
+    def test_run_hook_command_resolves_bash_via_which_not_a_bare_literal(self):
+        """The SECOND Windows CI bug found underneath the first: even with
+        `"shell": "bash"` honoured, `subprocess.run(["bash", "-c", ...])`
+        resolved to the WSL launcher stub on the Windows runner --
+        `subprocess.run` given a bare program name goes through Win32's
+        `CreateProcess` search order, which checks `%SystemRoot%\\System32`
+        (where Windows ships a `bash.exe` shim for WSL) BEFORE `PATH`, even
+        when Git Bash's own `bin/` is earlier in `PATH`. Measured on that CI
+        run: rc=1, `stdout` was the WSL stub's own message ("Windows
+        Subsystem for Linux has no installed distributions."), `stderr`
+        empty -- indistinguishable from "the command did not run" by return
+        code alone, but for the wrong reason.
+
+        `shutil.which("bash")` does a plain left-to-right PATH scan and is
+        not subject to that quirk (the same fix already established in this
+        repo for the identical hazard -- `scripts/checklist_engine.py` /
+        `scripts/generate_spine.py`'s `_find_posix_shell()`). This proves
+        `_run_hook_command` actually calls it and uses ITS answer, not the
+        bare literal, by patching both `shutil.which` and `subprocess.run`
+        and inspecting the argv `subprocess.run` was actually called with."""
+        fake_bash = "/opt/git-for-windows/bin/bash.exe"
+        with mock.patch.object(shutil, "which", return_value=fake_bash) as which:
+            with mock.patch.object(
+                subprocess, "run",
+                return_value=subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr=""),
+            ) as run:
+                self._run_hook_command("true", "bash")
+        which.assert_called_once_with("bash")
+        self.assertEqual([fake_bash, "-c", "true"], run.call_args.args[0])
 
     def test_the_wired_command_string_actually_executes(self):
         """Run the generated command EXACTLY as Claude Code would -- same string,
