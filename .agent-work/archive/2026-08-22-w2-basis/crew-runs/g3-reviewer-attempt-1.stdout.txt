@@ -1,0 +1,10 @@
+The g3 review is complete: **APPROVE**.
+
+Independent verification confirmed every claim in the implementer's account:
+- The `because`-count explanation is correct — all 3 hits are the nested `basis.because` sub-field on `plan.c2/c4/c5`, not a stray top-level collision.
+- The addendum is a pure append (dated, SHA-pinned to `9d5aac6d`, matching HEAD), with prior census prose byte-identical.
+- No excluded g1/g2 files were touched further in this gate.
+- The map build is deterministic (reproduced byte-identical), map-freshness tests pass (239/102 subtests), and the full suite reproduces exactly: 3642 passed, 6 skipped, 1274 subtests.
+- Fowler pass: 12/12 smells absent (docs-only diff).
+
+Survey driven through the engine at `.agent-work/w2-basis/g3-review/review.json`, result written to `.agent-work/w2-basis/crew-handoffs/g3-reviewer-result.md`, lease released. This closes out wave 2's last engineering gate — Commander can proceed to reconcile/triage/review/feedback/archive.

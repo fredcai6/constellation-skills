@@ -1,0 +1,220 @@
+{
+  "work_id": "w2-basis-g3",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-addendum",
+    "m2-map-build",
+    "m3-full-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the g3 handoff (.agent-work/w2-basis/crew-handoffs/g3-implementer-handoff.md), this skill's references/global-crew.md and references/global-everyone.md, and the existing docs/CHECK_SCRIPT_CENSUS.md section at lines 108-152 (generate_spine.py disposition) this gate extends. Confirm the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions) and that the cited line numbers still locate the section. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + census section read; handoff complete; insertion point at lines 108-152 confirmed unambiguous",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff read (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present); census section confirmed at lines 108-152, generate_spine.py disposition, insertion point unambiguous"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-addendum": {
+      "id": "m1-addendum",
+      "title": "Add dated addendum to docs/CHECK_SCRIPT_CENSUS.md",
+      "imperative": "Re-run `grep -c '\"because\"' skills/commander/templates/COMMANDER_SPINE.template.json` and `grep -c '\"basis\"' skills/commander/templates/COMMANDER_SPINE.template.json` fresh, at current HEAD. Add a short, dated addendum (cite the git SHA) to docs/CHECK_SCRIPT_CENSUS.md immediately after the generate_spine.py disposition section (around line 152) stating: 3 of the 19 check:null conditions (plan.c2, plan.c4, plan.c5) now carry a basis field (epic-569 w2-basis); basis is a distinct mechanism from generate_spine.py's because-in-compile-step convention (report-only locator + always-attached basis-check evidence, vs. prose-folded-into-statement) and is unaffected by this section's disposition of the compiler. Do not rewrite or alter any prior committed prose in the section, only append. Attest c1 with the fresh grep outputs recorded as evidence (attach evidence_type=grep-result).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff and census section confirmed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "addendum appended (not a rewrite of prior prose), dated, SHA-cited; fresh grep outputs for because and basis pasted verbatim as evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "addendum appended after generate_spine.py disposition section (before #368/#444 heading), dated 2026-08-22, SHA 9d5aac6d cited; fresh grep: because=3 basis=3, explained as key-name collision (basis's optional 'because' rationale sub-field vs generate_spine.py's compile-time convention)"
+        }
+      ],
+      "constraints": [
+        "do not touch scripts/checklist_engine.py, docs/CHECKLIST_SCHEMA.md, skills/commander/templates/COMMANDER_SPINE.template.json, overlay copies, or tests/test_checklist_engine.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-addendum-1",
+          "type": "grep-result",
+          "payload": {
+            "sha": "9d5aac6daa58a72fc6a665cb39879ee5705f7f71",
+            "because_count": "3",
+            "basis_count": "3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-map-build": {
+      "id": "m2-map-build",
+      "title": "Rebuild the repo map and confirm freshness",
+      "imperative": "Run `python -m scripts.code_map build --root .` and confirm it completes. Run `git status --porcelain map/` and report whether map/INDEX.md or map/ids.jsonl changed (this wave added no new Python symbols, so a no-op is expected but must be confirmed, not assumed). Run the map-freshness test and confirm it passes. Attest c1 with both outputs recorded.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "addendum written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "addendum written and confirmed above"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "code_map build completes; git status --porcelain map/ output reported verbatim; map-freshness test passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "code_map build completed in 3.034s; git status --porcelain map/ shows map/INDEX.md changed (entity counts for scripts.checklist_engine and tests.test_checklist_engine grew, reflecting g1/g2's basis-field additions -- NOT a no-op, contra handoff's tentative expectation), map/ids.jsonl unchanged; tests/test_code_map.py + tests/test_map_orient.py: 239 passed"
+        }
+      ],
+      "constraints": [
+        "only commit map/INDEX.md, map/ids.jsonl if the build actually changed them"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-map-build-1",
+          "type": "build-result",
+          "payload": {
+            "duration_s": "3.034",
+            "changed_files": "map/INDEX.md",
+            "ids_jsonl_changed": "false",
+            "freshness_tests": "239 passed, 102 subtests passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-full-suite": {
+      "id": "m3-full-suite",
+      "title": "Run the full local pytest suite",
+      "imperative": "Run `env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q` (the whole suite). Record exact pass/fail/skip counts. Per the handoff's stop condition, unrelated failures are reported, not fixed by this gate. Attest c1 with the counts recorded.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "map build confirmed",
+          "satisfied": true,
+          "satisfied_by": "map build confirmed above"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full pytest -q run completed; exact pass/fail/skip counts recorded as evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "full local pytest -q: 3642 passed, 6 skipped, 1274 subtests passed in 150.14s, 0 failures"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-full-suite-1",
+          "type": "test-result",
+          "payload": {
+            "passed": "3642",
+            "failed": "0",
+            "skipped": "6",
+            "subtests_passed": "1274",
+            "duration_s": "150.14"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/w2-basis/g3/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T18:17:20.488453+00:00",
+    "last_heartbeat": "2026-08-22T18:21:43.778845+00:00",
+    "claimed_by": "implementer",
+    "worktree": "/home/tommy/projects/569-w2-basis",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T18:22:25.468833+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:17:29.818334+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-addendum",
+      "why": "Addendum written extending (not rewriting) the generate_spine.py disposition; because-count discrepancy (0 expected, 3 measured) is explained by a key-name collision with basis's own optional rationale sub-field, not compiler reuse",
+      "mechanical": false,
+      "ts": "2026-08-22T18:18:05.967993+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-map-build",
+      "why": "map build is not a no-op: it picked up g1/g2's real symbol additions to checklist_engine.py and test_checklist_engine.py; map/INDEX.md refreshed accordingly, map/ids.jsonl unchanged, freshness tests green",
+      "mechanical": false,
+      "ts": "2026-08-22T18:18:57.268265+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-full-suite",
+      "why": "Full suite green (3642 passed, 6 skipped, 0 failures) confirms no regression from wave 2's basis-field change; gate complete",
+      "mechanical": false,
+      "ts": "2026-08-22T18:21:43.778837+00:00"
+    }
+  ]
+}

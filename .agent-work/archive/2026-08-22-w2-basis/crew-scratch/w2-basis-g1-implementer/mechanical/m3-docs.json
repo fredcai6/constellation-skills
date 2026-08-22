@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-docs",
+  "mechanical": {
+    "run": "w2-basis-g1-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-docs",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-basis-g1-implementer-m3-docs@90d8f33b6f60078e10d03e00be22be80f37e2ccb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-basis-g1-implementer",
+    "generated_at": "2026-08-22T17:48:11Z"
+  }
+}

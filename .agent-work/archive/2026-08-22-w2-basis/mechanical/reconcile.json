@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "w2-basis",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 8,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-basis-reconcile@d3a0fb628d655f5a2ef3389a29b4917c4bf88493",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-basis",
+    "generated_at": "2026-08-22T18:39:21Z"
+  }
+}

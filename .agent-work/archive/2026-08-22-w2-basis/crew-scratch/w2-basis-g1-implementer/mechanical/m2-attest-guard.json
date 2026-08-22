@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-attest-guard",
+  "mechanical": {
+    "run": "w2-basis-g1-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-attest-guard",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-basis-g1-implementer-m2-attest-guard@9a5b734f15101ee2d90e19a8183f6b70f7e602bc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-basis-g1-implementer",
+    "generated_at": "2026-08-22T17:46:22Z"
+  }
+}

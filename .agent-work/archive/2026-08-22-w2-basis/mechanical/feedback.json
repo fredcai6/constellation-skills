@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "w2-basis",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 10,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-basis-feedback@2335e66c1974899d00f005ecd91ef0f1a5dcf4ff",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-basis",
+    "generated_at": "2026-08-22T18:42:09Z"
+  }
+}

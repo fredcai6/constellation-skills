@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "mechanical": {
+    "run": "w2-basis-execute",
+    "project": "constellation-skills",
+    "spine-step": "g1-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-basis-execute-g1-integrate@1e901d7c0d9df32d7923009faa78b1d0602373ed",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "w2-basis-execute",
+    "generated_at": "2026-08-22T17:58:15Z"
+  }
+}

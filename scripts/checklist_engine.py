@@ -2602,6 +2602,10 @@ def _condition_view(c: dict) -> dict:
         "satisfied": bool(c.get("satisfied")),
         "waived": bool(c.get("waived")),
         "attested": bool(c.get("attested")),
+        # 569-w2-basis g1: pure passthrough of the stored `basis` dict (or
+        # None) -- same INV-2 rule as every other view field. render_human()
+        # decides whether/how to show it; state() never inspects it.
+        "basis": c.get("basis"),
     }
 
 
@@ -2884,6 +2888,32 @@ def _render_directive_lines(directives) -> list[str]:
     return []
 
 
+def _render_basis_line(basis) -> str | None:
+    """Format one condition's `basis` field for display (569-w2-basis g1):
+    a report-only locator authored on a `check: null` condition, telling the
+    agent WHERE the evidence for a qualitative assertion would live. Mirrors
+    the populated-only convention `_render_anchor_lines`/`_render_directive_
+    lines` already use, but returns a single line (not a list) since a
+    condition carries at most one basis. Returns None -- no line at all --
+    for a non-dict basis, an absent/empty `locator_kind`, or `abstain`
+    (abstain is the explicit "no locator, don't render, don't check" escape
+    hatch, per the epic's `ruling-decorative-basis-is-a-failure`: a locator
+    that renders but is never required would be exactly that decorative
+    failure, so `abstain` opts out of rendering too rather than rendering an
+    empty promise)."""
+    if not isinstance(basis, dict):
+        return None
+    kind = basis.get("locator_kind")
+    if not kind or kind == "abstain":
+        return None
+    locator = basis.get("locator") or {}
+    if kind == "file":
+        return f"    basis: file {locator.get('path', '')}"
+    if kind == "evidence_ref":
+        return f"    basis: evidence_ref {locator.get('task_id', '')}.{locator.get('cond_id', '')}"
+    return f"    basis: {kind}"
+
+
 def render_human(view: dict) -> str:
     """Human adapter: format a StateView as the text agents read from
     `current`. Pure presentation — every fact comes from `view`; this function
@@ -2931,7 +2961,11 @@ def render_human(view: dict) -> str:
     for which, open_conds in (("preconditions", open_pre), ("postconditions", open_post)):
         if open_conds:
             lines.append(f"{which}:")
-            lines.extend(f"  {c['id']} [unmet] {c['kind']} — {c['statement']}" for c in open_conds)
+            for c in open_conds:
+                lines.append(f"  {c['id']} [unmet] {c['kind']} — {c['statement']}")
+                basis_line = _render_basis_line(c.get("basis"))
+                if basis_line:
+                    lines.append(basis_line)
     total = len(active["preconditions"]) + len(active["postconditions"])
     if total:
         met = total - len(open_pre) - len(open_post)
@@ -3609,7 +3643,65 @@ def append(cl: dict, iid: str, title: str, imperative: str) -> str:
     return f"appended {iid}"
 
 
-def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None, evidence_id: str | None = None) -> str:
+def _resolve_basis_locator(cl: dict, base_dir: Path | None, basis: dict) -> str | None:
+    """569-w2-basis g1: resolve a `check: null` condition's `basis` locator.
+    Returns `None` when resolved, or a human-readable problem string when
+    not. NEVER raises -- the caller (`attest()`) is report-only by design
+    and always accepts the condition regardless of this result; this
+    function only decides what gets recorded in the `basis-check` evidence.
+
+    Two locator kinds only (`state_field`/`command` are named untaken roads,
+    out of scope this gate):
+
+    - `file`: touches the filesystem, resolved against `base_dir` the same
+      way `_collect_changed_files` resolves a git-change-policy path
+      (`root = base_dir or Path.cwd()`, then `root / path`) -- reusing that
+      convention rather than inventing a second one. `glob: true` requires
+      at least `min_matches` (default 1) matches under `root`; otherwise the
+      exact path must exist.
+    - `evidence_ref`: PURE -- reads `cl` only, no filesystem/subprocess.
+      Walks `cl["tasks"][task_id]`'s pre+postconditions for `cond_id` and
+      requires it `satisfied` with a non-null `satisfied_by`.
+
+    This is the one place `file` resolution touches the filesystem; keeping
+    it isolated here mirrors the git-change-policy evaluator/collector
+    purity split (docs/CHECKLIST_SCHEMA.md)."""
+    kind = basis.get("locator_kind")
+    locator = basis.get("locator") or {}
+    if kind == "file":
+        path = locator.get("path")
+        if not path:
+            return "file basis has no 'path'"
+        root = base_dir or Path.cwd()
+        if locator.get("glob"):
+            min_matches = locator.get("min_matches", 1)
+            matches = list(root.glob(path))
+            if len(matches) < min_matches:
+                return f"glob {path!r} under {root} matched {len(matches)}, need >= {min_matches}"
+            return None
+        if not (root / path).exists():
+            return f"file not found: {path} (under {root})"
+        return None
+    if kind == "evidence_ref":
+        task_id = locator.get("task_id")
+        cond_id = locator.get("cond_id")
+        if not task_id or not cond_id:
+            return "evidence_ref basis missing 'task_id'/'cond_id'"
+        t = cl.get("tasks", {}).get(task_id)
+        if t is None:
+            return f"evidence_ref: task {task_id!r} not found"
+        for which in ("preconditions", "postconditions"):
+            for c in t.get(which, []) or []:
+                if c.get("id") == cond_id:
+                    if c.get("satisfied") and c.get("satisfied_by"):
+                        return None
+                    return f"evidence_ref {task_id}.{cond_id} is not satisfied"
+        return f"evidence_ref: condition {cond_id!r} not found on {task_id!r}"
+    return f"unknown basis locator_kind {kind!r}"
+
+
+def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None,
+           evidence_id: str | None = None, base_dir: Path | None = None) -> str:
     """Satisfy a condition by attestation.
 
     Two paths:
@@ -3638,6 +3730,15 @@ def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None, evide
                 continue
             chk = c.get("check")
             if chk is None:
+                basis = c.get("basis")
+                if basis and basis.get("locator_kind") != "abstain":
+                    problem = _resolve_basis_locator(cl, base_dir, basis)
+                    attach(cl, iid, "basis-check", {
+                        "locator_kind": basis.get("locator_kind"),
+                        "locator": basis.get("locator"),
+                        "resolved": problem is None,
+                        "problem": problem,
+                    })
                 c["satisfied"] = True
                 c["satisfied_by"] = note or "attested"
                 return f"attested {iid}.{cond_id}"
@@ -4057,7 +4158,8 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
             raise EngineError(f"amend: cannot read delta {args.delta!r}: {exc}")
         return amend(cl, delta, args.reason, args.authority, base_dir=base_dir)
     if v == "attest":
-        return attest(cl, args.id, args.cond, args.which, args.note, evidence_id=getattr(args, "evidence", None))
+        return attest(cl, args.id, args.cond, args.which, args.note,
+                      evidence_id=getattr(args, "evidence", None), base_dir=base_dir)
     if v == "waive":
         return waive(cl, args.id, args.cond, args.which, args.authority, args.reason, forced=args.force)
     if v == "attach":

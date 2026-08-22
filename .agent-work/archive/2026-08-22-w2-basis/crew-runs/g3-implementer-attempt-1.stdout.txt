@@ -1,0 +1,8 @@
+The g3 gate is complete. Summary:
+
+- Appended a dated, SHA-cited addendum to `docs/CHECK_SCRIPT_CENSUS.md` explaining the 3 new `basis` fields (`plan.c2/c4/c5`) and how `basis` differs from `generate_spine.py`'s `because` convention — without touching prior committed prose.
+- **Caught a real discrepancy**: the handoff expected `grep -c '"because"'` to stay 0, but it measured 3 — traced to `basis`'s own optional nested `because` rationale sub-field (a key-name collision, not compiler reuse) and documented that in the addendum.
+- Ran `code_map build` — it was **not** a no-op as the handoff guessed; `map/INDEX.md` refreshed to reflect real symbol growth from g1/g2's engine and test changes. Map-freshness tests: 239 passed.
+- Full suite: **3642 passed, 6 skipped, 0 failures**.
+- Drove my own plan through the checklist-engine CLI rather than the parent Commander's bound spine (per this crew's `crew-runs.json` entry showing `"spine": null` — the env's `SPINE_*` pointed at the Commander's `execute.json`, not mine), consistent with prior sessions' handling of this same dispatch shape.
+- Result written to `.agent-work/w2-basis/crew-handoffs/g3-implementer-result.md`.
