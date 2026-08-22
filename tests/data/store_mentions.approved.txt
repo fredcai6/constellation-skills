@@ -12,9 +12,24 @@
 # playbook coming back under a new name, and it is how #308's retirement was undone.
 #
 # SEEDED at #447 g1 against the untouched tree, so the leg is green by construction
-# here and goes red the moment g3 moves the store's mentions around. Zero entries sit
-# under skills/ -- no skill instructs an agent about the store today, and that is the
-# property most worth keeping.
+# here and goes red the moment g3 moves the store's mentions around.
+#
+# This block used to read "Zero entries sit under skills/ -- no skill instructs an
+# agent about the store today, and that is the property most worth keeping." Exactly
+# ONE entry sits under skills/ now, and the substantive property is intact: that
+# entry is a WRITE-path mention (it names apply_episode_delta.py and
+# verify_episode_captured.py), not an instruction to READ the store, which is the
+# thing this census exists to catch.
+#
+# It arrived by RELOCATION, not by a skill gaining new instruction.
+# WORKFLOW_CLOSEOUT.template.md carried this same approval under
+# skills/workbench/templates/ until #639 retired `workbench` as an installable skill
+# and deleted its home, taking the entry with it. The file kept living in the project
+# overlay -- which this scan does not walk, so nothing went red -- until it was given
+# a home again at skills/_shared/templates/. Same text, same write path, same reason.
+#
+# So the count under skills/ is worth watching, but it is the READ/WRITE distinction
+# that decides, and a bare count would have called this relocation a regression.
 
 # architecture overview: describes the store as a layer, instructs no agent to read it
 docs/CONSTELLATION_OVERVIEW.md:episodes/active/ + episodes/retired/:
@@ -249,3 +264,11 @@ scripts/mcp_spine_server.py:**Also captures into `episodes/`** (issue #541), alo
 
 # repo-orientation guide, layout table: states what the store is FOR (a run records the challenge it hit) and names its ONLY write path; the same row says outright that an episode is a record and never a rule, so nothing here tells an agent to read the store back
 docs/agents/AGENT_GUIDE.md:| `episodes/` | continuous self-improvement. When a run hits a challenge, it records what happened — one file per record, written only through `scripts/apply_episode_delta.py`. A record, never a rule. |
+
+# relocation of an already-approved write-path mention: #639 retired `workbench` and
+# deleted this file's home, and it was rehomed under skills/_shared/templates/. Names
+# the episode WRITE path (apply_episode_delta.py) and its capture proof
+# (verify_episode_captured.py); instructs no agent to read the store. The very next
+# line of the template says so outright: "An episode is a record of what happened; a
+# rule for a future agent to follow belongs in docs/agents/* and is a human's call."
+skills/_shared/templates/WORKFLOW_CLOSEOUT.template.md:through `scripts/apply_episode_delta.py` and proved by `scripts/verify_episode_captured.py`.
