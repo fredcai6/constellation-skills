@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "spine": {
-      "command": "python3",
+      "command": "${CONSTELLATION_PYTHON:-python3}",
       "args": [
         "scripts/mcp_spine_server.py"
       ],

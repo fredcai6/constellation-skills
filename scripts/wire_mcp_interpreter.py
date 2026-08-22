@@ -3,20 +3,28 @@
 `.mcp.json` is git-tracked, and by #539's ruling (see install_constellation.py's
 `resolve_interpreter`) the tracked file must be launchable AS COMMITTED: a
 test, a fresh clone, or a harness reading `.mcp.json` before wiring ever runs
-sees whatever is there verbatim. So the committed file carries a real, bare
-interpreter name (`python3`, the PEP 394 guarantee on POSIX) rather than an
-unresolvable placeholder; `MCP_INTERPRETER_PLACEHOLDER` still exists for a
-config that has not been through this repo's own commit. Which commands
-wiring may touch -- the placeholder, or a bare `python`/`python3`/`py` (and
-`.exe` forms) -- is `is_rewritable_mcp_command`, the one predicate for that
-question; a path or any other program name is left alone. This script is the
-one write path that resolves a rewritable command to a real, working
-interpreter for the machine it runs on -- reusing `install_constellation.py`'s
-`resolve_interpreter()` (the same probe hook wiring already uses for
-#539/#540) rather than a second one. Hard-stops (propagates `InstallError`)
-when nothing probes; never stamps a known-broken name.
+sees whatever is there verbatim.
 
-Run once per machine, in a checkout of this repo:
+THIS REPO NO LONGER NEEDS THIS SCRIPT, and running it here refuses by design.
+Closing #553/#575 replaced the committed bare `python3` with the portable
+`${CONSTELLATION_PYTHON:-python3}` form, which is machine-neutral AND
+launchable at once -- the pair no single literal could satisfy. Wiring a
+git-tracked config is now a hard refusal (a probed interpreter is a fact about
+ONE machine; a tracked file ships), and the var form is not rewritable anyway.
+
+What remains is for an UNTRACKED `.mcp.json` in some other project: which
+commands wiring may touch -- the placeholder, or a bare `python`/`python3`/`py`
+(and `.exe` forms) -- is `is_rewritable_mcp_command`, the one predicate for
+that question; a path, the `${VAR:-default}` form, and any other program name
+are left alone. This script is the one write path that resolves a rewritable
+command to a real, working interpreter for the machine it runs on -- reusing
+`install_constellation.py`'s `resolve_interpreter()` (the same probe hook
+wiring already uses for #539/#540) rather than a second one. Hard-stops
+(propagates `InstallError`) when nothing probes, and when the target is
+tracked; never stamps a known-broken name, and never stamps a machine-specific
+one into a file that ships.
+
+Run in a checkout whose `.mcp.json` is untracked:
 
     python scripts/wire_mcp_interpreter.py
 """

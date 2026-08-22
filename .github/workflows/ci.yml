@@ -38,6 +38,28 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest coverage
 
+      # Salvaged from PR #555 per issue #575. Named separately from the suite
+      # below purely so the Windows evidence is LEGIBLE in the log: "the MCP
+      # door launched on Windows and answered a real tool call" becomes a green
+      # step with a name, instead of three dots inside 3500.
+      #
+      # The door used to ship a fixed `"command": "python3"`, which is not a
+      # command on a stock Windows host (the python.org installer ships
+      # `python.exe`/`py.exe`, and a bare `python3` commonly hits the Microsoft
+      # Store app-execution-alias stub) -- and nothing in CI could say so,
+      # because every test around it asserted on the config STRING rather than
+      # launching what the string names.
+      #
+      # SCOPE, stated honestly: this proves the interpreter that
+      # `${CONSTELLATION_PYTHON:-python3}` RESOLVES TO launches the door on
+      # Windows. It does NOT prove Claude Code performs the expansion on
+      # Windows -- that is harness behaviour, measured on Linux (see
+      # install_constellation.MCP_INTERPRETER_ENV_VAR) and confirmable on a real
+      # box with one `claude mcp get spine`. Do not read this step as covering
+      # that leg.
+      - name: MCP door launches on Windows and answers a real tool call
+        run: python -m pytest tests/test_mcp_spine_server.py tests/test_wire_mcp_interpreter.py -v -k "McpJsonVarExpansionLaunch or McpJsonTests or GitTrackedRefusal or ExpandMcpVar"
+
       - name: Run full test suite
         run: python -m pytest tests/ -q --junitxml=junit-report.xml
 

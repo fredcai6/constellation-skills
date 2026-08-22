@@ -1,11 +1,24 @@
 """Tests for scripts/wire_mcp_interpreter.py (M2 job 2, widened M2 g4-repair).
 
-`.mcp.json` is git-tracked and must be launchable AS COMMITTED (#539): it now
-carries a bare interpreter name (`python3`), not the unresolvable
-`<python-interpreter>` placeholder. This script is the one write path that
-resolves any rewritable command -- the placeholder, or a bare
-`python`/`python3`/`py` name -- to a real, per-machine interpreter, reusing
-install_constellation.py's `resolve_interpreter()` rather than a second probe.
+`.mcp.json` is git-tracked and must be launchable AS COMMITTED (#539). This
+script is the one write path that resolves a rewritable command -- the
+placeholder, or a bare `python`/`python3`/`py` name -- to a real, per-machine
+interpreter, reusing install_constellation.py's `resolve_interpreter()` rather
+than a second probe.
+
+Two things changed when #553/#575 were closed, and both are pinned below:
+
+1. A GIT-TRACKED target is REFUSED. A probed interpreter is a fact about one
+   machine; a tracked `.mcp.json` ships. Writing one into the other is the
+   field defect that reopened this (an install run rewrote the repo's tracked
+   `python3` to `py`, which on that host was the operator's own
+   `~/.local/bin/py` shim). The refusal existed once on PR #555 and was lost
+   when that branch was closed as superseded rather than repealed.
+2. The portable `${CONSTELLATION_PYTHON:-python3}` form is NOT rewritable --
+   it is already machine-neutral and launchable, so resolving it to this
+   host's name would downgrade it. This repo's own `.mcp.json` now carries
+   that form, which makes wiring a no-op here BY CONSTRUCTION as well as by
+   the tracked refusal -- belt and braces, deliberately.
 """
 
 import importlib.util
@@ -43,6 +56,135 @@ def write_mcp_config(path: Path, command: str) -> None:
             }
         }
     }, indent=2) + "\n", encoding="utf-8")
+
+
+class GitTrackedRefusalTests(unittest.TestCase):
+    """The guard restored from PR #555. `is_git_tracked` runs `git ls-files` for
+    real, so these build actual repos rather than mocking the predicate -- the
+    thing under test is precisely whether the write path consults it."""
+
+    def _repo(self, tmp: str, *, track: bool) -> Path:
+        root = Path(tmp)
+        subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.email", "t@e.st"], cwd=root, check=True)
+        subprocess.run(["git", "config", "user.name", "t"], cwd=root, check=True)
+        config_path = root / ".mcp.json"
+        write_mcp_config(config_path, "python3")
+        if track:
+            subprocess.run(["git", "add", ".mcp.json"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "add"], cwd=root, check=True)
+        return config_path
+
+    def test_refuses_to_wire_a_git_tracked_mcp_json(self):
+        wire = load_wire()
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = self._repo(tmp, track=True)
+            before = config_path.read_bytes()
+            interpreter = wire._install.InterpreterResolution("py", ("py",), "probe")
+
+            with self.assertRaises(wire._install.InstallError) as ctx:
+                wire.rewrite_mcp_config_interpreter(config_path, interpreter)
+
+            self.assertIn("git-tracked", str(ctx.exception))
+            self.assertEqual(before, config_path.read_bytes(),
+                             "the tracked file was written anyway")
+
+    def test_the_refusal_names_the_portable_form_so_the_caller_is_not_stranded(self):
+        """A refusal that does not say what to do instead just moves the
+        problem. The message must name the env-var knob."""
+        wire = load_wire()
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = self._repo(tmp, track=True)
+            interpreter = wire._install.InterpreterResolution("py", ("py",), "probe")
+            with self.assertRaises(wire._install.InstallError) as ctx:
+                wire.rewrite_mcp_config_interpreter(config_path, interpreter)
+        self.assertIn(wire._install.MCP_INTERPRETER_ENV_VAR, str(ctx.exception))
+
+    def test_the_same_run_wires_an_untracked_mcp_json(self):
+        """The control. The guard must key on TRACKED, not on 'is in a repo' --
+        otherwise it is a blanket refusal wearing a specific name."""
+        wire = load_wire()
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = self._repo(tmp, track=False)
+            interpreter = wire._install.InterpreterResolution("py", ("py",), "probe")
+
+            self.assertTrue(wire.rewrite_mcp_config_interpreter(config_path, interpreter))
+
+            written = json.loads(config_path.read_text(encoding="utf-8"))
+            self.assertEqual("py", written["mcpServers"]["spine"]["command"])
+
+    def test_this_repos_own_mcp_json_is_refused(self):
+        """The field defect, end to end, against the real file. This is the
+        exact call an install run makes, and it must not write."""
+        wire = load_wire()
+        before = (ROOT / ".mcp.json").read_bytes()
+        interpreter = wire._install.InterpreterResolution("py", ("py",), "probe")
+        with self.assertRaises(wire._install.InstallError):
+            wire.rewrite_mcp_config_interpreter(ROOT / ".mcp.json", interpreter)
+        self.assertEqual(before, (ROOT / ".mcp.json").read_bytes())
+
+
+class PortableVarFormIsNotRewritableTests(unittest.TestCase):
+    """`${VAR:-default}` is the answer wiring exists to produce; wiring must not
+    consume it."""
+
+    def test_the_var_form_is_not_rewritable(self):
+        wire = load_wire()
+        self.assertFalse(wire.is_rewritable_mcp_command("${CONSTELLATION_PYTHON:-python3}"))
+        self.assertFalse(wire.is_rewritable_mcp_command("${CONSTELLATION_PYTHON:-py}"))
+
+    def test_bare_names_and_the_placeholder_are_still_rewritable(self):
+        """Control: the var-form exemption must not have blunted the predicate."""
+        wire = load_wire()
+        for command in ("python3", "python", "py", wire.MCP_INTERPRETER_PLACEHOLDER):
+            with self.subTest(command=command):
+                self.assertTrue(wire.is_rewritable_mcp_command(command))
+
+    def test_an_untracked_config_on_the_var_form_is_left_alone(self):
+        """Even where writing IS permitted, the var form survives untouched."""
+        wire = load_wire()
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / ".mcp.json"
+            write_mcp_config(config_path, "${CONSTELLATION_PYTHON:-python3}")
+            before = config_path.read_bytes()
+            interpreter = wire._install.InterpreterResolution("py", ("py",), "probe")
+
+            self.assertFalse(wire.rewrite_mcp_config_interpreter(config_path, interpreter))
+            self.assertEqual(before, config_path.read_bytes())
+
+
+class ExpandMcpVarTests(unittest.TestCase):
+    """The MEASURED expansion rule (Claude Code 2.1.234). The `:-` spelling does
+    NOT carry POSIX `:-` semantics: a name that is PRESENT wins even when its
+    value is empty, and the default applies only when the name is ABSENT.
+    Measured 3/3 reproducibly against `claude mcp get`'s health-check, and
+    contrasted against a real POSIX shell, which disagrees. Pinned here because
+    the difference is invisible until it silently fails to launch a door."""
+
+    def test_default_applies_only_when_the_name_is_absent(self):
+        expand = load_wire()._install.expand_mcp_var
+        self.assertEqual("python3", expand("${CP:-python3}", {}))
+
+    def test_a_present_but_empty_name_wins_over_the_default(self):
+        """The trap, and the reason this is not `os.path.expandvars` or a shell
+        call. POSIX `${CP:-python3}` yields `python3` here; the harness yields
+        the empty string and the server does not start."""
+        expand = load_wire()._install.expand_mcp_var
+        self.assertEqual("", expand("${CP:-python3}", {"CP": ""}))
+
+    def test_a_present_name_is_used(self):
+        expand = load_wire()._install.expand_mcp_var
+        self.assertEqual("py", expand("${CP:-python3}", {"CP": "py"}))
+
+    def test_a_bare_reference_with_no_default_expands_to_empty_when_unset(self):
+        """Not to the literal `${CP}` -- which is what `os.path.expandvars`
+        would leave behind, and which would read as a launchable command."""
+        expand = load_wire()._install.expand_mcp_var
+        self.assertEqual("", expand("${CP}", {}))
+
+    def test_a_plain_string_is_returned_unchanged(self):
+        expand = load_wire()._install.expand_mcp_var
+        self.assertEqual("python3", expand("python3", {"CP": "py"}))
 
 
 class RewriteMcpConfigInterpreterTests(unittest.TestCase):

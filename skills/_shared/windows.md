@@ -66,6 +66,33 @@ is exactly how this class of defect ships: the command works for its author
 and fails verbatim everywhere else, because no hard-coded name matches the
 installer's `python <` rewrite token.
 
+## 4b. The MCP door's interpreter (`.mcp.json`)
+
+**Works:** leave the committed `"command": "${CONSTELLATION_PYTHON:-python3}"`
+alone, and on a host where bare `python3` is not a real interpreter, export
+`CONSTELLATION_PYTHON` to one that is before starting the session — on Windows
+that is usually `py`, or the full path to `python.exe`. Confirm with
+`claude mcp get spine`, which health-checks by actually launching the server:
+`✔ Connected` or `✘ Failed to connect`, no inference required.
+
+**Fails:** two ways, both field-observed.
+
+1. *Editing the tracked file to a name that works here.* `.mcp.json` ships, so
+   a value probed on your machine breaks everyone else's — and the probe order
+   is `py`, `python3`, `python`, so on a POSIX box `py` can resolve to a
+   personal shim (`~/.local/bin/py`) and get committed. The installer now
+   refuses to write a git-tracked `.mcp.json` for exactly this reason.
+2. *Exporting `CONSTELLATION_PYTHON=""`.* Measured (Claude Code 2.1.234): the
+   `:-` spelling does **not** carry POSIX `:-` semantics. A variable that is
+   **set but empty** expands to the empty string, **not** to the default — so
+   an empty export silently kills the door, where POSIX would have fallen back
+   to `python3`. Unset it rather than setting it empty.
+
+Note the shadowing trap behind #553: `~/.local/bin/py` exists on Windows too as
+an extensionless `#!/bin/sh` wrapper, which PowerShell cannot execute and which
+**shadows the real `py.exe`** on PATH. "The `py` launcher is installed" and "the
+`py` on PATH runs Python" are different claims — check `which py`.
+
 ## 5. Transient "Blocked by classifier" on `gh`/`git`
 
 **Works:** when a `gh` or `git` command is denied with "Blocked by classifier",

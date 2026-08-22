@@ -595,7 +595,19 @@ def resolve_interpreter(
 # POSIX) rather than staying on `MCP_INTERPRETER_PLACEHOLDER` forever, and
 # wiring's job is to rewrite that bare name -- or the placeholder, for a
 # config that has not been through this repo's own commit -- to the
-# interpreter THIS run actually probed. `is_rewritable_mcp_command` is the one
+# interpreter THIS run actually probed.
+#
+# SUPERSEDED FOR THIS REPO by #553/#575, and the reasoning above is exactly
+# why. "Launchable as committed" and "correct on every machine" cannot both
+# hold for one literal -- `python3` is the PEP 394 guarantee on POSIX and is
+# the name that hits the Microsoft Store alias stub on Windows -- so the
+# rewrite bought the first by writing the tracked file per machine, which
+# breaks the second for everyone the file ships to. The `${VAR:-default}`
+# form measured below satisfies both at once, so this repo's own `.mcp.json`
+# uses it and wiring is a no-op here twice over: the var form is not
+# rewritable, and a tracked target is refused outright. The machinery below
+# stays for an UNTRACKED `.mcp.json` in a downstream project, which is a real
+# and still-supported case. `is_rewritable_mcp_command` is the one
 # predicate for "which commands wiring may touch": the placeholder plus bare
 # `python`/`python3`/`py` (and their `.exe` forms); anything with a path
 # separator, or naming any other program, is left alone on purpose -- a caller
@@ -613,6 +625,76 @@ def resolve_interpreter(
 # always was.
 MCP_CONFIG_FILENAME = ".mcp.json"
 MCP_INTERPRETER_PLACEHOLDER = "<python-interpreter>"
+
+# --------------------------------------------------------------------------- #
+# The `${VAR:-default}` command form (#553 option 2, #575) -- MEASURED, not assumed
+# --------------------------------------------------------------------------- #
+# #553 listed this option but recorded expansion-in-`command` as UNVERIFIED, and
+# the epic-418-followon ADMIRAL_LOG made measuring it the first instruction of
+# the door work. It was never run; main took the rewrite path below instead, and
+# PR #555 (which proposed exactly `${CONSTELLATION_PYTHON:-python3}`) was closed
+# as superseded on that unmeasured assumption.
+#
+# Measured 2026-08-22, Claude Code 2.1.234 on Linux, via `claude mcp get`'s real
+# health-check against local-scope servers whose stored `command` was confirmed
+# verbatim on disk (so the CLI was not expanding at add-time):
+#
+#   command                        env                     result
+#   `python3`                      --                      connected  (control)
+#   `${CP:-python3}`               CP unset                connected
+#   `${CP:-python3}`               CP=/nonexistent/nope    FAILED     (var IS read)
+#   `${CP:-python3}`               CP=<other real python>  connected  (var IS honored)
+#   `python3`                      CP=/nonexistent/nope    connected  (control holds)
+#
+# So expansion DOES apply to `command`, not only to `env`. That is what lets the
+# committed file stay machine-neutral AND launchable, which no single literal
+# could be (#539's thesis) and which the rewrite path below tried to buy by
+# writing a tracked file per machine.
+#
+# CAUTION, also measured (3/3 reproducible, both `VAR=` and `export VAR=""`):
+# the `:-` spelling does NOT carry POSIX `:-` semantics. `${CP:-python3}` with
+# CP set-but-EMPTY expands to the EMPTY STRING and the server fails to launch;
+# only an UNSET variable yields the default. That is POSIX `${VAR-default}`
+# behaviour wearing `:-`'s spelling. A dispatcher that exports
+# CONSTELLATION_PYTHON="" (a script that computed nothing, say) therefore breaks
+# the door silently rather than falling back -- so `expand_mcp_var` below
+# reproduces the MEASURED rule, never the shell's.
+MCP_INTERPRETER_ENV_VAR = "CONSTELLATION_PYTHON"
+
+#: `${NAME}` or `${NAME:-default}`. The default may be empty (`${SPINE_FILE:-}`),
+#: and may not itself contain `}`.
+_MCP_VAR_RE = re.compile(r"^\$\{(?P<name>\w+)(?::-(?P<default>[^}]*))?\}$")
+
+
+def expand_mcp_var(raw: object, env: Mapping[str, str]) -> object:
+    """Expand a whole-string `${NAME}` / `${NAME:-default}` the way Claude Code
+    was MEASURED to expand it (see the block above), so a test or a readiness
+    check resolves a committed `.mcp.json` value to what the harness will really
+    launch instead of guessing.
+
+    Deliberately NOT POSIX and NOT `os.path.expandvars`: a name that is present
+    in `env` wins even when its value is empty, and the default applies only when
+    the name is ABSENT. `os.path.expandvars` also leaves an unset `${NAME}` as
+    the literal text, which would read as a launchable command here.
+
+    Anything that is not a full-string reference is returned unchanged -- this is
+    a resolver for the one shape `.mcp.json` uses, not a general interpolator."""
+    if not isinstance(raw, str):
+        return raw
+    match = _MCP_VAR_RE.match(raw)
+    if match is None:
+        return raw
+    name = match.group("name")
+    if name in env:
+        return env[name]            # set-but-empty wins over the default (measured)
+    return match.group("default") or ""
+
+
+def is_mcp_var_command(command: object) -> bool:
+    """Whether `command` is the portable `${VAR:-default}` form. Such a command
+    is machine-neutral by construction, so wiring must leave it alone -- it is
+    already the answer wiring exists to produce."""
+    return isinstance(command, str) and _MCP_VAR_RE.match(command) is not None
 
 # Bare names wiring may resolve, beyond the placeholder -- exactly the
 # interpreter launcher names `resolve_interpreter` itself probes, plus their
@@ -636,6 +718,13 @@ def is_rewritable_mcp_command(command: object) -> bool:
         return False
     if command == MCP_INTERPRETER_PLACEHOLDER:
         return True
+    # The portable `${VAR:-default}` form is already machine-neutral AND
+    # launchable -- it is the answer wiring exists to produce, so resolving it
+    # to this host's name would DOWNGRADE it. Stated explicitly rather than
+    # left to fall through the bare-name check below, so a test can pin the
+    # intent instead of an accident of set membership.
+    if is_mcp_var_command(command):
+        return False
     if "/" in command or "\\" in command:
         return False
     return command in MCP_REWRITABLE_BARE_NAMES
@@ -656,7 +745,30 @@ def rewrite_mcp_config_interpreter(mcp_config_path: Path, interpreter: Interpret
     `interpreter` is threaded in, never re-probed here -- mirrors
     `resolve_interpreter`'s "call once per run, thread the result through"
     contract, so this stays a pure rewrite over an already-resolved value and
-    never second-guesses the probe."""
+    never second-guesses the probe.
+
+    RAISES `InstallError` when `mcp_config_path` is git-tracked. A probed
+    interpreter is a fact about ONE machine -- on a POSIX host it is routinely
+    `py`, which here resolves to the operator's own `~/.local/bin/py` shim --
+    and a tracked `.mcp.json` SHIPS, so writing it hands every other checkout a
+    name that need not exist there. This is #539's rule (no tracked string names
+    an interpreter) applied to the file that never received #539's fix. The
+    refusal existed once, on PR #555, with a test named
+    `test_wiring_refuses_a_git_tracked_mcp_json_...`; it was lost when that
+    branch was closed as superseded rather than repealed, and this restores it.
+    The portable answer is now measured and available -- see
+    MCP_INTERPRETER_ENV_VAR -- so a refused caller is not stranded."""
+    if is_git_tracked(mcp_config_path):
+        raise InstallError(
+            f"refusing to wire {mcp_config_path}: it is git-tracked. The resolved "
+            f"interpreter ({interpreter.interpreter!r}) is a fact about THIS machine, "
+            f"and a tracked .mcp.json ships to every other checkout. Use the portable "
+            f"form instead -- set the command to "
+            f'"${{{MCP_INTERPRETER_ENV_VAR}:-python3}}", which Claude Code expands from '
+            f"the launching environment (measured; see MCP_INTERPRETER_ENV_VAR), so each "
+            f"machine overrides it via {MCP_INTERPRETER_ENV_VAR} without touching the file. "
+            f"Untrack it instead if it is genuinely machine-local."
+        )
     config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
     changed = False
     for server in config.get("mcpServers", {}).values():
@@ -686,6 +798,15 @@ def apply_repo_mcp_config_wiring(
     if not mcp_config_path.is_file():
         out(f"- {MCP_CONFIG_FILENAME}: none at {mcp_config_path}; nothing to wire")
         return
+    if dry_run and is_git_tracked(mcp_config_path):
+        # Same refusal the real run makes, surfaced at the same point -- a dry
+        # run that promised "would wire" a file the real run then refuses would
+        # be a lie in the one mode whose entire job is to predict the real run.
+        out(
+            f"- DRY RUN: {mcp_config_path} is git-tracked; would NOT wire it "
+            f'(use "${{{MCP_INTERPRETER_ENV_VAR}:-python3}}" instead)'
+        )
+        return
     if dry_run:
         config = json.loads(mcp_config_path.read_text(encoding="utf-8"))
         rewritable_count = sum(
@@ -704,7 +825,19 @@ def apply_repo_mcp_config_wiring(
                 f"command; nothing to wire"
             )
         return
-    if rewrite_mcp_config_interpreter(mcp_config_path, interpreter):
+    # A tracked target is REFUSED by `rewrite_mcp_config_interpreter`, and that
+    # refusal is reported here rather than raised onward: this step runs at the
+    # tail of an otherwise-successful install, and aborting with exit 2 after the
+    # skills are already on disk would report a completed install as a failure.
+    # The standalone `scripts/wire_mcp_interpreter.py` lets the same InstallError
+    # out to its own top-level handler, so a caller who asked for wiring ONLY
+    # still gets a hard, visible error. One refusal, two proportionate reactions.
+    try:
+        changed = rewrite_mcp_config_interpreter(mcp_config_path, interpreter)
+    except InstallError as exc:
+        out(f"- {mcp_config_path}: NOT wired -- {exc}")
+        return
+    if changed:
         out(f"- {mcp_config_path}: wired command -> {interpreter.interpreter!r} (probed)")
     else:
         out(

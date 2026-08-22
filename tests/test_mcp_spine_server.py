@@ -37,6 +37,21 @@ SERVER = ROOT / "scripts" / "mcp_spine_server.py"
 ENGINE = ROOT / "scripts" / "checklist_engine.py"
 MCP_JSON = ROOT / ".mcp.json"
 
+
+def _installer():
+    """`install_constellation` is the one home for `.mcp.json` semantics
+    (`is_rewritable_mcp_command`, `expand_mcp_var`). Imported by reference so
+    this file cannot carry a second, drifting copy of the expansion rule."""
+    import importlib.util
+    if "install_constellation" in sys.modules:
+        return sys.modules["install_constellation"]
+    spec = importlib.util.spec_from_file_location(
+        "install_constellation", ROOT / "scripts" / "install_constellation.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["install_constellation"] = module
+    spec.loader.exec_module(module)
+    return module
+
 EXPECTED_TOOLS = {
     "spine_status", "spine_lease", "spine_start", "spine_advance",
     "spine_evidence", "spine_halt", "spine_survey_result",
@@ -648,6 +663,67 @@ class McpJsonTests(unittest.TestCase):
         raw = config["mcpServers"]["spine"]["env"]["SPINE_FILE"]
         self.assertIsNone(self._default_spine_problem(raw))
 
+    #: The invariant that #553/#575 exist for, and that a probing installer
+    #: violated in the field: the committed `command` must name NO machine. It
+    #: must stay overridable per machine (the `${VAR:-default}` form, measured
+    #: to be expanded by Claude Code in `command`, not just in `env`), and its
+    #: DEFAULT -- what a fresh clone that sets nothing actually launches -- must
+    #: be a bare, portable interpreter name rather than a path probed on
+    #: whoever's box last ran the installer. Same extracted-predicate shape as
+    #: `_default_spine_problem` above, for the same reason: a guard needs a
+    #: positive control or it rots into a vacuous pass.
+    @staticmethod
+    def _command_problem(raw: object) -> str | None:
+        """None when `raw` is an acceptable committed `command`, else what is wrong."""
+        installer = _installer()
+        if not installer.is_mcp_var_command(raw):
+            return (f"command must stay overridable per machine via "
+                    f"${{{installer.MCP_INTERPRETER_ENV_VAR}:-<default>}} expansion; "
+                    f"got {raw!r}")
+        match = re.fullmatch(r"\$\{(?P<name>\w+)(?::-(?P<default>[^}]*))?\}", raw)
+        if match.group("name") != installer.MCP_INTERPRETER_ENV_VAR:
+            return (f"command overrides via {match.group('name')!r}, but the documented "
+                    f"knob is {installer.MCP_INTERPRETER_ENV_VAR!r}")
+        # What a fresh clone launches when it sets nothing.
+        default = installer.expand_mcp_var(raw, {})
+        if not default:
+            return "the default is empty, so a clone that sets nothing launches nothing"
+        if "/" in default or "\\" in default:
+            return (f"the default is a machine-specific PATH ({default!r}) -- a tracked "
+                    f"file must not name one machine's interpreter")
+        if default not in installer.MCP_REWRITABLE_BARE_NAMES:
+            return (f"the default {default!r} is not a known portable interpreter name "
+                    f"({sorted(installer.MCP_REWRITABLE_BARE_NAMES)})")
+        return None
+
+    def test_mcp_json_command_names_no_machine(self):
+        config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
+        raw = config["mcpServers"]["spine"]["command"]
+        self.assertIsNone(self._command_problem(raw))
+
+    def test_the_command_guard_still_catches_a_machine_specific_command(self):
+        """The positive control. Each entry is a way this has actually gone
+        wrong or could: the literal that broke Windows (#553), the probed value
+        an installer wrote into the tracked file, and the placeholder."""
+        for raw, why in [
+            ("python3", "a bare literal -- no per-machine override, and dead on Windows"),
+            ("py", "the other bare literal, dead on stock POSIX"),
+            ("/home/tommy/.local/bin/py", "a probed absolute path from one operator's box"),
+            ("<python-interpreter>", "the placeholder -- not launchable as committed"),
+            ("${CONSTELLATION_PYTHON:-}", "no default: a fresh clone launches nothing"),
+            ("${CONSTELLATION_PYTHON:-/usr/bin/python3}", "a path as the default"),
+            ("${SOME_OTHER_VAR:-python3}", "overridable, but not via the documented knob"),
+        ]:
+            with self.subTest(why=why):
+                self.assertIsNotNone(
+                    self._command_problem(raw),
+                    f"the guard accepted {raw!r} -- it no longer catches {why}")
+
+    def test_the_command_guard_accepts_the_portable_windows_answer(self):
+        """Not just a refusal machine: the form a Windows operator is told to
+        use must PASS, or the guidance and the guard disagree."""
+        self.assertIsNone(self._command_problem("${CONSTELLATION_PYTHON:-py}"))
+
     def test_the_default_spine_guard_still_catches_a_broken_default(self):
         """The positive control the conditional above needs to be worth
         anything. Each of these is a way the ORIGINAL guard earned its keep, and
@@ -684,6 +760,15 @@ class McpJsonVarExpansionLaunchTests(unittest.TestCase):
     def test_var_expansion_path_launches_a_real_server_and_answers_a_tool_call(self):
         config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
         entry = config["mcpServers"]["spine"]
+        # `command` is now `${CONSTELLATION_PYTHON:-python3}` and gets the SAME
+        # hand-applied expansion this test already applies to the env values --
+        # Python does not expand, and a real dispatch resolves the command
+        # through the harness before exec. Treating `env` as expandable while
+        # treating `command` as literal was the asymmetry that hid the question
+        # of whether expansion reaches `command` at all (it does; measured, see
+        # install_constellation.MCP_INTERPRETER_ENV_VAR).
+        command = _installer().expand_mcp_var(entry["command"], os.environ)
+        self.assertTrue(command, f"command expanded to nothing: {entry['command']!r}")
         tmp = tempfile.TemporaryDirectory()
         try:
             root = Path(tmp.name)
@@ -699,7 +784,7 @@ class McpJsonVarExpansionLaunchTests(unittest.TestCase):
             env["SPINE_CALLLOG"] = str(root / "mcp_calls.jsonl")
             env["SPINE_START_MARKER"] = str(root / "mcp_server_started")
             proc = subprocess.Popen(
-                [entry["command"], *entry["args"]],
+                [command, *entry["args"]],
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                 text=True, encoding="utf-8", bufsize=1, env=env, cwd=str(ROOT),
             )

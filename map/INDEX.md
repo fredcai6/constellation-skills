@@ -4,9 +4,9 @@
 conftest: 1 modules, 3 entities
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 60 modules, 1291 entities
+scripts: 60 modules, 1293 entities
 skills: 1 modules, 22 entities
-tests: 100 modules, 5514 entities
+tests: 100 modules, 5535 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -41,7 +41,7 @@ tests: 100 modules, 5514 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (60 modules, 1291 entities)
+## scripts (60 modules, 1293 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -77,7 +77,7 @@ tests: 100 modules, 5514 entities
 - [scripts.generate_spine](scripts.generate_spine/INDEX.md) (31 entities, 13 holes): Compile a `specs/<role>.spine.toml` spec into an engine-native spine JSON, and refuse to emit anything `scripts/validate_spine.py` would reject.
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
-- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (92 entities, 32 holes): HOLE: no docstring
+- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (94 entities, 32 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
 - [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (39 entities, 3 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
@@ -116,7 +116,7 @@ tests: 100 modules, 5514 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (100 modules, 5514 entities)
+## tests (100 modules, 5535 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -186,7 +186,7 @@ tests: 100 modules, 5514 entities
 - [tests.test_mcp_lifecycle](tests.test_mcp_lifecycle/INDEX.md) (48 entities, 28 holes): Tests for the MCP lifecycle door -- `spine_open`/`spine_close` (`scripts/mcp_spine_server.py`'s `call_lifecycle_tool`, issue #559, C3/g3).
 - [tests.test_mcp_rejection_episode_capture](tests.test_mcp_rejection_episode_capture/INDEX.md) (38 entities, 27 holes): Unit-level tests for the door-own rejection -> `episodes/` capture path (issue #541, epic #567 lane E).
 - [tests.test_mcp_spine_bind](tests.test_mcp_spine_bind/INDEX.md) (121 entities, 57 holes): `spine_bind` -- binding the door to a spine that ALREADY EXISTS (epic #567 lane A, gate `g2-implement`).
-- [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (62 entities, 41 holes): Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP front door on the checklist engine).
+- [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (67 entities, 42 holes): Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP front door on the checklist engine).
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
 - [tests.test_next_verbs_record_gate_comment](tests.test_next_verbs_record_gate_comment/INDEX.md) (16 entities, 12 holes): Issue #437: `_next_verbs()`'s comments must not restate a premise #422/#328 killed.
@@ -216,7 +216,7 @@ tests: 100 modules, 5514 entities
 - [tests.test_verify_spec_confirmed](tests.test_verify_spec_confirmed/INDEX.md) (37 entities, 32 holes): HOLE: no docstring
 - [tests.test_verify_spec_confirmed_cli](tests.test_verify_spec_confirmed_cli/INDEX.md) (7 entities, 6 holes): CLI-level regression coverage for verify_spec_confirmed.py's confirm-gate refusal.
 - [tests.test_verify_worktree_isolation](tests.test_verify_worktree_isolation/INDEX.md) (40 entities, 39 holes): HOLE: no docstring
-- [tests.test_wire_mcp_interpreter](tests.test_wire_mcp_interpreter/INDEX.md) (16 entities, 16 holes): Tests for scripts/wire_mcp_interpreter.py (M2 job 2, widened M2 g4-repair).
+- [tests.test_wire_mcp_interpreter](tests.test_wire_mcp_interpreter/INDEX.md) (32 entities, 22 holes): Tests for scripts/wire_mcp_interpreter.py (M2 job 2, widened M2 g4-repair).
 - [tests.test_work_id_nesting](tests.test_work_id_nesting/INDEX.md) (43 entities, 16 holes): A work-id may NEST, and four tools used to disagree about that.
 - [tests.test_worktree_derivation](tests.test_worktree_derivation/INDEX.md) (8 entities, 1 holes): The case table that SPECIFIES the worktree-derivation rule, and drives it.
 - [tests.test_worktree_precondition_wiring](tests.test_worktree_precondition_wiring/INDEX.md) (15 entities, 13 holes): Deliberate-breakage tests for a worktree-isolation precondition (#329/#422).
