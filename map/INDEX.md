@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 60 modules, 1287 entities
 skills: 1 modules, 22 entities
-tests: 97 modules, 5397 entities
+tests: 97 modules, 5407 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -116,7 +116,7 @@ tests: 97 modules, 5397 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (97 modules, 5397 entities)
+## tests (97 modules, 5407 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -129,7 +129,7 @@ tests: 97 modules, 5397 entities
 - [tests.test_bytecode_cache_provenance](tests.test_bytecode_cache_provenance/INDEX.md) (13 entities, 4 holes): #597 — a bytecode cache built in a different tree must be named, not suffered.
 - [tests.test_check_corpus_freshness](tests.test_check_corpus_freshness/INDEX.md) (15 entities, 14 holes): HOLE: no docstring
 - [tests.test_check_role_spine_bookends](tests.test_check_role_spine_bookends/INDEX.md) (11 entities, 7 holes): #567 lane L: the role-spine-template bookend lint.
-- [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (663 entities, 505 holes): HOLE: no docstring
+- [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (670 entities, 510 holes): HOLE: no docstring
 - [tests.test_checklist_engine_atomic_save](tests.test_checklist_engine_atomic_save/INDEX.md) (32 entities, 19 holes): #613 (atomicity half): `checklist_engine.save()` must install the new document by ATOMIC RENAME, never by writing over the live target in place.
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
 - [tests.test_cli_retirement_guard](tests.test_cli_retirement_guard/INDEX.md) (38 entities, 24 holes): Regrowth guard for issue #559 -- the door is the interface, not a second path.
@@ -201,7 +201,7 @@ tests: 97 modules, 5397 entities
 - [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (214 entities, 190 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
 - [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (32 entities, 17 holes): The `origin` stamp is PROVENANCE: written, and read by nothing (#315/#568/#609).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
-- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (231 entities, 104 holes): Unit tests for scripts/hooks/spine_rail.py.
+- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (234 entities, 104 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_spine_session_id](tests.test_spine_session_id/INDEX.md) (7 entities, 3 holes): `spine_lifecycle.session_id_for` -- the ONE definition of the lease identity a spine for a `work_id` is driven under (epic #567 lane A, gate g2-implement).
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
 - [tests.test_subtest_failures_are_greppable](tests.test_subtest_failures_are_greppable/INDEX.md) (8 entities, 3 holes): A failing subtest must be findable by searching for `FAILED`.
