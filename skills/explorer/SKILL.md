@@ -28,7 +28,7 @@ Whenever you name the marker in your own writing, keep it inline in a sentence, 
 
 ## The spine
 
-Drive the gated spine (`templates/EXPLORER_SPINE.template.json`) one step at a time through the MCP door's `spine_status`/`spine_lease`/`spine_advance` tools (see workbench `references/checklist-engine.md` — MCP door), since Explorer is orchestrator-tier and runs directly in the human-reachable context that owns the process's bound spine. Instantiate it at `init` via `python <skill-dir>/scripts/init_work_area.py <work-id> --spine <skill-dir>/templates/EXPLORER_SPINE.template.json --skill-dir <skill-dir>` (let the script resolve placeholders — do not hand-substitute), then `claim` the session lease through the door, which reads its own spine and session from the process environment and takes no session id argument.
+Drive the gated spine (`templates/EXPLORER_SPINE.template.json`) one step at a time through the MCP door's `spine_status`/`spine_lease`/`spine_advance` tools (see `references/checklist-engine.md` — MCP door), since Explorer is orchestrator-tier and runs directly in the human-reachable context that owns the process's bound spine. Instantiate it at `init` via `python <skill-dir>/scripts/init_work_area.py <work-id> --spine <skill-dir>/templates/EXPLORER_SPINE.template.json --skill-dir <skill-dir>` (let the script resolve placeholders — do not hand-substitute), then `claim` the session lease through the door, which reads its own spine and session from the process environment and takes no session id argument.
 
 | Step | What happens |
 |---|---|
@@ -112,4 +112,4 @@ Then archive the work area (`.agent-work/<work-id>/` → `.agent-work/archive/<d
 
 ## Templates and scripts
 
-Templates: `EXPLORER_SPINE.template.json`, `CYCLE.template.json`, `EXPLORER_STARTING_QUESTIONS.template.md`, `IDEAS_BOARD.template.md`, `DESIGN_SPEC.template.md`, `EXCURSION_BRIEF.template.md`, `CRITIC_HANDOFF.template.md`. Scripts: `checklist_engine.py`, `init_work_area.py`, `run_crew.py`, `recover_crews.py`, `verify_cycles.py`, `verify_spec_confirmed.py`. Engine reference: workbench `references/checklist-engine.md`.
+Templates: `EXPLORER_SPINE.template.json`, `CYCLE.template.json`, `EXPLORER_STARTING_QUESTIONS.template.md`, `IDEAS_BOARD.template.md`, `DESIGN_SPEC.template.md`, `EXCURSION_BRIEF.template.md`, `CRITIC_HANDOFF.template.md`. Scripts: `checklist_engine.py`, `init_work_area.py`, `run_crew.py`, `recover_crews.py`, `verify_cycles.py`, `verify_spec_confirmed.py`. Engine reference: `references/checklist-engine.md`.

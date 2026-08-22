@@ -42,7 +42,6 @@ POINTER_ONLY_TARGETS = [
     "skills/curator/SKILL.md",
     "skills/lessons-auditor/SKILL.md",
     "skills/scout/SKILL.md",
-    "skills/workbench/SKILL.md",
 ]
 
 RAIL_CITATION_MARKER = "canonical enforcement source"

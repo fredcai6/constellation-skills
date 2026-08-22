@@ -5,7 +5,6 @@ Charter      -> interrogates engineering doctrine and compiles agent-operable co
 Admiral      -> runs an epic as the human's delegate; dispatches Commanders in waves; adjudicates, merges, and harvests at closeout
 Commander    -> runs one bounded issue end to end; owns spine, interrogation, and execute checklists; dispatches crew
 Explorer     -> shapes a raw idea upstream of any issue: exploration cycles, excursions, cold critique, human-confirmed spec; never cuts work
-Workbench    -> manages recoverable workflow state and drives the checklist engine
 Interrogator -> questions request/design ambiguity as a survey probe
 Cartographer -> maintains current-only structural map
 Scout        -> audits map-first architecture pressure
@@ -32,14 +31,13 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Commander | `.agent-work/<work-id>/spine.json` (gated) | Cartographer, Interrogator, human | one bounded issue: understand/plan/execute/cleanup; drives interrogation and gate plan; human verifies at checkpoints |
 | Commander | `.agent-work/<work-id>/execute.json` (gated) | Implementer, Reviewer | frozen gate plan authored at plan time; three tasks per gate (implement/review/integrate); not edited mid-run |
 | Charter | `docs/agents/ORCHESTRATOR_CONTEXT.md` | Commander, Cartographer, Scout | project DELTAS over inherited global-orchestrator doctrine: planning, authority, evidence, stop/ask departures |
-| Charter | engine config (rework cap, replan policy, human checkpoints) | Commander, Workbench engine | sets the mechanism limits the engine enforces |
+| Charter | engine config (rework cap, replan policy, human checkpoints) | Commander, the checklist engine | sets the mechanism limits the engine enforces |
 | Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project DELTAS over inherited global-crew doctrine: implementation/review rules usable inside a handoff |
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
 | Charter | `docs/agents/AGENT_GUIDE.md` + root `AGENTS.md`/`CLAUDE.md` pointers | all agents (Constellation or external) | single repo-orientation guide: layout, documentation map, conventions; the shared middle of the two contexts, not how to approach the job |
 | Commander, Admiral | `episodes/active/` via `scripts/apply_episode_delta.py` | future Charter refresh, maintainers | one episode per distinct thing that happened, written at closeout through the store's only write path; a record of what happened, never a rule to follow |
-| Workbench | `templates/DEFAULT.template.json` | any role | generic gated controller for ad-hoc work; not durable truth |
-| Role skills | role-specific checklist templates | owning role, Workbench | execution controller when role ships one; Workbench creates/archives files but does not own semantics |
-| Workbench | closeout/archive rules | Commander, Cartographer | artifact hygiene; roles execute package movement at closeout |
+| Role skills | role-specific checklist templates | owning role | execution controller when the role ships one |
+| `_shared/` | closeout/archive rules | Commander, Cartographer | artifact hygiene; roles execute package movement at closeout |
 | Interrogator | `.agent-work/<work-id>/interrogation.json` | Commander, Charter | survey of questions; consolidates to a resolved understanding |
 | Cartographer | `docs/architecture/packets/` + `index.md` | Scout, Commander, Implementer, Reviewer, Docent | current structural truth and sparse purpose/constraint/rationale anchors |
 | Cartographer | mismatch/Triage candidate | Commander, Triage | current-vs-future separation with structural anchor |

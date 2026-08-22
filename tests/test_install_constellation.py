@@ -38,6 +38,14 @@ def load_installer():
 # now shows up here automatically instead of silently drifting out of sync.
 SKILL_NAMES = sorted(skill.install_name for skill in load_installer().discover_skills())
 
+# Every directory a full install writes. NOT the same list as SKILL_NAMES since
+# #639: the engine bundle is a shipping unit that is deliberately not a skill --
+# no SKILL.md, absent from every agent's skill list -- so `discover_skills` does
+# not and must not see it, while `iterdir()` on the target root does.
+INSTALLED_DIR_NAMES = sorted(
+    SKILL_NAMES + [load_installer().ENGINE_BUNDLE_INSTALL_NAME]
+)
+
 
 class InstallConstellationTests(unittest.TestCase):
     def test_replan_installs_its_pure_verifier_and_g1_contract_helper(self):
@@ -71,7 +79,7 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertEqual(0, exit_code)
             target_root = project / ".codex" / "skills"
             self.assertEqual(
-                sorted(SKILL_NAMES),
+                INSTALLED_DIR_NAMES,
                 sorted(path.name for path in target_root.iterdir() if path.is_dir()),
             )
             self.assertTrue((target_root / "constellation-charter" / "SKILL.md").exists())
@@ -121,8 +129,10 @@ class InstallConstellationTests(unittest.TestCase):
 
             self.assertEqual(0, exit_code)
             target_root = codex_home / "skills"
+            # The engine bundle rides along with any subset (#639).
             self.assertEqual(
-                ["constellation-charter", "constellation-implementer"],
+                ["constellation-charter", "constellation-engine",
+                 "constellation-implementer"],
                 sorted(path.name for path in target_root.iterdir() if path.is_dir()),
             )
             self.assertTrue(
@@ -257,7 +267,7 @@ class InstallConstellationTests(unittest.TestCase):
                 env={}, out=lambda _: None,
             )
             self.assertEqual(
-                sorted(SKILL_NAMES),
+                INSTALLED_DIR_NAMES,
                 sorted(path.name for path in target_root.iterdir() if path.is_dir()),
             )
             self.assertFalse((target_root / "_shared").exists())
@@ -295,7 +305,7 @@ class InstallConstellationTests(unittest.TestCase):
                     "--skills",
                     "commander",
                     "cartographer",
-                    "workbench",
+                    "charter",
                 ],
                 env={},
                 out=lambda _: None,
@@ -552,7 +562,7 @@ class InstallConstellationTests(unittest.TestCase):
             base = ["--agent", "codex", "--scope", "user", "--dest", str(target_root)]
             self.assertEqual(0, installer.main(base, env={}, out=lambda _: None))
             installed_before = {p.name for p in target_root.iterdir()}
-            self.assertIn("constellation-workbench", installed_before)
+            self.assertIn("constellation-charter", installed_before)
             self.assertEqual(
                 0,
                 installer.main(base + ["--skills", "commander", "--force"],
@@ -1725,19 +1735,28 @@ class HookScriptBundleTests(unittest.TestCase):
     # install it lands beside the writer like the rail does.
     READER = "gauge_reader.py"
     # Canonical owner: the hook exists solely to feed checklist_engine.py's
-    # `current` advisory, so it installs into the checklist engine's home skill.
+    # `current` advisory, so it installs into the engine's own shipping unit.
     # Deliberately NOT a companion of checklist_engine.py -- that would copy it
     # into ~10 skills and reintroduce a "which copy is canonical?" ambiguity.
-    OWNER_SKILL = "workbench"
-    INSTALLED_OWNER = "constellation-workbench"
+    #
+    # Since #639 that unit is the non-skill engine bundle, not the `workbench`
+    # SKILL. The assertions below are unchanged in substance; what changed is
+    # WHERE the one canonical copy lands, and the fact that `--skills` can no
+    # longer produce an install without it.
+    INSTALLED_OWNER = load_installer().ENGINE_BUNDLE_INSTALL_NAME
 
-    def _install_owner_skill(self, tmp: str) -> Path:
-        """Really install the owner skill into a temp dest; return its scripts/ dir."""
+    def _install_engine_bundle(self, tmp: str) -> Path:
+        """Really install into a temp dest; return the engine bundle's scripts/ dir.
+
+        Installs a single unrelated skill on purpose: the bundle must arrive even
+        on the narrowest `--skills` subset, because a consuming machine's hook
+        wiring points into it either way.
+        """
         installer = load_installer()
         dest = Path(tmp) / "skills"
         exit_code = installer.main(
             ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-             "--skills", self.OWNER_SKILL],
+             "--skills", "charter"],
             env={}, out=lambda _line: None,
         )
         self.assertEqual(0, exit_code)
@@ -1748,7 +1767,7 @@ class HookScriptBundleTests(unittest.TestCase):
         disk. Inspecting the bundle dict would pass even if the copy loop wrote
         them to different places."""
         with tempfile.TemporaryDirectory() as tmp:
-            scripts_dir = self._install_owner_skill(tmp)
+            scripts_dir = self._install_engine_bundle(tmp)
             writer = scripts_dir / self.WRITER
             rail = scripts_dir / self.RAIL
             self.assertTrue(
@@ -1774,7 +1793,7 @@ class HookScriptBundleTests(unittest.TestCase):
         resolved its rail. Presence on disk does not prove the sibling load
         works; this drives the real loader (import-time `_load_spine_rail()`)."""
         with tempfile.TemporaryDirectory() as tmp:
-            scripts_dir = self._install_owner_skill(tmp)
+            scripts_dir = self._install_engine_bundle(tmp)
             mod = load_module("installed_gauge_writer_hook", scripts_dir / self.WRITER)
             self.assertIsNotNone(
                 mod._spine_rail,
@@ -1794,7 +1813,7 @@ class HookScriptBundleTests(unittest.TestCase):
         DARK governor, not merely an inert one, and only an installed-layout
         test can see it."""
         with tempfile.TemporaryDirectory() as tmp:
-            scripts_dir = self._install_owner_skill(tmp)
+            scripts_dir = self._install_engine_bundle(tmp)
             self.assertTrue((scripts_dir / self.READER).is_file())
             mod = load_module("installed_gauge_writer_hook_reader",
                               scripts_dir / self.WRITER)
@@ -1822,22 +1841,27 @@ class HookScriptBundleTests(unittest.TestCase):
         declared = set(installer.SCRIPT_RUNTIME_COMPANIONS.get(self.WRITER, ()))
         self.assertEqual(siblings, declared)
 
-    def test_owner_skill_bundle_expands_to_both_hook_scripts(self):
+    def test_engine_bundle_expands_to_both_hook_scripts(self):
         installer = load_installer()
-        expanded = installer.expand_script_bundle(
-            installer.SKILL_SCRIPT_BUNDLES[self.OWNER_SKILL])
-        self.assertIn(self.WRITER, expanded)
-        self.assertIn(self.RAIL, expanded)
+        self.assertIn(self.WRITER, installer.ENGINE_BUNDLE_SCRIPTS)
+        self.assertIn(self.RAIL, installer.ENGINE_BUNDLE_SCRIPTS)
 
     def test_gauge_writer_hook_ships_to_exactly_one_canonical_owner(self):
         """One canonical copy, by design: whatever later wires this hook into a
         settings.json needs an unambiguous path to point at."""
         installer = load_installer()
-        owners = sorted(
+        skill_owners = sorted(
             name for name, scripts in installer.SKILL_SCRIPT_BUNDLES.items()
             if self.WRITER in installer.expand_script_bundle(scripts)
         )
-        self.assertEqual([self.OWNER_SKILL], owners)
+        self.assertEqual(
+            [], skill_owners,
+            "a SKILL ships the gauge writer again -- since #639 its one canonical "
+            "home is the engine bundle, and a second copy under a skill directory "
+            "restores the 'which copy is canonical?' ambiguity the wiring cannot "
+            "resolve",
+        )
+        self.assertIn(self.WRITER, installer.ENGINE_BUNDLE_SCRIPTS)
 
     def test_hook_sources_stay_under_scripts_hooks(self):
         """The SOURCE layout is frozen -- this repo's own settings file plus
@@ -1856,11 +1880,13 @@ class HookScriptBundleTests(unittest.TestCase):
         sources under scripts/. A subdir-blind check turns bundling the hooks
         into a hard install failure rather than a silent one."""
         installer = load_installer()
-        owner = [s for s in installer.discover_skills()
-                 if s.source_name == self.OWNER_SKILL]
-        self.assertEqual(1, len(owner))
-        self.assertIn(self.WRITER, owner[0].required_scripts)
-        installer.validate_required_scripts(owner)  # must not raise
+        # The engine bundle is not a Skill, so it is checked through the same
+        # source resolver the validator uses rather than through discover_skills.
+        self.assertIn(self.WRITER, installer.ENGINE_BUNDLE_SCRIPTS)
+        for script in installer.ENGINE_BUNDLE_SCRIPTS:
+            with self.subTest(script=script):
+                self.assertTrue(
+                    installer.script_source_path(script, ROOT / "scripts").is_file())
 
 
 class ScriptsPackageBundlingTests(unittest.TestCase):
@@ -1935,7 +1961,7 @@ class TemplateBaselineTests(unittest.TestCase):
             project = Path(tmp)
             exit_code = installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
-                 "--skills", "commander", "workbench"],
+                 "--skills", "commander", "charter"],
                 env={}, cwd=project, out=lambda _line: None,
             )
             self.assertEqual(0, exit_code)
@@ -1952,7 +1978,8 @@ class TemplateBaselineTests(unittest.TestCase):
                 self.assertEqual(len(entry["sha256"]), 64)
             names = {e["template"] for e in manifest["templates"]}
             self.assertIn("COMMANDER_SPINE.template.json", names)
-            self.assertIn("WORKFLOW_CLOSEOUT.template.md", names)
+            # a second skill's template, so this proves the manifest spans skills
+            self.assertIn("CHARTER.template.json", names)
 
     def test_reinstall_leaves_existing_baseline_untouched(self):
         installer = load_installer()
@@ -1960,7 +1987,7 @@ class TemplateBaselineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
             args = ["--agent", "claude", "--scope", "project", "--project", str(project),
-                    "--skills", "workbench"]
+                    "--skills", "charter"]
             installer.main(args, env={}, cwd=project, out=lambda _line: None)
             manifest_path = project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json"
             original = manifest_path.read_text(encoding="utf-8")
@@ -1979,19 +2006,19 @@ class TemplateBaselineTests(unittest.TestCase):
             base = ["--agent", "claude", "--scope", "project", "--project", str(project),
                     "--baseline-only"]
             # initial baseline tracks only workbench templates
-            installer.main(base + ["--skills", "workbench"], env={}, cwd=project, out=lambda _l: None)
+            installer.main(base + ["--skills", "charter"], env={}, cwd=project, out=lambda _l: None)
             troot = project / ".agent-work" / "templates"
             mpath = troot / "TEMPLATES_MANIFEST.json"
             before = {(e["skill"], e["template"]): e["sha256"]
                       for e in json.loads(mpath.read_text(encoding="utf-8"))["templates"]}
             self.assertTrue(before)
             self.assertFalse(any(s == "constellation-commander" for s, _ in before))
-            wb_baseline = (troot / ".baseline" / "constellation-workbench"
-                           / "WORKFLOW_CLOSEOUT.template.md").read_text(encoding="utf-8")
+            anchor_baseline = (troot / ".baseline" / "constellation-charter"
+                               / "CHARTER.template.json").read_text(encoding="utf-8")
 
             # a later install brings a skill whose templates the project never tracked
             messages = []
-            installer.main(base + ["--skills", "workbench", "commander"],
+            installer.main(base + ["--skills", "charter", "commander"],
                            env={}, cwd=project, out=messages.append)
             after = {(e["skill"], e["template"]): e["sha256"]
                      for e in json.loads(mpath.read_text(encoding="utf-8"))["templates"]}
@@ -2003,12 +2030,12 @@ class TemplateBaselineTests(unittest.TestCase):
             self.assertTrue(any("new template" in m for m in messages))
             # the genuinely-new template also gets an editable working copy
             self.assertTrue((troot / "COMMANDER_SPINE.template.json").is_file())
-            # existing workbench anchors are untouched (same shas, same baseline bytes)
+            # existing anchors are untouched (same shas, same baseline bytes)
             for key, sha in before.items():
                 self.assertEqual(after[key], sha)
             self.assertEqual(
-                wb_baseline,
-                (troot / ".baseline" / "constellation-workbench" / "WORKFLOW_CLOSEOUT.template.md")
+                anchor_baseline,
+                (troot / ".baseline" / "constellation-charter" / "CHARTER.template.json")
                 .read_text(encoding="utf-8"),
             )
 
@@ -2021,15 +2048,15 @@ class TemplateBaselineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
             args = ["--agent", "claude", "--scope", "project", "--project", str(project),
-                    "--baseline-only", "--skills", "workbench"]
+                    "--baseline-only", "--skills", "charter"]
             installer.main(args, env={}, cwd=project, out=lambda _l: None)
             troot = project / ".agent-work" / "templates"
-            closeout_wc = troot / "WORKFLOW_CLOSEOUT.template.md"
-            self.assertTrue(closeout_wc.is_file())  # fresh install seeded it
-            closeout_wc.unlink()  # project opts out of tracking it locally
+            tracked_wc = troot / "CHARTER.template.json"
+            self.assertTrue(tracked_wc.is_file())  # fresh install seeded it
+            tracked_wc.unlink()  # project opts out of tracking it locally
 
             installer.main(args, env={}, cwd=project, out=lambda _l: None)  # reinstall
-            self.assertFalse(closeout_wc.exists())  # not backfilled (already tracked)
+            self.assertFalse(tracked_wc.exists())  # not backfilled (already tracked)
 
     def test_user_scope_install_writes_no_baseline(self):
         installer = load_installer()
@@ -2038,7 +2065,7 @@ class TemplateBaselineTests(unittest.TestCase):
             dest = Path(tmp) / "skills"
             installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _line: None,
             )
             self.assertFalse((Path(tmp) / ".agent-work").exists())
@@ -2050,7 +2077,7 @@ class TemplateBaselineTests(unittest.TestCase):
             project = Path(tmp)
             installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
-                 "--skills", "commander", "workbench"],
+                 "--skills", "commander", "charter"],
                 env={}, cwd=project, out=lambda _line: None,
             )
             templates_root = project / ".agent-work" / "templates"
@@ -2200,7 +2227,9 @@ class CorpusMarkerTests(unittest.TestCase):
             )
             marker = self._read_marker(target_root)
             recomputed = installer.compute_corpus_id(
-                target_root, names=["constellation-charter", "constellation-implementer"]
+                target_root,
+                names=["constellation-charter", "constellation-implementer",
+                       installer.ENGINE_BUNDLE_INSTALL_NAME],
             )
             self.assertEqual(marker["corpus_id"], recomputed)
 
@@ -2220,14 +2249,19 @@ class CorpusMarkerTests(unittest.TestCase):
             )
             marker = self._read_marker(target_root)
             scoped = installer.compute_corpus_id(
-                target_root, names=["constellation-charter"]
+                target_root,
+                names=["constellation-charter", installer.ENGINE_BUNDLE_INSTALL_NAME],
             )
             self.assertEqual(marker["corpus_id"], scoped)
             # Mutating the foreign skill leaves the constellation corpus id unchanged.
             (foreign / "SKILL.md").write_text("mine CHANGED\n", encoding="utf-8")
             self.assertEqual(
                 scoped,
-                installer.compute_corpus_id(target_root, names=["constellation-charter"]),
+                installer.compute_corpus_id(
+                    target_root,
+                    names=["constellation-charter",
+                           installer.ENGINE_BUNDLE_INSTALL_NAME],
+                ),
             )
 
     def test_dry_run_writes_no_marker(self):
@@ -2256,8 +2290,17 @@ class RegisteredScriptSourceTests(unittest.TestCase):
         installer = load_installer()
         scripts_root = Path(installer.REPO_ROOT) / "scripts"
         subdir_backed = 0
-        for skill, bundle in installer.SKILL_SCRIPT_BUNDLES.items():
-            for script in installer.expand_script_bundle(bundle):
+        registered = [
+            (name, installer.expand_script_bundle(bundle))
+            for name, bundle in installer.SKILL_SCRIPT_BUNDLES.items()
+        ]
+        # The engine bundle is registered script sources too, and since #639 it
+        # is the ONLY carrier of the subdir-backed hook pair -- so a sweep over
+        # SKILL_SCRIPT_BUNDLES alone would stop exercising the case below.
+        registered.append(
+            (installer.ENGINE_BUNDLE_INSTALL_NAME, installer.ENGINE_BUNDLE_SCRIPTS))
+        for skill, bundle in registered:
+            for script in bundle:
                 with self.subTest(skill=skill, script=script):
                     source = installer.script_source_path(script, scripts_root)
                     self.assertTrue(
@@ -2280,8 +2323,12 @@ class _HookWiringFixture(unittest.TestCase):
     test is `<tmp>/settings.json` -- a real install layout, and structurally
     incapable of touching the developer's own ~/.claude/settings.json."""
 
-    OWNER_SKILL = "workbench"
-    INSTALLED_OWNER = "constellation-workbench"
+    # Some skill to install so a run happens at all. Since #639 it is NOT the
+    # hook owner -- the owner is the non-skill engine bundle below, which every
+    # install writes regardless of what `--skills` selects -- so which skill this
+    # names carries no meaning beyond "one that exists".
+    ANY_SKILL = "charter"
+    INSTALLED_OWNER = load_installer().ENGINE_BUNDLE_INSTALL_NAME
     WRITER = "gauge_writer_hook.py"
 
     def _dest(self, tmp) -> Path:
@@ -2302,7 +2349,7 @@ class _HookWiringFixture(unittest.TestCase):
         lines = []
         code = installer.main(
             ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
-             "--skills", self.OWNER_SKILL, *extra],
+             "--skills", self.ANY_SKILL, *extra],
             env={}, out=lines.append,
         )
         self.assertEqual(expect, code)
@@ -2519,7 +2566,7 @@ class HookWiringDetectionTests(_HookWiringFixture):
         with tempfile.TemporaryDirectory() as tmp:
             code = installer.main(
                 ["--agent", "codex", "--scope", "user", "--dest", str(self._dest(tmp)),
-                 "--skills", self.OWNER_SKILL],
+                 "--skills", self.ANY_SKILL],
                 env={}, out=lines.append,
             )
         self.assertEqual(0, code)
@@ -2715,24 +2762,36 @@ class HookWiringOptInTests(_HookWiringFixture):
 
     # -- refusals -----------------------------------------------------------
 
-    def test_wire_hooks_hard_errors_when_the_canonical_owner_is_not_installed(self):
-        """Refusing to wire something it cannot locate is correct, and is NOT a
-        fail-open violation: `decision:fail-open-is-inviolable` governs hook
-        EXECUTION paths, not installer preconditions."""
+    def test_wire_hooks_succeeds_on_the_narrowest_subset(self):
+        """INVERTED BY #639, not deleted. This asserted that `--wire-hooks`
+        hard-errors when `--skills` leaves the canonical owner out -- correct
+        while the owner was the `workbench` SKILL, which a subset could omit,
+        leaving the wiring nothing real to point at.
+
+        The owner is now the engine BUNDLE, which every install writes whatever
+        `--skills` selects, so that failure is unreachable and the guard that
+        raised it is gone (a guard whose answer is identical in the healthy and
+        the broken world discriminates nothing). What replaces it is the
+        property that made the guard removable: wire the narrowest possible
+        subset and the written path must exist ON DISK -- checked by resolving
+        it, never by matching the string, which is the same discipline
+        `detect_hook_wiring` uses."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                with self.assertRaises(SystemExit) as raised:
-                    installer.main(
-                        ["--agent", "claude", "--scope", "user",
-                         "--dest", str(self._dest(tmp)),
-                         "--skills", "charter", "--wire-hooks"],
-                        env={}, out=lambda _: None,
-                    )
-            self.assertNotEqual(0, raised.exception.code)
-            self.assertIn(self.OWNER_SKILL, stderr.getvalue())
-            self.assertFalse(self._settings(tmp).exists())
+            exit_code = installer.main(
+                ["--agent", "claude", "--scope", "user",
+                 "--dest", str(self._dest(tmp)),
+                 "--skills", "charter", "--wire-hooks"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, exit_code)
+            wired = installer.installed_hook_path(self._dest(tmp), self.WRITER)
+            self.assertTrue(
+                wired.is_file(),
+                f"--wire-hooks wrote a path with no file behind it: {wired}",
+            )
+            self.assertIn(self.INSTALLED_OWNER, str(wired))
+            self.assertIn(self.INSTALLED_OWNER, self._settings(tmp).read_text(encoding="utf-8"))
 
     def test_wire_hooks_refuses_an_unparseable_settings_json_without_clobbering(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2745,7 +2804,7 @@ class HookWiringOptInTests(_HookWiringFixture):
                     installer.main(
                         ["--agent", "claude", "--scope", "user",
                          "--dest", str(self._dest(tmp)),
-                         "--skills", self.OWNER_SKILL, "--wire-hooks"],
+                         "--skills", self.ANY_SKILL, "--wire-hooks"],
                         env={}, out=lambda _: None,
                     )
             self.assertNotEqual(0, raised.exception.code)
@@ -2759,7 +2818,7 @@ class HookWiringOptInTests(_HookWiringFixture):
                     installer.main(
                         ["--agent", "codex", "--scope", "user",
                          "--dest", str(self._dest(tmp)),
-                         "--skills", self.OWNER_SKILL, "--wire-hooks"],
+                         "--skills", self.ANY_SKILL, "--wire-hooks"],
                         env={}, out=lambda _: None,
                     )
             self.assertNotEqual(0, raised.exception.code)
@@ -2792,7 +2851,7 @@ class HookWiringOptInTests(_HookWiringFixture):
             project.mkdir()
             code = installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
-                 "--skills", self.OWNER_SKILL, "--wire-hooks"],
+                 "--skills", self.ANY_SKILL, "--wire-hooks"],
                 env={}, cwd=project, out=lines.append,
             )
             self.assertEqual(0, code)
@@ -3099,7 +3158,7 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
                     f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
                 )
 
-    def test_source_wiring_does_not_need_the_workbench_skill_installed(self):
+    def test_source_wiring_does_not_need_an_installed_copy(self):
         """The installed-copy precondition is about the install; source wiring
         points somewhere else entirely, so requiring it would be refusing on a
         ground that does not apply."""
@@ -3134,7 +3193,7 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
                 with self.assertRaises(SystemExit) as raised:
                     installer.main(
                         ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
-                         "--skills", self.OWNER_SKILL, "--wire-hooks", "--hooks-from", "source"],
+                         "--skills", self.ANY_SKILL, "--wire-hooks", "--hooks-from", "source"],
                         env={}, out=lambda _: None,
                     )
             self.assertNotEqual(0, raised.exception.code)
@@ -3150,7 +3209,7 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
             subprocess.run(["git", "init", "-q"], cwd=str(repo), capture_output=True)
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
-                 "--skills", self.OWNER_SKILL, "--wire-hooks", "--hooks-from", "source"],
+                 "--skills", self.ANY_SKILL, "--wire-hooks", "--hooks-from", "source"],
                 env={}, out=lambda _: None,
             )
             self.assertEqual(0, code)
@@ -3235,7 +3294,7 @@ class HookWiringLoudFailureTests(_MultiHookFixture):
                     with self.assertRaises(SystemExit) as raised:
                         installer.main(
                             ["--agent", "claude", "--scope", "user",
-                             "--dest", str(self._dest(tmp)), "--skills", self.OWNER_SKILL,
+                             "--dest", str(self._dest(tmp)), "--skills", self.ANY_SKILL,
                              "--wire-hooks", "--hooks-from", "source"],
                             env={}, out=lambda _: None,
                         )
@@ -3375,7 +3434,7 @@ class ReadinessSkillsCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "skills"
             target.mkdir()
-            (target / "constellation-workbench").mkdir()  # skill dir with no CORPUS.json
+            (target / "constellation-charter").mkdir()  # skill dir with no CORPUS.json
             result = installer.check_skills_installed(target)
         self.assertFalse(result.ready)
         self.assertIn("CORPUS.json", result.reason)
@@ -3385,10 +3444,10 @@ class ReadinessSkillsCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "skills"
             target.mkdir()
-            (target / "constellation-workbench").mkdir()
+            (target / "constellation-charter").mkdir()
             (target / "CORPUS.json").write_text("{}", encoding="utf-8")
             result = installer.check_skills_installed(
-                target, expected_skills=["constellation-workbench", "constellation-implementer"])
+                target, expected_skills=["constellation-charter", "constellation-implementer"])
         self.assertFalse(result.ready)
         self.assertIn("constellation-implementer", result.reason)
 
@@ -3397,11 +3456,11 @@ class ReadinessSkillsCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "skills"
             target.mkdir()
-            (target / "constellation-workbench").mkdir()
+            (target / "constellation-charter").mkdir()
             (target / "constellation-implementer").mkdir()
             (target / "CORPUS.json").write_text("{}", encoding="utf-8")
             result = installer.check_skills_installed(
-                target, expected_skills=["constellation-workbench", "constellation-implementer"])
+                target, expected_skills=["constellation-charter", "constellation-implementer"])
         self.assertTrue(result.ready)
 
     def test_check_skills_installed_ready_with_no_expected_skills_given(self):
@@ -3411,7 +3470,7 @@ class ReadinessSkillsCheckTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "skills"
             target.mkdir()
-            (target / "constellation-workbench").mkdir()
+            (target / "constellation-charter").mkdir()
             (target / "CORPUS.json").write_text("{}", encoding="utf-8")
             result = installer.check_skills_installed(target)
         self.assertTrue(result.ready)
@@ -3708,7 +3767,7 @@ class ReadinessTriStateTests(_MultiHookFixture):
                 ["git", "-c", "user.email=t@e.com", "-c", "user.name=T",
                  "commit", "-qm", "init"], cwd=str(project), capture_output=True)
             install = ["--agent", "claude", "--scope", "project",
-                       "--project", str(project), "--skills", "workbench"]
+                       "--project", str(project), "--skills", "charter"]
             self.assertEqual(0, installer.main(install, env={}, cwd=project, out=lambda _: None))
 
             lines = []
@@ -3777,7 +3836,7 @@ class NoInterpreterOnHostTests(unittest.TestCase):
                     with self.assertRaises(SystemExit) as raised:
                         installer.main(
                             ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                             "--skills", "workbench"],
+                             "--skills", "charter"],
                             env={}, out=lambda _: None,
                         )
             self.assertNotEqual(0, raised.exception.code)
@@ -3797,11 +3856,11 @@ class NoInterpreterOnHostTests(unittest.TestCase):
             dest = Path(tmp) / "skills"
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _: None,
             )
             self.assertEqual(0, code)
-            self.assertTrue((dest / "constellation-workbench").is_dir())
+            self.assertTrue((dest / "constellation-charter").is_dir())
 
     # -- caller 2: --dry-run --------------------------------------------------
 
@@ -3819,7 +3878,7 @@ class NoInterpreterOnHostTests(unittest.TestCase):
                     with self.assertRaises(SystemExit) as raised:
                         installer.main(
                             ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                             "--skills", "workbench", "--dry-run"],
+                             "--skills", "charter", "--dry-run"],
                             env={}, out=lambda _: None,
                         )
             self.assertNotEqual(0, raised.exception.code)
@@ -3831,7 +3890,7 @@ class NoInterpreterOnHostTests(unittest.TestCase):
             lines = []
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench", "--dry-run"],
+                 "--skills", "charter", "--dry-run"],
                 env={}, out=lines.append,
             )
             self.assertEqual(0, code)
@@ -3852,7 +3911,7 @@ class NoInterpreterOnHostTests(unittest.TestCase):
             with self._no_interpreter(installer):
                 code = installer.main(
                     ["--agent", "claude", "--scope", "project", "--project", str(project),
-                     "--skills", "workbench", "--baseline-only"],
+                     "--skills", "charter", "--baseline-only"],
                     env={}, cwd=project, out=lambda _: None,
                 )
             self.assertEqual(0, code, "--baseline-only refused despite needing no interpreter")
@@ -3959,7 +4018,7 @@ class ReadinessCLITests(unittest.TestCase):
             dest = Path(tmp) / "skills"
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                 "--skills", "workbench", "--wire-hooks"],
+                 "--skills", "charter", "--wire-hooks"],
                 env={}, out=lambda _: None,
             )
             self.assertEqual(0, code)
@@ -3967,7 +4026,7 @@ class ReadinessCLITests(unittest.TestCase):
             lines = []
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                 "--skills", "workbench", "--check-readiness", "--project", str(project)],
+                 "--skills", "charter", "--check-readiness", "--project", str(project)],
                 env={}, cwd=project, out=lines.append,
             )
         self.assertEqual(0, code)
@@ -4119,7 +4178,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             before = mcp_config.read_text(encoding="utf-8")
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _: None, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4133,7 +4192,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             lines = []
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lines.append, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4154,7 +4213,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             before = mcp_config.read_text(encoding="utf-8")
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4179,7 +4238,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             with mock.patch.object(installer.subprocess, "run", side_effect=only_py_answers):
                 code = installer.main(
                     ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                     "--skills", "workbench"],
+                     "--skills", "charter"],
                     env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
                 )
             self.assertEqual(0, code)
@@ -4195,7 +4254,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             mcp_config = Path(tmp) / "nonexistent" / ".mcp.json"
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench"],
+                 "--skills", "charter"],
                 env={}, out=lambda _: None, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4210,7 +4269,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             lines = []
             code = installer.main(
                 ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
-                 "--skills", "workbench", "--dry-run"],
+                 "--skills", "charter", "--dry-run"],
                 env={}, out=lines.append, wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
             self.assertEqual(0, code)
@@ -4245,7 +4304,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             before = mcp_config.read_text(encoding="utf-8")
             code = installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
-                 "--skills", "workbench", "--baseline-only"],
+                 "--skills", "charter", "--baseline-only"],
                 env={}, cwd=project, out=lambda _: None,
                 wire_repo_mcp_config=True, mcp_config_path=mcp_config,
             )
@@ -4271,7 +4330,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
                     with self.assertRaises(SystemExit) as raised:
                         installer.main(
                             ["--agent", "claude", "--scope", "user",
-                             "--dest", str(Path(tmp) / "skills"), "--skills", "workbench"],
+                             "--dest", str(Path(tmp) / "skills"), "--skills", "charter"],
                             env={}, out=lambda _: None,
                             wire_repo_mcp_config=True, mcp_config_path=mcp_config,
                         )
@@ -4336,7 +4395,7 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             try:
                 code = installer.main(
                     ["--agent", "claude", "--scope", "user", "--dest", str(dest),
-                     "--skills", "workbench"],
+                     "--skills", "charter"],
                     env={}, out=lambda _: None, wire_repo_mcp_config=True,
                 )
             finally:
@@ -4427,3 +4486,185 @@ class RewriteMcpConfigInterpreterBareNameTests(unittest.TestCase):
 
             self.assertFalse(changed)
             self.assertEqual(before, mcp_config.read_text(encoding="utf-8"))
+
+
+def installer_legacy_name() -> str:
+    """The engine's install home before #639, read from the installer itself."""
+    return load_installer().LEGACY_ENGINE_HOME_INSTALL_NAME
+
+
+class EngineBundleTests(unittest.TestCase):
+    """Issue #639: the installer gains a shipping unit that is not a skill.
+
+    `discover_skills` refuses a directory under `skills/` with no `SKILL.md`, so
+    a bundle of scripts could only ship dressed as a skill an agent could load.
+    `constellation-workbench` was that dress -- named for the wrapper, not for
+    the cargo, so reading its seven inert files said "dead" while deleting it
+    would have unwired the Stop hook, the SessionStart hook, the gauge writer
+    and the engine path on every installed machine.
+
+    These assert the bundle's three defining properties: it is invisible as a
+    skill, it arrives whatever `--skills` selects, and its old home does not
+    survive an upgrade."""
+
+    def _install(self, dest: Path, *args: str) -> int:
+        return load_installer().main(
+            ["--agent", "claude", "--scope", "user", "--dest", str(dest), *args],
+            env={}, out=lambda _line: None,
+        )
+
+    def test_the_bundle_is_not_a_skill(self):
+        installer = load_installer()
+        names = {skill.install_name for skill in installer.discover_skills()}
+        self.assertNotIn(
+            installer.ENGINE_BUNDLE_INSTALL_NAME, names,
+            "the engine bundle is discoverable as a skill again -- it would then "
+            "appear in every agent's skill list describing a wrapper rather than "
+            "its cargo, which is the #639 defect restored",
+        )
+        self.assertFalse((ROOT / "skills" / "engine").exists())
+
+    def test_the_bundle_ships_exactly_the_pre_639_cargo(self):
+        installer = load_installer()
+        self.assertEqual(
+            sorted(installer.ENGINE_BUNDLE_SCRIPTS),
+            sorted([
+                "agent_work_root.py", "checklist_engine.py", "context_manifest.py",
+                "episode_capture.py", "gauge_reader.py", "gauge_writer_hook.py",
+                "spine_rail.py",
+            ]),
+            "the engine bundle's cargo changed. It is the transitive closure of "
+            "checklist_engine.py + gauge_writer_hook.py, and those closures encode "
+            "silent-failure contracts (a split hook pair fails open to a dark "
+            "governor) -- change SCRIPT_RUNTIME_COMPANIONS and this together",
+        )
+
+    def test_the_bundle_arrives_on_the_narrowest_subset(self):
+        """The load-bearing property. A machine's settings.json wires five hook
+        entries into this directory, so a subset install that skipped it would
+        leave every one of them naming a path with no file behind it."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            self.assertEqual(0, self._install(dest, "--skills", "charter"))
+            bundle = dest / installer.ENGINE_BUNDLE_INSTALL_NAME / "scripts"
+            self.assertTrue(bundle.is_dir())
+            for script in installer.ENGINE_BUNDLE_SCRIPTS:
+                with self.subTest(script=script):
+                    self.assertTrue((bundle / script).is_file())
+            self.assertFalse(
+                (bundle / "SKILL.md").exists(),
+                "the bundle grew a SKILL.md, which is how it becomes a skill again",
+            )
+
+    def _legacy_home(self, dest: Path) -> Path:
+        legacy = dest / installer_legacy_name() / "scripts"
+        legacy.mkdir(parents=True)
+        (legacy / "checklist_engine.py").write_text("stale\n", encoding="utf-8")
+        return legacy
+
+    def test_a_subset_install_refuses_to_leave_the_old_home_behind(self):
+        """THE SILENT CASE, and the reason this migration exists. A full --force
+        install wipes every constellation-* directory, so the old copies vanish
+        and a stale settings.json entry resolves to nothing -- which
+        detect_hook_wiring reports as STALE. A --skills subset does NOT wipe: the
+        old scripts survive, every wired path still resolves, and five hooks go
+        on running the previous revision's code with nothing reporting it."""
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            dest.mkdir(parents=True)
+            legacy = self._legacy_home(dest)
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                with self.assertRaises(SystemExit) as raised:
+                    self._install(dest, "--skills", "charter")
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn("--force", stderr.getvalue())
+            self.assertTrue(
+                legacy.is_dir(),
+                "the refusal removed the old home anyway -- a refusal must not "
+                "half-apply the migration it is refusing to perform",
+            )
+
+    def test_force_removes_the_old_home(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            dest.mkdir(parents=True)
+            legacy = self._legacy_home(dest)
+            self.assertEqual(0, self._install(dest, "--skills", "charter", "--force"))
+            self.assertFalse(
+                legacy.exists(),
+                "the pre-#639 engine home survived a --force upgrade, so the wired "
+                "hooks still resolve to it and still run the old code",
+            )
+
+    def test_dry_run_reports_the_migration_and_never_raises(self):
+        """A plan is where someone should LEARN a migration is pending, and this
+        one fires on every machine that has ever installed this corpus -- so
+        raising here would make --dry-run unusable for all of them."""
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            dest.mkdir(parents=True)
+            legacy = self._legacy_home(dest)
+            lines: list[str] = []
+            self.assertEqual(
+                0,
+                load_installer().main(
+                    ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                     "--skills", "charter", "--dry-run"],
+                    env={}, out=lines.append,
+                ),
+            )
+            report = "\n".join(lines)
+            self.assertIn("pre-#639", report)
+            self.assertIn("needs --force", report)
+            self.assertTrue(legacy.exists(), "a dry run removed something")
+
+
+class StalePermissionRuleReportTests(unittest.TestCase):
+    """Read-only, by decision (#639). The installer has never written a
+    permission rule and `test_wire_hooks_is_additive_and_preserves_unrelated_settings`
+    pins `permissions` as surviving byte-identical -- and unlike a stale HOOK
+    entry, which fails silently, a stale permission rule fails LOUDLY by
+    prompting, so the human's own approval writes the correction."""
+
+    def _settings(self, tmp: Path, allow: list) -> Path:
+        path = tmp / "settings.json"
+        path.write_text(json.dumps({"permissions": {"allow": allow}}), encoding="utf-8")
+        return path
+
+    def test_reports_only_the_rule_whose_path_is_gone(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            live = tmp / "skills" / "constellation-engine" / "scripts"
+            live.mkdir(parents=True)
+            (live / "checklist_engine.py").write_text("x", encoding="utf-8")
+            gone = tmp / "skills" / "constellation-workbench" / "scripts"
+            path = self._settings(tmp, [
+                f"Bash(py {gone / 'checklist_engine.py'}:*)",
+                f"Bash(py {live / 'checklist_engine.py'}:*)",
+                "Bash(ls:*)",
+            ])
+            stale = installer.detect_stale_permission_rules(path)
+            self.assertEqual(1, len(stale))
+            self.assertIn("constellation-workbench", stale[0])
+
+    def test_says_nothing_when_there_is_no_settings_file(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(
+                [], installer.detect_stale_permission_rules(Path(tmp) / "absent.json"))
+
+    def test_unparseable_settings_are_left_to_the_hook_detector(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "settings.json"
+            path.write_text("{ not json", encoding="utf-8")
+            self.assertEqual([], installer.detect_stale_permission_rules(path))
+
+    def test_a_rule_naming_no_constellation_path_is_never_reported(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._settings(Path(tmp), ["Bash(ls:*)", "Bash(git status:*)"])
+            self.assertEqual([], installer.detect_stale_permission_rules(path))

@@ -27,7 +27,7 @@ Constellation deliberately holds native, rigor-flavored versions of the capabili
 
 ## Skill set
 
-The corpus is **20 skills**. `skills/_shared/` is **not a skill** — it is shared doctrine (e.g. `skill-goodness.md`, deep-module notes) that multiple skills consume.
+The corpus is **19 skills**, plus one non-skill shipping unit (`constellation-engine`, the checklist engine and hook scripts -- #639). `skills/_shared/` is **not a skill** — it is shared doctrine (e.g. `skill-goodness.md`, deep-module notes) that multiple skills consume.
 
 | Skill | Purpose |
 |---|---|
@@ -49,7 +49,6 @@ The corpus is **20 skills**. `skills/_shared/` is **not a skill** — it is shar
 | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, Glossary, and engine config. |
 | `constellation-curator` | Periodic human-run maintenance of the skills corpus: measure, mend mechanical issues in place, route design decisions to Triage. |
 | `constellation-docent` | Generate a self-contained static HTML explainer site for humans from Cartographer map truth, stamped with the source-map digest so a stale site is visibly flagged. |
-| `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey); the substrate every other skill uses. |
 | `constellation-how-to-talk` | Keep an agent's prose clear, concise, and grounded — each sentence one point in the plainest words — so meaning stays consistent across artifacts, agents, and sessions. Applies to any human-facing output, so it is not tier-specific. |
 
 ## Choosing an entry point
@@ -358,7 +357,7 @@ Rules:
 - If it is in `docs/`, it is meant to guide future workflows.
 - If it is in `.agent-work/templates/`, it is the project-owned template catalog. Agents prefer `.agent-work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.
-- Workflow status language follows `skills/workbench/references/status-model.md`.
+- Workflow status language follows `skills/_shared/status-model.md`.
 - execute.json = Commander's frozen gate plan; three tasks per gate (implement/review/integrate); authored at plan time and never edited mid-run.
 - Default Checklist = fallback controller when a role does not ship its own checklist (e.g. Crew multi-step recovery). Never both a role checklist and Default Checklist for the same work.
 - Charter seeds and updates project templates when project doctrine changes checklist or handoff interfaces.

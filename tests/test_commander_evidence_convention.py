@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXECUTE_PLAN = ROOT / "skills" / "commander" / "templates" / "EXECUTE_PLAN.template.json"
 COMMANDER_CORE = ROOT / "skills" / "commander" / "references" / "commander-core.md"
 IMPLEMENTER_HANDOFF = ROOT / "skills" / "commander" / "templates" / "IMPLEMENTER_HANDOFF.template.md"
-STATUS_MODEL = ROOT / "skills" / "workbench" / "references" / "status-model.md"
+STATUS_MODEL = ROOT / "skills" / "_shared" / "status-model.md"
 
 
 def _g1_implement_task():

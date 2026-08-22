@@ -1043,7 +1043,10 @@ class TestTier2SpineAlreadyBoundForDispatchedCrews:
 # Tier 3 -- the engine CLI reference every Tier2 file points at.
 # --------------------------------------------------------------------------- #
 
-TIER3_PATH = "skills/workbench/references/checklist-engine.md"
+# Moved out of the retired `workbench` skill by #639: the engine reference is
+# shared doctrine now, bundled into each skill that cites it rather than
+# reached through a cross-package pointer only one skill could satisfy.
+TIER3_PATH = "skills/_shared/checklist-engine.md"
 
 #: The heading of the section this tier exists to pin. Every Tier3 assertion
 #: below is scoped to the text UNDER this heading, never to the whole file.

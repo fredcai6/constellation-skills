@@ -16,7 +16,7 @@ workflow's reporting step (closeout, feedback step, or workflow feedback); repor
 deviation.
 
 How you invoke the engine (the mechanism — controller types, verbs, evidence shape, ordering, the rework and
-consolidation guards) is explained once in workbench `references/checklist-engine.md`; each role skill only names
+consolidation guards) is explained once in `references/checklist-engine.md`; each role skill only names
 its own spine/survey template and drives it, it never re-explains the engine.
 
 ## Engine verbs

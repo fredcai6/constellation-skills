@@ -17,6 +17,7 @@ from typing import Callable, Iterable, Mapping, Sequence
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = REPO_ROOT / "skills"
 SHARED_REFERENCE_ROOT = SOURCE_ROOT / "_shared"
+SHARED_TEMPLATE_ROOT = SHARED_REFERENCE_ROOT / "templates"
 
 
 class InstallError(Exception):
@@ -30,6 +31,7 @@ class Skill:
     source_path: Path
     required_scripts: tuple[str, ...]
     required_references: tuple[str, ...]
+    required_templates: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -220,13 +222,6 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     # tests/test_install_constellation.py pins companions against actual dynamic
     # loads.
     "commander": ("checklist_engine.py", "init_work_area.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_episode_delta.py", "verify_episode_captured.py", "verify_worktree_isolation.py", "agent_work_root.py", "map_orient.py", "verify_iterative_role_artifacts.py"),
-    # workbench is the checklist engine's home skill, so it is the canonical (and
-    # only) owner of the gauge WRITER hook -- the gauge exists solely to feed
-    # checklist_engine.py's `current` advisory. Deliberately NOT a companion of
-    # checklist_engine.py: that would copy the hook into every engine-carrying
-    # skill and leave "which copy is canonical?" ambiguous for whatever later
-    # wires it into a settings.json.
-    "workbench": ("checklist_engine.py", "gauge_writer_hook.py"),
     "interrogator": ("checklist_engine.py", "verify_interrogation.py"),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
     "docent": ("docent_freshness.py",),
@@ -239,15 +234,71 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "diagnose": ("verify_diagnosis.py",),
     "write-a-skill": ("verify_skill_registered.py", "curate_corpus.py", "install_constellation.py"),
 }
+
+# THE ONE SHIPPING UNIT THAT IS NOT A SKILL (#639).
+#
+# `discover_skills` refuses a directory under `skills/` that has no `SKILL.md`,
+# so before this constant the only way to ship a bundle of scripts was to dress
+# it as a skill an agent could load. `constellation-workbench` was that dress:
+# vestigial as a skill, load-bearing as a bundle, and named for the wrapper
+# rather than the cargo -- so anyone reading `skills/workbench/` to decide
+# whether it still earned its place measured inert files and concluded it was
+# dead. It was not: deleting it unwired the Stop hook, the SessionStart hook,
+# the gauge writer and the engine path on every installed machine.
+#
+# This unit has no `SKILL.md`, never appears in an agent's skill list, and is
+# installed on every run regardless of `--skills`, because the hook wiring on a
+# consuming machine points into it and a subset install must not leave that
+# wiring dangling.
+#
+# ITS SOURCES DO NOT MOVE, deliberately. The install DESTINATION is what #639 is
+# about; `SCRIPT_SOURCE_SUBDIRS` above already proves source location and
+# install location are independent, and `AGENT_GUIDE.md`'s layout table names
+# `scripts/` as where shared machinery lives. Relocating the hook pair would
+# additionally break this repo's own `.claude/settings.json`, 28 test
+# references, and the frozen-source-layout decision recorded above -- all to
+# move files the installer can already reach where they sit.
+ENGINE_BUNDLE_INSTALL_NAME = "constellation-engine"
+
+# Exactly what `constellation-workbench` shipped before #639: the engine, the
+# gauge writer hook, and the transitive runtime closure of both. Expanded from
+# the same two roots through the same companion table, so the cargo cannot drift
+# from what the hooks and the door actually need.
+ENGINE_BUNDLE_ROOTS: tuple[str, ...] = ("checklist_engine.py", "gauge_writer_hook.py")
+ENGINE_BUNDLE_SCRIPTS: tuple[str, ...] = expand_script_bundle(ENGINE_BUNDLE_ROOTS)
 # Global doctrine buckets (single source: skills/_shared/), bundled into each skill's
 # references/ at install exactly as the scripts above are bundled into scripts/. The
 # audience Venn is enforced by which buckets a skill carries: everyone-global is shared
 # by all; the tier buckets reach only their tier. A role reads its own bucket(s) at the
 # checklist context-read step; the project supplies thin local deltas under docs/agents/.
-_GLOBAL_EVERYONE = ("global-everyone.md", "windows.md")
-_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md", "design-it-twice-brief.md", "windows.md")
-_GLOBAL_CREW = ("global-everyone.md", "global-crew.md", "windows.md")
-_GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md", "windows.md")
+# Shared TEMPLATES, bundled into each skill's templates/ exactly as the shared
+# references are bundled into its references/ (#639). Before this table only
+# references had a shared-bundling mechanism: a skill's templates arrived solely
+# through the wholesale copytree of its own directory, so a template two skills
+# both needed had to live in a third skill they could point at -- which is one of
+# the things that kept `workbench` alive as a wrapper after its teaching was cut.
+# The alternative was a copy per consumer, and two copies of a file that must not
+# drift is the failure `_shared/` exists to prevent.
+SKILL_TEMPLATE_BUNDLES: dict[str, tuple[str, ...]] = {
+    # The crash-resume state note: both spine templates name it as the fallback
+    # when a project carries no .agent-work/templates/ overlay, and
+    # verify_state_note.py is the gate that reads what it produces.
+    "admiral": ("STATE_NOTE.template.md", "CONSTELLATION_FEEDBACK.template.md"),
+    "commander": ("STATE_NOTE.template.md", "CONSTELLATION_FEEDBACK.template.md"),
+    # commander-delegated cites the feedback template but never stands up a work
+    # area (the Admiral does it), so it needs no state note.
+    "commander-delegated": ("CONSTELLATION_FEEDBACK.template.md",),
+}
+
+# `checklist-engine.md` is in every tuple because `global-everyone.md` -- which
+# every skill carries -- cites it by name. Before #639 it lived under the
+# `workbench` skill and every citation was a CROSS-PACKAGE pointer that only
+# resolved if that skill happened to be installed; bundled here it is a local
+# `references/checklist-engine.md` in each skill that names it.
+_GLOBAL_EVERYONE = ("global-everyone.md", "windows.md", "checklist-engine.md")
+_GLOBAL_ORCHESTRATOR = ("global-everyone.md", "global-orchestrator.md", "design-it-twice-brief.md", "windows.md", "checklist-engine.md")
+_GLOBAL_CREW = ("global-everyone.md", "global-crew.md", "windows.md", "checklist-engine.md")
+_GLOBAL_ALL_TIERS = ("global-everyone.md", "global-orchestrator.md", "global-crew.md", "windows.md", "checklist-engine.md")
 SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     # admiral and commander stand up a worktree/work area themselves (issue #610);
     # commander-delegated never does (the Admiral does it for them), so it stays on
@@ -255,14 +306,13 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "admiral": _GLOBAL_ORCHESTRATOR + ("stand-up-work-area.md",),
     "commander-delegated": _GLOBAL_ORCHESTRATOR,
     "charter": _GLOBAL_ALL_TIERS,  # the baseline Charter elicits project deltas from
-    "commander": _GLOBAL_ORCHESTRATOR + ("stand-up-work-area.md",),
-    "workbench": _GLOBAL_ALL_TIERS,  # generic driver for either tier
+    "commander": _GLOBAL_ORCHESTRATOR + ("stand-up-work-area.md", "status-model.md"),
     "interrogator": _GLOBAL_EVERYONE,
     "cartographer": _GLOBAL_ORCHESTRATOR,
     "docent": _GLOBAL_ORCHESTRATOR,
     "scout": _GLOBAL_ORCHESTRATOR,
-    "implementer": _GLOBAL_CREW,
-    "reviewer": _GLOBAL_CREW,
+    "implementer": _GLOBAL_CREW + ("status-model.md",),
+    "reviewer": _GLOBAL_CREW + ("status-model.md",),
     "triage": _GLOBAL_ORCHESTRATOR,
     "explorer": _GLOBAL_ORCHESTRATOR,
     "prototyper": _GLOBAL_CREW,
@@ -331,6 +381,7 @@ def discover_skills(source_root: Path = SOURCE_ROOT) -> list[Skill]:
                 required_scripts=expand_script_bundle(
                     SKILL_SCRIPT_BUNDLES.get(source_path.name, ())),
                 required_references=SKILL_REFERENCE_BUNDLES.get(source_path.name, ()),
+                required_templates=SKILL_TEMPLATE_BUNDLES.get(source_path.name, ()),
             )
         )
 
@@ -376,6 +427,18 @@ def validate_required_scripts(skills: Iterable[Skill], scripts_root: Path = REPO
                 missing.append(f"{skill.install_name}: {source}")
     if missing:
         raise InstallError(f"required script(s) missing: {'; '.join(missing)}")
+
+
+def validate_required_templates(
+    skills: Iterable[Skill], shared_root: Path = SHARED_TEMPLATE_ROOT
+) -> None:
+    missing: list[str] = []
+    for skill in skills:
+        for template in skill.required_templates:
+            if not (shared_root / template).is_file():
+                missing.append(f"{skill.install_name}: {shared_root / template}")
+    if missing:
+        raise InstallError(f"required template(s) missing: {'; '.join(missing)}")
 
 
 def validate_required_references(
@@ -784,6 +847,96 @@ def remove_existing_constellation_set(target_root: Path) -> None:
             target.unlink()
 
 
+def install_engine_bundle(
+    target_root: Path,
+    *,
+    dry_run: bool,
+    out: Callable[[str], object],
+) -> None:
+    """Install the non-skill engine bundle (#639).
+
+    Unconditional: every install writes it, whatever `--skills` selected, because
+    a consuming machine's settings.json wires five hook entries into this
+    directory and a subset install that skipped it would leave every one of them
+    naming a path with no file behind it.
+
+    Replace-in-place rather than merge, matching how a skill target is written:
+    a script dropped from `ENGINE_BUNDLE_SCRIPTS` must not survive as a stale
+    copy that an old settings.json can still resolve.
+    """
+    target = target_root / ENGINE_BUNDLE_INSTALL_NAME
+    out(f"- {ENGINE_BUNDLE_INSTALL_NAME}: {len(ENGINE_BUNDLE_SCRIPTS)} script(s) -> {target}")
+    if dry_run:
+        return
+    ensure_target_is_inside_root(target_root, target)
+    if target.exists():
+        if target.is_dir():
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+    scripts_dir = target / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    for script in ENGINE_BUNDLE_SCRIPTS:
+        shutil.copy2(script_source_path(script, REPO_ROOT / "scripts"), scripts_dir / script)
+
+
+# The engine's home before #639. A machine that has ever installed this corpus
+# carries hook wiring into it, so vacating the path is a migration, not a rename.
+LEGACY_ENGINE_HOME_INSTALL_NAME = "constellation-workbench"
+
+
+def migrate_legacy_engine_home(
+    target_root: Path,
+    *,
+    force: bool,
+    dry_run: bool,
+    out: Callable[[str], object],
+) -> None:
+    """Remove the engine scripts from their pre-#639 home, loudly.
+
+    THE FAILURE THIS EXISTS TO PREVENT IS SILENT, AND IT IS THE SUBSET INSTALL.
+    A full `--force` install wipes every `constellation-*` directory
+    (`remove_existing_constellation_set`), so the old copies vanish and any
+    settings.json entry still naming them resolves to nothing -- which
+    `detect_hook_wiring` reports as STALE, because it classifies by resolving
+    paths against the filesystem rather than by matching strings. That case is
+    already loud.
+
+    A `--skills <subset>` install does NOT wipe. Without this migration the old
+    `constellation-workbench/scripts/` survives intact, every wired path still
+    resolves, and five hooks plus the engine go on running the PREVIOUS
+    revision's code forever, with nothing anywhere reporting a problem. That is
+    strictly worse than a broken path: a stale hook that runs is indistinguishable
+    from a current one that runs.
+
+    So it runs on every install, subset or not, and requires `--force` -- the
+    same authority `migrate_legacy_initial_cut_destination` requires, for the
+    same reason: removing something a previous install wrote is not a side
+    effect of an install someone already knew how to run.
+    """
+    legacy_scripts = target_root / LEGACY_ENGINE_HOME_INSTALL_NAME / "scripts"
+    if not legacy_scripts.exists():
+        return
+    ensure_target_is_inside_root(target_root, legacy_scripts)
+    if dry_run:
+        # Dry run reports and never raises, including when --force is absent: a
+        # plan is exactly where someone should LEARN a migration is pending, and
+        # this one fires on every machine that has ever installed this corpus, so
+        # raising here would make --dry-run unusable for all of them.
+        needs = "" if force else " (needs --force)"
+        out(f"- DRY RUN: would remove the engine's pre-#639 home {legacy_scripts}{needs}")
+        return
+    if not force:
+        raise InstallError(
+            f"the engine's pre-#639 home still exists at {legacy_scripts}; it holds the "
+            f"copies five wired hook entries resolve to, so leaving it in place would keep "
+            f"those hooks running the old code with nothing reporting it. Migrate with "
+            f"--force."
+        )
+    shutil.rmtree(legacy_scripts)
+    out(f"- removed the engine's pre-#639 home {legacy_scripts}")
+
+
 INITIAL_CUT_INSTALL_NAME = "constellation-to-initial-issues"
 LEGACY_INITIAL_CUT_INSTALL_NAME = "constellation-to-issues"
 
@@ -843,10 +996,12 @@ SETTINGS_FILENAME = "settings.json"
 LOCAL_SETTINGS_FILENAME = "settings.local.json"
 GAUGE_WRITER_HOOK_SCRIPT = "gauge_writer_hook.py"
 SPINE_RAIL_HOOK_SCRIPT = "spine_rail.py"
-# The canonical owner (see SKILL_SCRIPT_BUNDLES["workbench"]): exactly one
-# installed copy exists, so the wiring has an unambiguous path to point at.
-HOOK_OWNER_SKILL = "workbench"
-HOOK_OWNER_INSTALL_NAME = "constellation-workbench"
+# The canonical owner (see ENGINE_BUNDLE_INSTALL_NAME): exactly one installed
+# copy exists, so the wiring has an unambiguous path to point at. Since #639
+# that owner is the non-skill engine bundle rather than a skill -- which is what
+# lets the wiring name the cargo instead of a wrapper, and what lets
+# `--wire-hooks` stop depending on a particular skill being in the install set.
+HOOK_OWNER_INSTALL_NAME = ENGINE_BUNDLE_INSTALL_NAME
 HOOK_EVENT = "PostToolUse"
 # Matcher and timeout are carried VERBATIM from the snippet in
 # docs/GAUGE_WRITER_HOOK.md. Neither is tuned, derived, or invented here: the
@@ -926,7 +1081,7 @@ HOOK_SETS: dict[str, tuple[HookSpec, ...]] = {
 DEFAULT_HOOK_SET = "governor"
 
 # Where the wiring points its script paths.
-HOOKS_FROM_INSTALLED = "installed"  # <target_root>/constellation-workbench/scripts/
+HOOKS_FROM_INSTALLED = "installed"  # <target_root>/constellation-engine/scripts/
 HOOKS_FROM_SOURCE = "source"        # this checkout's own scripts/hooks/
 HOOKS_FROM_CHOICES = (HOOKS_FROM_INSTALLED, HOOKS_FROM_SOURCE)
 
@@ -1304,6 +1459,70 @@ def local_settings_note(target_root: Path) -> str:
     )
 
 
+def detect_stale_permission_rules(settings_path: Path) -> list[str]:
+    """READ-ONLY. `permissions.allow` entries naming a path under a
+    `constellation-*` directory that is not on disk.
+
+    WHY THIS IS A REPORT AND NEVER A REWRITE (#639). The installer does not own
+    that block: it has never written a permission rule, and
+    `test_wire_hooks_is_additive_and_preserves_unrelated_settings` pins
+    `permissions` as surviving `wire_hooks` byte-identical. The rules on a given
+    machine are hand-approved, per-machine, and incomplete by construction --
+    they name the engine copies under three skills and not the one a crew
+    actually drives.
+
+    It is also a materially different failure from a stale HOOK. A hook entry
+    naming a moved script fails SILENTLY: nothing fires and nothing says so,
+    which is why that case earns a migration. A permission rule naming a moved
+    script fails LOUDLY, by prompting -- the human sees it, approves once, and
+    their own approval writes the corrected rule. Reporting converts a surprise
+    prompt into an expected one; rewriting would make an installer that edits
+    security config on a human's behalf.
+
+    Classification is by RESOLVING the path, the same discipline
+    `detect_hook_wiring` uses, so a rule pointing at a directory that still
+    exists is never reported.
+    """
+    if not settings_path.is_file():
+        return []
+    try:
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        # Unreadable settings are already reported by the hook detector, which
+        # runs beside this one. Saying it twice would not add information.
+        return []
+    allow = ((settings or {}).get("permissions") or {}).get("allow") or []
+    stale: list[str] = []
+    for rule in allow:
+        if not isinstance(rule, str):
+            continue
+        for token in re.findall(r"[^\s'\"()]*constellation-[^\s'\"()]*", rule):
+            candidate = token.rstrip(":*")
+            if candidate and not Path(candidate).exists():
+                stale.append(rule)
+                break
+    return stale
+
+
+def report_stale_permission_rules(
+    target_root: Path,
+    *,
+    out: Callable[[str], object],
+) -> list[str]:
+    """Print the read-only permission-rule notice, if there is one to print."""
+    settings_path = settings_path_for_target_root(target_root)
+    stale = detect_stale_permission_rules(settings_path)
+    if stale:
+        out(
+            f"- permissions: {len(stale)} `permissions.allow` rule(s) in {settings_path} "
+            f"name a constellation path that is not on disk, so they match nothing and you "
+            f"will be prompted where they used to allow: {'; '.join(stale)}. This installer "
+            f"does not edit permissions -- approve the new path once when prompted, or "
+            f"update the rule yourself."
+        )
+    return stale
+
+
 def report_hook_wiring(
     target_root: Path,
     *,
@@ -1314,6 +1533,7 @@ def report_hook_wiring(
     wiring = detect_hook_wiring(
         settings_path_for_target_root(target_root), env=env, specs=specs)
     out(describe_hook_wiring(wiring) + local_settings_note(target_root))
+    report_stale_permission_rules(target_root, out=out)
     return wiring
 
 
@@ -1941,6 +2161,12 @@ def install_skills(
     if force and full_set and not dry_run:
         remove_existing_constellation_set(target_root)
 
+    # After the set-level wipe (which already vacated the old home on a full
+    # --force run) and before the skills, so the bundle the hook wiring points at
+    # exists no matter which subset of skills this call writes.
+    migrate_legacy_engine_home(target_root, force=force, dry_run=dry_run, out=out)
+    install_engine_bundle(target_root, dry_run=dry_run, out=out)
+
     # Resolved lazily, at most once, and reused for every skill in THIS call --
     # never a module-level global (a hidden global risks one pytest-process test
     # reading a stale value left by an earlier test). A caller installing across
@@ -1981,6 +2207,10 @@ def install_skills(
             reference_target = target / "references" / reference
             reference_target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(SHARED_REFERENCE_ROOT / reference, reference_target)
+        for template in skill.required_templates:
+            template_target = target / "templates" / template
+            template_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(SHARED_TEMPLATE_ROOT / template, template_target)
 
     if not dry_run:
         # Stamp the installed root with a CORPUS.json provenance marker, scoped to
@@ -1990,7 +2220,7 @@ def install_skills(
         corpus_id = write_corpus_marker(
             target_root,
             _source_commit(),
-            names=[skill.install_name for skill in skills],
+            names=[skill.install_name for skill in skills] + [ENGINE_BUNDLE_INSTALL_NAME],
         )
         out(f"- {CORPUS_MARKER}: {corpus_id}")
         out(restart_message)
@@ -2105,6 +2335,26 @@ def assert_corpus(run_skills_dir, expected_id: str) -> bool:
     return compute_corpus_id(run_skills_dir) == expected_id
 
 
+def skill_template_sources(skill: Skill) -> list[Path]:
+    """Every template file an install of `skill` writes into its templates/ dir.
+
+    Two sources since #639, not one: the skill's own `templates/` directory, and
+    the shared templates bundled into it from `_shared/templates/`. The three
+    baseline/working-copy walks below all read THIS, because a walk that saw only
+    the first source would anchor no baseline for a shared template -- and
+    check_skill_freshness, which reads the manifest, would then never report an
+    upstream change to one. Sorted by name so the manifest is stable run to run
+    regardless of which source a template came from.
+    """
+    found: dict[str, Path] = {}
+    own = skill.source_path / "templates"
+    if own.is_dir():
+        found.update({p.name: p for p in own.iterdir() if p.is_file()})
+    for name in skill.required_templates:
+        found[name] = SHARED_TEMPLATE_ROOT / name
+    return [found[name] for name in sorted(found)]
+
+
 def write_template_baselines(
     skills: Sequence[Skill],
     project_root: Path,
@@ -2141,12 +2391,7 @@ def write_template_baselines(
     entries: list[dict[str, str]] = []
     seeded: set[tuple[str, str]] = set()
     for skill in skills:
-        source_templates = skill.source_path / "templates"
-        if not source_templates.is_dir():
-            continue
-        for template in sorted(source_templates.iterdir()):
-            if not template.is_file():
-                continue
+        for template in skill_template_sources(skill):
             target = baseline_root / skill.install_name / template.name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(template, target)
@@ -2205,12 +2450,7 @@ def extend_template_baselines(
 
     added: set[tuple[str, str]] = set()
     for skill in skills:
-        source_templates = skill.source_path / "templates"
-        if not source_templates.is_dir():
-            continue
-        for template in sorted(source_templates.iterdir()):
-            if not template.is_file():
-                continue
+        for template in skill_template_sources(skill):
             if (skill.install_name, template.name) in tracked:
                 continue  # already tracked — never re-anchor an existing baseline
             target = baseline_root / skill.install_name / template.name
@@ -2267,12 +2507,7 @@ def write_template_working_copies(
     templates_root = project_root / ".agent-work" / "templates"
     seeded = 0
     for skill in skills:
-        source_templates = skill.source_path / "templates"
-        if not source_templates.is_dir():
-            continue
-        for template in sorted(source_templates.iterdir()):
-            if not template.is_file():
-                continue
+        for template in skill_template_sources(skill):
             if (skill.install_name, template.name) not in only:
                 continue  # only seed templates entering tracking this run
             target = templates_root / template.name
@@ -2417,6 +2652,7 @@ def main(
         skills = select_skills(args.skills, discover_skills())
         validate_required_scripts(skills)
         validate_required_references(skills)
+        validate_required_templates(skills)
 
         if args.wire_hooks:
             # Refuse EARLY, before anything is written. An installer that
@@ -2428,16 +2664,14 @@ def main(
                     "--wire-hooks cannot be combined with --baseline-only (which installs "
                     "no skills, so there would be no hook to point at)"
                 )
-            if (
-                args.hooks_from == HOOKS_FROM_INSTALLED
-                and HOOK_OWNER_SKILL not in {skill.source_name for skill in skills}
-            ):
-                raise InstallError(
-                    f"--wire-hooks needs the '{HOOK_OWNER_SKILL}' skill -- the canonical owner "
-                    f"of {GAUGE_WRITER_HOOK_SCRIPT} -- and this install does not include it. "
-                    f"Refusing to wire a hook it cannot locate rather than silently pointing "
-                    f"at some other skill's copy."
-                )
+            # No skill-membership check here since #639. The hook owner used to be
+            # the `workbench` SKILL, which `--skills` could leave out, so wiring had
+            # to refuse a path it could not locate. The owner is now the engine
+            # BUNDLE, installed on every non-dry run regardless of `--skills`
+            # (`install_engine_bundle`), so the condition this guard tested can no
+            # longer be false -- and a guard whose answer is the same in the healthy
+            # and the broken world discriminates nothing. `--baseline-only` is the
+            # one case where no install happens at all, and it is refused above.
             if args.hooks_from == HOOKS_FROM_SOURCE:
                 # Source wiring points at THIS checkout, so the check is about
                 # the checkout, not about what is being installed.

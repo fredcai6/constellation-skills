@@ -34,7 +34,7 @@ agent's skills root, copying shared machinery into every bundle. So `skills/diag
 
 | Path | Holds |
 |---|---|
-| `skills/` | the corpus: 20 skills, one directory each. `skills/_shared/` is **not** a skill — it is doctrine that several skills bundle. |
+| `skills/` | the corpus: 19 skills, one directory each. `skills/_shared/` is **not** a skill — it is doctrine and templates that several skills bundle. The checklist engine and hook scripts ship separately as `constellation-engine`, a shipping unit that is not a skill (#639). |
 | `scripts/` | shared machinery: checklist engine, installer, verifiers, code-map builder. Installed skills get copies. |
 | `tests/` | pytest suite over the machinery and the corpus |
 | `evals/` | end-to-end skill runs with checkable answers |

@@ -99,4 +99,4 @@ The run cannot close with unrouted observations. Engine-enforced:
 
 **Batched re-verification.** Re-running the full suite once per merged PR is often redundant when a wave batches several merges before a single close — the sanctioned pattern is to batch the merges and re-verify once, on the final merged main, in a fresh worktree, rather than per-PR. The skip is governed by the shared unchanged-tree evidence contract in `references/global-orchestrator.md` (§unchanged-tree-shortcut).
 
-Templates: `templates/ADMIRAL_SPINE.template.json`, `templates/LATITUDE_CONTRACT.template.md`, `templates/LAUNCH_ORDER.template.md`, `templates/ADMIRAL_LOG.template.md`. References: `references/fleet-doctrine.md` (platform/harness survival doctrine). Engine: workbench `references/checklist-engine.md`.
+Templates: `templates/ADMIRAL_SPINE.template.json`, `templates/LATITUDE_CONTRACT.template.md`, `templates/LAUNCH_ORDER.template.md`, `templates/ADMIRAL_LOG.template.md`. References: `references/fleet-doctrine.md` (platform/harness survival doctrine). Engine: `references/checklist-engine.md`.

@@ -241,10 +241,12 @@ class TestShapeAcceptsEveryShippedTemplate:
         faults = [f for f in vs.validate(spine, repo_root=ROOT) if f.code.startswith("shape-")]
         assert not faults, f"{path}: {[str(f) for f in faults]}"
 
-    def test_at_least_twelve_shipped_templates_found(self):
+    def test_at_least_eleven_shipped_templates_found(self):
         # A floor, not a literal -- red only if the population narrows back
         # toward the table's stale count of 6, never on a legitimate addition.
-        assert len(SHIPPED_TEMPLATES) >= 12
+        # Lowered 12 -> 11 by #639, which retired `workbench` and with it the
+        # unused DEFAULT.template.json (one doc citation, no driver).
+        assert len(SHIPPED_TEMPLATES) >= 11
 
 
 # --------------------------------------------------------------------------- #
@@ -666,9 +668,10 @@ class TestCorpusSweepPopulation:
             if isinstance(data, dict) and data.get("type") in ("gated", "survey"):
                 on_disk.append(path)
         assert set(SHIPPED_TEMPLATES) == set(on_disk)
-        assert len(SHIPPED_TEMPLATES) == 12, (
-            f"measured population is {len(SHIPPED_TEMPLATES)}, not the 12 a cold "
-            f"reviewer counted -- if this is a legitimate addition/removal, update "
+        assert len(SHIPPED_TEMPLATES) == 11, (
+            f"measured population is {len(SHIPPED_TEMPLATES)}, not the 11 a cold "
+            f"reviewer counted (12 before #639 retired workbench's unused "
+            f"DEFAULT.template.json) -- if this is a legitimate addition/removal, update "
             f"this pin in the same edit; it exists so a broken discovery step (e.g. "
             f"a glob that stops matching) cannot silently read as a clean pass"
         )
