@@ -2347,6 +2347,76 @@ def test_stop_three_strike_block_block_continue(proj):
     assert "block" in o3["systemMessage"]
 
 
+def test_stop_hatch_clears_the_strike_instead_of_latching_off(proj):
+    """Firing the hatch must DROP the strike record, not leave it above the
+    threshold. It used to keep climbing, so every later turn-end re-tripped the
+    same `>= 3` branch: one stuck moment disarmed the rail for the whole session
+    and re-printed the banner on every turn-end after it."""
+    sp = write_spine(proj, make_spine([("g1", "in-progress")]), journal_lines=1)
+    bind(proj, "s1", sp)
+    payload = {"session_id": "s1", "prompt_id": "p1"}
+    assert sr.decide_stop(payload, proj).get("decision") == "block"
+    assert sr.decide_stop(payload, proj).get("decision") == "block"
+    fired = sr.decide_stop(payload, proj)
+    assert fired.get("continue") is True
+    # The strike is gone, not parked at 3.
+    assert "s1" not in sr.load_nudges(proj)
+    # So the rail is back up at the next turn-end rather than standing down for
+    # the rest of the session.
+    back_up = sr.decide_stop(payload, proj)
+    assert back_up.get("decision") == "block"
+    assert sr.load_nudges(proj)["s1"]["count"] == 1
+
+
+def test_stop_new_prompt_id_resets_the_strike(proj):
+    """A human speaking again is progress. Three turn-ends across three user
+    prompts mid-gate is an ordinary conversation, not a stuck run, and must
+    never reach the hatch -- the engine journal only grows on a mutating verb,
+    so it stayed flat through every journal-silent turn and the count ran away
+    (live ledgers held counts of 10)."""
+    sp = write_spine(proj, make_spine([("g1", "in-progress")]), journal_lines=1)
+    bind(proj, "s1", sp)
+    for i in range(1, 7):
+        out = sr.decide_stop({"session_id": "s1", "prompt_id": "p%d" % i}, proj)
+        assert out.get("decision") == "block", i
+        assert "SPINE-RAIL: released" not in json.dumps(out), i
+        assert sr.load_nudges(proj)["s1"]["count"] == 1, i
+
+
+def test_stop_same_prompt_id_still_accrues_strikes(proj):
+    """The other half of the same rule: re-stopping INSIDE one prompt is the
+    loop the hatch exists for, and still trips at three."""
+    sp = write_spine(proj, make_spine([("g1", "in-progress")]), journal_lines=1)
+    bind(proj, "s1", sp)
+    payload = {"session_id": "s1", "prompt_id": "p1"}
+    assert sr.decide_stop(payload, proj).get("decision") == "block"
+    assert sr.decide_stop(payload, proj).get("decision") == "block"
+    assert sr.decide_stop(payload, proj).get("continue") is True
+
+
+def test_stop_absent_prompt_id_keeps_the_old_three_strike_behavior(proj):
+    """A payload with no `prompt_id` (pre-2.1.196 harness, or before first user
+    input) must read as "unknown, not new" and fall back to the engine signal.
+    Reading absent as new would reset every turn and jam the hatch open, which
+    is the one failure the rail must not have."""
+    sp = write_spine(proj, make_spine([("g1", "in-progress")]), journal_lines=1)
+    bind(proj, "s1", sp)
+    assert sr.decide_stop({"session_id": "s1"}, proj).get("decision") == "block"
+    assert sr.decide_stop({"session_id": "s1"}, proj).get("decision") == "block"
+    assert sr.decide_stop({"session_id": "s1"}, proj).get("continue") is True
+
+
+def test_stop_prompt_id_is_present_on_the_real_captured_payloads(proj):
+    """The reset above rides on a field the harness actually sends. Pinned
+    against the live captures in tests/fixtures/probe_payloads.jsonl so a
+    harness that stopped sending it fails here rather than silently disarming
+    the strike reset."""
+    rows = probe_payloads()
+    assert rows, "no captured payloads to pin against"
+    for row in rows:
+        assert row.get("prompt_id"), row.get("hook_event_name")
+
+
 def test_stop_progress_resets_counter(proj):
     work = "run1"
     spine = make_spine([("g1", "in-progress")])
