@@ -35,6 +35,11 @@ launch from the environment, and thereafter by `_bind_process_to`, the one place
 it to a spine that already exists (issue #567). Only the MOMENT of decision
 moves; the count never rises above one, and `_rebind_refusal` still blocks the
 swap while this process holds an active lease -- `decision:one-spine-per-process-stands`.
+The ONE narrowing, issue #634: descending onto a plan the bound spine itself
+declares in a `child_checklist` skips that refusal, because following your own
+plan's declaration down orphans nothing -- see `_declared_child_of_the_bound_spine`
+and the comment at the skip. The count is unchanged; only the refusal is, and
+only downward.
 
 The SESSION is never a tool argument in either case: `spine_open` takes it from
 what it minted, and `spine_bind` derives it from the spine's own work id
@@ -251,6 +256,7 @@ SESSION = os.environ.get("SPINE_SESSION", "")
 sys.path.insert(0, str(ENGINE.parent))
 import checklist_engine  # noqa: E402
 import spine_lifecycle  # noqa: E402
+import run_crew  # noqa: E402
 import episode_capture  # noqa: E402
 import apply_episode_delta  # noqa: E402
 
@@ -1269,6 +1275,87 @@ def _derivable_work_id(spine: dict) -> str | None:
     return None
 
 
+def _declared_child_of_the_bound_spine(candidate: Path) -> tuple[str, str, str] | None:
+    """Is `candidate` a plan the BOUND spine itself declares as a child? If so,
+    `(parent_work_id, gate_id, role)` -- the three parts of the identity it
+    inherits. None when it is not, or when the parent cannot answer.
+
+    **Why a child needs its own answer at all.** `session_id_for` derives
+    `constellation/<work_id>` from a spine's own work id, and a declared child
+    sits in its parent's work directory -- so deriving the child's identity the
+    same way yields the PARENT'S string, and two plans under one session id are
+    indistinguishable to the engine. Measured on the child plans already on
+    disk, the workaround was to invent one: `issue-58` (the parent's, collided),
+    `issue-418-iterative-planning-understand` (a hand-made variant),
+    `commander-567-d1-execute`, `constellation/567-e/execute` -- four shapes,
+    all invented, none reproducible by a second process. That is issue #634's
+    subject, and it is the same self-asserted identity as #632, where a cold
+    subagent read a session string out of a journal and drove a live run with it.
+
+    **The parent already knows.** `run_crew.assignment_session_name` builds
+    `constellation/<work-id>/<gate>/<role>` and its docstring records that gate
+    and role are "knowledge only the dispatcher has" -- true for a dispatched
+    crew, and NOT true here. A declared child is declared BY A GATE: the task
+    carrying `child_checklist` names the gate, and the filename that task names
+    is the role. So the identity is DERIVED from the parent's own plan text,
+    reproducibly, and nothing is supplied by the caller or invented by the child.
+    `interrogation.json` declared on `understand` of `issue-634` is
+    `constellation/issue-634/understand/interrogation` -- the same shape a crew
+    plan already carries, and the same string any other process reading the same
+    parent would compute.
+
+    The child's OWN `work_id` is deliberately not consulted. It is the field
+    that was being invented; the parent is the authority on whose child this is.
+
+    Identification is STRUCTURAL and confined, mirroring
+    `spine_lifecycle._release_child_plans` (the other reader of this same
+    declaration, which releases these leases at closeout) rather than inventing a
+    second predicate: a task in the bound spine must NAME this file in its
+    `child_checklist`, resolved relative to the bound spine's directory, and the
+    resolved path must be strictly inside that directory. A symlink inside the
+    work area pointing elsewhere is refused by the same `_resolve_confined` the
+    door's other path arguments go through.
+
+    Fails CLOSED to None in every unreadable case -- nothing bound, unparseable
+    parent, no work id, no matching declaration. None means "bind this the
+    ordinary way", never "bind it as a child anyway"."""
+    if SPINE is None:
+        return None
+    try:
+        parent = json.loads(SPINE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(parent, dict):
+        return None
+    parent_work_id = _derivable_work_id(parent)
+    if parent_work_id is None:
+        return None
+
+    try:
+        target = candidate.resolve()
+    except OSError:
+        return None
+
+    tasks = parent.get("tasks")
+    if not isinstance(tasks, dict):
+        return None
+    for gate_id, task in tasks.items():
+        if not isinstance(task, dict):
+            continue
+        declared = task.get("child_checklist")
+        if not isinstance(declared, str) or not declared.strip():
+            continue
+        resolved, escapes = _resolve_confined(
+            declared, join_relative_to=SPINE.parent, bound_dir=SPINE.parent)
+        if escapes or resolved != target:
+            continue
+        role = target.stem
+        if not role:
+            return None
+        return parent_work_id, gate_id, role
+    return None
+
+
 def _worktree_root_for_lifecycle() -> Path:
     """The worktree `SPINE` itself lives in -- its own toplevel, NOT the
     primary checkout. This is `close_work`'s own `root`: it computes
@@ -1347,6 +1434,17 @@ def _rebind_refusal(acting_tool: str = "spine_open") -> str | None:
     session to arrive must then force it. Releasing first is one call
     (`spine_lease` `action: release`) and is what the door's own closeout
     already does.
+
+    **Narrowed once, downward only (issue #634).** `_spine_bind` does not consult
+    this function when the candidate is a plan the bound spine DECLARES as its
+    child. That case orphans nothing: the same agent re-binds the parent on the
+    way back and recovers the identical lease (`session_id_for` is pure), and if
+    it never returns, `spine_lifecycle._release_child_plans` releases declared
+    children at closeout from the same declaration. The RETURN trip is not a
+    declared-child bind, so it meets this refusal unmodified and the child's
+    lease must be released first -- which is why the narrowing cannot be used to
+    walk away from a lease on the plan you are standing in. This function itself
+    is UNCHANGED; the caller decides when to ask it.
 
     Scoped to a lease THIS process holds -- `session_id == SESSION` -- not to
     any active lease at all. A lease held by some other session is not this
@@ -1499,7 +1597,20 @@ def _spine_bind(args: dict) -> dict:
     So an unbound door faced with work that already exists had nothing to call.
     `decision:bind-on-open-over-new-verb` already moved WHEN the binding is
     decided; this adds one more moment, before any verb runs, and never a second
-    live binding. `decision:one-spine-per-process-stands`: the count never rises
+    live binding.
+
+    **Two kinds of target, and the second is what #634 added.** An ordinary
+    target is a spine of its own: its identity is `constellation/<its work id>`
+    and this door may not bind it while holding a lease elsewhere. A DECLARED
+    CHILD -- a plan the currently bound spine names in a `child_checklist` -- is
+    bound on its parent's authority instead: its identity is assignment-shaped
+    and derived from the parent's declaration, and the parent's own lease does
+    not block the descent. That is the path a Commander's `execute.json`, an
+    Interrogator's `interrogation.json` and an in-session crew's own plan take;
+    before it they had no door at all, and were driven under session strings
+    their agents invented. See `_declared_child_of_the_bound_spine`.
+
+    `decision:one-spine-per-process-stands`: the count never rises
     above one.
 
     **This function assigns neither `SPINE` nor `SESSION`.** It calls
@@ -1696,19 +1807,33 @@ def _spine_bind(args: dict) -> dict:
             tool="spine_bind", rejection_class="not-a-spine",
         )
 
-    work_id = _derivable_work_id(payload)
-    if work_id is None:
-        return _tool_error(
-            f"REFUSED: {str(candidate)!r} carries neither `origin.work_id` nor a top-level "
-            f"`work_id`, so this door cannot derive the session identity that spine is driven "
-            f"under -- and a door bound with no session cannot `claim` "
-            f"(`checklist_engine.claim` refuses an empty --session-id), which means it would "
-            f"not be a bound door at all. Every spine the engine drives carries a `work_id`; "
-            f"a fragment or a hand-written JSON file does not. Drive that one through the CLI, "
-            f"which takes --session-id per call.",
-            tool="spine_bind", rejection_class="no-derivable-identity",
-        )
-    session = spine_lifecycle.session_id_for(work_id)
+    # A plan the BOUND spine declares as its child is bound on the parent's
+    # authority, not on its own (issue #634). Two things follow, and they are the
+    # whole of this branch: the identity is assignment-shaped and derived from the
+    # parent's declaration, and the parent's own lease does not block the bind.
+    # Asked BEFORE the work-id refusal below, because a child need not carry a
+    # work id of its own -- the parent is the authority on whose child it is.
+    lineage = _declared_child_of_the_bound_spine(candidate)
+    parent_before_bind = SPINE  # `_bind_process_to` moves SPINE; the answer is reported below
+    if lineage is not None:
+        work_id, gate_id, role = lineage
+        session = run_crew.assignment_session_name(work_id, gate_id, role)
+    else:
+        work_id = _derivable_work_id(payload)
+        if work_id is None:
+            return _tool_error(
+                f"REFUSED: {str(candidate)!r} carries neither `origin.work_id` nor a top-level "
+                f"`work_id`, so this door cannot derive the session identity that spine is driven "
+                f"under -- and a door bound with no session cannot `claim` "
+                f"(`checklist_engine.claim` refuses an empty --session-id), which means it would "
+                f"not be a bound door at all. Every spine the engine drives carries a `work_id`; "
+                f"a fragment or a hand-written JSON file does not. If it is meant to be a child "
+                f"of the spine this door is bound to, declare it in that spine's own "
+                f"`child_checklist` and bind it again -- a declared child inherits its identity "
+                f"from its parent and needs no work id of its own.",
+                tool="spine_bind", rejection_class="no-derivable-identity",
+            )
+        session = spine_lifecycle.session_id_for(work_id)
 
     # R9 -- the identity this bind would ASSUME is live somewhere else. Scoped to
     # that identity, not to any active lease at all: another session's lease is
@@ -1731,16 +1856,46 @@ def _spine_bind(args: dict) -> dict:
                 tool="spine_bind", rejection_class="identity-held",
             )
 
-    blocked = _rebind_refusal("spine_bind")
-    if blocked is not None:
-        return _tool_error(blocked, tool="spine_bind", rejection_class="lease-held")
+    # `decision:one-spine-per-process-stands` is UNCHANGED and this is not an
+    # exception to it: this door still drives exactly one spine at a time, and
+    # `_identity_violation` still refuses every call that resolves anywhere else.
+    # What is narrowed is `_rebind_refusal`, and only for a DECLARED CHILD.
+    #
+    # That refusal protects one thing: rebinding must not leave a lease held by
+    # nobody. Following the bound spine's own `child_checklist` down does not,
+    # for two reasons that hold together and neither of which holds alone. The
+    # agent is the same agent -- it re-binds to the parent on the way back out
+    # and recovers its lease, because `session_id_for` is pure and yields the
+    # identical string. And if it never comes back, the parent's lease is not
+    # orphaned either: `spine_lifecycle._release_child_plans` releases declared
+    # children at closeout, reading this same declaration.
+    #
+    # Deliberately one-directional. The return trip (child -> parent) is NOT a
+    # declared-child bind, so it meets the unmodified refusal and the child's
+    # lease must be released first -- one call, and the release the Interrogator's
+    # own doctrine already ends on. Nothing here lets a door abandon a lease it is
+    # still holding on the plan it is standing in.
+    if lineage is None:
+        blocked = _rebind_refusal("spine_bind")
+        if blocked is not None:
+            return _tool_error(blocked, tool="spine_bind", rejection_class="lease-held")
 
     _bind_process_to(str(candidate), session)
-    return _lifecycle_result({
+    result = {
         "SPINE_FILE": str(candidate.resolve()), "SPINE_SESSION": session,
         "work_id": work_id, "already_bound": False,
         "note": "this door now drives that spine; call spine_status to see where it is",
-    })
+    }
+    if lineage is not None:
+        _, gate_id, role = lineage
+        result["child_of"] = {"spine": str(parent_before_bind), "gate": gate_id, "role": role}
+        result["note"] = (
+            f"this door now drives {role!r}, the child plan {str(parent_before_bind)!r} declares "
+            f"on gate {gate_id!r}; its identity is inherited from that declaration, not invented. "
+            f"Call spine_status to see where it is. When you are done: release this lease, then "
+            f"spine_bind back to the parent -- it recovers the lease it still holds."
+        )
+    return _lifecycle_result(result)
 
 
 def _spine_close(args: dict) -> dict:

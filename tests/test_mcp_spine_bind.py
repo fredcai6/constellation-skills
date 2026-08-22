@@ -1472,3 +1472,165 @@ class TwoDoorRoundTripTests(_RealDoorInAStagedCheckout):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# --------------------------------------------------------------------------- #
+# 12. A plan the bound spine DECLARES as its child (issue #634).
+# --------------------------------------------------------------------------- #
+
+class DeclaredChildBindTests(_BoundInARepo):
+    """`spine_bind` onto a plan the BOUND spine names in a `child_checklist`.
+
+    This is the one path that had no door at all. A Commander's `execute.json`,
+    an Interrogator's `interrogation.json` and an in-session crew's own plan are
+    second plans driven by an agent that is already inside its parent's process,
+    so they were reached with the CLI -- the mechanism #559 retired -- and after
+    that retirement they had no path whatsoever. Measured on disk at the time:
+    25 interrogation surveys, every one fully driven, 22 holding a lease under a
+    session id the agent made up on the spot.
+
+    Two properties, and the second is the one that makes the first honest:
+
+    1. **The identity is INHERITED, not invented.** It is
+       `constellation/<parent work id>/<gate>/<role>` --
+       `run_crew.assignment_session_name`, the same builder a dispatched crew's
+       plan already uses -- where the gate is the task carrying the declaration
+       and the role is the file that task names. Every part comes from the
+       parent's own plan text, so a second process reading the same parent
+       computes the same string.
+    2. **The parent's lease is not orphaned.** The bind is one-directional: going
+       DOWN into a declared child skips `_rebind_refusal`, coming back UP does
+       not. So a door cannot walk away from a lease on the plan it is standing
+       in, and the round trip below is the whole contract.
+    """
+
+    def _child(self, name="interrogation.json", gate="understand", *, declare=True):
+        parent = json.loads(self.driving.read_text(encoding="utf-8"))
+        parent["tasks"][gate] = {"status": "in-progress", "title": "t"}
+        if declare:
+            parent["tasks"][gate]["child_checklist"] = name
+        parent["engine_session"] = {
+            "session_id": "constellation/driving-work", "status": "active",
+            "claimed_by": "parent", "claimed_at": "2026-08-22T00:00:00Z",
+            "heartbeat_at": "2026-08-22T00:00:00Z",
+        }
+        _write_spine(self.driving, parent)
+        return _write_spine(self.driving.parent / name,
+                            {"type": "survey", "items": ["q1"],
+                             "tasks": {"q1": {"status": "pending", "title": "q"}}})
+
+    def test_a_declared_child_binds_and_inherits_an_assignment_identity(self):
+        child = self._child()
+        result = self.bind(str(child))
+        self.assertFalse(result.get("isError"), _text(result))
+
+        payload = json.loads(_text(result))
+        self.assertEqual(
+            "constellation/driving-work/understand/interrogation",
+            payload["SPINE_SESSION"],
+            "the child's identity must be derived from the parent's declaration "
+            "(work id / gate / role), never invented and never the parent's own",
+        )
+        self.assertEqual(
+            {"spine": str(self.driving), "gate": "understand", "role": "interrogation"},
+            payload["child_of"],
+            "the result must state whose child this is, so the lineage is legible "
+            "to the agent and in the transcript without re-reading the parent",
+        )
+        self.assertEqual(str(child.resolve()), payload["SPINE_FILE"])
+        self.assertEqual(str(child.resolve()), str(self.module.SPINE))
+
+    def test_the_parents_own_active_lease_does_not_block_the_descent(self):
+        """The live break, stated as the test that would have caught it. The
+        parent holds its lease for the whole run -- a Commander claims at `init`
+        and releases at `archive` -- so `understand`, the window the Interrogator
+        runs in, is exactly when `_rebind_refusal` fires. An undeclared sibling
+        in the same directory still meets that refusal, which is what makes this
+        a narrowing rather than a hole."""
+        child = self._child()
+        lease = json.loads(self.driving.read_text(encoding="utf-8"))["engine_session"]
+        self.assertEqual("active", lease["status"])
+        self.assertEqual(self.module.SESSION, lease["session_id"])
+
+        self.assertFalse(self.bind(str(child)).get("isError"))
+
+    def test_an_undeclared_sibling_still_meets_the_rebind_refusal(self):
+        """The control. Same directory, same shape, same lease -- the ONLY
+        difference is that no gate names it. Without this, the test above would
+        pass just as well if the refusal had been deleted outright."""
+        self._child()
+        sibling = _write_spine(self.driving.parent / "not-declared.json",
+                               _spine_payload("some-other-work"))
+        result = self.bind(str(sibling))
+        self.assertTrue(result.get("isError"),
+                        "an undeclared sibling bound while the parent held its lease")
+        self.assertIn("still holds an active lease", _text(result))
+
+    def test_the_round_trip_recovers_the_parents_lease(self):
+        """Down, drive, release, back up -- and the parent's identity on return
+        is byte-identical to the one it was launched with, because
+        `session_id_for` is pure. This is what makes skipping the refusal on the
+        way down safe rather than merely convenient."""
+        parent_session = self.module.SESSION
+        child = self._child()
+
+        self.assertFalse(self.bind(str(child)).get("isError"))
+        self.assertNotEqual(parent_session, self.module.SESSION)
+
+        # Coming back up is NOT a declared-child bind, so it meets the unmodified
+        # refusal -- but this door holds no lease on the child, so nothing blocks.
+        back = self.bind(str(self.driving))
+        self.assertFalse(back.get("isError"), _text(back))
+        self.assertEqual(parent_session, self.module.SESSION)
+        self.assertEqual(str(self.driving.resolve()), str(self.module.SPINE))
+
+        parent = json.loads(self.driving.read_text(encoding="utf-8"))
+        self.assertEqual("active", parent["engine_session"]["status"])
+        self.assertEqual(parent_session, parent["engine_session"]["session_id"])
+
+    def test_the_return_trip_is_refused_while_the_child_lease_is_held(self):
+        """The one-directional half, measured. Holding the child's lease, the
+        door may not walk back up to the parent -- it must release first. If this
+        went green without the release, `_rebind_refusal` would have been
+        narrowed in both directions rather than one."""
+        child = self._child()
+        self.assertFalse(self.bind(str(child)).get("isError"))
+
+        held = json.loads(child.read_text(encoding="utf-8"))
+        held["engine_session"] = {
+            "session_id": self.module.SESSION, "status": "active",
+            "claimed_by": "interrogator", "claimed_at": "2026-08-22T00:00:00Z",
+            "heartbeat_at": "2026-08-22T00:00:00Z",
+        }
+        _write_spine(child, held)
+
+        result = self.bind(str(self.driving))
+        self.assertTrue(result.get("isError"),
+                        "the door abandoned an active lease on the child it was standing in")
+        self.assertIn("still holds an active lease", _text(result))
+
+    def test_a_declared_child_needs_no_work_id_of_its_own(self):
+        """The fixture child carries none, deliberately: the field that was being
+        invented is the one this path must not require. A non-child with no work
+        id is still refused, and the refusal now points at the declaration."""
+        child = self._child()
+        self.assertNotIn("work_id", json.loads(child.read_text(encoding="utf-8")))
+        self.assertFalse(self.bind(str(child)).get("isError"))
+
+        orphan = _write_spine(self.driving.parent / "orphan.json",
+                              _spine_payload("x", top_level=False))
+        result = self.bind(str(orphan))
+        self.assertTrue(result.get("isError"))
+        self.assertIn("child_checklist", _text(result))
+
+    def test_a_declaration_escaping_the_work_area_is_not_honoured(self):
+        """`_resolve_confined`, the same predicate every other path argument on
+        this door goes through: a declaration resolving outside the parent's own
+        directory confers no lineage, so it cannot be used to bind something far
+        away under an inherited identity."""
+        outside = _write_spine(self.dir / "outside" / "elsewhere.json",
+                               _spine_payload("elsewhere-work"))
+        self._child(name="../../outside/elsewhere.json", gate="understand")
+        result = self.bind(str(outside))
+        self.assertTrue(result.get("isError"),
+                        "a child_checklist pointing outside the work area was honoured")

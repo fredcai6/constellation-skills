@@ -23,11 +23,17 @@ You were handed a goal to resolve, not to answer from assumption. The moment thi
 
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
 
-Drive the question list as a `survey` from `templates/INTERROGATION.template.json`: ask one question at a time and resolve its answer, then `consolidate` into the resolved understanding. When your survey file *is* the spine this process's MCP door was launched for, drive it through the door's `spine_status`/`spine_survey_result`/`spine_evidence` tools (see `references/checklist-engine.md` — MCP door). **Usually it is not.** Interrogator runs in the invoking agent's own human-reachable context, so it shares that agent's process and therefore that agent's door binding: a Commander drives `interrogation.json` through this skill while its own door stays bound to `spine.json`, and a door call from inside the interrogation would operate on the Commander's spine, not on the survey you own. **Check what the door is bound to before you reach for it.**
+Drive the question list as a `survey` from `templates/INTERROGATION.template.json`: ask one question at a time and resolve its answer, then `consolidate` into the resolved understanding.
 
-The door cannot be moved onto your survey either: one door drives one spine at a time, and it refuses to rebind while its owner still holds that spine's lease — which is exactly the state the agent hosting you is in.
+**Bind the door to your survey first.** Interrogator runs in the invoking agent's own human-reachable context, so it shares that agent's process and therefore that agent's door — which is bound to the HOST's spine, not to your survey. Move it: call `spine_bind` with your survey file. Your survey is a plan the host's spine declares in a `child_checklist`, so the door follows that declaration down and binds it even though the host still holds its own lease.
 
-**Every verb you need has a door tool.** `append` is `spine_capture` (`action=append`) and `skip` is `spine_halt` (`action=skip`); the CLI-only carve-out those two sat in was retired at #559, when the door grew to cover all 18 engine verbs. What you may lack is a door bound to YOUR survey, which is a different problem from a verb having no tool — and a **known structural gap** for this skill, because Interrogator is loaded into its host's context by design and so cannot be dispatched into a process of its own the way a crew can. Where that gap bites, say so to the agent hosting you and let it decide; do not drive its spine, and do not reach around the door for a second path to the same engine.
+You do not name an identity and you never invent one. The door derives it from the host's own declaration — `constellation/<work-id>/<gate>/<role>`, where the gate is the host's step that declares your survey and the role is your survey's own name. A second process reading the same parent computes the same string.
+
+Then drive it through the ordinary door tools: `spine_status` for what's next, `spine_survey_result` to record and consolidate, `spine_capture` (`action=append`) to add a question, `spine_halt` (`action=skip`) to skip one the order already settles, `spine_evidence` to attach.
+
+**On the way out, in this order: `consolidate`, then release your lease, then `spine_bind` back to the host's spine.** The descent is one-directional — coming back up is an ordinary rebind, so it is refused while you still hold your survey's lease. Release first and the host recovers the lease it never stopped holding.
+
+Your survey is meant to change as you work it. Append a question the moment the answers open one up; that is the point of driving a plan rather than filling in a form.
 
 ## Facts vs. decisions — resolve one, block on the other
 

@@ -4,9 +4,9 @@
 conftest: 1 modules, 3 entities
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 60 modules, 1286 entities
+scripts: 60 modules, 1287 entities
 skills: 1 modules, 22 entities
-tests: 97 modules, 5388 entities
+tests: 97 modules, 5397 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -41,7 +41,7 @@ tests: 97 modules, 5388 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (60 modules, 1286 entities)
+## scripts (60 modules, 1287 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -78,7 +78,7 @@ tests: 97 modules, 5388 entities
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
 - [scripts.install_constellation](scripts.install_constellation/INDEX.md) (92 entities, 32 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
-- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (38 entities, 3 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
+- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (39 entities, 3 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
@@ -116,7 +116,7 @@ tests: 97 modules, 5388 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (97 modules, 5388 entities)
+## tests (97 modules, 5397 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -183,7 +183,7 @@ tests: 97 modules, 5388 entities
 - [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV
 - [tests.test_mcp_lifecycle](tests.test_mcp_lifecycle/INDEX.md) (48 entities, 28 holes): Tests for the MCP lifecycle door -- `spine_open`/`spine_close` (`scripts/mcp_spine_server.py`'s `call_lifecycle_tool`, issue #559, C3/g3).
 - [tests.test_mcp_rejection_episode_capture](tests.test_mcp_rejection_episode_capture/INDEX.md) (38 entities, 27 holes): Unit-level tests for the door-own rejection -> `episodes/` capture path (issue #541, epic #567 lane E).
-- [tests.test_mcp_spine_bind](tests.test_mcp_spine_bind/INDEX.md) (112 entities, 55 holes): `spine_bind` -- binding the door to a spine that ALREADY EXISTS (epic #567 lane A, gate `g2-implement`).
+- [tests.test_mcp_spine_bind](tests.test_mcp_spine_bind/INDEX.md) (121 entities, 57 holes): `spine_bind` -- binding the door to a spine that ALREADY EXISTS (epic #567 lane A, gate `g2-implement`).
 - [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (62 entities, 41 holes): Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP front door on the checklist engine).
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
