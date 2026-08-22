@@ -1,5 +1,6 @@
 import copy
 import importlib.util
+import inspect
 import json
 import re
 import sys
@@ -437,38 +438,38 @@ class Hardening(unittest.TestCase):
         t["child_checklist"] = "child"
         return gated(g1=t)
 
-    def _write_child(self, d, verdict):
-        cons = {"verdict": verdict, "findings": []} if verdict else None
-        child = survey(v1=survey_item("v1", "complete"))
-        child["consolidation"] = cons
-        p = Path(d) / "child.json"
-        E.save(p, child)
-        return p
+    def test_advance_takes_no_from_child(self):
+        """#634 regrowth guard: `advance` closes a gate on the evidence ON it,
+        never on a path named in the call.
 
-    def test_advance_from_child_approve_completes(self):
-        with tempfile.TemporaryDirectory() as d:
-            child = self._write_child(d, "APPROVE")
-            cl = self._review_gate()
-            msg = E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
-            self.assertEqual(msg, "g1 -> complete")
-            self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+        `--from-child` read a child checklist's `consolidation` and attached it
+        as the gate's `review-result` before advancing. It was cut as dead
+        weight -- measured over the whole corpus, every gate declaring a
+        `child_checklist` carried NO review-result and all 253 review-results on
+        disk sat on gates declaring NO child. It also let any JSON file with a
+        `consolidation` key close a gate, measured live on a fabricated APPROVE.
 
-    def test_advance_from_child_block_refuses(self):
-        with tempfile.TemporaryDirectory() as d:
-            child = self._write_child(d, "BLOCK")
-            cl = self._review_gate()
-            with self.assertRaises(E.EngineError):
-                E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
-            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
-            # the child's verdict was still attached as evidence
-            self.assertTrue(any(e["type"] == "review-result" for e in cl["tasks"]["g1"]["evidence"]))
+        Pinned as an ABSENCE rather than deleted quietly, because this repo's
+        record is that a retired path grows back (see
+        `tests/test_cli_retirement_guard.py`, written for the same reason). The
+        signature and the CLI are checked separately: a re-added parameter with
+        no flag, or a flag with no parameter, each fail alone.
+        """
+        self.assertNotIn("from_child", inspect.signature(E.advance).parameters)
 
-    def test_advance_from_child_without_consolidation_refuses(self):
-        with tempfile.TemporaryDirectory() as d:
-            child = self._write_child(d, None)
-            cl = self._review_gate()
-            with self.assertRaises(E.EngineError):
-                E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
+        ns = E.parse_args(["--file", "x.json", "advance", "g1"])
+        self.assertFalse(
+            hasattr(ns, "from_child"),
+            "the advance subparser declares --from-child again; it was cut at #634",
+        )
+
+    def test_the_from_child_guard_can_fail(self):
+        """Positive control for the guard above -- a check that cannot fail is
+        not evidence. A stand-in carrying the retired shape is caught by the
+        same two predicates."""
+        def advance(cl, iid, from_child=None):  # the retired signature
+            return None
+        self.assertIn("from_child", inspect.signature(advance).parameters)
 
     def test_config_ref_resolves_rework_cap(self):
         with tempfile.TemporaryDirectory() as d:
@@ -3598,76 +3599,6 @@ class RefreshPrimitives(unittest.TestCase):
             self.assertIn("REFRESH REQUESTED:", out.getvalue())
 
 
-class FromChildAttachIdempotent(unittest.TestCase):
-    """#191 — the `advance --from-child` seam is dedup-idempotent: a refused advance
-    (which `main()` persists) followed by a retry must NOT double-attach the child
-    consolidation. The attach stays BEFORE the postcondition/why guards; the fix is
-    a dedup, not a reorder."""
-
-    def _review_gate(self):
-        # non-exempt gate whose artifact postcondition is satisfied by the from-child
-        # review-result — so the refusal that fires is the why-capture one, AFTER the
-        # attach (the double-attach window this fix closes).
-        t = gate("g1", "in-progress", why_exempt=False)
-        t["postconditions"] = [{
-            "id": "c2", "statement": "approved",
-            "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}},
-            "satisfied": False,
-        }]
-        t["child_checklist"] = "child"
-        return gated(g1=t)
-
-    def _write_child(self, d):
-        cons = {"verdict": "APPROVE", "findings": []}
-        child = survey(v1=survey_item("v1", "complete"))
-        child["consolidation"] = cons
-        p = Path(d) / "child.json"
-        E.save(p, child)
-        return p
-
-    def _review_results(self, cl):
-        return [e for e in cl["tasks"]["g1"]["evidence"] if e["type"] == "review-result"]
-
-    def test_refuse_then_retry_attaches_exactly_one(self):
-        with tempfile.TemporaryDirectory() as d:
-            child = self._write_child(d)
-            cl = self._review_gate()
-            # first attempt: no --why -> refuses AFTER the from-child attach
-            with self.assertRaises(E.EngineError):
-                E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
-            self.assertEqual(len(self._review_results(cl)), 1)
-            # retry, still no --why -> dedup, STILL exactly one
-            with self.assertRaises(E.EngineError):
-                E.advance(cl, "g1", from_child=str(child), base_dir=Path(d))
-            self.assertEqual(len(self._review_results(cl)), 1)
-            # finally with --why -> completes, STILL exactly one
-            msg = E.advance(cl, "g1", from_child=str(child), base_dir=Path(d), why="ok")
-            self.assertEqual(msg, "g1 -> complete")
-            self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
-            self.assertEqual(len(self._review_results(cl)), 1)
-
-    def test_cli_refuse_then_retry_persists_exactly_one(self):
-        # CLI round-trip: main() actually SAVES on the refused advance, so this
-        # exercises the real double-attach path the dedup closes.
-        with tempfile.TemporaryDirectory() as d:
-            child = self._write_child(d)
-            cl = self._review_gate()
-            spine = Path(d) / "spine.json"
-            E.save(spine, cl)
-            self.assertEqual(
-                E.main(["--file", str(spine), "advance", "g1", "--from-child", str(child)]), 1)
-            self.assertEqual(len(self._review_results(E.load(spine))), 1)
-            self.assertEqual(
-                E.main(["--file", str(spine), "advance", "g1", "--from-child", str(child)]), 1)
-            self.assertEqual(len(self._review_results(E.load(spine))), 1)
-            self.assertEqual(
-                E.main(["--file", str(spine), "advance", "g1", "--from-child", str(child),
-                        "--why", "ok"]), 0)
-            reloaded = E.load(spine)
-            self.assertEqual(reloaded["tasks"]["g1"]["status"], "complete")
-            self.assertEqual(len(self._review_results(reloaded)), 1)
-
-
 class SurveyWhySuffixReachUp(unittest.TestCase):
     """#189 — `_why_suffix` is extended to surveys so a survey role (reviewer) can
     cold-start from `current` alone. A survey never accumulates a `why_trail`, so no
@@ -3715,7 +3646,7 @@ def _reading(fill, model="claude-opus-4-8"):
 
 def _advance_ns(iid="g1", why=None, mechanical=False):
     return types.SimpleNamespace(
-        verb="advance", id=iid, from_child=None, why=why,
+        verb="advance", id=iid, why=why,
         mechanical=mechanical, session_id=None,
     )
 

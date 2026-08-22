@@ -52,19 +52,23 @@ declared path property below. The values:
                    is what sets it on a real dispatch; the server just uses
                    whatever string it is handed)
 
-TWO declared tool properties carry a filesystem path, and they are different in
-kind. This sentence used to read "exactly ONE" and was stated in the singular
-because that one exception cost a measured gate closure on a fabricated APPROVE;
-the second one arrived with issue #567 and is named here rather than left to be
-discovered.
+EXACTLY ONE declared tool property carries a filesystem path. This count has
+moved twice and the history is the point: it read "exactly ONE" when the only
+one was `spine_advance.from_child`, whose containment cost a measured gate
+closure on a fabricated APPROVE to discover; it read "TWO" when `spine_bind`
+arrived at #567; and it is back to ONE because #634 CUT `from_child` entirely.
 
-* `spine_advance.from_child` does not redirect the door -- the call still
-  addresses the bound spine -- but the child's `consolidation` is attached to
-  that spine as a `review-result`, which is the evidence type an artifact
-  postcondition consumes, so an unconfined path would let any JSON file carrying
-  a `consolidation` key close a gate. `_identity_violation` therefore CONFINES it
-  to the bound spine's own directory tree, the containment every real use in this
-  repo already satisfies. See IDENTITY_TRADE.md §2.
+* `spine_advance.from_child` is GONE (#634). It read a child checklist's
+  `consolidation` and attached it to the bound spine as a `review-result` --
+  the evidence type an artifact postcondition consumes -- so an unconfined path
+  let any JSON file carrying a `consolidation` key close a gate, measured live
+  before `_identity_violation` confined it. It was cut rather than kept confined
+  because it was never used: over the whole corpus, every gate declaring a
+  `child_checklist` carried NO review-result, and all 253 review-results on disk
+  sat on gates declaring NO child. A parent that needs a child's verdict attaches
+  it explicitly through `spine_evidence`, which is what every real run already
+  did. Do not restore it; a gate is closed by the evidence on it, never by a path
+  named on the call. See IDENTITY_TRADE.md §2 for the reach it used to carry.
 * `spine_bind.spine_file` DOES decide which spine is bound -- that is its whole
   job -- which makes it the wider of the two and the reason `spine_bind` exists as
   its own tool rather than as an argument on one that promises creation. It is
@@ -133,9 +137,10 @@ JSON object in the tool arguments, writes it to a file BESIDE the bound spine
 dir, so the artifact is per-task coherent and survives for audit), and hands
 the engine the same `--delta <path>` the CLI already parses -- the engine
 alone validates the ops. That written path is then run back through
-`_identity_violation`'s containment check (`_resolve_confined`, the same
-predicate `spine_advance.from_child` already used) before the engine ever
-sees it.
+`_identity_violation`'s containment check (`_resolve_confined`) before the
+engine ever sees it. That predicate was originally shared with
+`spine_advance.from_child`; since #634 cut that flag, `--delta` is its only
+caller inside `_identity_violation`.
 
 --------------------------------------------------------------------------- #
 The lifecycle door: 3 more tools, dispatched OUTSIDE call_tool
@@ -366,21 +371,24 @@ def _log(rec: dict) -> None:
 def _resolve_confined(
     value: str, *, join_relative_to: Path | None, bound_dir: Path | None = None,
 ) -> tuple[Path, bool]:
-    """Resolve `value` and report whether it escapes `bound_dir`. Shared by
-    both `--from-child` and `--delta` in `_identity_violation` -- one
-    containment predicate, not two, for the two flags that carry the same
-    underlying hazard: a filesystem path the engine will read and act on.
+    """Resolve `value` and report whether it escapes `bound_dir`. THE one
+    containment predicate for a filesystem path the engine will read and act
+    on -- never a second copy per caller.
 
-    `join_relative_to` is where the two flags genuinely differ, and it is a
-    parameter rather than a second copy of this function for exactly that
-    reason. `advance()` resolves a relative `from_child` against the parent
-    checklist's own directory (a rule it implements itself); the caller passes
-    `SPINE.parent` here to mirror that. `amend()` applies NO such rule to
-    `--delta` -- it does a bare `Path(args.delta).read_text()`, so a relative
-    value resolves against the process's own cwd, same as Python's own
-    default; the caller passes `None` here, and this function then resolves
-    `value` exactly as `Path(value).resolve()` would, matching the engine
-    faithfully rather than asserting a base directory `amend()` never uses.
+    It has three callers and they do not agree on how a RELATIVE value
+    resolves, which is why `join_relative_to` is a parameter rather than a
+    baked-in rule: `amend()` applies no base-dir rule to `--delta` (a bare
+    `Path(args.delta).read_text()`, so a relative value resolves against the
+    process's own cwd, same as Python's default) and passes `None`;
+    `spine_bind` and `spine_open` confine against a root of their own. Passing
+    `None` makes this resolve `value` exactly as `Path(value).resolve()`
+    would, matching the engine faithfully rather than asserting a base
+    directory the engine never uses.
+
+    A fourth caller, `--from-child`, was cut at #634 -- it was the one that
+    needed `join_relative_to=SPINE.parent`, mirroring a base-dir rule
+    `advance()` implemented itself. The parameter survives it because
+    `spine_open` and `spine_bind` still need a non-default root.
 
     One wrinkle since issue #568: `run_engine` stands in the bound spine's
     worktree while the engine runs, so "the process's own cwd" is not the same
@@ -389,9 +397,8 @@ def _resolve_confined(
     left outside it -- resolving a containment check against a directory the
     door is about to enter would change what "confined" means mid-check. No
     live divergence follows: this door only ever hands the engine an ABSOLUTE
-    `--delta` (`_write_amend_delta`) and joins a relative `from_child` to
-    `SPINE.parent`, so no relative path reaches the engine to be resolved
-    under either cwd.
+    `--delta` (`_write_amend_delta`), so no relative path reaches the engine to
+    be resolved under either cwd.
 
     `bound_dir` defaults to `SPINE.parent` -- exactly what every call inside
     `_identity_violation` needs, unchanged -- but is a parameter so
@@ -542,36 +549,34 @@ def _identity_violation(argv: list[str]) -> str | None:
       message; refusing here would replace the engine's error text with ours.
       The parse's own stderr is swallowed into a scratch buffer for the same
       reason -- otherwise the usage block would be emitted twice.
-    * Scoped to `ns.file`, `ns.session_id` and `ns.from_child`, never "no
-      repeated flags". `--field` is `action="append"` BY DESIGN and
-      `spine_evidence attach` with two fields is legitimate; a repeated-flag
-      rule would break it.
+    * Scoped to `ns.file`, `ns.session_id` and `ns.delta`, never "no repeated
+      flags". `--field` is `action="append"` BY DESIGN and `spine_evidence
+      attach` with two fields is legitimate; a repeated-flag rule would break
+      it.
 
-    **Why `--from-child` is checked at all, and why it is checked differently.**
-    A SEVENTH review found that `spine_advance.from_child` is a DECLARED tool
-    property carrying a filesystem path. `advance()` does `Path(from_child)`,
-    honours an absolute path, reads that file and attaches its `consolidation`
-    into the BOUND spine as a `review-result` -- with `ns.file` still resolving
-    to the bound spine, so both halves of the check above stayed blind. That is
-    not merely a data read: `review-result` is the evidence type an `artifact`
-    postcondition consumes, so any JSON file anywhere carrying a `consolidation`
-    key could close a gate. Measured live before this clause existed: a
-    `from_child` outside the binding advanced g1 to `complete` on a fabricated
-    APPROVE.
+    **Why a PATH is checked here at all.** A SEVENTH review found that a
+    declared tool property can carry a filesystem path the engine READS AND
+    ACTS ON while `ns.file` still resolves to the bound spine -- so both halves
+    of the check above stay blind. The case was `spine_advance.from_child`:
+    `advance()` did `Path(from_child)`, honoured an absolute path, read that
+    file and attached its `consolidation` into the bound spine as a
+    `review-result`. That is not merely a data read -- `review-result` is the
+    evidence type an `artifact` postcondition consumes, so any JSON file
+    anywhere carrying a `consolidation` key could close a gate. Measured live
+    before the containment clause existed: a `from_child` outside the binding
+    advanced g1 to `complete` on a fabricated APPROVE.
 
-    So this one is a CONTAINMENT question, not an equality one -- `--from-child`
-    legitimately names a DIFFERENT file (the child checklist), it just may not
-    name one outside the bound spine's own directory tree. Measured before
-    restricting it: every real use in this repo -- the engine's own tests, the
-    schema doc's worked example, and every live/archived run record -- resolves
-    inside the parent checklist's own directory (children are written under the
-    work area the spine sits in). Resolution mirrors `advance()` exactly: a
-    non-absolute path resolves against the parent checklist's directory, which
-    IS `SPINE.parent` here because `ns.file` was already proven equal to it.
+    `from_child` itself is GONE (#634, cut as never-used), but the CLASS it
+    taught is not, and this containment check is the standing guard against the
+    next member of it. Such a path is a CONTAINMENT question, not an equality
+    one: it legitimately names a DIFFERENT file, it just may not name one
+    outside the bound spine's own directory tree.
 
-    `amend`'s `--delta` is the same shape of hazard (a filesystem path the
-    engine reads and acts on) added by the N1 verb-closure change, so it is
-    confined by the SAME `_resolve_confined` helper rather than a second check.
+    `amend`'s `--delta` is that class's surviving member -- the same shape of
+    hazard, added by the N1 verb-closure change -- and it is confined by the
+    `_resolve_confined` helper `from_child` used, rather than by a second check
+    written in different words. Any future tool property carrying a path
+    belongs in that helper too, never in a new one.
     """
     scratch = io.StringIO()
     try:
@@ -599,27 +604,13 @@ def _identity_violation(argv: list[str]) -> str | None:
             f"launched for; a claim under any other identity would record a lease nobody holds."
         )
 
-    resolved_child = getattr(ns, "from_child", None)
-    if resolved_child:
-        resolved, escapes = _resolve_confined(resolved_child, join_relative_to=SPINE.parent)
-        if escapes:
-            return (
-                f"REFUSED: --from-child names a child checklist INSIDE the bound spine's own "
-                f"directory ({str(SPINE.parent)!r}); this call resolves it to {str(resolved)!r}, "
-                f"which is outside. The child's `consolidation` is attached to the bound spine "
-                f"as a review-result, and a review-result is what closes an artifact "
-                f"postcondition -- so a path outside the binding would let any JSON file carrying "
-                f"a `consolidation` key close a gate. Put the child under the spine's work area, "
-                f"or launch a door already bound to the target spine -- a dispatched crew's own "
-                f"run_crew.py --backend cli --spine launch does exactly that before its first call."
-            )
-
-    # `amend`'s --delta is the SAME hazard as --from-child (a filesystem path the
-    # engine will read and act on), so it goes through the SAME containment
-    # predicate (`_resolve_confined`) rather than a second one -- but NOT the same
-    # relative-path rule: `amend()` does a bare `Path(args.delta).read_text()`,
-    # with no base-dir join of its own (unlike `advance()`'s from_child), so a
-    # relative --delta resolves against the process's cwd, not SPINE.parent -- and
+    # `--delta` is a filesystem path the engine will read and act on -- the same
+    # hazard class the cut `--from-child` taught (see this function's docstring),
+    # so it goes through the SAME containment predicate (`_resolve_confined`)
+    # rather than a second one. It does NOT share that flag's relative-path rule:
+    # `amend()` does a bare `Path(args.delta).read_text()`, with no base-dir join
+    # of its own, so a relative --delta resolves against the process's cwd, not
+    # SPINE.parent -- and
     # since issue #568 that cwd is the bound spine's worktree by the time the
     # engine reads it, while this check runs before the door moves there (see
     # `_resolve_confined`'s docstring). This door only ever writes the delta file
@@ -1052,7 +1043,8 @@ def _write_amend_delta(delta: dict) -> Path:
     is never caller-supplied (the tool schema declares `delta` as a JSON
     object, not a path), and it is still run back through
     `_identity_violation`'s `_resolve_confined` containment check before the
-    engine ever reads it, the same as `spine_advance.from_child`.
+    engine ever reads it -- the containment every path this door hands the
+    engine goes through.
 
     The engine, not this function, validates the delta's `{"ops": [...]}`
     shape -- this only serialises whatever object the caller sent."""
@@ -1409,7 +1401,7 @@ def _spine_open(args: dict) -> dict:
 
     Containment: the candidate worktree path `work_id` derives is resolved
     against `wt_root` through `_resolve_confined` -- the SAME predicate
-    `_identity_violation` already uses for `--from-child`/`--delta`, reused
+    `_identity_violation` already uses for `--delta`, reused
     rather than a second, differently-shaped check, just with `wt_root` (not
     `SPINE.parent`) as `bound_dir`. This is defense in depth: `open_work`
     itself already refuses an unsafe `work_id` via `run_crew.validate_work_id`
@@ -1474,7 +1466,7 @@ def _spine_open(args: dict) -> dict:
 #: The closing clause every containment refusal in this module ends with, so a
 #: caller who is confined meets ONE consistent way out rather than three
 #: differently-worded ones. Lifted from `_identity_violation`'s own escape
-#: hatches for `--from-child` and `--delta`.
+#: hatch for `--delta`.
 #:
 #: Used to point at the CLI as a per-call escape hatch -- overturned (issue
 #: #559, ratified fleet-wide, cited in this module's own docstring): "the
@@ -1596,10 +1588,11 @@ def _spine_bind(args: dict) -> dict:
     # the rest of the session, and giving the next call a `BrokenPipeError`. That
     # is the opposite of this gate's Protected Intent ("Fail closed. A spine that
     # cannot be identified refuses"): it neither refused nor logged a rejection.
-    # `spine_bind` is the first lifecycle tool to take a caller-supplied filesystem
-    # path -- the pre-existing analogue, `spine_advance`'s `--from-child`, survives
-    # only because `_identity_violation` runs inside `run_engine`'s
-    # `except Exception` net, and the lifecycle path has no such net -- and it is
+    # `spine_bind` is the only tool taking a caller-supplied filesystem path since
+    # #634 cut `spine_advance`'s `--from-child`. That predecessor survived its own
+    # unguarded resolution only because `_identity_violation` runs inside
+    # `run_engine`'s `except Exception` net; the lifecycle path has no such net,
+    # so nothing here may lean on it. `spine_bind` is also
     # reachable with NOTHING bound (`BINDS_WITHOUT_A_BOUND_SPINE`), so it is
     # reachable at the moment an agent has no other way in. `OSError` and
     # `RuntimeError` join `ValueError` for the same reason the two root resolutions
@@ -1932,10 +1925,6 @@ TOOLS = [
                 "mechanical": {
                     "type": "boolean",
                     "description": "true when this gate carried no new understanding; use instead of 'why'",
-                },
-                "from_child": {
-                    "type": "string",
-                    "description": "path to a child checklist file whose consolidation attaches as review-result before advancing",
                 },
             },
             "required": ["task_id"],
@@ -2305,8 +2294,6 @@ def call_tool(name: str, args: dict) -> dict:
                 tool="spine_advance", rejection_class="missing-required-argument",
             )
         rest = [args["task_id"]]
-        if args.get("from_child"):
-            rest += ["--from-child", args["from_child"]]
         if args.get("mechanical"):
             rest.append("--mechanical")
         elif args.get("why"):

@@ -343,7 +343,7 @@ class SpineOpenContainmentTests(unittest.TestCase):
     """`work_id` is the only caller-supplied value `spine_open` turns into a
     filesystem path (the candidate worktree). Confined through
     `_resolve_confined` -- the SAME predicate `_identity_violation` already
-    uses for `--from-child`/`--delta` -- parameterized with `wt_root` as
+    uses for `--delta` -- parameterized with `wt_root` as
     `bound_dir` instead of the default `SPINE.parent`, never a second,
     differently-shaped check."""
 

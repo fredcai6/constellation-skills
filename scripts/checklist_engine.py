@@ -2727,35 +2727,33 @@ def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
     return f"{iid} -> in-progress"
 
 
-def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | None = None,
+def advance(cl: dict, iid: str, base_dir: Path | None = None,
             why: str | None = None, mechanical: bool = False,
             require_why: bool = False) -> str:
+    """Close an in-progress gate whose postconditions are met.
+
+    A gate is closed by the evidence ON IT, never by a file named on the call.
+    `--from-child` used to read a child checklist's `consolidation` and attach
+    it here as a `review-result` before advancing; it was cut at #634 as dead
+    weight. Measured over the whole corpus before cutting: every gate declaring
+    a `child_checklist` carried NO review-result, and all 253 review-results on
+    disk sat on gates declaring NO child, with `attach`-shaped payloads. The two
+    halves of that seam never once met in a real run.
+
+    A parent that genuinely needs a child's verdict still gets it the way every
+    real run already did -- `attach`/`attest` citing the child, an explicit act
+    by the agent holding the gate. What is gone is the ability to close a gate
+    by naming a path, which is the hazard `_identity_violation` had to confine
+    at the door (a `from_child` outside the binding once advanced a gate to
+    `complete` on a fabricated APPROVE). `child_checklist` itself STAYS: it is
+    live custody metadata, read by `spine_lifecycle._release_child_plans` at
+    closeout."""
     if cl["type"] != GATED:
         raise EngineError("advance is for gated checklists; use record")
     t = task(cl, iid)
     if t["status"] != "in-progress":
         raise EngineError(f"{iid} is {t['status']!r}, must be in-progress to advance",
                            task_id=iid, verb="advance", status=t["status"])
-    if from_child:
-        child_path = Path(from_child)
-        if not child_path.is_absolute() and base_dir is not None:
-            child_path = base_dir / from_child
-        if not child_path.exists():
-            raise EngineError(f"child checklist {from_child} not found")
-        cons = json.loads(child_path.read_text(encoding="utf-8")).get("consolidation")
-        if not cons:
-            raise EngineError(f"child {from_child} has no consolidation yet")
-        # Idempotent seam (#191): keep the attach BEFORE the guards (an artifact
-        # postcondition may legitimately consume this from-child review-result), but
-        # skip a duplicate. `main()` persists state even on a refused advance (missing
-        # --why / unmet postcondition), so a refuse-then-retry would otherwise
-        # double-attach the same consolidation — `attach` appends unconditionally.
-        already = any(
-            e.get("type") == "review-result" and e.get("payload") == cons
-            for e in t.get("evidence", []) or []
-        )
-        if not already:
-            attach(cl, iid, "review-result", cons)
     posts = t.get("postconditions", [])
     if not posts:
         raise EngineError(f"{iid}: a gated gate needs >=1 postcondition")
@@ -3516,7 +3514,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     add_session(s)
     s = sub.add_parser("advance")
     s.add_argument("id")
-    s.add_argument("--from-child", dest="from_child", help="child checklist file; attach its consolidation as review-result first")
     s.add_argument("--why", help="the running understanding justifying this advance; required on a non-exempt gate unless --mechanical (reference the task state, do not duplicate it)")
     s.add_argument("--mechanical", action="store_true", help="discharge the why prompt: this advance carries no new understanding (a distinct flag, not a magic string)")
     add_session(s)
@@ -3681,7 +3678,7 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
         # inside IS the handoff — but at/over hard it does refuse closing it in
         # SILENCE. The band decision belongs to this CLI boundary, so `advance` stays
         # a pure function of its arguments and every direct caller is unaffected.
-        return advance(cl, args.id, from_child=getattr(args, "from_child", None),
+        return advance(cl, args.id,
                        base_dir=base_dir, why=getattr(args, "why", None),
                        mechanical=getattr(args, "mechanical", False),
                        require_why=_trip_hard_band_reading(

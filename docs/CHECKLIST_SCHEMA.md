@@ -636,7 +636,11 @@ learns nothing; the historical line is what has to be read.
 
 Every **mutating** verb above (`start`/`advance`/`record`/`consolidate`/`skip`/`block`/`resume`/`reopen`/`append`/`amend`/`attest`/`waive`/`attach`/`flag-candidate`) accepts an optional `--session-id`; it is required, and checked against the active lease, **only once a lease has been claimed** (see *Engine session*).
 
-`advance <id> --from-child <path>` reads the child checklist's `consolidation`, attaches it as the gate's `review-result`, then advances. A **non-absolute** `<path>` resolves against the **parent checklist's directory** (the dirname of `--file`), not the current working directory — so a path written relative to cwd double-joins to a nonexistent file. Pass an absolute path, or one relative to the parent checklist's directory. `--from-child` only closes the gate when the child is a `survey` carrying a `consolidation`; a `gated` child (e.g. an `execute.json`) has none, so its parent postcondition is closed by a direct `attest` citing the child's per-gate evidence instead.
+**A gate is closed by the evidence on it, never by a path named on the call.** `advance <id> --from-child <path>` used to read a child checklist's `consolidation` and attach it as the gate's `review-result` before advancing. It was **cut at #634** and must not be restored.
+
+It was cut as dead weight, measured over the whole corpus: every gate declaring a `child_checklist` carried **no** `review-result`, and all 253 `review-result` items on disk sat on gates declaring **no** child, with `attach`-shaped payloads. The two halves of that seam never met in a real run — 25 consolidated surveys, 0 consolidations ever ingested. It also carried real reach: because `review-result` is what an `artifact` postcondition consumes, any JSON file with a `consolidation` key could close a gate, and one outside the binding was measured advancing a gate to `complete` on a fabricated APPROVE.
+
+A parent that needs a child's verdict attaches it explicitly — `attach` the verdict, or `attest` citing the child's per-gate evidence — which is what every real run already did. `child_checklist` itself **stays**: it declares custody, and `spine_lifecycle._release_child_plans` reads it at closeout to release the child's lease.
 
 ## Example: two linked checklists
 
@@ -655,5 +659,5 @@ issue-204-g1-review      (survey)  v1 pass, v2 pass, v3 (appended) FAIL
 
 1. **Consolidation shape.** `survey` output is a verdict + findings (reviewer) or a resolved understanding (interrogator). Those differ enough that `consolidation` may need a small per-purpose shape.
 2. **Condition expressiveness.** Free-text `statement` + optional `command`/`artifact` check; no structured task-to-task dependency (qualitative trust-but-verify instead). Revisit only if cross-task deps prove error-prone.
-3. **Cross-artifact write-back.** A child survey's `consolidation` *is* the parent gate's `review-result` evidence (the parent's `artifact` check reads `consolidation.verdict`). The remaining mechanic is how the engine — working on one checklist file at a time — attaches that to the parent file; likely an `attach`/`--from-child <work-id>` step before the parent's `advance`.
+3. **Cross-artifact write-back — CLOSED, and closed against the mechanic this entry proposed.** The entry read: a child survey's `consolidation` *is* the parent gate's `review-result`, and the engine needs a way to attach it across files, "likely an `attach`/`--from-child <work-id>` step". That step was built and then **cut at #634**, never having been used once. The answer is that the agent holding the gate attaches the verdict itself, as an explicit act, and the engine keeps working on one checklist file at a time.
 4. **Evidence payload typing.** Left loose; `review-result` vs `command-output` differ a lot. May need per-type payload schemas before `artifact` checks validate reliably.

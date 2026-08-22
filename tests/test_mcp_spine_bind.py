@@ -1317,11 +1317,13 @@ class NulByteDoesNotKillTheDoorTests(_RealDoorInAStagedCheckout):
     next call got a `BrokenPipeError`.
 
     A real process, not an imported module: the property under test is that the
-    PROCESS survives, and an in-process call cannot observe that. The pre-existing
-    analogue (`spine_advance(from_child=<NUL>)`) already survives, because
+    PROCESS survives, and an in-process call cannot observe that. The engine
+    pass-through tools survive a NUL anywhere in their argv because
     `_identity_violation` runs inside `run_engine`'s `except Exception` net --
-    `spine_bind` is the first lifecycle tool to take a caller-supplied filesystem
-    path, and the lifecycle path has no such net."""
+    `spine_bind` takes a caller-supplied filesystem path on the LIFECYCLE path,
+    which has no such net. (The pass-through analogue used to be named here as
+    `spine_advance(from_child=<NUL>)`; #634 cut that property, and the net it
+    relied on is unchanged.)"""
 
     def test_a_nul_byte_in_spine_file_is_refused_and_the_door_stays_alive(self):
         door = self._door(self.repo / "scripts" / "mcp_spine_server.py", self.repo)

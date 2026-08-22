@@ -728,9 +728,11 @@ def identity_arg_offenders(tools, *, markers, addresses_within, binds_this_door)
     control fail if the exemption is ever widened to swallow the planted case.
 
     `addresses_within` is matched on the PROPERTY NAME alone, across every tool:
-    those are structural ids inside the bound spine (`task_id`), plus
-    `from_child`, whose path is confined at RUNTIME by
-    `_identity_violation` -- delete that clause and the entry becomes false.
+    those are structural ids inside the bound spine (`task_id`), each of which
+    addresses something the bound spine already contains. It used to also carry
+    `from_child`, a FILESYSTEM PATH held on the list only by a runtime
+    confinement clause; #634 cut that property, so the list is back to
+    structural ids alone and needs no runtime clause to stay true.
 
     `binds_this_door` is keyed on `(tool, property)`, deliberately NOT on the
     tool: `{"spine_bind": ("spine_file",)}` exempts exactly one property of
@@ -740,7 +742,8 @@ def identity_arg_offenders(tools, *, markers, addresses_within, binds_this_door)
     unseen. `tests/test_mcp_spine_bind.py` carries the runtime half: that
     property is confined to this door's own checkout's `.agent-work/` and confers
     only the identity the spine itself dictates. Delete that confinement and this
-    entry becomes false, exactly as with `from_child`.
+    entry becomes false. That is now the ONLY entry resting on a runtime
+    confinement rather than on a property being a structural id.
     """
     offenders = []
     for tool in tools:
@@ -778,10 +781,13 @@ class IdentityBindingPinTests(unittest.TestCase):
 
     The second clause used to read "because there is no argument that would let
     it touch another", which was FALSE and known to be checkable: `from_child`
-    is a declared property carrying a filesystem path, and a comment on
+    was a declared property carrying a filesystem path, and a comment on
     `ADDRESSES_WITHIN_BOUND_SPINE` asserted it away rather than measuring it.
-    Confinement is now a fact about `_identity_violation`, not about the tool
-    schemas alone.
+    #634 then cut `from_child` outright -- it had never been used in a real run
+    -- so on today's surface the only declared path property is
+    `spine_bind.spine_file`. Confinement remains a fact about
+    `_identity_violation`, not about the tool schemas alone: the flag is gone,
+    the guard that would catch its successor is not.
 
     Companion seam, named but NOT tested here: `scripts/hooks/spine_rail.py`
     has the same defect by a different route (issue #549) -- it is outside this
@@ -795,34 +801,34 @@ class IdentityBindingPinTests(unittest.TestCase):
     IDENTITY_ARG_MARKERS = ("spine", "session", "engine", "checklist_file", "identity")
 
     #: Deliberately NOT matched: `task_id` (a gate id within the bound spine),
-    #: `condition_id`, `evidence_ref`, `from_child`. The distinction is the
-    #: whole discriminator, so it is stated rather than left implicit in a
-    #: regex -- and it is now stated EXACTLY, because it was overstated.
+    #: `condition_id`, `evidence_ref`. The distinction is the whole
+    #: discriminator, so it is stated rather than left implicit in a regex --
+    #: and it is now stated EXACTLY, because it was once overstated.
     #:
-    #: `task_id`/`condition_id`/`evidence_ref` are structural ids: they address
-    #: things INSIDE the spine the server is already bound to, and there is no
-    #: value they could take that reaches another file.
+    #: All three are structural ids: they address things INSIDE the spine the
+    #: server is already bound to, and there is no value they could take that
+    #: reaches another file. Every entry on this list must meet that test.
     #:
-    #: `from_child` is NOT of that kind and never was. It is a FILESYSTEM PATH
-    #: to a different file, `advance()` honours an absolute one, and the child's
-    #: `consolidation` is attached to the bound spine as a `review-result` --
-    #: the evidence type an artifact postcondition consumes. Left unrestricted
-    #: it closed a gate on a fabricated APPROVE read from outside the binding,
-    #: with `ns.file` still resolving to the bound spine, so both halves of the
-    #: guard were blind. It belongs on this list only because
-    #: `mcp_spine_server.py::_identity_violation` now CONFINES it to the bound
-    #: spine's own directory tree at runtime, pinned below by
-    #: `test_the_runtime_guard_refuses_a_from_child_outside_the_bound_spine`.
-    #: Delete that clause and this entry becomes false again.
-    ADDRESSES_WITHIN_BOUND_SPINE = ("task_id", "condition_id", "evidence_ref", "from_child")
+    #: `from_child` sat here too, and it did NOT meet that test -- it was a
+    #: FILESYSTEM PATH to a different file, `advance()` honoured an absolute
+    #: one, and the child's `consolidation` was attached to the bound spine as a
+    #: `review-result`, the evidence type an artifact postcondition consumes.
+    #: Left unrestricted it closed a gate on a fabricated APPROVE read from
+    #: outside the binding, with `ns.file` still resolving to the bound spine,
+    #: so both halves of the guard were blind. It was held on this list by a
+    #: runtime confinement clause in `_identity_violation` -- and then cut
+    #: entirely at #634 as never-used. Do NOT add a path-valued property back to
+    #: this list: this list is for structural ids, and a path needs the
+    #: `binds_this_door` treatment instead (its own runtime confinement, its own
+    #: pin, and an IDENTITY_TRADE.md amendment).
+    ADDRESSES_WITHIN_BOUND_SPINE = ("task_id", "condition_id", "evidence_ref")
 
     #: The ONE exemption that is not a structural id, keyed on `(tool, property)`
     #: rather than on the tool -- issue #567 lane A, `spine_bind`.
     #:
     #: `spine_bind.spine_file` is a declared property that DOES redirect the
-    #: door; that is the tool's entire purpose, and it is the wider of the two
-    #: path properties on this surface (`from_child` can only feed evidence INTO
-    #: the bound spine; this one decides WHICH spine is bound). So the identity
+    #: door; that is the tool's entire purpose, and since #634 cut `from_child`
+    #: it is the ONLY declared path property left on this surface. So the identity
     #: trade was deliberately re-opened, and the amendment this pin's failure
     #: message demands ships in the same change -- IDENTITY_TRADE.md §7.
     #:
@@ -1411,7 +1417,7 @@ class IdentityBindingPinTests(unittest.TestCase):
     @staticmethod
     def _artifact_gate(spine: Path) -> None:
         """Put the bound spine's g1 in-progress behind an ARTIFACT postcondition
-        -- the shape `--from-child` exists to close. Without this the advance
+        -- the shape `--from-child` used to close. Without this the advance
         refuses for an unrelated reason and the test proves nothing."""
         state = json.loads(spine.read_text(encoding="utf-8"))
         gate = state["tasks"]["g1"]
@@ -1431,25 +1437,35 @@ class IdentityBindingPinTests(unittest.TestCase):
             {"consolidation": {"verdict": "APPROVE", "summary": summary}}), encoding="utf-8")
         return path
 
-    def test_the_runtime_guard_refuses_a_from_child_outside_the_bound_spine(self):
-        """Live, through `call_tool`, no mutation of the door required:
-        `spine_advance.from_child` is a DECLARED tool property that carries a
-        filesystem path, so this is what any caller can already do.
+    def test_the_door_declares_no_from_child_and_ignores_one(self):
+        """#634 regrowth guard, at the door: `spine_advance` declares no
+        `from_child`, and a caller who sends one anyway cannot close a gate with
+        it.
 
-        The hole it closes, measured before the guard clause existed: an
-        absolute `from_child` outside the binding was read, its `consolidation`
-        attached to the BOUND spine as a `review-result`, and g1 advanced to
-        `complete`. `_identity_violation` never fired, because `ns.file` still
-        resolved to the bound spine -- the redirect was not of the spine but of
-        the EVIDENCE, and `review-result` is what closes an artifact
-        postcondition. Gate closure on fabricated evidence.
+        This replaces the pair of runtime tests that pinned `from_child`'s
+        CONTAINMENT (refuse a path outside the binding, allow one inside). The
+        flag is gone, so containment is no longer the property to pin -- absence
+        is. Two assertions, because either alone is a false green: the schema
+        could drop the property while the dispatch still forwarded it, and the
+        dispatch could drop it while the schema still advertised it.
+
+        The hole this closes is why the absence is worth a test rather than a
+        deletion. Measured before the containment clause existed: an absolute
+        `from_child` outside the binding was read, its `consolidation` attached
+        to the BOUND spine as a `review-result`, and g1 advanced to `complete`.
+        `_identity_violation` never fired, because `ns.file` still resolved to
+        the bound spine -- the redirect was not of the spine but of the
+        EVIDENCE, and `review-result` is what closes an artifact postcondition.
+        Gate closure on fabricated evidence.
         """
         module = self._load_module(self.spine, "")
+        advance_tool = next(t for t in module.TOOLS if t["name"] == "spine_advance")
+        self.assertNotIn(
+            "from_child", advance_tool["inputSchema"]["properties"],
+            "spine_advance declares from_child again; it was cut at #634",
+        )
+
         self._artifact_gate(Path(module.SPINE))
-        # A SEPARATE tempdir: `self.root` holds the bound spine, and a child in a
-        # SUBdirectory of it is legitimate (`.agent-work/<id>/g1-review/review.json`
-        # is the shipped shape), so an "outside" fixture under `self.root` would
-        # not reproduce anything.
         with tempfile.TemporaryDirectory() as elsewhere:
             outside = self._child(Path(elsewhere) / "not-a-child.json",
                                   "SECRET-OUTSIDE-THE-BINDING")
@@ -1458,53 +1474,50 @@ class IdentityBindingPinTests(unittest.TestCase):
         text = result["content"][0]["text"]
 
         self.assertIs(True, result.get("isError"),
-                      "the door advanced a gate on a child checklist outside its binding")
-        self.assertIn("REFUSED", text)
+                      "the door closed an artifact gate with no evidence on it")
         self.assertNotIn("SECRET-OUTSIDE-THE-BINDING", text)
 
         state = json.loads(Path(module.SPINE).read_text(encoding="utf-8"))
         self.assertEqual(
             "in-progress", state["tasks"]["g1"]["status"],
-            "the gate CLOSED on evidence read from outside the binding -- an artifact "
-            "postcondition is satisfied by a review-result, so an unconfined from_child "
-            "lets any JSON file carrying a `consolidation` key close a gate",
+            "the gate CLOSED on a from_child the door no longer declares -- the "
+            "dispatch is still forwarding it to the engine",
         )
         self.assertEqual(
             [], state["tasks"]["g1"]["evidence"],
             "content from outside the binding was attached to the bound spine as evidence",
         )
 
-    def test_the_runtime_guard_leaves_a_from_child_inside_the_bound_spine_alone(self):
-        """The other half, and the reason this is a CONTAINMENT check rather
-        than a ban: a genuine child checklist still closes its parent's gate.
+    def test_a_real_child_no_longer_closes_its_parents_gate_either(self):
+        """The other half of the cut, stated as a behaviour change rather than
+        left implicit: a LEGITIMATE child checklist beside the bound spine no
+        longer closes its parent's gate either.
 
-        Measured before restricting it, every real `--from-child` in this repo
-        resolves inside the parent checklist's own directory -- the engine's own
-        tests (`tests/test_checklist_engine.py`, child beside the spine in one
-        tempdir), the worked example in `docs/CHECKLIST_SCHEMA.md`, and every
-        live and archived run record (`.agent-work/<work-id>/g1-review/review.json`
-        under `.agent-work/<work-id>/spine.json`). Both forms are exercised here
-        because `advance()` accepts both.
+        This is the capability #634 deliberately gave up, and it is pinned so
+        the loss is a decision on the record rather than a surprise. The parent
+        now closes the same way all 253 review-results on disk were actually
+        produced: the agent holding the gate attaches the verdict itself,
+        through `spine_evidence`.
         """
         module = self._load_module(self.spine, "")
-        bound_dir = Path(module.SPINE).parent
+        self._artifact_gate(Path(module.SPINE))
+        child = self._child(Path(module.SPINE).parent / "child.json", "REAL-CHILD")
 
-        for label, ref in (
-            ("absolute", lambda p: str(p)),
-            ("relative to the parent checklist's directory", lambda p: p.name),
-        ):
-            with self.subTest(form=label):
-                self._artifact_gate(Path(module.SPINE))
-                child = self._child(bound_dir / "child.json", f"REAL-CHILD-{label}")
-                result = module.call_tool("spine_advance", {
-                    "task_id": "g1", "mechanical": True, "from_child": ref(child)})
-                self.assertFalse(
-                    result.get("isError"),
-                    f"{label}: the guard refused a legitimate child checklist inside the "
-                    f"bound spine's own work area:\n{result['content'][0]['text']}",
-                )
-                state = json.loads(Path(module.SPINE).read_text(encoding="utf-8"))
-                self.assertEqual("complete", state["tasks"]["g1"]["status"])
+        result = module.call_tool("spine_advance", {
+            "task_id": "g1", "mechanical": True, "from_child": str(child)})
+        self.assertIs(True, result.get("isError"))
+        state = json.loads(Path(module.SPINE).read_text(encoding="utf-8"))
+        self.assertEqual("in-progress", state["tasks"]["g1"]["status"])
+
+        # ...and the surviving path works: attach the verdict, then advance.
+        attached = module.call_tool("spine_evidence", {
+            "action": "attach", "task_id": "g1", "evidence_type": "review-result",
+            "fields": {"verdict": "APPROVE"}})
+        self.assertFalse(attached.get("isError"), attached["content"][0]["text"])
+        advanced = module.call_tool("spine_advance", {"task_id": "g1", "mechanical": True})
+        self.assertFalse(advanced.get("isError"), advanced["content"][0]["text"])
+        state = json.loads(Path(module.SPINE).read_text(encoding="utf-8"))
+        self.assertEqual("complete", state["tasks"]["g1"]["status"])
 
     @staticmethod
     def _delta(gate_id: str) -> dict:
@@ -1513,9 +1526,9 @@ class IdentityBindingPinTests(unittest.TestCase):
 
     def test_the_runtime_guard_refuses_a_delta_outside_the_bound_spine(self):
         """Live, through `run_engine`, no mutation of the door required:
-        `amend`'s `--delta` (added by issue #559, N1) is the SAME shape of
-        hazard `--from-child` is -- a filesystem path the engine reads and
-        acts on. This door only ever writes that path itself, beside the
+        `amend`'s `--delta` (added by issue #559, N1) is the same shape of
+        hazard the cut `--from-child` taught -- a filesystem path the engine
+        reads and acts on -- and since #634 it is the only one left. This door only ever writes that path itself, beside the
         bound spine (`_write_amend_delta` in `call_tool`), so this test is
         defense in depth: it calls `run_engine` directly, the way a future
         bug in that call site could, and proves the guard refuses a `--delta`
@@ -1557,11 +1570,13 @@ class IdentityBindingPinTests(unittest.TestCase):
         self.assertIn("genuine-abs", state["tasks"])
 
     def test_the_runtime_guard_refuses_a_relative_delta_because_amend_resolves_it_against_cwd_not_the_spine(self):
-        """The asymmetry with `--from-child`, made an explicit, tested boundary
-        rather than a silent gap: `advance()` resolves a relative `from_child`
-        against the parent checklist's own directory (its own documented rule),
-        but `amend()` does a bare `Path(args.delta).read_text()` with no such
-        join, so a relative `--delta` resolves against the process's cwd. A
+        """`--delta`'s relative-path rule, made an explicit, tested boundary
+        rather than a silent gap: `amend()` does a bare
+        `Path(args.delta).read_text()` with no base-dir join, so a relative
+        `--delta` resolves against the process's cwd. (The now-cut
+        `--from-child` was the asymmetric case that made this worth stating: it
+        resolved a relative value against the parent checklist's own directory,
+        a rule `advance()` implemented itself.) A
         file that GENUINELY sits beside the bound spine, named relatively, is
         therefore refused here -- not because it is unsafe in itself, but
         because `_resolve_confined` (matching `amend()` faithfully rather than
