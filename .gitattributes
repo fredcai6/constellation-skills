@@ -1,11 +1,14 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-# scripts/hooks/*.py are invoked directly by their shebang line -- the
-# tracked .claude/settings.json names no interpreter at all (see that
-# file). `* text=auto` alone still lets a Windows checkout with
-# core.autocrlf=true (Git for Windows' own recommended default) rewrite
-# these to CRLF, corrupting `#!/usr/bin/env python3` into
-# `#!/usr/bin/env python3\r` -- an interpreter name `env` cannot resolve.
-# Force LF unconditionally so the shebang survives checkout on every OS.
+# scripts/hooks/*.py carry a `#!/usr/bin/env python3` shebang. The tracked
+# .claude/settings.json no longer relies on it for invocation (#539/#560: the
+# hook command now names ${CONSTELLATION_PYTHON:-python3} explicitly, so the
+# interpreter comes from the command, not from executing the file directly),
+# but a corrupted shebang is still worth avoiding on general principle and
+# costs nothing to keep clean. `* text=auto` alone still lets a Windows
+# checkout with core.autocrlf=true (Git for Windows' own recommended default)
+# rewrite these to CRLF, corrupting `#!/usr/bin/env python3` into
+# `#!/usr/bin/env python3\r`. Force LF unconditionally so the shebang stays
+# clean on every OS.
 scripts/hooks/*.py text eol=lf

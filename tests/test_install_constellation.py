@@ -6,6 +6,7 @@ import os
 import re
 import io
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -2651,6 +2652,24 @@ class HookWiringOptInTests(_HookWiringFixture):
                 f"command: {hook['command']!r}",
             )
 
+    def test_wired_entry_pins_shell_bash(self):
+        """Ruling 2 (#539/#560, coordinator finding): the interpreter half is
+        `${MCP_INTERPRETER_ENV_VAR:-<default>}`, a POSIX parameter expansion
+        that only a real POSIX shell performs -- PowerShell/cmd.exe pass it
+        through unresolved. Before this pin, #651 shipped exactly that gap:
+        the command depended on POSIX expansion but nothing told Claude Code
+        to use a POSIX shell, and three live-execution tests failed on
+        Windows CI as a result (`AssertionError: 0 != 1`, command never ran).
+        `assert_shell_safe_command`'s contract now states this dependency
+        explicitly; this test is the positive control proving the pin this
+        installer writes actually satisfies it, matching every entry in this
+        repo's own tracked .claude/settings.json."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(tmp)
+            hook = self._entries(tmp)[0]["hooks"][0]
+            self.assertEqual("bash", hook.get("shell"))
+
     def test_the_wired_command_string_actually_executes(self):
         """Run the generated command EXACTLY as Claude Code would -- same string,
         stdin JSON -- and require it not to refuse.
@@ -2856,42 +2875,52 @@ class HookWiringOptInTests(_HookWiringFixture):
                     )
             self.assertNotEqual(0, raised.exception.code)
 
-    # -- the committability cost, surfaced ----------------------------------
+    # -- the committability win, surfaced (#539/#560 ruling) -----------------
 
-    def test_wire_hooks_at_project_scope_warns_the_file_is_committable(self):
-        """An absolute path embeds the user's home directory AND username, and a
-        project-scope settings.json is committable. Wiring must not make
-        committing it the path of least resistance."""
+    def test_wire_hooks_at_project_scope_writes_a_project_relative_portable_command(self):
+        """Pre-ruling this warned that the entry embedded an absolute path
+        containing the user's home directory and username. The owner's
+        ruling (#539/#560, recorded on `build_hook_command`) withdraws the
+        #269 constraint that kept the path absolute: at project scope it is
+        now `${CLAUDE_PROJECT_DIR}`-relative, and the interpreter default was
+        already portable (`${CONSTELLATION_PYTHON:-...}`). Nothing
+        machine-specific is left to warn about before committing it."""
         installer = load_installer()
-        lines = []
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "proj"
             project.mkdir()
             code = installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
                  "--skills", self.ANY_SKILL, "--wire-hooks"],
-                env={}, cwd=project, out=lines.append,
+                env={}, cwd=project, out=lambda _: None,
             )
             self.assertEqual(0, code)
             settings = project / ".claude" / "settings.json"
             self.assertTrue(settings.is_file())
-            output = "\n".join(lines).lower()
-            self.assertIn("commit", output)
-            self.assertIn("absolute path", output)
-            self.assertIn("user name", output)
+            written = json.loads(settings.read_text(encoding="utf-8"))
+            command = written["hooks"]["PostToolUse"][0]["hooks"][0]["command"]
+            self.assertIn(
+                "${CLAUDE_PROJECT_DIR}/.claude/skills/constellation-engine/scripts/", command)
+            self.assertNotIn(str(project), command)
+            self.assertNotIn(str(Path.home()), command)
 
-    # -- the gap this class exists to close: the INSTALLED path had no --------
-    # -- is_git_tracked guard at all (#539 residual) ---------------------------
+    # -- the gap #651 closed (is_git_tracked with no exception for hooks_from) --
+    # -- narrowed again by the #539/#560 ruling: the emitted command is now ----
+    # -- portable at project scope, so the ORIGINAL reason to refuse is gone ---
 
-    def test_wire_hooks_at_project_scope_refuses_an_already_tracked_settings_json(self):
-        """`--wire-hooks --scope project` (the default, INSTALLED path -- no
-        `--hooks-from source`) had no `is_git_tracked` guard at all: only
-        `--hooks-from source` refused. Re-wiring an already-committed
-        settings.json would stamp THIS machine's absolute installed path (and,
-        before the interpreter fix above, this machine's probed interpreter)
-        into a file that ships to every other checkout. Mirrors
-        `test_source_wiring_refuses_a_git_tracked_local_settings_file`, for the
-        installed path instead of `--hooks-from source`."""
+    def test_wire_hooks_at_project_scope_now_writes_an_already_tracked_settings_json(self):
+        """Before the #539/#560 ruling this refused (`is_git_tracked`, #651):
+        the emitted command carried an absolute installed path, so writing it
+        into an already-committed settings.json would ship a path that does
+        not exist on any other contributor's machine. The ruling makes the
+        project-scope command `${CLAUDE_PROJECT_DIR}`-relative (path) and
+        `${CONSTELLATION_PYTHON:-...}` (interpreter) -- both portable -- so
+        that original reason no longer applies, and writing into a tracked
+        file is exactly item 3 of #539/#560 ("converge .claude/settings.json
+        onto the form the installer emits"). `--scope user` keeps refusing
+        (see `test_source_wiring_refuses_a_git_tracked_local_settings_file`),
+        because a user-scope command is still absolute -- there is no single
+        project a user-scope settings.json belongs to."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "proj"
@@ -2906,19 +2935,16 @@ class HookWiringOptInTests(_HookWiringFixture):
             subprocess.run(["git", "add", ".claude/settings.json"],
                             cwd=str(project), capture_output=True)
             subprocess.run(["git", "commit", "-qm", "x"], cwd=str(project), capture_output=True)
-            before = settings.read_bytes()
 
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                with self.assertRaises(SystemExit) as raised:
-                    installer.main(
-                        ["--agent", "claude", "--scope", "project", "--project", str(project),
-                         "--skills", self.ANY_SKILL, "--wire-hooks"],
-                        env={}, cwd=project, out=lambda _: None,
-                    )
-            self.assertNotEqual(0, raised.exception.code)
-            self.assertIn("git-tracked", stderr.getvalue())
-            self.assertEqual(before, settings.read_bytes(), "the tracked file was written anyway")
+            code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", self.ANY_SKILL, "--wire-hooks"],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            written = json.loads(settings.read_text(encoding="utf-8"))
+            command = written["hooks"]["PostToolUse"][0]["hooks"][0]["command"]
+            self.assertIn("${CLAUDE_PROJECT_DIR}", command)
 
     def test_wire_hooks_at_project_scope_succeeds_when_settings_json_is_not_yet_tracked(self):
         """Anti-vacuity for the refusal above: it must be about TRACKEDNESS, not
@@ -3179,9 +3205,17 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
     scripts/hooks/ instead.
 
     It writes settings.local.json, not settings.json, and that is not a
-    preference: a source command carries this checkout's absolute path AND an
-    interpreter probed on this host, so it is wrong for every other machine by
-    construction."""
+    preference: a developer's own source-tree override should not land in the
+    file every contributor shares, regardless of whether the command it
+    carries happens to be portable.
+
+    `--scope user` (this fixture's `_run`, throughout this class) has no
+    single project to be relative to, so the command stays absolute -- an
+    interpreter probed on this host AND this checkout's absolute path, wrong
+    for every other machine by construction. At `--scope project` the path
+    half becomes `${CLAUDE_PROJECT_DIR}`-relative instead (#539/#560 ruling;
+    see `test_source_wiring_at_project_scope_is_project_relative` below),
+    which is what this repo's own tracked .claude/settings.json ships."""
 
     def test_source_wiring_points_at_this_checkouts_own_hook_scripts(self):
         installer = load_installer()
@@ -3195,6 +3229,32 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
                     expected.is_file(), f"wired a path with no file behind it: {expected}")
                 self.assertIn(expected.as_posix(), command)
                 self.assertNotIn("${CLAUDE_PROJECT_DIR}", command)
+
+    def test_source_wiring_at_project_scope_is_project_relative(self):
+        """At `--scope project` the source path becomes
+        `${CLAUDE_PROJECT_DIR}/scripts/hooks/<script>` -- REPO_ROOT-relative,
+        which is always exactly `scripts/hooks/<script>` since
+        `source_hook_path` is defined in terms of REPO_ROOT regardless of
+        `target_root`. Still written to settings.local.json (unchanged
+        routing -- see class docstring), not the shared file."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            project.mkdir()
+            code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", self.ANY_SKILL, "--wire-hooks", "--hooks", "all",
+                 "--hooks-from", "source"],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            local = project / ".claude" / "settings.local.json"
+            self.assertTrue(local.is_file())
+            written = self._all_commands(json.loads(local.read_text(encoding="utf-8")))
+            self.assertEqual(len(installer.HOOK_SPECS), len(written))
+            for (_event, _matcher, script), (command, _timeout) in written.items():
+                self.assertIn(f"${{CLAUDE_PROJECT_DIR}}/scripts/hooks/{script}", command)
+                self.assertNotIn(str(installer.REPO_ROOT), command)
 
     def test_source_wiring_writes_the_local_file_and_never_the_shared_one(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -3753,11 +3813,23 @@ class ReadinessTriStateTests(_MultiHookFixture):
     from WIRED WRONG, and must not launder an honest "I cannot tell" into
     either a pass or a fail.
 
-    The pre-existing CANNOT EVALUATE behaviour is RIGHT and is preserved: the
-    detector refuses to expand `${CLAUDE_PROJECT_DIR}` because it would be
-    expanded in the installer's process, not the future hook's. What was wrong
-    was the ROLL-UP -- a two-state report had nowhere to put that answer, so a
-    correctly wired repo read as defective."""
+    `check_hooks_shippable`/`detect_hook_wiring`, called directly with
+    whatever `env` a caller hands them (as every test in this class below
+    does), still correctly refuse to expand `${CLAUDE_PROJECT_DIR}` when it is
+    not actually known -- that would be resolving a future hook's variable in
+    the WRONG process. What #539/#560 item 4 changes is one level up, in
+    `build_readiness_report` (see `ReadinessDeterminismTests` below): at
+    `--scope project`, readiness's own `--project`/cwd argument already NAMES
+    the one value `${CLAUDE_PROJECT_DIR}` is guaranteed (#269) to hold for a
+    real future hook in that project, so `build_readiness_report` supplies it
+    itself rather than deferring to whatever the CALLING process's `os.environ`
+    happened to carry (often nothing, if run from a plain terminal). That
+    turns a correctly-wired project-scope repo from CANNOT DETERMINE into a
+    real READY, without ever guessing in the wrong process -- the tests in
+    THIS class (`check_hooks_shippable`/`check_hooks_shippable`-under-empty-
+    env only) still see the honest "cannot tell" the pre-existing roll-up
+    fix was for, and that is correct: they are testing the lower layer, which
+    genuinely has no project context of its own."""
 
     def _wire_by_hand(self, tmp, command):
         return self._write_settings(tmp, {"hooks": {"PostToolUse": [self._entry(command)]}})
@@ -3846,9 +3918,21 @@ class ReadinessTriStateTests(_MultiHookFixture):
         self.assertEqual(installer.READINESS_READY, report.verdict)
         self.assertEqual(0, report.exit_code)
 
-    def test_cli_exits_three_when_only_undeterminable_items_remain(self):
+    def test_cli_exits_zero_for_a_project_wired_the_way_this_repo_ships(self):
         """End to end through the real CLI, on a project whose hooks are wired
-        exactly the way this repo's own tracked settings.json wires them."""
+        exactly the way this repo's own tracked settings.json wires them.
+
+        Before #539/#560 item 4 this asserted `READINESS_EXIT_UNDETERMINABLE`:
+        `env={}` here means the CLI sees NO `CLAUDE_PROJECT_DIR` at all (`main`
+        only falls back to `os.environ` when `env is None`), so the detector
+        could not expand the tracked entries' `${CLAUDE_PROJECT_DIR}` token and
+        reported CANNOT EVALUATE for a repo that was actually wired correctly
+        -- the load-bearing example of the defect item 4 exists to fix.
+        `build_readiness_report` now supplies `CLAUDE_PROJECT_DIR` itself, from
+        this same CLI invocation's own `--project` (#269 guarantees a real
+        future hook sees the same value), so this is a real, determinable
+        READY now -- not a guess in the wrong process, the one fact this
+        invocation was already told."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "project"
@@ -3857,6 +3941,11 @@ class ReadinessTriStateTests(_MultiHookFixture):
             (project / ".claude" / "settings.json").write_text(
                 (ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"),
                 encoding="utf-8")
+            # The tracked settings.json wires `${CLAUDE_PROJECT_DIR}/scripts/hooks/...`
+            # (hooks_from=source form -- correct for a checkout that owns these
+            # hooks, which this synthetic project must therefore also be, or
+            # the entries would correctly read STALE rather than READY).
+            shutil.copytree(ROOT / "scripts" / "hooks", project / "scripts" / "hooks")
             subprocess.run(["git", "add", "-A"], cwd=str(project), capture_output=True)
             subprocess.run(
                 ["git", "-c", "user.email=t@e.com", "-c", "user.name=T",
@@ -3872,11 +3961,42 @@ class ReadinessTriStateTests(_MultiHookFixture):
             )
         output = "\n".join(lines)
         self.assertEqual(
-            installer.READINESS_EXIT_UNDETERMINABLE, code,
-            f"a correctly wired project did not read as CANNOT DETERMINE:\n{output}",
+            0, code,
+            f"a correctly wired project (this repo's own tracked settings.json) did not "
+            f"read as READY:\n{output}",
         )
-        self.assertIn("hooks: CANNOT DETERMINE", output)
+        self.assertIn("hooks: READY", output)
+        self.assertNotIn("CANNOT DETERMINE", output)
         self.assertIn("skills: READY", output)
+
+    def test_cli_still_reports_cannot_determine_for_a_genuinely_undecidable_case(self):
+        """Anti-vacuity for the fix above: item 4 must not have laundered EVERY
+        `${CLAUDE_PROJECT_DIR}` entry into READY -- only the ones a project-
+        scope invocation can actually vouch for. `--scope user` has no single
+        project `${CLAUDE_PROJECT_DIR}` could stand for (a user-scope
+        settings.json is read for every project a session opens), so
+        `build_readiness_report` never substitutes it there, and a hand-wired
+        `${CLAUDE_PROJECT_DIR}` entry at that scope stays honestly unknown."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry('py "${CLAUDE_PROJECT_DIR}/' + hook.name + '"')]}})
+            lines = []
+            # skills is deliberately left NOT READY here (no --skills install
+            # was run against this --dest) -- a determinable failure on a
+            # DIFFERENT item outranks an undeterminable one in the overall
+            # roll-up (`run_readiness_check`'s own documented ordering), so
+            # this asserts the "hooks" ITEM's own verdict line, not the
+            # overall exit code, to isolate exactly what item 4 governs.
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+                 "--check-readiness"],
+                env={}, out=lines.append,
+            )
+        output = "\n".join(lines)
+        self.assertNotEqual(0, code, output)
+        self.assertIn("hooks: CANNOT DETERMINE", output)
 
 
 class NoInterpreterOnHostTests(unittest.TestCase):
