@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 60 modules, 1279 entities
 skills: 1 modules, 18 entities
-tests: 95 modules, 5323 entities
+tests: 96 modules, 5337 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -116,7 +116,7 @@ tests: 95 modules, 5323 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (95 modules, 5323 entities)
+## tests (96 modules, 5337 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -156,6 +156,7 @@ tests: 95 modules, 5323 entities
 - [tests.test_episode_store](tests.test_episode_store/INDEX.md) (214 entities, 127 holes): Tests for the episode store (docs/EPISODE_STORE.md): scripts/apply_episode_delta.py, the validated all-or-nothing writer (gate g2), and scripts/query_episodes.p
 - [tests.test_explorer_templates](tests.test_explorer_templates/INDEX.md) (43 entities, 42 holes): Verifier<->template cross-check for the constellation-explorer engine artifacts.
 - [tests.test_feedback_tooling](tests.test_feedback_tooling/INDEX.md) (61 entities, 59 holes): HOLE: no docstring
+- [tests.test_force_claim_occupancy](tests.test_force_claim_occupancy/INDEX.md) (14 entities, 9 holes): #369 (resume side): a force takeover reports what the artifacts around the spine say about who else has been here, as counts and ages, with no verdict.
 - [tests.test_fowler_pass](tests.test_fowler_pass/INDEX.md) (37 entities, 31 holes): Tests for the constellation-reviewer sharpening rail (scripts/verify_fowler_pass.py).
 - [tests.test_gauge_chain_writer_to_trip](tests.test_gauge_chain_writer_to_trip/INDEX.md) (35 entities, 1 holes): The Context Governor chain, traversed end to end with REAL OS subprocesses:
 - [tests.test_gauge_reader](tests.test_gauge_reader/INDEX.md) (105 entities, 80 holes): HOLE: no docstring

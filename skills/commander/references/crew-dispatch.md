@@ -45,6 +45,44 @@ The wrapper is backend-pluggable behind one result contract (see `docs/superpowe
 
 Select with `--backend {auto,cli,external}` (auto-detects: CLI on PATH → `cli`, else `external`); the `--dispatch {spawn,external}` form also works and an explicit choice always wins. In the Constellation Agent-tool harness there is no headless `claude` CLI, so dispatch the implementer/reviewer as synchronous Agent-tool subagents via `--dispatch external` (or `--backend external`) + `--verify-result`; do not re-derive a hand-rolled workaround.
 
+## An in-harness subagent is dispatched as `constellation-crew`, and that is the guard
+
+When you dispatch that Agent-tool subagent, pass `subagent_type: "constellation-crew"`.
+Not a preference — it is the only thing standing between an in-harness helper and
+your own run.
+
+**The two channels are not symmetric, and only one of them is safe by default.**
+A `cli`-backend crew is a fresh process: `run_crew._crew_door_env` *assigns* its
+`SPINE_FILE`/`SPINE_SESSION`/`SPINE_PARENT`, so its door is bound to its own plan
+from the first call. An **Agent-tool subagent inherits no environment at all** —
+measured, all three variables unset in the dispatching agent too — and the door
+instead resolves through `.agent-work/.spine-rail-binding.json`, keyed by the
+harness session id the subagent **shares with you**. So an in-harness helper that
+calls `mcp__spine__*` drives *your* spine, and the journal afterwards shows one
+session id and no anomaly. That is not hypothetical: a cold subagent given two
+strings to read drove a live gate to completion, amended four downstream gates,
+and advanced the top-level spine (#632, lane H).
+
+`.claude/agents/constellation-crew.md` declares a tool list that omits every
+`mcp__spine__*` tool, so the door is simply not on the subagent's tool surface.
+Verified in a fresh session: the type registers, the subagent reports no
+`mcp__spine__*` tool and no `ToolSearch` with which to recover one. **This
+replaces the hand-written "do NOT call any `mcp__spine__*` tool" paragraph** that
+every handoff in the deficiency-cleanup epic wrote by hand — a declared exclusion
+costs nothing at use time and cannot be forgotten.
+
+A helper that genuinely needs to drive a spine should not be an in-harness
+subagent at all — dispatch it through `run_crew.py` on the `cli` backend, which
+gives it its own process with its own bound door (`_crew_door_env`). The
+exclusion does not take work away from a crew; it says which channel that work
+belongs on.
+
+**Do not scope the door per-caller instead.** The door cannot identify its
+caller — an MCP call carries no caller discriminator, which is why the
+`sid#<agent_id>` per-agent key works at `decide_stop` (a Stop payload carries
+`agent_id`) and nowhere else. And do not add a refusal at the door: it cannot
+tell a legitimate call from a mistaken one, so the refusal would be a coin flip.
+
 ## Name a tier: the handoff's Suggested Model Tier field is what you resolve --model from
 
 `run_crew.py` refuses a fresh or relaunched dispatch that names no tier at all (`CrewSpec.__post_init__`,
