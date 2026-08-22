@@ -1,0 +1,939 @@
+{
+  "work_id": "w2-ledger",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-issue259-and-amend",
+    "g5-closeout-gate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read this skill's references/global-orchestrator.md and references/global-everyone.md, then docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Re-read .agent-work/w2-ledger/MISSION_FRAME.md, PLAN_ALTERNATIVES.md, and PLAN_CRITIC.md (including its Commander triage section) as the frozen plan intent and scope for this execute run. Confirm the hybrid design (override_ledger + kind discriminant, dispatch-only writes, report-only authority-mismatch) and the ten critic fixes are what every gate below implements, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + frozen plan (mission frame, plan alternatives, critic triage) loaded and confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context reloaded"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Land override_ledger + _override_entries, re-point the trip writer",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate and dispatch constellation-implementer. Task: in scripts/checklist_engine.py, add a top-level `_append_override_entry(cl, kind, **fields) -> str` function (same setdefault/never-mutate/never-remove idiom as today's `_append_trip_entry` at :2167-2187, ids scoped `ov-N` across all kinds, not per-kind). Re-point `_append_trip_entry` to call it with `kind=\"trip\"` plus the existing trip-specific fields (fill/hard/model/why_ref/outcome), so `_trip_hard_gate` (:2263, called only from `dispatch()` at :3699 before `_run_verb` at :3703, for start/reopen only) remains the ONLY caller that ever creates a `kind=\"trip\"` entry -- today's engine-written-only property for trips is exactly preserved, not re-argued. Add `_override_entries(cl, kind=None) -> list[dict]` as the one read path: yields `cl.get(\"override_ledger\", [])` entries (optionally filtered by `kind`), PLUS -- for backward-compatible reads of pre-migration spines only, never a rewrite of archived JSON -- every entry of `cl.get(\"trip_ledger\", [])` retagged `kind=\"trip\"` in the RETURNED (not stored) dict. Order matters (Finding 5 of PLAN_CRITIC.md): yield the retagged legacy `trip_ledger` entries FIRST, then the `override_ledger` entries -- this is chronologically correct because no `override_ledger` entry can predate the code deploy that introduces the key, so 'legacy first' is always time-ordered for any single spine, not just for archived ones. Rewrite `begin_over_line_records` (:2192) and `begin_over_line_records_historical` (:2230) to source from `_override_entries(cl, kind=\"trip\")` instead of `cl.get(\"trip_ledger\")` directly -- a read-path swap only, their outcome/why_ref filtering logic is unchanged. `trip_ledger` the KEY must never be written again anywhere in the file after this gate lands (grep-verifiable). Also write the schema doc as part of this same gate, not a follow-up: extend docs/CHECKLIST_SCHEMA.md (the '### The trip ledger' section near line 459, and the top-of-file schema block near line 77) with the `override_ledger` block, its four `kind` values (`trip`/`force-claim`/`force-release`/`waive`) and example entries, the migration-contract paragraph (legacy trip_ledger reads merge via `_override_entries`, ordered legacy-first, never rewritten in place), and one sentence noting the `waive` kind's count is expected to be the loudest and least-exceptional of the four on ordinary runs (Finding 6) since a plain policy-allowed waive is the schema's own documented routine path (CHECKLIST_SCHEMA.md:267), not a rare event -- so a reader of a closeout summary should not over-index on a nonzero `waive` count alone. Map entry point for the implementer: scripts/checklist_engine.py (read `_append_trip_entry`/`_trip_hard_gate`/`begin_over_line_records*`/`dispatch` first, in that order) and docs/CHECKLIST_SCHEMA.md (read '### The trip ledger' and the top schema block first). Constraints: no touch to `generate_spine.py`, `specs/`, the attest/condition surface, or shipped spine templates; `trip_ledger`'s three existing outcomes (begin-refused/begin-released/begin-instructed) must keep emitting byte-identical shapes for every EXISTING call site and EXISTING test. Suggested Model Tier: sonnet (mechanical refactor plus a well-specified schema addition, not open-ended design -- the design was already decided at plan).",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "no touch to generate_spine.py/specs/ or the attest-condition surface",
+        "trip_ledger key never written again after this gate",
+        "existing trip_ledger tests pass unmodified"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:scripts/checklist_engine.py#_append_trip_entry, function",
+          "struct:scripts/checklist_engine.py#_trip_hard_gate, function",
+          "struct:scripts/checklist_engine.py#dispatch, function"
+        ],
+        "capability": [
+          "capability:engine-session-leasing-and-gate-advancement",
+          "capability:trip-ledger"
+        ],
+        "constraint": [
+          "constraint:engine-written-only \u2014 the ledger must be reachable only from the dispatch chokepoint, provably",
+          "constraint:no-spec-migration \u2014 do not touch generate_spine.py/specs/"
+        ],
+        "decision": [
+          "decision:ledger-schema-is-override-ledger-with-kind \u2014 override_ledger top-level key, kind discriminant, single merge-reading function, no archived-JSON migration @grade: settled/human \u00b7 leans g1-implement,g1-review \u00b7 settle: done at plan via design-it-twice convergence, see PLAN_ALTERNATIVES.md",
+          "decision:merge-order-is-legacy-first \u2014 _override_entries yields retagged legacy trip_ledger entries before override_ledger entries @grade: settled/measured \u00b7 leans g1-implement \u00b7 settle: done, PLAN_CRITIC.md Finding 5"
+        ],
+        "evidence": [
+          "claim:trip-ledger-is-engine-written-only \u2014 verified by grep + call-site trace, see notes-w2b.md"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Review: override_ledger landed, trip writer re-pointed",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g1-implement's plan and IMPLEMENTER_RESULT. Dispatch constellation-reviewer. Verify specifically: (1) grep -n 'trip_ledger' scripts/checklist_engine.py shows only the one read site inside _override_entries, zero write/assignment sites; (2) every existing trip-ledger test in tests/test_checklist_engine.py passes UNMODIFIED against a fixture using the new override_ledger key with kind=trip entries and no trip_ledger key at all; (3) a fixture with BOTH a legacy trip_ledger and unrelated override_ledger kinds reads correctly through _override_entries(cl, kind='trip') with no leakage and no dropped legacy entries; (4) a live-transition fixture (legacy trip_ledger entries, then a fresh trip event lands in override_ledger) reads back in chronological (legacy-first) order via _override_entries(cl) with no kind filter; (5) docs/CHECKLIST_SCHEMA.md's new section matches what the code actually emits, field-for-field, including the waive-count caveat sentence. Map entry point: same as g1-implement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT (attempt 2) received and integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Integrate g1",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects yourself (grep trip_ledger write sites; re-run the named pytest cases), then advance -- the command postcondition below re-runs on advance. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests pass: pytest tests/test_checklist_engine.py -q",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": "review-result APPROVE, attached at g1-review"
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "grep -n 'trip_ledger' scripts/checklist_engine.py shows zero write/assignment sites (only the read inside _override_entries)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && ! grep -nE 'trip_ledger\"?\\]\\s*=|setdefault\\(\"trip_ledger\"' scripts/checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && ! grep -nE 'trip_ledger\"?\\]\\s*=|setdefault\\(\"trip_ledger\"' scripts/checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && ! grep -nE 'trip_ledger\"?\\]\\s*=|setdefault\\(\"trip_ledger\"' scripts/checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Fix waive()'s #503 defects; wire waive/force-claim/force-release into override_ledger from dispatch() only",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. This gate depends on g1's override_ledger/_append_override_entry/_override_entries landing first. Two parts: PART A -- fix waive() itself (scripts/checklist_engine.py:3475-3520), two surgical changes: (1) line 3511, replace the literal `\"produced_by\": \"human\"` with `\"produced_by\": authority` (authority is already validated non-empty three lines above); (2) read `policy.get(\"authority\")` (currently never read) and compare it, case/whitespace-normalized, against the passed `authority`. On a mismatch do NOT refuse -- this is a brand-new refusal and the standing epic rule requires report-only shape -- instead set `authority_mismatch: true` on both the evidence payload and the `c[\"waived\"]` marker, plus `expected_authority` (the policy's declared value). On a match, or when `policy.get(\"authority\")` is absent, add no new field (today's silent-pass on absence is unchanged, not a defect). PART B -- in `dispatch()`, wire three append calls into `_append_override_entry`, ALL living inside dispatch()'s own body, NONE inside waive()/claim()/release()'s own function bodies (this is the provable, non-negotiable chokepoint constraint the whole mission rests on): (i) claim branch (~3680-3684) -- after `claim(...)` returns successfully, if `force` was passed AND the just-written `cl['engine_session']['previous_session_id']` is non-null (a genuine takeover, not a no-op force), append `kind='force-claim'`; (ii) release branch (~3670-3674) -- this is a hard `return`, NOT a fall-through (verified in PLAN_CRITIC.md Finding 3) -- capture the owning session_id from `cl.get('engine_session')` BEFORE calling `release(...)`, then compute and append `kind='force-release'` (when force was passed AND the caller's session_id differs from the captured owner) INLINE before the existing return statement -- do not restructure the early return into a fall-through, and add an explicit test asserting a force-release against an archived-path spine still gets zero archived-banner decoration, exactly as before (Finding 3's regression risk); (iii) generic verb branch (~3685-3701, where waive already runs via `_run_verb`) -- when `v=='waive'` and `_run_verb` returns successfully, read the condition's now-set `c['waived']` marker and append `kind='waive'` with its authority/reason/forced/authority_mismatch/expected_authority fields plus task/cond/evidence -- record EVERY successful waive, not only forced/mismatched ones (deliberate, per PLAN_ALTERNATIVES.md's recommendation and PLAN_CRITIC.md Finding 6, which is accepted as a named tradeoff already documented in g1's schema doc). The condition lookup dispatch performs for the authority-mismatch read must be tested against the SAME duplicate-lookup path waive() itself exercises (PLAN_CRITIC.md Finding 9), so a divergence between dispatch's re-lookup and waive()'s own lookup is caught by a test, not a production surprise. Named promotion trigger (do not implement now, just record in code comment + the schema doc from g1): `waive-authority-mismatch`/`authority_mismatch` stays report-only until BOTH (a) a corpus census across at least one full epic-wave shows every historical mismatch was a genuine violation with zero legitimate cross-role cases, AND (b) docs/CHECKLIST_SCHEMA.md's override_policy.authority field is explicitly upgraded from 'advisory' to a documented enforceable contract in the SAME change that promotes the check. Map entry point: scripts/checklist_engine.py, read waive() (:3475) and dispatch() (:3663) first. Constraints: waive() must never newly refuse/block on a mismatch; every existing waive test passes unchanged; zero calls to _append_override_entry inside waive()/claim()/release()'s own function bodies (grep-verifiable). Suggested Model Tier: sonnet, reasoning-effort medium (the release()-early-return control-flow care in Finding 3 is the one place a careless refactor regresses unrelated behavior -- worth deliberate care, not exotic difficulty).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 (override_ledger + _append_override_entry + _override_entries) landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 landed: override_ledger, _append_override_entry, _override_entries all exist; committed at 2895dc8b"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "waive() never blocks on authority mismatch (report-only)",
+        "zero _append_override_entry calls inside waive()/claim()/release() bodies",
+        "release's existing early-return output shape (archived-banner behavior) unchanged"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:scripts/checklist_engine.py#waive, function",
+          "struct:scripts/checklist_engine.py#dispatch, function"
+        ],
+        "capability": [
+          "capability:override-authority-handling"
+        ],
+        "constraint": [
+          "constraint:override-policy-authority-is-currently-advisory \u2014 docs/CHECKLIST_SCHEMA.md:284",
+          "constraint:widening-live-refusal-report-only \u2014 a brand-new refusal ships report-only with a named promotion trigger"
+        ],
+        "decision": [
+          "decision:waive-fix-shape \u2014 one-token produced_by fix inside waive(); authority-mismatch as a chokepoint-side post-hoc report-only read, not a refusal inside waive() itself @grade: settled/human \u00b7 leans g2-implement,g2-review \u00b7 settle: done, both plan candidates converged independently, see PLAN_ALTERNATIVES.md",
+          "decision:record-every-waive \u2014 every successful waive is ledger-recorded, not only forced/mismatched ones @grade: settled/human \u00b7 leans g2-implement \u00b7 settle: done, PLAN_ALTERNATIVES.md + PLAN_CRITIC.md Finding 6 accepted as named tradeoff"
+        ],
+        "evidence": [
+          "claim:save-happens-once-after-dispatch-returns \u2014 verified by PLAN_CRITIC.md Finding 9's trace of main(), so the after-the-verb append pattern is safe"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Review: waive() fixes + dispatch-only ledger wiring",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g2-implement's plan and IMPLEMENTER_RESULT. Dispatch constellation-reviewer. Verify specifically: (1) produced_by echoes the passed authority for a non-'human' value; (2) authority_mismatch/expected_authority appear ONLY when override_policy.authority disagrees with the passed authority, absent (not false) otherwise; (3) waive still succeeds and returns identically on a mismatch -- never blocks; (4) grep -n '_append_override_entry' scripts/checklist_engine.py shows call sites ONLY inside dispatch() -- zero inside waive()/claim()/release()'s own function bodies (by line-range/AST check, not string count); (5) a test drives waive/claim --force/release --force through checklist_engine.dispatch() (the CLI path) and asserts ledger entries land, while a companion test calls waive()/claim()/release() directly (library functions, bypassing dispatch) and asserts the ledger is UNCHANGED -- the chokepoint-proof pattern both plan candidates converged on; (6) a force-release against an archived-path spine gets zero archived-banner decoration, unchanged from before this gate (Finding 3); (7) claim --force with no actual prior owner produces no force-claim entry. Map entry point: same as g2-implement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT (g2-implement) received and integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Integrate g2",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects yourself (the grep + direct-call-vs-dispatch tests), then advance. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests pass: pytest tests/test_checklist_engine.py -q",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": "review-result APPROVE"
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "no CLI verb's own body calls _append_override_entry directly",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && python -c \"import ast,sys; src=open('scripts/checklist_engine.py').read(); tree=ast.parse(src); funcs={n.name:n for n in ast.walk(tree) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))}; bad=[]; \nfor fname in ('waive','claim','release'):\n    fn=funcs.get(fname)\n    if fn is None: continue\n    for n in ast.walk(fn):\n        if isinstance(n, ast.Call) and getattr(n.func,'id',None)=='_append_override_entry': bad.append(fname)\nsys.exit(1 if bad else 0)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -c \"import ast,sys; src=open('scripts/checklist_engine.py').read(); tree=ast.parse(src); funcs={n.name:n for n in ast.walk(tree) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))}; bad=[]; \nfor fname in ('waive','claim','release'):\n    fn=funcs.get(fname)\n    if fn is None: continue\n    for n in ast.walk(fn):\n        if isinstance(n, ast.Call) and getattr(n.func,'id',None)=='_append_override_entry': bad.append(fname)\nsys.exit(1 if bad else 0)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Closeout renders the ledger (#504): episode mechanical-fields + finish_work summary",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. This gate depends on g1/g2 landing first (needs _override_entries and a populated ledger to summarize). Four parts, ALL required together (PLAN_CRITIC.md Finding 1 -- these travel together or the feature silently defeats itself): PART A -- add a small pure `override_summary(cl) -> dict` to scripts/checklist_engine.py (near _override_entries), returning counts by kind (e.g. `{'trip': N, 'force-claim': N, 'force-release': N, 'waive': N, 'waive_authority_mismatch': N}`, the last counting entries where kind=='waive' and authority_mismatch is true) plus the full ordered list of entry ids, reading only `_override_entries(cl)` -- same purity discipline as begin_over_line_records (no subprocess/gauge/clock). PART B -- scripts/apply_episode_delta.py: add `\"overrides\"` to `MECHANICAL_ALL_FIELDS` (line ~179; it is dict-shaped like `artifact-ref`, NOT a scalar, so it does not belong in `MECHANICAL_SCALAR_FIELDS`) and add a corresponding shape check inside `_validate_create` (lines ~1058-1065) so a malformed `overrides` value is refused the same way other structured mechanical fields are -- without this, PLAN_CRITIC.md Finding 1's traced failure is real: `_validate_create` hard-refuses episode creation the first time any workflow copies mechanical_fields()'s full output into a create op for a run that used any override, exactly the runs this feature exists to surface. PART C -- scripts/episode_capture.py: extend `mechanical_fields()` (line ~407) with the same idiom already used for `refusals` (line ~448-450): `fields['overrides'] = override_summary(checklist)` gated on the summary being non-empty -- a run with zero override entries reports nothing here, matching the refusals absence-is-meaningful convention. Do NOT add `overrides` to `REQUIRED_MECHANICAL_FIELDS` (line ~483) -- same reasoning already applied to artifact-ref there, its absence is definitionally valid. PART D -- scripts/spine_lifecycle.py `finish_work` (:1005 onward): attach `overrides` (computed via `override_summary(spine)`/`_override_entries`, NEVER via a raw `spine.get('trip_ledger')` + `e.get('outcome')` read -- PLAN_CRITIC.md Finding 2 traced that shortcut to a silent-empty or a TypeError under this gate's own schema) to EVERY dict finish_work returns: the verify refusal (stage='verify', ~line 1102), the advance-release refusal (stage='advance-release:<substage>', ~1116-1120), the archive refusal (stage='archive', ~1132), AND the final success dict (~1149-1161) -- all four, not just two (PLAN_CRITIC.md Finding 4 named this gap explicitly). Map entry point: scripts/checklist_engine.py (_override_entries, from g1) first, then scripts/apply_episode_delta.py (MECHANICAL_ALL_FIELDS, _validate_create), scripts/episode_capture.py (mechanical_fields), scripts/spine_lifecycle.py (finish_work). Constraints: no change to REQUIRED_MECHANICAL_FIELDS; no change to close_work/open_pr bodies beyond finish_work's own return dict. Suggested Model Tier: sonnet (four well-specified, individually small edits across four files -- the risk is completeness across all four return points and the two-file MECHANICAL_ALL_FIELDS/mechanical_fields pairing, not conceptual difficulty).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 (override_ledger, _override_entries) and g2 (waive/claim/release wiring) landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1+g2 landed and committed (2895dc8b, 87ea0655): override_ledger, _override_entries, dispatch-only waive/claim/release wiring"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "overrides is dict-shaped in MECHANICAL_ALL_FIELDS, not scalar",
+        "REQUIRED_MECHANICAL_FIELDS unchanged",
+        "finish_work attaches overrides to all four return points"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:scripts/episode_capture.py#mechanical_fields, function",
+          "struct:scripts/apply_episode_delta.py#_validate_create, function",
+          "struct:scripts/spine_lifecycle.py#finish_work, function"
+        ],
+        "capability": [
+          "capability:closeout-episode-capture",
+          "capability:closeout-finish-work"
+        ],
+        "constraint": [
+          "constraint:no-unwired-checker \u2014 any new check must run somewhere that can fail it",
+          "constraint:mechanical-fields-and-episode-delta-allowlist-travel-together \u2014 PLAN_CRITIC.md Finding 1"
+        ],
+        "decision": [
+          "decision:closeout-render-target-is-both \u2014 wire mechanical_fields (durable, retrospective-consumed) AND finish_work's return dict (immediate, visible at close time), not one or the other @grade: settled/human \u00b7 leans g3-implement \u00b7 settle: done, PLAN_ALTERNATIVES.md recommendation"
+        ],
+        "evidence": [
+          "claim:finish_work-currently-blind-to-trip-ledger \u2014 verified by grep, see notes-w2b.md"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Review: closeout rendering, all four return points, allowlist pairing",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g3-implement's plan and IMPLEMENTER_RESULT. Dispatch constellation-reviewer. Verify specifically: (1) a fixture whose mechanical_fields() output (including a non-empty 'overrides') is round-tripped through apply_episode_delta.py's actual create-op validation path does NOT raise -- not just that mechanical_fields() alone returns the right dict, which was PLAN_CRITIC.md Finding 1's exact untested gap; (2) a fixture with an empty/absent override_ledger produces mechanical_fields() output with NO 'overrides' key at all; (3) finish_work's overrides field is computed via override_summary/_override_entries, verified by a fixture using the NEW schema (override_ledger with non-trip kinds lacking any 'outcome' field) -- confirm it does NOT read raw trip_ledger/outcome (Finding 2); (4) all four finish_work return points (verify/advance-release/archive/success) carry 'overrides' in a dedicated test per return point, not just two. Map entry point: same as g3-implement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT (g3-implement attempt 2) received and integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Integrate g3",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects yourself (the round-trip-through-apply_episode_delta test, and the four-return-point test), then advance. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received, APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests pass: pytest tests/test_checklist_engine.py tests/test_episode_fields.py tests/test_spine_lifecycle.py tests/test_episode_observations.py tests/test_episode_store.py -q",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py tests/test_episode_fields.py tests/test_spine_lifecycle.py tests/test_episode_observations.py tests/test_episode_store.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": "review-result APPROVE"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py tests/test_episode_fields.py tests/test_spine_lifecycle.py tests/test_episode_observations.py tests/test_episode_store.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-issue259-and-amend": {
+      "id": "g4-issue259-and-amend",
+      "title": "Close #259 on the census evidence; record amend's authority handling as reviewed, no change",
+      "imperative": "REASONING GATE, no crew dispatch -- the deliverable is a doc/decision, not code, and the Commander already holds the full context (the census in notes-w2b.md, the amend() read from understand). Crew-waiver reason: a design-note/doc-closure gate with no independently-verifiable code diff to review is shallower, not safer, to route through a crew per commander-core.md's reasoning-gate guidance. Two actions: (1) add a short note to docs/CHECKLIST_SCHEMA.md (near the consolidate verb-table row or the 'Override policy' section) recording: consolidate --override-reason (scripts/checklist_engine.py:2906) is the sanctioned APPROVE-with-findings reviewer pattern on a SURVEY checklist's verdict, never a bypass of engine-enforced gate-advancement authority (survey verbs never run through _trip_hard_gate/TRIP_HARD_GUARDED_VERBS, which is gated-spine-only) -- a census of .agent-work/archive/ (117 files) shows constant, correct use, refuting issue #259's 'no sanctioned use case' premise. It stays OUT of override_ledger deliberately -- folding it in would misrepresent ordinary correct reviewer behavior as an audit-worthy override event. Then attempt the actual GitHub-side close of #259 citing this doc note (check whether `gh` is authenticated with write access to this repo first): if closing is not clearly within this run's repo action authority or gh is not usable, do NOT close it yourself -- record it plainly in RESULT.md as a named recommendation to the Admiral instead of assuming the action is authorized (PLAN_CRITIC.md Finding 7: the doc note landing in-repo and the GitHub issue actually closing are two independently-forgettable facts; do not conflate them). (2) Record in this gate's evidence (a user-decision artifact, cited below) that amend()'s authority handling (scripts/checklist_engine.py:3144, requires non-empty --authority/--reason, same as waive) was reviewed and found to have NO analogous #503-shaped defect: amend has no override_policy-style comparison target the way a waivable condition does, so there is nothing to compare its authority string against -- this is a documented, evidence-based no-op, not a decision deferred to 'handled elsewhere' (PLAN_CRITIC.md Finding 8 confirms this reasoning is sound). Map entry point: docs/CHECKLIST_SCHEMA.md ('## Consolidation (survey output)' and 'Amend delta' sections), notes-w2b.md (the #259 census).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1/g2/g3 landed (the ledger and its schema doc exist so this gate's cross-references resolve)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1/g2/g3 landed and committed (2895dc8b, 87ea0655, 7627d381)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "docs/CHECKLIST_SCHEMA.md carries the #259 closing note",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "docs/CHECKLIST_SCHEMA.md carries the #259 closing note (commit 0427898a); GitHub comment posted at https://github.com/fredcai6/constellation-skills/issues/259#issuecomment-5382193485 -- issue itself NOT closed, since it bundles an unrelated item 1 (perturb-to-test hazard) still open"
+        },
+        {
+          "id": "c2",
+          "statement": "amend's authority-handling review recorded as a user-decision citing this gate's reasoning",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision",
+            "match": {
+              "cite": "PLAN_CRITIC.md:Finding 8"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-issue259-and-amend-1"
+        }
+      ],
+      "constraints": [
+        "no code change in this gate beyond the doc note"
+      ],
+      "anchors": {
+        "structural": [
+          "struct:scripts/checklist_engine.py#consolidate, function",
+          "struct:scripts/checklist_engine.py#amend, function"
+        ],
+        "capability": [
+          "capability:consolidation-survey-verdict"
+        ],
+        "constraint": [],
+        "decision": [
+          "decision:259-closes-on-evidence \u2014 census refutes the issue's premise; not deletion, not fold-in @grade: settled/measured \u00b7 leans g4-issue259-and-amend \u00b7 settle: done, notes-w2b.md"
+        ],
+        "evidence": [
+          "claim:override-reason-has-sanctioned-use \u2014 117-file archive census, notes-w2b.md"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-issue259-and-amend-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "PLAN_CRITIC.md:Finding 8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-closeout-gate": {
+      "id": "g5-closeout-gate",
+      "title": "Closing gate: full local suite, code map refresh, doc consistency",
+      "imperative": "REASONING/MECHANICAL GATE, no crew dispatch -- this is a verification-and-housekeeping gate over the whole diff, run in your own context. Run the full local pytest suite as one foreground command that does not return until the summary line lands (per references/crew-dispatch.md's nohup+poll idiom, since the full suite is long enough to trigger harness auto-backgrounding): `nohup env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q > /tmp/w2ledger_suite.log 2>&1 & until grep -qE '^[0-9]+ (passed|failed|error)' /tmp/w2ledger_suite.log; do sleep 15; done; tail -5 /tmp/w2ledger_suite.log`. Confirm the pass count is at or above the pre-change baseline (3622 passed, 6 skipped, 0 failed, per the launch order's stated Base at 9d5aac6d) plus this run's new cases -- no net loss of coverage. Then run `python -m scripts.code_map build --root .` (repo doctrine: map/INDEX.md must stay fresh since g1/g2/g3 touch scripts/checklist_engine.py, scripts/apply_episode_delta.py, scripts/episode_capture.py, scripts/spine_lifecycle.py) and commit the regenerated map alongside the code, not as a follow-up. Re-read docs/CHECKLIST_SCHEMA.md end to end once more against the actually-landed code (not against g1's forecast) and correct any field that drifted during g1-g4's implementation. Produce a red-proof pinned to the shipped SHA (LAUNCH_ORDER decision:red-proof-pinned-to-shipped-revision): on the pre-fix code, `waive()` with a mismatched authority hardcodes produced_by='human' and records nothing about the mismatch; demonstrate this fails against the OLD code (e.g. via git stash / git show of the pre-change file) and passes against the shipped SHA.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1, g2, g3, g4 all complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-g4 all complete and committed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full local pytest suite green at or above the 3622-passed/6-skipped/0-failed baseline plus new cases",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && nohup env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q > /tmp/w2ledger_suite.log 2>&1 & until grep -qE '^[0-9]+ (passed|failed|error)' /tmp/w2ledger_suite.log; do sleep 15; done; tail -5 /tmp/w2ledger_suite.log; ! grep -qE 'failed|error' /tmp/w2ledger_suite.log"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-closeout-gate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "map/INDEX.md refreshed via code_map build, no stale symbols",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && python -m scripts.code_map build --root . && git diff --quiet -- map/INDEX.md map/ids.jsonl || git add map/INDEX.md map/ids.jsonl"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-closeout-gate-3"
+        },
+        {
+          "id": "c3",
+          "statement": "red-proof pinned to shipped SHA attached",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision",
+            "match": {
+              "cite": "red-proof"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-closeout-gate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-closeout-gate-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "red-proof"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-closeout-gate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && nohup env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q > /tmp/w2ledger_suite.log 2>&1 & until grep -qE '^[0-9]+ (passed|failed|error)' /tmp/w2ledger_suite.log; do sleep 15; done; tail -5 /tmp/w2ledger_suite.log; ! grep -qE 'failed|error' /tmp/w2ledger_suite.log",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-closeout-gate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -m scripts.code_map build --root . && git diff --quiet -- map/INDEX.md map/ids.jsonl || git add map/INDEX.md map/ids.jsonl",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 6,
+  "engine_session": {
+    "session_id": "commander-execute-w2ledger",
+    "status": "released",
+    "claimed_at": "2026-08-22T17:42:20.424077+00:00",
+    "last_heartbeat": "2026-08-22T19:35:50.726580+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T19:36:05.892175+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T17:42:32.739468+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Attempt 1 landed production code and correctly stopped (BLOCK) on a genuine handoff conflict: requirement 5 (never write trip_ledger again) vs 'existing -k trip tests pass unmodified' -- 35 tests pinned raw trip_ledger storage. Resolved via REWORK NOTE: unmodified means observable trip behavior, not literal storage-key text; rework rewrote the 35 tests through the new accessor/override_ledger key (mechanical, same semantic fact), added 3 new required tests, extended docs/CHECKLIST_SCHEMA.md. Independently re-verified myself: full suite 497 passed, -k trip 126 passed, zero trip_ledger write sites (grep), _trip_hard_gate the only _append_trip_entry caller.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:07:55.598368+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:17:00.487159+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "REVIEW_RESULT APPROVE (independently re-verified: full suite 497 passed, trip_ledger write-site grep zero matches, _append_trip_entry single caller). g1 complete: override_ledger landed, trip writer re-pointed, chokepoint property preserved and proven by an AST-based test.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:17:34.294817+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "waive() fixed: produced_by echoes real authority, override_policy.authority compared report-only with named promotion trigger. dispatch()-only wiring for force-claim/force-release/waive into override_ledger, proven by updated AST chokepoint test + direct-call-vs-dispatch-call test. Independently re-verified: full suite 511 passed, grep confirms 4 call sites (1 trip, 3 new dispatch-side). Fixed a stale doc table myself (force-claim/force-release/waive real field shapes, previously said 'landed in a later gate').",
+      "mechanical": false,
+      "ts": "2026-08-22T18:29:24.268892+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:36:12.564256+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "waive() #503 fixed (produced_by, report-only authority-mismatch with named promotion trigger); dispatch()-only wiring proven by AST chokepoint test and direct-call-vs-dispatch test. Independently re-verified: 511 passed, zero new raise EngineError in diff, zero _append_override_entry calls in verb bodies.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:36:35.738363+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "PARTS A-D landed attempt 1 (override_summary, episode allowlist+validation, mechanical_fields wiring, all 4 finish_work return points). Attempt 1's own out-of-scope observation found the durable half incomplete: overrides validated but silently dropped before persisting to the rendered episode .md text. REWORK PART E closed this: Episode dataclass field, render_episode/parse_episode round-trip, _apply_create wiring -- independently re-verified: full repo suite 3660 passed, 6 skipped.",
+      "mechanical": false,
+      "ts": "2026-08-22T19:08:30.796220+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T19:26:36.470581+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "Closeout renders the override ledger, both immediately (finish_work's return dict, all four paths) and durably (episode mechanical_fields + actual persistence into the rendered .md text, closing a gap attempt 1's own out-of-scope observation found). Independently re-verified: full suite 3660 passed, 6 skipped; round-trip invariant reproduced directly.",
+      "mechanical": false,
+      "ts": "2026-08-22T19:27:01.826753+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-issue259-and-amend",
+      "why": "Closed #259's item 2 (--override-reason premise) on the 117-file archive census, documented in docs/CHECKLIST_SCHEMA.md (0427898a) and via a GitHub comment -- deliberately did NOT close the issue itself since it bundles an unrelated, still-open item 1. Recorded amend()'s authority handling as reviewed and found to have no #503-shaped defect (no override_policy-style comparison target exists for amend).",
+      "mechanical": false,
+      "ts": "2026-08-22T19:28:52.063205+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g5-closeout-gate",
+      "why": "Full local suite green: 3660 passed, 6 skipped, 0 failed -- above the launch order's stated baseline (3622 passed, 6 skipped) plus this run's new coverage. map/INDEX.md fresh (code_map build, no diff). Red-proof for #503 pinned to shipped SHA 0427898a, demonstrated red against base 9d5aac6d and green against the shipped commit.",
+      "mechanical": false,
+      "ts": "2026-08-22T19:35:50.726563+00:00"
+    }
+  ]
+}

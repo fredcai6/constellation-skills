@@ -1,0 +1,167 @@
+{
+  "work_id": "w2-reindex",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-everyone.md, global-crew.md, CREW_CONTEXT.md, GLOSSARY.md, the g1-review handoff, the full g1-implement handoff, the implementer result, and the diff/new files (build.py, precommit.py, code_map_precommit.py, test_code_map_precommit.py, cli.py delegation).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "build() seam matches spec (build(root, *, artifacts=None, out=None)->int, wraps extract/render, cli._build delegates to it, one build path). precommit.py implements the 6-step mechanism end to end. code_map_precommit.py is the fail-open shim with dynamic per-worktree resolution. Independently re-ran the full suite (161 passed, 65 subtests) and the 6-step mechanism, timeout, and fail-open contract all match the pinned spec on direct code inspection.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain confirms exactly the allowed scope: cli.py modified (one-line _build delegation, diff read in full), plus 4 new files (build.py, precommit.py, code_map_precommit.py, test_code_map_precommit.py). git diff --stat on discovery.py/extract.py/render.py is empty (untouched). git diff -- tests/test_code_map.py is empty. install_constellation.py, generate_spine.py, specs/, checklist_engine.py, and any spine template are all untouched. No real git commit or .git/hooks/ install against this repo's own state.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently re-ran (not just re-read): full suite 161 passed/65 subtests matches claim; git diff -- tests/test_code_map.py empty; wiring grep reproduced exactly (2 real build() call sites: cli.py:91, precommit.py:111; 1 real precommit-module reference outside test file: the shim's own importlib.import_module). Re-ran ConcurrencyTimeoutTests specifically (3 passed, forced-timeout took the expected ~10s and total stayed well under 15s). Went further than re-running: patched a scratch copy of precommit.py to use a FIXED worktree path instead of tempfile.mkdtemp and ran two real concurrent subprocess invocations against two sibling worktrees -- confirmed it DOES collide ('fatal: already exists' from git worktree add), proving the unique-tempfile-path property is genuinely load-bearing and the test could fail, not vacuously green. Confirmed the sibling-worktree topology claim (two real OS subprocesses via Popen against two  siblings sharing one .git, not threads against one path) by reading test_concurrent_invocations_do_not_collide directly -- matches the implementer's Workflow Feedback reasoning about why threading would manufacture false hazards (extract.py module-level globals, index.lock contention) that real concurrent commits never hit.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Injectable runner: subprocess.run only appears as the default value of the runner= keyword parameter on run_precommit/main; every actual call site funnels through the single _run(runner,...) helper -- no bare module-level subprocess.run call in precommit.py. Every subprocess call in precommit.py carries timeout=_TIMEOUT(10) via that same _run helper (write-tree, commit-tree, worktree add, git show x2, git add, worktree remove, worktree prune). Stdlib-only: all imports across build.py/precommit.py/code_map_precommit.py are stdlib (subprocess, sys, tempfile, importlib, pathlib). Fail-open contract verified by direct inspection and by re-running the forced-timeout/forced-exception tests: exactly one stderr line on fail-open (main's except Exception branch) and on the fixed-staleness path (staged paths line), nothing printed on true no-op.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No unreconciled architecture divergence. Map is DEGRADED-UNPARSEABLE at this repo (no citable map anchors) so this gate reconciles against path anchors only, as the handoff frames it. Confirmed the repo_name()/git-common-dir mechanism (render.py:599) directly -- it resolves the true repo name via git rev-parse --git-common-dir, not the ephemeral worktree's own directory, which is exactly what makes build output byte-identical whether built directly against the repo or against an index-snapshot worktree; this independently confirms the implementer's Map Impact claim rather than just trusting it. One out-of-scope triage candidate (discovery.py's untimed git ls-files) reconfirmed and flagged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/w2-reindex/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass recorded to .agent-work/w2-reindex/FOWLER_PASS.json; verify_fowler_pass.py exits 0 (smells=12, flagged=[duplicated-code], overridden=[long-method]). long-method (run_precommit, ~60 lines) overridden: handoff pins an exact numbered 6-step sequential mechanism ('implement precisely, do not improvise a substitute') plus global-everyone.md's no-speculative-abstraction posture -- splitting into single-caller helpers would scatter the auditable step sequence with no second caller to justify the seam. duplicated-code (the fail-open diagnostic string repeated between precommit.py and code_map_precommit.py) flagged as a minor observation, not a blocker -- the two catches guard genuinely different failure domains per each file's own docstring. All other baseline smells absent, verified against the actual diff, not assumed.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 7 checks pass (r0-r6). Independently re-ran the full suite (161 passed/65 subtests), the two safety-critical tests named by the handoff (concurrent-invocation, forced-timeout), the byte-identical/wiring-grep claims, and confirmed empty git diff on tests/test_code_map.py. Went beyond re-running: reproduced that the unique-tempfile-path property is genuinely load-bearing by patching a scratch copy to a fixed path and confirming two real concurrent invocations then collide. The 6-step mechanism, timeout coverage, and fail-open contract match the pinned spec exactly on direct code inspection. Scope is exactly the allowed files; all specific exclusions untouched. Fowler pass recorded and rail-verified (1 flagged as observation, 1 justified override, rest absent). One out-of-scope triage candidate flagged (discovery.py's untimed git ls-files, tc1)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "scripts/code_map/discovery.py:tracked_python_files's git ls-files subprocess call has no timeout=. Read-only reference material at this gate; worth a follow-up if build() is ever called somewhere a hang would matter more than it does inside this mechanism's already-bounded worktree (already flagged by the implementer)."
+    }
+  ],
+  "blockers": []
+}

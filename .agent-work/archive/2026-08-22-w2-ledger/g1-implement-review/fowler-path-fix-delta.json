@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "r6-fowler",
+      "which": "postconditions",
+      "cond": "c1",
+      "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-ledger/FOWLER_PASS.json"
+    }
+  ]
+}

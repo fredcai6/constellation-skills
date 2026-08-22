@@ -160,7 +160,13 @@ class CrewSpawnCwdTests(unittest.TestCase):
                     model="sonnet", launcher="claude", attempt=1, root=root, entries=[],
                     parent="test-parent",
                 )
-            self.assertEqual(root / "sub", Path(calls[0]["cwd"]))
+            # `.resolve()` on both sides: on Windows, whatever resolves the
+            # worktree internally can canonicalize an 8.3 short-name path
+            # segment (`RUNNER~1`, inherited from `%TEMP%` via
+            # `tempfile.TemporaryDirectory`) to its long form (`runneradmin`)
+            # -- `WindowsPath.__eq__` normcases but does not resolve short
+            # names, so two spellings of the same directory compare unequal.
+            self.assertEqual((root / "sub").resolve(), Path(calls[0]["cwd"]).resolve())
 
     def test_resume_passes_the_stored_worktree_as_the_child_cwd(self):
         with tempfile.TemporaryDirectory() as tmp:

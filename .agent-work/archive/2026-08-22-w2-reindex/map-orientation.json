@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "work_id": "w2-reindex",
+  "root": "/home/tommy/projects/569-w2-reindex",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "parses but carries no nodes[].id"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "0 packet(s), none non-empty"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/AGENT_GUIDE.md",
+      "content_hash": "4d4e233052cbb009ea41af4802153999754a4df62906fbbcd563ff84671f8de1",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "4183448e7bd4408b17192f35a3d8abad623553baa6d6fddf9025ce07252c7074",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    },
+    {
+      "path": "CLAUDE.md",
+      "content_hash": "3be528d65d4a3a982c19dd4acc9440316a69e834f7a1c6b99f87dd348ff63ebf",
+      "source": "known-fallback"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "ccc03657424cdec7ccaf98e88eea6770c23a1fbc73f2f08f6707328b4f9c5d89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "content_hash": "30e401e6ac3888dfa936d6aecdee99719fc778b4d64b9a1a77ea969fb12c757a"
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": true,
+      "content_hash": "3be528d65d4a3a982c19dd4acc9440316a69e834f7a1c6b99f87dd348ff63ebf"
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "docs/architecture/generated/map.json carries no nodes[].id (no citable Cartographer anchors); map/INDEX.md and map/ids.jsonl are the code_map artifact family (this mission's own subject) but are not structured with map_orient-citable anchor ids"
+  ],
+  "escalation": "none needed -- this run's mission is precisely to make map/INDEX.md/ids.jsonl reliable; per commander-core.md Architecture bookend, a skill-source repo with no packet map reconciles the structural record directly at the reconcile step rather than via Cartographer dispatch",
+  "emitted_at": "2026-08-22T17:11:38.170831+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

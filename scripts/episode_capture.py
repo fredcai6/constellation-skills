@@ -449,6 +449,15 @@ def mechanical_fields(
     if isinstance(refusals, int) and not isinstance(refusals, bool) and refusals >= 0:
         fields["refusals"] = refusals
 
+    # `overrides` (#504) is CHECKLIST-scoped like `refusals` -- the override ledger
+    # is top-level state, not tied to whichever step happens to be active. Absence
+    # here means "this run's ledger carried no entries", matching `refusals`' own
+    # absence-is-meaningful convention: a run with zero override activity reports
+    # nothing, rather than an all-zero summary that would read as noise.
+    overrides = _engine().override_summary(checklist)
+    if overrides["ids"]:
+        fields["overrides"] = overrides
+
     step = _engine().active_id(checklist)
     task = (checklist.get("tasks") or {}).get(step) if step else None
     if step and isinstance(task, dict):

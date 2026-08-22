@@ -1,0 +1,183 @@
+{
+  "work_id": "w2-reindex",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md. Read g3-review-handoff.md, g3-implement-implementer-result.md, g3-implement-handoff(-relaunch/-relaunch2).md, g1/g2-review-reviewer-result.md for precedent (own-survey-authoring pattern), and tests/test_code_map_precommit_e2e.py in full.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "tests/test_code_map_precommit_e2e.py delivers all 8 numbered cases from g3-implement-handoff.md via 7 real-subprocess-git test methods (case2/3 deliberately combined per InstallThenGreenProofTests's own docstring/name). Independently re-ran the full file: 7 passed in 60.14s. Independently re-derived case1 (red proof) and case7 (second-worktree) from scratch by hand against fresh scratch worktrees (not just re-running the file) -- both reproduced exactly as claimed: case1's freshness test failed with FAILED/AssertionError on an un-hooked commit; case7's hook fired from the second worktree (map/INDEX.md in git log -1 --stat), first worktree's git status stayed empty, and both worktrees resolved the identical shared hooks dir. PINNED_SHA_PREFIX=9d5aac6d matches this branch's actual HEAD (git rev-parse HEAD = 9d5aac6daa58...) at review time. git diff -- tests/test_code_map.py is empty (confirmed). Full local suite independently re-run: 3656 passed, 6 skipped, 0 failed, 1275 subtests passed -- matches claimed evidence exactly and clears the 3622-baseline floor.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "This gate's own diff is exactly one new file, tests/test_code_map_precommit_e2e.py (confirmed via git status --porcelain: the only ?? entry not already accounted for by gates 1-2). map/INDEX.md's 6-line change is the Commander's separate mechanical rebuild (per the handoff, not this gate's implementation) -- independently confirmed byte-identical to a fresh 'python -m scripts.code_map build --root . --artifacts /tmp/... --out /tmp/...' run. No Specific Exclusion touched: git diff --stat/-- generate_spine.py specs/ scripts/checklist_engine.py is empty, and git status --porcelain against those same paths is empty. scripts/code_map/, scripts/hooks/, scripts/install_constellation.py remain gates 1-2's already-approved diff, untouched by this gate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read every fixture helper in the test file directly (not just docstrings): _make_shared_scratch_git does exactly ONE 'git clone --bare' per test (of THIS repo's own common .git, read-only via git rev-parse --git-common-dir), and every subsequent worktree in that same test is 'git worktree add' off that one shared clone (_worktree_add) -- grepped the whole file for 'git clone'/'worktree add': the only clone call is the single shared one, never a second clone standing in for a worktree. _resolve_hooks_dir uses the same git rev-parse --path-format=absolute --git-path hooks idiom install_constellation.py's own resolver uses, so case 7's 'same hooks dir' assertion is a real structural check, not incidental. Each of the 8 numbered cases from the implement handoff maps onto a real, independently-inspectable code block: case1=RedProofBeforeInstallTests, case2/3=InstallThenGreenProofTests, case4=PathspecRestrictedPartialCommitTests, case5=HunkRestrictedPartialCommitTests, case6=UnrelatedDirtyFileSurvivesTests, case7=SecondWorktreeSharesInstalledHookTests, case8=TimingTests. Independently re-verified case1 and case7 end to end against fresh scratch worktrees built by hand (not via the test file) -- both reproduced the claimed behavior exactly (see r1-handoff finding for the transcript). MapTreeFreshnessTests (tests/test_code_map.py) is unmodified (git diff empty) and is the actual backstop both the red proof and the regression check exercise, confirmed by reading it and by both hand-run reproductions calling it directly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff Constraints checked individually, each independently (not read-only): (1) 'Independently re-verify, not just re-read' the red proof and second-worktree case -- done by hand against fresh scratch worktrees built outside the test file, both matched claims exactly. (2) 'Confirm no case substitutes git clone where a shared-.git worktree add was required' -- read every fixture helper, confirmed exactly one clone per test (the shared one) and worktree add for everything else. (3) map/INDEX.md rebuild verified byte-identical to a fresh build via a standalone 'python -m scripts.code_map build --root . --artifacts /tmp/... --out /tmp/...' + diff, not the implementer's line-count claim alone. Code quality: file is well-commented at the WHY level (topology rationale, why hunks split, why _snapshot_gates_1_2_onto exists), matches this repo's dense-agent-facing-docstring convention (docs/agents/CREW_CONTEXT.md), every scratch dir uses tempfile.TemporaryDirectory (auto-discarded), no path outside the temp dir or the explicitly-allowed read-only ROOT reads. No production code touched (proof-only gate honored).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence from recorded architecture. This gate adds one test-only file proving already-approved gates 1-2 code end to end; it introduces no new capability, interface, or constraint. Map Anchors from the handoff (git worktree list topology, MapTreeFreshnessTests as backstop) both hold exactly as stated -- confirmed live. Nothing here requires Commander adjudication; no new decision candidates. The map/INDEX.md rebuild is inert (verified byte-identical to a mechanical fresh build), so no reconciliation is owed for it either.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/w2-reindex/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `spine_amend`, whose `delta` carries the single op `retext-check` on this item's c1, never by hand-editing this survey. There, `authority` is the dispatching Commander named in your reviewer handoff (never a string you invent), and `reason` is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full Fowler baseline pass rendered on all 12 smells against tests/test_code_map_precommit_e2e.py (record: .agent-work/w2-reindex/FOWLER_PASS.json). 11 absent, 1 flagged (non-blocking): duplicated-code -- the 'fresh worktree + real CLI install + assert returncode 0' two-line call pattern recurs across cases 4/5/6/8, but it is call-site boilerplate into already-shared helpers, not duplicated logic, and each test staying self-contained is a deliberate integration-test readability property (case1 deliberately omits install, so a combining fixture would obscure that). No overrides needed this pass. verify_fowler_pass.py exits 0: 'fowler pass ok: .agent-work/w2-reindex/FOWLER_PASS.json (smells=12, flagged=[\"duplicated-code\"], overridden=[])'.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/w2-reindex/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 8 numbered cases from g3-implement-handoff.md are genuinely covered by 7 real-subprocess-git test methods, correctly using a single shared bare-clone + git worktree add topology throughout (no case substitutes a second clone). Independently re-derived case1 (red proof) and case7 (second-worktree) by hand against fresh scratch worktrees, outside the test file, and both reproduced exactly as claimed. Full local suite independently re-run: 3656 passed, 6 skipped, 0 failed, 1275 subtests passed -- clears the 3622-baseline floor. git diff -- tests/test_code_map.py is empty. PINNED_SHA_PREFIX (9d5aac6d) matches this branch's actual HEAD at review time. The Commander's map/INDEX.md rebuild was independently confirmed byte-identical to a fresh 'python -m scripts.code_map build' run, not merely trusted. No specific exclusion touched; allowed scope (tests/test_code_map_precommit_e2e.py only) honored. Fowler pass: 11/12 smells absent, 1 flagged non-blocking (duplicated-code, call-site boilerplate across 4 install-then-assert cases), no overrides needed."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/w2-reindex/g3-review/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T19:29:25.889573+00:00",
+    "last_heartbeat": "2026-08-22T19:32:09.426436+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T19:32:49.860482+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-22T19:31:32.403036+00:00",
+      "reason": "Authoring typo: the c1 command referenced <reviewer-skill-dir>/scripts/verify_fowler_pass.py substituted as skills/reviewer/scripts/verify_fowler_pass.py, but that path does not exist in this checkout -- the real script lives at scripts/verify_fowler_pass.py (repo root), which is what g1/g2's own reviewers actually ran per their reviewer-result.md records.",
+      "authority": "constellation/w2-reindex/execute/execute",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "mechanical": {
+    "run": "w2-reindex",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "archive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-archive@40d7139b89e5c96fa658adc92f178f34b615ce4c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex",
+    "generated_at": "2026-08-22T19:46:40Z"
+  }
+}

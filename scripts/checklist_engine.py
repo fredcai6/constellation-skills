@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import errno
 import hashlib
 import importlib.util
 import json
@@ -220,15 +221,35 @@ def lease_stale_seconds(config: dict) -> int:
 # state helpers
 # --------------------------------------------------------------------------- #
 def load(path: Path) -> dict:
-    # `_read_text_with_retry`, not a bare `.read_text()`: `save()` installs the
-    # new document with `os.replace`, and on Windows that same sharing
-    # violation `_replace_with_retry` retries FOR THE WRITER (see that
-    # function's docstring) can hit an ordinary concurrent reader's `open()`
-    # too -- `os.replace` briefly holds the destination name exclusively while
-    # it installs. `run_crew.py`'s parent-lease heartbeat is exactly this
-    # caller, reading a spine another process is actively `save()`-ing
-    # (#613's own scenario), so this is the other half of that same fix, not
-    # a new one.
+    """Read and parse the checklist at `path`.
+
+    **The contract under concurrent access (issue #647):** a call to `load()`
+    never returns a torn or partial document -- the complete old document or
+    the complete new one, never a half-written mixture, on every platform.
+
+    On Windows, a call CAN instead raise a recognized transient busy
+    `OSError` (`_read_busy_on_windows`) after `_read_text_with_retry`'s
+    bounded retry budget is exhausted, when a concurrent `save()`'s
+    `os.replace` is mid-install for longer than that budget allows. That is
+    not this function returning bad data -- it is this function correctly
+    refusing to guess, and the caller is expected to retry. On POSIX this
+    never occurs (`rename(2)` does not invalidate an open reader), so a
+    `load()` there either returns a complete document or raises a REAL
+    error; there is no busy case to retry into.
+
+    Any OTHER `OSError`, or a `json.JSONDecodeError` on well-formed input,
+    is a genuine failure and must propagate, not be swallowed here.
+
+    `_read_text_with_retry`, not a bare `.read_text()`: `save()` installs the
+    new document with `os.replace`, and on Windows that same sharing
+    violation `_replace_with_retry` retries FOR THE WRITER (see that
+    function's docstring) can hit an ordinary concurrent reader's `open()`
+    too -- `os.replace` briefly holds the destination name exclusively while
+    it installs. `run_crew.py`'s parent-lease heartbeat is exactly this
+    caller, reading a spine another process is actively `save()`-ing
+    (#613's own scenario), so this is the other half of that same fix, not
+    a new one.
+    """
     return json.loads(_read_text_with_retry(Path(path)))
 
 
@@ -251,6 +272,29 @@ def _dominant_newline(path: Path) -> bytes:
 _WINDOWS_REPLACE_BUSY = (5, 32)
 _REPLACE_ATTEMPTS = 12
 _REPLACE_BACKOFF_SECONDS = 0.01
+
+
+def _write_busy_on_windows(exc: OSError) -> bool:
+    """Whether `exc` is the transient Windows sharing violation
+    `_replace_with_retry` should retry, rather than a real failure.
+
+    Named and extracted (rather than left inline in `_replace_with_retry`) so a
+    caller outside this module -- concretely, a test asserting on the CLASS of
+    error a concurrent writer surfaced, not just that one occurred -- can ask
+    the identical question the writer's own retry loop asks, instead of
+    re-deriving a second definition that could quietly drift from it.
+
+    Deliberately narrower than the reader's `_read_busy_on_windows`: only the
+    two named `_WINDOWS_REPLACE_BUSY` codes, matched by `winerror`. The
+    reader's extra fallback (a bare `PermissionError` with no `winerror`, seen
+    from a plain `read_text()`) does not apply here -- `os.replace` is a
+    single lower-level Windows call, and every busy failure measured from it
+    in CI carried a populated `winerror`. Widening this to the reader's bare-
+    `PermissionError` fallback would make the writer retry (and a caller's
+    test tolerate) failures `_replace_with_retry` was never built to retry,
+    which is a correctness regression dressed as a simplification -- so it is
+    not done here without new CI evidence that `os.replace` needs it too."""
+    return getattr(exc, "winerror", None) in _WINDOWS_REPLACE_BUSY
 
 
 def _replace_with_retry(tmp_name: str, path: Path) -> None:
@@ -304,7 +348,7 @@ def _replace_with_retry(tmp_name: str, path: Path) -> None:
         except OSError as exc:
             # `winerror` exists only on Windows; on POSIX nothing matches, so this
             # loop runs exactly once and the behaviour is unchanged there.
-            if getattr(exc, "winerror", None) not in _WINDOWS_REPLACE_BUSY:
+            if not _write_busy_on_windows(exc):
                 raise
             last = exc
             if attempt < _REPLACE_ATTEMPTS - 1:
@@ -317,6 +361,28 @@ _replace_with_retry.__doc__ = _replace_with_retry.__doc__ % (
 )
 
 
+def _read_busy_on_windows(exc: OSError) -> bool:
+    """Whether `exc` is the transient Windows sharing violation
+    `_read_text_with_retry` should retry, rather than a real failure.
+
+    Matches `winerror` when the OS supplied one -- the same
+    `_WINDOWS_REPLACE_BUSY` codes `_replace_with_retry` matches for the writer
+    side of this exact race. But an ordinary `open()`/`read_text()` failure on
+    Windows does not always populate `.winerror` the way `os.replace()`'s
+    does (measured: a concurrent-reader `PermissionError` from a plain
+    `read_text()` in CI carried only `errno=13`, `winerror=None`) -- so on
+    Windows ONLY, a bare `PermissionError` (`errno.EACCES`) is ALSO treated as
+    busy. Scoped to `os.name == "nt"`: on POSIX a `read_text()` racing a
+    concurrent `os.replace()` never raises at all (`rename(2)` does not
+    invalidate an open reader), so a `PermissionError` there is a REAL
+    permission problem (see `test_an_unreadable_spine_file_is_refused`) and
+    must not be retried into a slow success-that-should-have-failed.
+    """
+    if getattr(exc, "winerror", None) in _WINDOWS_REPLACE_BUSY:
+        return True
+    return os.name == "nt" and isinstance(exc, PermissionError) and exc.errno == errno.EACCES
+
+
 def _read_text_with_retry(path: Path) -> str:
     """`path.read_text(encoding="utf-8")`, retrying on the SAME narrow Windows
     sharing violation `_replace_with_retry` retries for the writer.
@@ -326,16 +392,16 @@ def _read_text_with_retry(path: Path) -> str:
     concurrent `open()` for reading can itself raise `PermissionError` /
     `ERROR_SHARING_VIOLATION` on Windows, not only the writer racing an open
     reader (`_replace_with_retry`'s case). Same constants, same backoff, same
-    narrow match on `winerror`: this is the other half of #613's fix, not a
-    second design. POSIX is unaffected (`winerror` never matches), so the
-    loop runs exactly once there, identical to a bare `.read_text()`.
+    narrow-busy predicate (`_read_busy_on_windows`): this is the other half of
+    #613's fix, not a second design. POSIX is unaffected (never busy there),
+    so the loop runs exactly once, identical to a bare `.read_text()`.
     """
     last: OSError | None = None
     for attempt in range(_REPLACE_ATTEMPTS):
         try:
             return path.read_text(encoding="utf-8")
         except OSError as exc:
-            if getattr(exc, "winerror", None) not in _WINDOWS_REPLACE_BUSY:
+            if not _read_busy_on_windows(exc):
                 raise
             last = exc
             if attempt < _REPLACE_ATTEMPTS - 1:
@@ -397,6 +463,29 @@ def save(path: Path, data: dict) -> None:
     durably unparseable document — worse than the tear this fixes), `fsync` it so the
     rename cannot become durable before the data is, then `os.replace` it into place.
     A reader now sees the complete old document or the complete new one.
+
+    **The contract under concurrent access (issue #647), stated plainly:** a
+    reader concurrent with `save()` never observes a torn or partial document
+    -- the complete old one or the complete new one, on every platform, always.
+    On Windows, where a lease-holder's writes race one or more readers'
+    `load()` calls, `save()`'s install step (`_replace_with_retry`) CAN raise a
+    recognized transient busy `OSError` (`_write_busy_on_windows`) after its
+    bounded retry budget is exhausted -- that is fail-loud, not fail-torn: the
+    document on disk is left exactly as it was before this `save()` began, and
+    the caller is expected to retry the whole `save()`. On POSIX this busy case
+    never occurs. Any OTHER `OSError` is a real failure and is not retried.
+
+    **This is a single-writer contract, not mutual exclusion between
+    writers.** The engine's ownership model IS the lease: where an active
+    lease is held, there is exactly one writer, and the guarantees above are
+    for that writer racing readers -- not for two writers racing each other.
+    On a spine with no active lease -- never claimed, or claimed and since
+    released (see the ownership-is-the-lease note at lines ~110-115 above) --
+    there is no single-writer guarantee, and concurrent `save()` calls there
+    are undefended by design: the LAST `os.replace` to land wins and an
+    earlier writer's update is silently gone, exactly as `Atomicity here is
+    not mutual exclusion` below already says about `load()`-mutate-`save()`
+    races in general.
 
     **Atomicity here is not mutual exclusion.** The WRITE is atomic; the
     read-modify-write is not. Two callers that each `load()` → mutate → `save()` still
@@ -2199,43 +2288,131 @@ def _trip_hard_band_reading(cl: dict, base_dir: Path | None, gate: str | None = 
     return reading
 
 
+def _append_override_entry(cl: dict, kind: str, **fields) -> str:
+    """Append one entry to the top-level append-only `override_ledger` and return
+    its id. Same idiom as `_append_trip_entry`/`_append_why`: `setdefault` creates
+    the ledger on first write (so a spine without one drives unchanged), the id is
+    positional and scoped `ov-N` ACROSS ALL KINDS (not per-kind), and a prior entry
+    is NEVER mutated or removed.
+
+    Entries stay flat dicts -- `{"id": ..., "kind": kind, "ts": ..., **fields}` --
+    no envelope+detail nesting, so `kind="trip"` entries keep the exact shape
+    `_append_trip_entry`'s callers already read (`e.get("outcome")`,
+    `e.get("why_ref")`, etc).
+
+    This is the ONE write path going forward: `trip_ledger` itself is never
+    written again anywhere in this file (see `_override_entries` for the
+    corresponding read path, which still reads legacy `trip_ledger` entries for
+    backward compatibility)."""
+    ledger = cl.setdefault("override_ledger", [])
+    oid = f"ov-{len(ledger) + 1}"
+    ledger.append({"id": oid, "kind": kind, "ts": _now(), **fields})
+    return oid
+
+
 def _append_trip_entry(cl: dict, gate: str, verb: str | None, outcome: str,
                        reading, hard: float, why_ref: str | None) -> str:
-    """Append one entry to the top-level append-only `trip_ledger` and return its
-    id. ENGINE-WRITTEN ONLY: the sole caller is `_trip_hard_gate`, which is reached
+    """Append one `kind="trip"` entry to the top-level append-only
+    `override_ledger` (via `_append_override_entry`) and return its id.
+    ENGINE-WRITTEN ONLY: the sole caller is `_trip_hard_gate`, which is reached
     from the `dispatch` chokepoint BEFORE `_run_verb`, so no CLI verb can create,
     edit, or delete an entry.
-
-    Same idiom as `_append_why`: `setdefault` creates the ledger on first write (so
-    a spine without one drives unchanged), the id is positional, and a prior entry
-    is NEVER mutated or removed.
 
     `why_ref` is the live why-record id at the moment of the trip. It is what lets
     the compliance selector (`begin_over_line_records`) key on the CURRENT
     understanding, so a mark left under a superseded understanding stops reading as
     present-tense non-compliance without any entry being edited."""
-    ledger = cl.setdefault("trip_ledger", [])
-    tid = f"tl-{len(ledger) + 1}"
-    ledger.append({
-        "id": tid, "gate": gate, "verb": verb, "outcome": outcome,
-        "fill": round(float(reading.fill_fraction), 4), "hard": round(float(hard), 4),
-        "model": reading.model, "why_ref": why_ref, "ts": _now(),
-    })
-    return tid
+    return _append_override_entry(
+        cl, "trip", gate=gate, verb=verb, outcome=outcome,
+        fill=round(float(reading.fill_fraction), 4), hard=round(float(hard), 4),
+        model=reading.model, why_ref=why_ref,
+    )
+
+
+def _override_entries(cl: dict, kind: str | None = None) -> list[dict]:
+    """The ONE read path over the override ledger, going forward. Yields every
+    entry of `cl.get("trip_ledger", [])` FIRST, each retagged `kind="trip"` in the
+    RETURNED dict only -- `trip_ledger` itself is never rewritten in place and
+    never migrated, so an archived spine's JSON on disk stays exactly as it is;
+    this retag is a backward-compatible read for spines that predate this
+    migration, nothing more. Then yields every entry of
+    `cl.get("override_ledger", [])`.
+
+    This "legacy first, then new" order is deliberately fixed, not sorted by
+    timestamp: no `override_ledger` entry can chronologically precede the code
+    deploy that introduces the key, so putting legacy entries first is always
+    time-ordered for any single spine's own continuous history, including one
+    that straddles the deploy boundary mid-flight.
+
+    When `kind` is given, the merged sequence is filtered to entries whose
+    `kind` matches; omitting it returns the full merged, ordered sequence.
+
+    Pure by construction, same fail-safe posture as the selectors below: a
+    malformed `trip_ledger`/`override_ledger` (`None`, a string, a dict) degrades
+    to nothing via `or []`, and non-dict entries are skipped rather than raising."""
+    out: list[dict] = []
+    for e in cl.get("trip_ledger", []) or []:
+        if not isinstance(e, dict):
+            continue
+        retagged = dict(e)
+        retagged["kind"] = "trip"
+        out.append(retagged)
+    for e in cl.get("override_ledger", []) or []:
+        if not isinstance(e, dict):
+            continue
+        out.append(e)
+    if kind is not None:
+        out = [e for e in out if e.get("kind") == kind]
+    return out
+
+
+def override_summary(cl: dict) -> dict:
+    """Closeout-facing summary over the override ledger (#504): counts by kind
+    plus the full ordered list of entry ids, so a run that carried override
+    activity is visibly distinguishable from a clean one at closeout.
+
+    Reads only `_override_entries(cl)` -- same purity discipline as
+    `begin_over_line_records` (no subprocess/gauge/clock read), so this is safe
+    to call from any read-only path, including a refusal path that must not
+    mutate anything.
+
+    `waive_authority_mismatch` is a sub-count of `waive`, not a sixth kind: it
+    counts entries where `kind == "waive"` and `authority_mismatch` is true
+    (the field `_append_override_entry`'s waive call site sets only when
+    `waive()` itself recorded a mismatch -- see the `dispatch` `waive` branch)."""
+    entries = _override_entries(cl)
+    counts = {
+        "trip": 0, "force-claim": 0, "force-release": 0,
+        "waive": 0, "waive_authority_mismatch": 0,
+    }
+    ids: list[str] = []
+    for e in entries:
+        kind = e.get("kind")
+        if kind in ("trip", "force-claim", "force-release", "waive"):
+            counts[kind] += 1
+        if kind == "waive" and e.get("authority_mismatch"):
+            counts["waive_authority_mismatch"] += 1
+        eid = e.get("id")
+        if eid is not None:
+            ids.append(eid)
+    return {**counts, "ids": ids}
 
 
 def begin_over_line_records(cl: dict) -> list[dict]:
-    """PURE selector over stored state: every `trip_ledger` entry recording a BEGIN
-    at/over the hard line **under the live understanding**. A `begin-instructed`
+    """PURE selector over stored state: every override-ledger `kind="trip"` entry
+    (read via `_override_entries`, which also covers a pre-migration spine's
+    legacy `trip_ledger`) recording a BEGIN at/over the hard line **under the live
+    understanding**. A `begin-instructed`
     entry is deliberately NOT one of them (#510): that begin is the one the HARD
     advisory itself instructs, so counting it would report an offence for obedience.
     Its emptiness IS the compliance predicate — an empty list means the engine holds no record of anyone
     beginning work over the line under the understanding now in force; a non-empty
     list IS the non-compliance signal.
 
-    Pure by construction: it reads `trip_ledger` and `_latest_why_record` and
-    nothing else — no subprocess, no gauge read, no clock — so it is safe to call
-    from the read-only `current` path.
+    Pure by construction: it reads `_override_entries` (in turn `override_ledger`/
+    `trip_ledger`) and `_latest_why_record` and nothing else — no subprocess, no
+    gauge read, no clock — so it is safe to call from the read-only `current`
+    path.
 
     Keyed to the live understanding: an entry matches only when its `why_ref` is the
     id of the CURRENT why-record. A `reopen` freshens the digest by APPENDING a
@@ -2251,9 +2428,7 @@ def begin_over_line_records(cl: dict) -> list[dict]:
     rec = _latest_why_record(cl)
     live = rec["id"] if rec else None
     out: list[dict] = []
-    for e in cl.get("trip_ledger", []) or []:
-        if not isinstance(e, dict):
-            continue
+    for e in _override_entries(cl, kind="trip"):
         if e.get("outcome") not in ("begin-refused", "begin-released"):
             continue
         if e.get("why_ref") != live:
@@ -2264,8 +2439,8 @@ def begin_over_line_records(cl: dict) -> list[dict]:
 
 def begin_over_line_records_historical(cl: dict) -> list[dict]:
     """PURE selector, additive to `begin_over_line_records` and separate from it:
-    every `begin-refused`/`begin-released` entry in `trip_ledger`, regardless of
-    `why_ref` (#467 B1 rework).
+    every `begin-refused`/`begin-released` `kind="trip"` entry (read via
+    `_override_entries`), regardless of `why_ref` (#467 B1 rework).
 
     Where the LIVE selector answers "is there an over-the-line begin under the
     understanding now in force" -- and is therefore emptied by the very close the
@@ -2275,20 +2450,18 @@ def begin_over_line_records_historical(cl: dict) -> list[dict]:
     entries the live selector reads; this is a second, unkeyed view onto them, not
     a second write and not a second source of truth.
 
-    Pure by construction, same as the live selector: reads only `trip_ledger`, no
-    subprocess/gauge/clock, so it is safe to call from the read-only `current`
-    path. Never raises on a malformed ledger -- a non-list `trip_ledger` (`None`,
-    a string, a dict) degrades to nothing via `or []`, and a list holding
-    non-dict entries skips them one at a time, matching `begin_over_line_records`'s
-    own fail-safe.
+    Pure by construction, same as the live selector: reads only `_override_entries`
+    (in turn `override_ledger`/`trip_ledger`), no subprocess/gauge/clock, so it is
+    safe to call from the read-only `current` path. Never raises on a malformed
+    ledger -- `_override_entries` itself degrades a non-list `trip_ledger`/
+    `override_ledger` to nothing, and skips non-dict entries one at a time,
+    matching `begin_over_line_records`'s own fail-safe.
 
     Does not replace the live selector and must never be used to. The live
     selector's keying is close criterion (b) (Admiral pre-ruling) and stays
     exactly as it is; this selector is additive and separately rendered."""
     out: list[dict] = []
-    for e in cl.get("trip_ledger", []) or []:
-        if not isinstance(e, dict):
-            continue
+    for e in _override_entries(cl, kind="trip"):
         if e.get("outcome") not in ("begin-refused", "begin-released"):
             continue
         out.append(e)
@@ -3537,19 +3710,49 @@ def waive(
         reason = (reason or "").strip() or None
         if (policy.get("reason_required") or forced) and not reason:
             raise EngineError("waive requires a non-empty --reason")
+        # #503 (report-only, promotion trigger below): a declared
+        # override_policy.authority is compared, never enforced. On a mismatch we
+        # record it on both the evidence payload and the waived marker so it is
+        # auditable, but waive() itself never refuses or blocks -- this is a
+        # brand-new refusal candidate and the standing epic rule requires any new
+        # refusal to ship report-only first. Absence of a declared authority (or a
+        # match) means nothing to compare, so no new field is added at all --
+        # matches this codebase's existing convention that absence is meaningful.
+        #
+        # waive-authority-mismatch/authority_mismatch stays report-only until BOTH
+        # (a) a corpus census across at least one full epic-wave shows every
+        # historical mismatch was a genuine violation with zero legitimate
+        # cross-role cases (e.g. an Admiral waiving on a condition declared
+        # authority: "commander", which is presumably fine and would falsify a
+        # blanket refusal); AND (b) docs/CHECKLIST_SCHEMA.md's
+        # override_policy.authority field (currently documented as "advisory") is
+        # explicitly upgraded to a documented enforceable contract in the SAME
+        # change that promotes the check.
+        expected_authority = policy.get("authority")
+        mismatch = bool(
+            (expected_authority or "").strip()
+            and (expected_authority or "").strip().casefold() != authority.strip().casefold()
+        )
         eid = _new_evidence_id(t)
+        payload = {"cond": cond_id, "authority": authority, "reason": reason, "forced": forced}
+        waived_marker = {"authority": authority, "reason": reason, "evidence": eid, "forced": forced}
+        if mismatch:
+            payload["authority_mismatch"] = True
+            payload["expected_authority"] = expected_authority
+            waived_marker["authority_mismatch"] = True
+            waived_marker["expected_authority"] = expected_authority
         t.setdefault("evidence", []).append(
             {
                 "id": eid,
                 "type": "waiver",
-                "payload": {"cond": cond_id, "authority": authority, "reason": reason, "forced": forced},
-                "produced_by": "human",
+                "payload": payload,
+                "produced_by": authority,
                 "ts": "",
             }
         )
         c["satisfied"] = True
         c["satisfied_by"] = eid
-        c["waived"] = {"authority": authority, "reason": reason, "evidence": eid, "forced": forced}
+        c["waived"] = waived_marker
         tag = " (FORCED)" if forced else ""
         return f"waived {iid}.{cond_id}{tag} by {authority} -> {eid}"
     raise EngineError(f"{which} {cond_id!r} not found on {iid}")
@@ -3703,9 +3906,27 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
     if v == "heartbeat":
         return heartbeat(cl, args.session_id)
     if v == "release":
+        # override_ledger chokepoint (g2): capture the owning session BEFORE
+        # release() mutates status -- release() leaves session_id in place, so
+        # this is a safe read of pre-call state. A force-release is one where
+        # --force was passed AND the caller is not the recorded owner; append
+        # ahead of the return so the early-return control flow (deliberately
+        # NOT a fall-through -- release never gets the archived-path banner)
+        # stays exactly as it was.
+        force = getattr(args, "force", False)
+        prior_owner = None
+        existing_session = cl.get("engine_session")
+        if isinstance(existing_session, dict):
+            prior_owner = existing_session.get("session_id")
+        if force and prior_owner is not None and prior_owner != args.session_id:
+            _append_override_entry(
+                cl, "force-release", verb="release",
+                session_id=args.session_id, previous_session_id=prior_owner,
+                takeover_reason=getattr(args, "reason", None),
+            )
         return release(
             cl, args.session_id,
-            force=getattr(args, "force", False), reason=getattr(args, "reason", None),
+            force=force, reason=getattr(args, "reason", None),
         )
     if v == "current":
         # Trip SOFT/HARD advisory (#182) rides the read-only `current` at the gate
@@ -3717,6 +3938,19 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
             cl, args.session_id, args.claimed_by, args.worktree, config,
             force=getattr(args, "force", False), reason=getattr(args, "reason", None),
         )
+        # override_ledger chokepoint (g2): read state claim() already produced --
+        # a genuine takeover is force=true AND a non-null previous_session_id (a
+        # no-op --force with nothing to take over records nothing).
+        if getattr(args, "force", False):
+            session = cl.get("engine_session") or {}
+            previous_session_id = session.get("previous_session_id")
+            if previous_session_id:
+                _append_override_entry(
+                    cl, "force-claim", verb="claim",
+                    session_id=session.get("session_id"),
+                    previous_session_id=previous_session_id,
+                    takeover_reason=session.get("takeover_reason"),
+                )
     else:
         # Actor-authority gate: once an active lease exists, a mutating verb must
         # carry the owning --session-id. No lease -> legacy behavior (no session).
@@ -3736,6 +3970,28 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         # so it never refreshes the lease even though main() persists on the error
         # path. Only a verb that returns successfully reaches the stamp below.
         message = _run_verb(cl, args, base_dir)
+        # override_ledger chokepoint (g2): a successful waive is recorded here,
+        # EVERY time, not only forced/mismatched ones -- a plain policy-allowed
+        # matched-authority waive is still "a human accepting risk to skip a
+        # control." Re-find the SAME condition waive() itself just set, using
+        # the SAME which-only lookup (no preconditions/postconditions
+        # fallback) -- a cond id that exists in both lists with different
+        # override_policy would otherwise let dispatch's re-lookup diverge
+        # from the one waive() actually acted on.
+        if v == "waive":
+            waived_task = task(cl, args.id)
+            for cond in waived_task.get(args.which, []):
+                if cond["id"] != args.cond:
+                    continue
+                marker = cond.get("waived") or {}
+                fields = {"task": args.id, "cond": args.cond, "evidence": marker.get("evidence"),
+                          "authority": marker.get("authority"), "reason": marker.get("reason"),
+                          "forced": marker.get("forced")}
+                if "authority_mismatch" in marker:
+                    fields["authority_mismatch"] = marker["authority_mismatch"]
+                    fields["expected_authority"] = marker["expected_authority"]
+                _append_override_entry(cl, "waive", **fields)
+                break
         # Owner activity = liveness: a SUCCESSFUL mutating verb by the owner refreshes
         # the lease, so an actively-working session never goes stale and an idle gap
         # self-heals. A refused verb never gets here.

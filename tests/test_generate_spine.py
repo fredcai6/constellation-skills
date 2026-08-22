@@ -234,8 +234,13 @@ class TestCompilePopulation:
             (tmp_path / "specs" / name).write_text("", encoding="utf-8")
         # repo_root_token is the real tmp_path here, so the compiled command
         # is already anchored there -- no substitution needed.
+        # `.as_posix()`, not `str(tmp_path)`: the token is interpolated
+        # UNQUOTED into `cd {repo_root_token} && ...`, and `init_work_area.py`'s
+        # real resolver substitutes `<repo-root>` with `.as_posix()` for
+        # exactly this reason -- an unquoted Windows path loses its
+        # backslashes to bash's own unquoted-backslash escaping.
         cond = _population_cond(root="specs", glob="*.toml", expected=3)
-        out = gs.compile_condition(cond, repo_root_token=str(tmp_path))
+        out = gs.compile_condition(cond, repo_root_token=tmp_path.as_posix())
         cmd = out["check"]["command"]
         proc = subprocess.run(_bash_argv(cmd), cwd=str(tmp_path), capture_output=True)
         assert proc.returncode == 0, proc.stderr
@@ -647,7 +652,12 @@ class TestDeclaredDispatchDrivenThroughEngine:
 
     def _resolve_repo_root(self, spine, gid, fake_repo):
         post = next(c for c in spine["tasks"][gid]["postconditions"] if c["id"] == "c-dispatch-0")
-        post["check"]["command"] = post["check"]["command"].replace("<repo-root>", str(fake_repo))
+        # `.as_posix()`, matching `init_work_area.py`'s real resolver
+        # (`text.replace("<repo-root>", Path(root).resolve().as_posix())`):
+        # the compiled command interpolates this token UNQUOTED into a `cd`
+        # clause, and an unquoted Windows path loses its backslashes to
+        # bash's own escaping the moment this compiled command actually runs.
+        post["check"]["command"] = post["check"]["command"].replace("<repo-root>", fake_repo.as_posix())
         return post["check"]["command"]
 
     def test_wrong_parent_fails_the_compiled_command_and_advance(self, fake_repo):

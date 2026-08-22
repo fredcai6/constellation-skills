@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "context",
+  "mechanical": {
+    "run": "w2-ledger",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 0,
+    "spine-step": "context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger-context@5b948311f0177c904f66e62bad6add7c52024092",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger",
+    "generated_at": "2026-08-22T17:11:24Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-green-and-report",
+  "mechanical": {
+    "run": "w2-reindex-g2-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m4-green-and-report",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-g2-implement-m4-green-and-report@44f328069f62d5f345309af7481feed7267df23f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex-g2-implement",
+    "generated_at": "2026-08-22T18:31:15Z"
+  }
+}

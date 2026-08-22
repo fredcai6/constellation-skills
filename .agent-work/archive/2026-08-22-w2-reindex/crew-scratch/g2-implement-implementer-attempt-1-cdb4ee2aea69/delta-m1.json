@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m1-resolve-hooks-dir",
+      "cond": "c2",
+      "which": "postconditions",
+      "command": "python -m pytest tests/test_install_constellation.py -k resolve_git_hooks_dir -q"
+    }
+  ]
+}

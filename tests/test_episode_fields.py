@@ -704,6 +704,61 @@ class RefusalsCounterTests(unittest.TestCase):
         self.assertEqual(self.spine.fields()["refusals"], 0)
 
 
+class OverridesFieldTests(unittest.TestCase):
+    """`overrides` (#504): CHECKLIST-scoped like `refusals`, and the same
+    absence-is-meaningful convention -- a run with zero override-ledger
+    entries reports nothing here at all, not an all-zero summary that would
+    read as noise."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.spine = LiveSpine(Path(self.tmp.name))
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write_ledger(self, entries):
+        data = self.spine.load()
+        data["override_ledger"] = entries
+        self.spine.path.write_text(
+            json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+
+    def test_absent_when_the_ledger_is_empty(self):
+        self.assertNotIn("overrides", self.spine.fields())
+
+    def test_present_and_matches_override_summary_when_the_ledger_has_entries(self):
+        self._write_ledger([
+            {"id": "ov-1", "kind": "force-claim", "verb": "claim"},
+            {"id": "ov-2", "kind": "waive", "task": "s1", "cond": "c1",
+             "authority_mismatch": True, "expected_authority": "human"},
+        ])
+        engine = load("checklist_engine")
+        expected = engine.override_summary(self.spine.load())
+        self.assertEqual(expected, {
+            "trip": 0, "force-claim": 1, "force-release": 0,
+            "waive": 1, "waive_authority_mismatch": 1,
+            "ids": ["ov-1", "ov-2"],
+        })
+        self.assertEqual(self.spine.fields()["overrides"], expected)
+
+    def test_legacy_trip_ledger_alone_also_surfaces(self):
+        """A pre-migration spine (only `trip_ledger`, no `override_ledger` key
+        at all) must still surface a non-empty `overrides` -- `_override_entries`
+        reads both keys, and `mechanical_fields` must not special-case either
+        one out."""
+        data = self.spine.load()
+        data["trip_ledger"] = [
+            {"id": "tl-1", "gate": "s1", "verb": "start", "outcome": "begin-refused"},
+        ]
+        self.spine.path.write_text(
+            json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+        fields = self.spine.fields()
+        self.assertEqual(fields["overrides"]["trip"], 1)
+        self.assertEqual(fields["overrides"]["ids"], ["tl-1"])
+
+
 class AdditiveOnlyTests(unittest.TestCase):
     """A checklist saved BEFORE the counter existed must still work everywhere.
 
@@ -797,6 +852,42 @@ class ZeroAgentEffortTests(unittest.TestCase):
         self.assertEqual(mech["project"], "repo")
         self.assertTrue(mech["context-manifest-ref"].startswith("ctx-wk-live-s1@"))
         self.assertEqual(snapshot["refused"], [])
+
+    def test_overrides_field_survives_the_create_op_validation_path(self):
+        """PLAN_CRITIC.md Finding 1's exact untested gap (#504's PART B/PART C
+        pairing): a REAL `mechanical_fields()` output -- captured via the
+        engine's own seam, not hand-assembled -- that includes a non-empty
+        `overrides` must pass `apply_episode_delta`'s actual create-op
+        validation path unchanged. This is the load-bearing round-trip
+        proof: without PART B, this exact op would hard-refuse on
+        `overrides` being an unrecognized mechanical field."""
+        data = self.spine.load()
+        data["override_ledger"] = [
+            {"id": "ov-1", "kind": "force-claim", "verb": "claim"},
+            {"id": "ov-2", "kind": "waive", "task": "s1", "cond": "c1",
+             "authority_mismatch": True, "expected_authority": "human"},
+        ]
+        self.spine.path.write_text(
+            json.dumps(data, indent=2) + "\n", encoding="utf-8", newline="\n"
+        )
+
+        self.assertEqual(self.spine.verb("start", "s1").returncode, 0)
+        snapshot = json.loads(self.snapshot_file().read_text(encoding="utf-8"))
+        mech = snapshot["mechanical"]
+        self.assertIn("overrides", mech, "fixture precondition: a non-empty overrides field")
+        self.assertEqual(mech["overrides"]["force-claim"], 1)
+        self.assertEqual(mech["overrides"]["waive_authority_mismatch"], 1)
+
+        aed = load("apply_episode_delta")
+        # The load-bearing call: apply_episode_delta's actual create-op
+        # validation path, not mechanical_fields() alone. Raises
+        # EpisodeDeltaError on failure -- reaching the assertions below at
+        # all is the proof.
+        aed.validate_delta({"work_id": mech["run"], "ops": [{
+            "op": "create", "mechanical": mech,
+            "agent_supplied": {k: {"strength": "medium", "statement": "s"}
+                               for k in aed.AGENT_SUPPLIED_KINDS},
+        }]})
 
     def test_the_snapshot_refreshes_when_the_step_is_reopened(self):
         """Unlike the manifest, the snapshot OVERWRITES: it carries counters, and a
