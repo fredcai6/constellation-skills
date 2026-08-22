@@ -746,6 +746,11 @@ class EmittedCommandShapeTests(unittest.TestCase):
     being true -- it is the correct form either way."""
 
     def test_every_hook_spec_builds_a_command_starting_with_the_interpreter(self):
+        """The interpreter is written portably (#539 residual):
+        `${CONSTELLATION_PYTHON:-python3}`, not bare `python3` -- the same
+        env-var knob `.mcp.json` uses (f315d7bf) -- but it is still the
+        leading TOKEN of the command, which is what this test actually
+        guards."""
         installer = load_installer()
         specs = installer.HOOK_SPECS
         self.assertTrue(
@@ -753,12 +758,14 @@ class EmittedCommandShapeTests(unittest.TestCase):
             "HOOK_SPECS is empty -- nothing is built, which makes this check "
             "impossible to fail",
         )
+        expected_prefix = f"${{{installer.MCP_INTERPRETER_ENV_VAR}:-python3}} "
         for spec in specs:
             command = installer.build_hook_command(
                 Path("/some/where/with a space") / spec.script, "python3", spec.args)
             self.assertTrue(
-                command.startswith("python3 "),
-                f"{spec.name}: command does not start with the interpreter: {command!r}",
+                command.startswith(expected_prefix),
+                f"{spec.name}: command does not start with the portable interpreter form "
+                f"{expected_prefix!r}: {command!r}",
             )
             self.assertNotIn(
                 command[0], "\"'",

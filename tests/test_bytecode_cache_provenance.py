@@ -36,7 +36,7 @@ from __future__ import annotations
 
 import importlib.util
 import marshal
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
 
@@ -105,7 +105,24 @@ def cache_offenders(root: Path, pycs) -> list[tuple[Path, str, str]]:
         if embedded is None:
             continue
         source = Path(embedded)
-        if not source.is_absolute():
+        # `source.is_absolute()` alone misses the incident this file exists to
+        # catch: `embedded` was written by whatever interpreter BUILT the
+        # cache, which need not be the one running THIS check. A cache built
+        # on Linux/CI embeds a POSIX-style absolute path (`/home/...`); on a
+        # Windows checker, `Path` is `WindowsPath`, and
+        # `PureWindowsPath.is_absolute()` is False for a leading-`/` path with
+        # no drive letter -- Windows absoluteness requires a drive or UNC
+        # root. Symmetrically, a Windows-built cache's `C:\...` path checked
+        # on a POSIX box is not absolute to `PurePosixPath` either (no
+        # leading `/`; the drive letter is just an ordinary path segment).
+        # Either miss reads a genuinely foreign cache as "a relative path,
+        # names no tree" and skips it -- exactly the silent miss #597 was
+        # about. Judging `embedded` under BOTH conventions, not just this
+        # platform's native one, catches it either way.
+        if not (
+            PurePosixPath(embedded).is_absolute()
+            or PureWindowsPath(embedded).is_absolute()
+        ):
             continue
         try:
             inside = source.resolve().is_relative_to(root_resolved)
@@ -171,6 +188,29 @@ class TestTheCheckItself:
         pyc = _write_pyc(
             here / "pkg" / "__pycache__" / "mod.cpython.pyc",
             "/home/tommy/projects/constellation-skills-wt/epic-568-codex-tier-routing/pkg/mod.py",
+        )
+        offenders = cache_offenders(here, [pyc])
+        assert [(o[0], o[2]) for o in offenders] == [(pyc, FOREIGN_ROOT)]
+
+    def test_a_windows_style_foreign_path_is_caught_on_any_platform(self, tmp_path):
+        """The mirror of the case above: a cache built on WINDOWS, checked from
+        HERE (whichever platform runs this suite).
+
+        `Path(embedded).is_absolute()` alone is native-platform-only: a
+        `C:\\...` embedded path is not absolute to `PurePosixPath` (no leading
+        `/`; the drive letter reads as an ordinary character), which is
+        exactly the miss `PureWindowsPath(embedded).is_absolute()` on the
+        Windows side of this same fix exists to close. `PureWindowsPath` is
+        importable and gives real, non-identity answers on every platform
+        (unlike `ntpath.normcase`, which is identity on POSIX) -- so this case
+        is not skipped anywhere; it is the same assertion the Windows CI leg
+        makes, just reached without needing a Windows host to run it on.
+        """
+        here = tmp_path / "repo"
+        (here / "pkg").mkdir(parents=True)
+        pyc = _write_pyc(
+            here / "pkg" / "__pycache__" / "mod.cpython.pyc",
+            r"C:\Users\runneradmin\AppData\Local\Temp\some-other-checkout\pkg\mod.py",
         )
         offenders = cache_offenders(here, [pyc])
         assert [(o[0], o[2]) for o in offenders] == [(pyc, FOREIGN_ROOT)]

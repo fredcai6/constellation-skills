@@ -1720,14 +1720,39 @@ def build_hook_command(script_path: Path, interpreter: str, args: Sequence[str] 
     one release from changing. An absolute installed path is pinned BY
     CONSTRUCTION and asks the harness to guarantee nothing, which is what
     actually protects the ruling that an agent's own branch cannot edit the code
-    that judges it.
+    that judges it. That reasoning governs the PATH ONLY. The interpreter is a
+    separate half of this string, addressed below, with a different fix.
 
-    `interpreter` comes from the run's single `resolve_interpreter()` probe --
-    never re-probed here, never hardcoded. Naming it at all is only safe
-    BECAUSE this string is written per machine: no single interpreter name
-    works on every platform, which is why the git-tracked settings.json names
-    none (#539)."""
-    command = f'{interpreter} "{script_path.as_posix()}"'
+    The INTERPRETER is written as `${MCP_INTERPRETER_ENV_VAR}:-<interpreter>}`
+    (e.g. `${CONSTELLATION_PYTHON:-py}`), not the bare `interpreter` name --
+    #539's residual on this file, closed by measurement rather than assumption.
+    Every hook entry Claude Code runs shell-form, and (reproduced independently,
+    2026-08-22, via `claude -p` + a temp `--settings` file per
+    `skills/_shared/windows.md` #6: control/single-quoted/double-quoted marker
+    arms, plus a set-but-empty arm) the REAL SHELL performs true POSIX
+    `${VAR:-default}` expansion on a hook `command` -- set-but-empty correctly
+    falls back to the default here, unlike `.mcp.json`'s `command`, which
+    Claude Code's own expander handles with non-POSIX `:-` semantics (#575).
+    So the same env var the MCP door already uses (`MCP_INTERPRETER_ENV_VAR` --
+    one knob, not two) also overrides a hook's interpreter, with no new
+    mechanism and no new failure mode to document.
+
+    `interpreter` -- the DEFAULT inside that expansion -- still comes from the
+    run's single `resolve_interpreter()` probe, never re-probed here, never
+    hardcoded, so behaviour is UNCHANGED when the env var is unset: this only
+    ADDS an override path. It does NOT by itself make the whole command safe to
+    write into a git-tracked settings.json -- the default is still a fact about
+    THIS machine, and the path half stays absolute regardless of the
+    interpreter -- so `wire_hooks` refuses a git-tracked target outright (see
+    `is_git_tracked` there) rather than relying on this wrapping alone.
+
+    A side effect worth naming: `${MCP_INTERPRETER_ENV_VAR}...}` always starts
+    with `$`, never a quote, so the leading-quote hazard `assert_shell_safe_command`
+    guards is now structurally unreachable from this call site (even an empty
+    `interpreter` no longer produces one) -- the call stays, as defense in depth
+    on a public function, not because this site can still trip it."""
+    portable_interpreter = f"${{{MCP_INTERPRETER_ENV_VAR}:-{interpreter}}}"
+    command = f'{portable_interpreter} "{script_path.as_posix()}"'
     if args:
         command = " ".join([command, *args])
     assert_shell_safe_command(command)
@@ -1828,13 +1853,45 @@ def wire_hooks(
 
     settings_path = settings_path_for_wiring(target_root, hooks_from)
 
-    if hooks_from == HOOKS_FROM_SOURCE and is_git_tracked(settings_path):
+    # RAISES on ANY git-tracked target, regardless of `hooks_from` (#539
+    # residual: this guard used to fire only for `hooks_from ==
+    # HOOKS_FROM_SOURCE`, leaving the DEFAULT installed path -- what
+    # `--wire-hooks --scope project` uses against the #180-required tracked
+    # settings.json -- free to write into an already-committed file). Mirrors
+    # f315d7bf's unconditional refusal for a git-tracked `.mcp.json`.
+    #
+    # The interpreter fix in `build_hook_command` above does NOT retire this
+    # guard: it makes the INTERPRETER half portable, but every command this
+    # function builds still carries an ABSOLUTE, per-machine PATH (#269,
+    # deliberately never `${CLAUDE_PROJECT_DIR}` -- see `build_hook_command`'s
+    # docstring). A tracked settings.json ships that path to every other
+    # checkout, where it does not exist, no matter how the interpreter is
+    # spelled -- so this refusal stands on the path half alone.
+    if is_git_tracked(settings_path):
+        portable_interpreter = f"${{{MCP_INTERPRETER_ENV_VAR}:-{interpreter.interpreter}}}"
+        if hooks_from == HOOKS_FROM_SOURCE:
+            raise InstallError(
+                f"--wire-hooks --hooks-from source: refusing to write {settings_path} -- it is "
+                f"git-tracked. Source-tree wiring carries this checkout's absolute path and an "
+                f"interpreter probed on this host, so committing it hands every teammate a "
+                f"path that does not exist on their machine. The interpreter half is portable "
+                f"({portable_interpreter!r}, the same {MCP_INTERPRETER_ENV_VAR} knob `.mcp.json` "
+                f"uses) but the path half is not (#269 keeps it absolute by design), so this "
+                f"refusal stands either way. Untrack it (it belongs in .gitignore) and re-run."
+            )
         raise InstallError(
-            f"--wire-hooks --hooks-from source: refusing to write {settings_path} -- it is "
-            f"git-tracked. Source-tree wiring carries this checkout's absolute path and an "
-            f"interpreter probed on this host, so committing it hands every teammate a "
-            f"path that does not exist on their machine. Untrack it (it belongs in "
-            f".gitignore) and re-run."
+            f"--wire-hooks: refusing to write {settings_path} -- it is git-tracked. Every "
+            f"command this function builds carries an ABSOLUTE path to a hook script on THIS "
+            f"machine (#269: kept absolute by design, never ${{CLAUDE_PROJECT_DIR}}, so an "
+            f"agent's own branch cannot edit the code that judges it), and a tracked "
+            f"settings.json ships that path to every other checkout, where it does not exist. "
+            f"The interpreter half is portable ({portable_interpreter!r}, the same "
+            f"{MCP_INTERPRETER_ENV_VAR} knob `.mcp.json` uses via `rewrite_mcp_config_interpreter`), "
+            f"but that alone does not make the whole command safe to commit, so wiring a "
+            f"git-tracked settings file is refused either way -- see #539's open checklist item "
+            f"on whether tracked config should carry wiring at all. Wire at --scope user instead "
+            f"(writes an untracked ~/.claude/settings.json), or keep {settings_path} out of "
+            f"version control until that question is settled."
         )
 
     commands: list[tuple[HookSpec, str]] = []
