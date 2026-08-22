@@ -74,7 +74,8 @@ Reject HTN's offline stance (expand the whole network to primitives before execu
   "blockers": [],                   // stuck items, bubbled to the parent agent
   "amendments": [],                 // audit log of `amend` deltas: gated, plus a survey's retext-check (see Amend delta)
   "why_trail": [],                  // optional, append-only: the running-understanding trail (see Why-capture)
-  "trip_ledger": [],                // optional, append-only: BEGINs judged at/over the hard line (see Trip ledger)
+  "trip_ledger": [],                // legacy, read-only: pre-migration BEGINs judged at/over the hard line (see Trip ledger / The override ledger)
+  "override_ledger": [],            // optional, append-only: the trip ledger's successor, kind-discriminated (see The override ledger)
   "refusals": 0,                    // optional: checklist-scoped refusal tally, ARMED by `claim` (see below)
   "origin": null,                   // optional: the worktree this file was created in (see below)
   "engine_session": null            // optional: actor-authority lease over this checklist's STATE (see below)
@@ -619,6 +620,66 @@ its own advisory told it to close render **identically absent**. That is why the
 exists (`begin_over_line_records_historical`, above): it carries no keying for the close to supersede,
 so it is where the two worlds actually differ. A reader who checks only the live line at the seam
 learns nothing; the historical line is what has to be read.
+
+#### The override ledger — the trip ledger's successor (`override_ledger`)
+
+`trip_ledger` above is now **read-only history**: `checklist_engine.py` never writes to that key
+again. Its successor is `override_ledger`, a top-level, append-only list with the same idiom
+(`setdefault` creates it lazily, ids are positional, an existing entry is never mutated or removed)
+but a wider shape: every entry carries a `kind` discriminant, so **one** ledger can eventually hold
+every override the engine records, not just trip events. `override_ledger` ids are `ov-<n>`, scoped
+**across all kinds** — not per-kind — so an entry's id alone recovers its place in the ledger's own
+order, mirroring `trip_ledger`'s `tl-<n>` idiom.
+
+As of this gate, `trip` is the only kind actually written — `_append_trip_entry` now calls
+`_append_override_entry(cl, "trip", ...)` instead of writing `trip_ledger` directly, so a fresh trip
+event lands here, not in the legacy key. Three more kinds are named now so this schema documents the
+target shape, though nothing writes them yet — they land in a later gate:
+
+| kind | written by | meaning |
+|---|---|---|
+| `trip` | `_append_trip_entry` (this gate) | a BEGIN judged at/over the hard line — see *The trip ledger* above; field shape unchanged |
+| `force-claim` | *landed in a later gate* | an actor force-claiming a lease against another actor's hold |
+| `force-release` | *landed in a later gate* | an actor force-releasing a lease it does not hold |
+| `waive` | *landed in a later gate* | a human waiving a `git-change-policy`/override-policy check (see *Override policy*) |
+
+```json
+"override_ledger": [
+  {"id": "ov-1", "kind": "trip", "ts": "2026-08-08T12:00:00+00:00",
+   "gate": "g2", "verb": "start", "outcome": "begin-refused",
+   "fill": 0.95, "hard": 0.9, "model": "claude-opus-4-8", "why_ref": "w-1"},
+  {"id": "ov-2", "kind": "force-claim", "ts": "2026-08-09T09:00:00+00:00",
+   "gate": "g3", "actor": "commander", "prior_actor": "implementer"},
+  {"id": "ov-3", "kind": "force-release", "ts": "2026-08-09T09:05:00+00:00",
+   "gate": "g3", "actor": "commander"},
+  {"id": "ov-4", "kind": "waive", "ts": "2026-08-09T10:00:00+00:00",
+   "gate": "g4", "actor": "human", "check_id": "c2",
+   "reason": "artifact intentionally overrides the policy"}
+]
+```
+
+The `trip` entry above is exactly what `_append_trip_entry` emits today: the same field set
+`trip_ledger`'s own example carries, plus the `kind`/envelope shape every `override_ledger` entry
+now has. The other three entries are **illustrative shapes only** — marked above as landed in a
+later gate — so their exact fields are not yet decided by this schema.
+
+**The one read path — `_override_entries(cl, kind=None)`.** Every engine read over either ledger
+goes through this single merge function: it yields every `trip_ledger` entry first, each retagged
+`kind="trip"` **in the returned dict only** (`trip_ledger` on disk is never rewritten or migrated —
+an archived spine's JSON stays exactly as it is), then every `override_ledger` entry. This "legacy
+first, then new" order is fixed, not sorted by timestamp: no `override_ledger` entry can
+chronologically precede the code deploy that introduced the key, so putting legacy entries first is
+always correct for any single spine's own continuous history, including one that straddles the
+deploy boundary mid-flight. An optional `kind` filter narrows the merged sequence; omitting it
+returns everything. `begin_over_line_records` and `begin_over_line_records_historical` both read
+through `_override_entries(cl, kind="trip")` now, instead of `trip_ledger` directly — their own
+selection logic (the outcome filter, the `why_ref` keying) is unchanged.
+
+Once `waive` entries land (a later gate), expect that kind's count to be the loudest and least
+exceptional of the four on an ordinary run: a plain policy-allowed waive is this schema's own
+documented routine path (see *Override policy* above — "a human who intends an artifact ... carries
+an `override_policy` on it and `waive`s it"), not a rare event, so a future reader of a closeout
+summary should not over-index on a nonzero `waive` count alone.
 
 ## Engine verbs ↔ schema
 

@@ -2164,43 +2164,99 @@ def _trip_hard_band_reading(cl: dict, base_dir: Path | None, gate: str | None = 
     return reading
 
 
+def _append_override_entry(cl: dict, kind: str, **fields) -> str:
+    """Append one entry to the top-level append-only `override_ledger` and return
+    its id. Same idiom as `_append_trip_entry`/`_append_why`: `setdefault` creates
+    the ledger on first write (so a spine without one drives unchanged), the id is
+    positional and scoped `ov-N` ACROSS ALL KINDS (not per-kind), and a prior entry
+    is NEVER mutated or removed.
+
+    Entries stay flat dicts -- `{"id": ..., "kind": kind, "ts": ..., **fields}` --
+    no envelope+detail nesting, so `kind="trip"` entries keep the exact shape
+    `_append_trip_entry`'s callers already read (`e.get("outcome")`,
+    `e.get("why_ref")`, etc).
+
+    This is the ONE write path going forward: `trip_ledger` itself is never
+    written again anywhere in this file (see `_override_entries` for the
+    corresponding read path, which still reads legacy `trip_ledger` entries for
+    backward compatibility)."""
+    ledger = cl.setdefault("override_ledger", [])
+    oid = f"ov-{len(ledger) + 1}"
+    ledger.append({"id": oid, "kind": kind, "ts": _now(), **fields})
+    return oid
+
+
 def _append_trip_entry(cl: dict, gate: str, verb: str | None, outcome: str,
                        reading, hard: float, why_ref: str | None) -> str:
-    """Append one entry to the top-level append-only `trip_ledger` and return its
-    id. ENGINE-WRITTEN ONLY: the sole caller is `_trip_hard_gate`, which is reached
+    """Append one `kind="trip"` entry to the top-level append-only
+    `override_ledger` (via `_append_override_entry`) and return its id.
+    ENGINE-WRITTEN ONLY: the sole caller is `_trip_hard_gate`, which is reached
     from the `dispatch` chokepoint BEFORE `_run_verb`, so no CLI verb can create,
     edit, or delete an entry.
-
-    Same idiom as `_append_why`: `setdefault` creates the ledger on first write (so
-    a spine without one drives unchanged), the id is positional, and a prior entry
-    is NEVER mutated or removed.
 
     `why_ref` is the live why-record id at the moment of the trip. It is what lets
     the compliance selector (`begin_over_line_records`) key on the CURRENT
     understanding, so a mark left under a superseded understanding stops reading as
     present-tense non-compliance without any entry being edited."""
-    ledger = cl.setdefault("trip_ledger", [])
-    tid = f"tl-{len(ledger) + 1}"
-    ledger.append({
-        "id": tid, "gate": gate, "verb": verb, "outcome": outcome,
-        "fill": round(float(reading.fill_fraction), 4), "hard": round(float(hard), 4),
-        "model": reading.model, "why_ref": why_ref, "ts": _now(),
-    })
-    return tid
+    return _append_override_entry(
+        cl, "trip", gate=gate, verb=verb, outcome=outcome,
+        fill=round(float(reading.fill_fraction), 4), hard=round(float(hard), 4),
+        model=reading.model, why_ref=why_ref,
+    )
+
+
+def _override_entries(cl: dict, kind: str | None = None) -> list[dict]:
+    """The ONE read path over the override ledger, going forward. Yields every
+    entry of `cl.get("trip_ledger", [])` FIRST, each retagged `kind="trip"` in the
+    RETURNED dict only -- `trip_ledger` itself is never rewritten in place and
+    never migrated, so an archived spine's JSON on disk stays exactly as it is;
+    this retag is a backward-compatible read for spines that predate this
+    migration, nothing more. Then yields every entry of
+    `cl.get("override_ledger", [])`.
+
+    This "legacy first, then new" order is deliberately fixed, not sorted by
+    timestamp: no `override_ledger` entry can chronologically precede the code
+    deploy that introduces the key, so putting legacy entries first is always
+    time-ordered for any single spine's own continuous history, including one
+    that straddles the deploy boundary mid-flight.
+
+    When `kind` is given, the merged sequence is filtered to entries whose
+    `kind` matches; omitting it returns the full merged, ordered sequence.
+
+    Pure by construction, same fail-safe posture as the selectors below: a
+    malformed `trip_ledger`/`override_ledger` (`None`, a string, a dict) degrades
+    to nothing via `or []`, and non-dict entries are skipped rather than raising."""
+    out: list[dict] = []
+    for e in cl.get("trip_ledger", []) or []:
+        if not isinstance(e, dict):
+            continue
+        retagged = dict(e)
+        retagged["kind"] = "trip"
+        out.append(retagged)
+    for e in cl.get("override_ledger", []) or []:
+        if not isinstance(e, dict):
+            continue
+        out.append(e)
+    if kind is not None:
+        out = [e for e in out if e.get("kind") == kind]
+    return out
 
 
 def begin_over_line_records(cl: dict) -> list[dict]:
-    """PURE selector over stored state: every `trip_ledger` entry recording a BEGIN
-    at/over the hard line **under the live understanding**. A `begin-instructed`
+    """PURE selector over stored state: every override-ledger `kind="trip"` entry
+    (read via `_override_entries`, which also covers a pre-migration spine's
+    legacy `trip_ledger`) recording a BEGIN at/over the hard line **under the live
+    understanding**. A `begin-instructed`
     entry is deliberately NOT one of them (#510): that begin is the one the HARD
     advisory itself instructs, so counting it would report an offence for obedience.
     Its emptiness IS the compliance predicate — an empty list means the engine holds no record of anyone
     beginning work over the line under the understanding now in force; a non-empty
     list IS the non-compliance signal.
 
-    Pure by construction: it reads `trip_ledger` and `_latest_why_record` and
-    nothing else — no subprocess, no gauge read, no clock — so it is safe to call
-    from the read-only `current` path.
+    Pure by construction: it reads `_override_entries` (in turn `override_ledger`/
+    `trip_ledger`) and `_latest_why_record` and nothing else — no subprocess, no
+    gauge read, no clock — so it is safe to call from the read-only `current`
+    path.
 
     Keyed to the live understanding: an entry matches only when its `why_ref` is the
     id of the CURRENT why-record. A `reopen` freshens the digest by APPENDING a
@@ -2216,9 +2272,7 @@ def begin_over_line_records(cl: dict) -> list[dict]:
     rec = _latest_why_record(cl)
     live = rec["id"] if rec else None
     out: list[dict] = []
-    for e in cl.get("trip_ledger", []) or []:
-        if not isinstance(e, dict):
-            continue
+    for e in _override_entries(cl, kind="trip"):
         if e.get("outcome") not in ("begin-refused", "begin-released"):
             continue
         if e.get("why_ref") != live:
@@ -2229,8 +2283,8 @@ def begin_over_line_records(cl: dict) -> list[dict]:
 
 def begin_over_line_records_historical(cl: dict) -> list[dict]:
     """PURE selector, additive to `begin_over_line_records` and separate from it:
-    every `begin-refused`/`begin-released` entry in `trip_ledger`, regardless of
-    `why_ref` (#467 B1 rework).
+    every `begin-refused`/`begin-released` `kind="trip"` entry (read via
+    `_override_entries`), regardless of `why_ref` (#467 B1 rework).
 
     Where the LIVE selector answers "is there an over-the-line begin under the
     understanding now in force" -- and is therefore emptied by the very close the
@@ -2240,20 +2294,18 @@ def begin_over_line_records_historical(cl: dict) -> list[dict]:
     entries the live selector reads; this is a second, unkeyed view onto them, not
     a second write and not a second source of truth.
 
-    Pure by construction, same as the live selector: reads only `trip_ledger`, no
-    subprocess/gauge/clock, so it is safe to call from the read-only `current`
-    path. Never raises on a malformed ledger -- a non-list `trip_ledger` (`None`,
-    a string, a dict) degrades to nothing via `or []`, and a list holding
-    non-dict entries skips them one at a time, matching `begin_over_line_records`'s
-    own fail-safe.
+    Pure by construction, same as the live selector: reads only `_override_entries`
+    (in turn `override_ledger`/`trip_ledger`), no subprocess/gauge/clock, so it is
+    safe to call from the read-only `current` path. Never raises on a malformed
+    ledger -- `_override_entries` itself degrades a non-list `trip_ledger`/
+    `override_ledger` to nothing, and skips non-dict entries one at a time,
+    matching `begin_over_line_records`'s own fail-safe.
 
     Does not replace the live selector and must never be used to. The live
     selector's keying is close criterion (b) (Admiral pre-ruling) and stays
     exactly as it is; this selector is additive and separately rendered."""
     out: list[dict] = []
-    for e in cl.get("trip_ledger", []) or []:
-        if not isinstance(e, dict):
-            continue
+    for e in _override_entries(cl, kind="trip"):
         if e.get("outcome") not in ("begin-refused", "begin-released"):
             continue
         out.append(e)
