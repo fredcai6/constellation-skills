@@ -47,7 +47,9 @@ from __future__ import annotations
 
 import json
 import re
+import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -264,9 +266,30 @@ class VocabularyRule(unittest.TestCase):
         )
 
     def test_negative_self_test_catches_a_synthetic_mechanically_enforced_claim(self):
-        offenders = []
-        synthetic_text = "This check is mechanically enforced by nothing."
-        for phrase in _BANNED_PHRASES:
-            if phrase in synthetic_text.lower():
-                offenders.append("synthetic")
-        self.assertEqual(offenders, ["synthetic"])
+        # Drives the REAL scanning path this rule depends on -- _prose_files()
+        # walking the repo, .read_text(), the banned-phrase check -- rather
+        # than reimplementing a substring check on a string literal in this
+        # test's own stack frame. The prior version of this test did the
+        # latter and kept passing even after _prose_files() was broken to
+        # yield no files at all (clean-room review finding, epic-569
+        # w1-wiring g4-disposition: verified by patching _prose_files() to
+        # return nothing and re-running the suite -- every test, including
+        # this one, still passed).
+        #
+        # Plants a real file UNDER ROOT (tempfile.TemporaryDirectory(dir=ROOT),
+        # not an arbitrary tmp path) so the production method's own
+        # `path.relative_to(ROOT)` call resolves instead of raising, then
+        # monkeypatches _prose_files() to yield only that planted file and
+        # asserts the real blocking test method actually raises, naming it.
+        with tempfile.TemporaryDirectory(dir=ROOT) as tmp:
+            planted = Path(tmp) / "synthetic-mechanically-enforced.md"
+            planted.write_text(
+                "This check is mechanically enforced by nothing.\n",
+                encoding="utf-8",
+            )
+            with unittest.mock.patch(
+                f"{__name__}._prose_files", return_value=iter([planted])
+            ):
+                with self.assertRaises(AssertionError) as caught:
+                    self.test_no_mechanically_enforced_claims()
+        self.assertIn(str(planted.relative_to(ROOT)), str(caught.exception))

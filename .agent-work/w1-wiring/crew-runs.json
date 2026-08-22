@@ -1,0 +1,32 @@
+[
+  {
+    "crew_id": "constellation/w1-wiring/g5-clean-room-review/reviewer/attempt-1",
+    "work_id": "w1-wiring",
+    "gate": "g5-clean-room-review",
+    "role": "reviewer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/w1-wiring/g5-clean-room-review/reviewer/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 3036499,
+    "worktree": "/home/tommy/projects/569-w1-wiring",
+    "handoff": "/home/tommy/projects/constellation-skills/.agent-work/569/crew-handoffs/REVIEWER_HANDOFF-w1-wiring.md",
+    "result": ".agent-work/w1-wiring/REVIEW_RESULT-clean-room.md",
+    "spine": null,
+    "parent": "constellation/569",
+    "stdout": ".agent-work/w1-wiring/crew-runs/g5-clean-room-review-reviewer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/w1-wiring/crew-runs/g5-clean-room-review-reviewer-attempt-1.stderr.txt",
+    "started_at": "2026-08-22T15:44:24.880276+00:00",
+    "last_heartbeat": "2026-08-22T15:53:03.060292+00:00",
+    "completed_at": "2026-08-22T15:53:03.060292+00:00",
+    "abandoned": false,
+    "model": "sonnet",
+    "reason": "Admiral-ordered independent review: w1-wiring ran with no crew dispatch and self-reviewed every gate",
+    "scratch_dir": ".agent-work/w1-wiring/crew-scratch/g5-clean-room-review-reviewer-attempt-1-18bb0d8d17e7",
+    "exit_code": 0,
+    "result_present": true,
+    "result_fresh": true,
+    "verdict_source": "result"
+  }
+]
