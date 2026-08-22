@@ -1,42 +1,24 @@
 # Crash-resume state note — 569
 
-Rewrite this **before** launching any detached or multi-hour process, and again
-before **each** new detach (the PID changes every time). If this session dies,
-a fresh agent resumes from exactly these five lines — no forensics.
+- **step:** execute · wave 2 dispatching (three lanes, all sonnet, all via run_crew.py --role commander)
+- **slug:** work-id `569`, Admiral spine `.agent-work/569/spine.json` (session `constellation/569`, lease active), driven from /home/tommy/projects/constellation-skills on `main` @ 9d5aac6d. Lanes: `w2-basis` (/home/tommy/projects/569-w2-basis, branch epic-569/w2-basis), `w2-ledger` (/home/tommy/projects/569-w2-ledger), `w2-reindex` (/home/tommy/projects/569-w2-reindex). All based on 9d5aac6d, main verified green there at 3622 passed / 6 skipped.
+- **next command:** check for results — `ls /home/tommy/projects/569-w2-{basis,ledger,reindex}/.agent-work/w2-{basis,ledger,reindex}/RESULT.md`. Adjudicate per .agent-work/569/LATITUDE_CONTRACT.md; VERIFY EACH MERGE by test-merging into main in a scratch worktree and running the full suite BEFORE merging — a MERGEABLE PR turned main red in wave 1 and no automated signal caught it. Then STOP AND PRESENT: the contract's autonomous clearance ENDS after wave 2.
+- **pid:** none — foreground Admiral. Commanders are separate `claude` processes launched by run_crew.py with a durable registry at each worktree's .agent-work/<id>/crew-runs.json; recover with `python scripts/recover_crews.py <work-id>`.
+- **expected artifact:** three RESULT.md files, three merged PRs, then the wave-2 checkpoint presentation
 
-- **step:** execute · wave 1 in flight, both commanders at their own `execute` gate with plans frozen; Admiral is waiting to adjudicate, not working
-- **slug:** work-id `569`, Admiral spine `.agent-work/569/spine.json` (session `constellation/569`, lease active) driven from the main checkout /home/tommy/projects/constellation-skills on `main`. Commanders: `w1-wiring` in /home/tommy/projects/569-w1-wiring (branch epic-569/w1-wiring, spine .agent-work/w1-wiring/spine.json); `w1-verdict` in /home/tommy/projects/569-w1-verdict (branch epic-569/w1-verdict, spine .agent-work/w1-verdict/spine.json). Both based on 244665ee.
-- **next command:** `ls /home/tommy/projects/569-w1-wiring/.agent-work/w1-wiring/RESULT.md /home/tommy/projects/569-w1-verdict/.agent-work/w1-verdict/RESULT.md`. If present, adjudicate and merge per .agent-work/569/LATITUDE_CONTRACT.md; then author the wave-1→wave-2 transition under .agent-work/569/transitions/w1-to-w2/ and run `python3 /home/tommy/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id 569` before dispatching wave 2.
-- **pid:** none — foreground. Wave-1 commanders are in-harness Agent-tool subagents (see the dispatch error below), not OS processes, so there is no PID to check and no run_crew registry entry to resume from. A background Monitor (task brulx8emm) polls both worktrees.
-- **expected artifact:** .agent-work/w1-wiring/RESULT.md and .agent-work/w1-verdict/RESULT.md inside their respective worktrees, plus two merged PRs on main
+## Wave-2 checkpoint agenda (owed to the human, do not skip)
 
-## If you are a fresh agent resuming this run, read this first
+1. **#558 review-level doctrine** — brief prepared at `.agent-work/569/558-CHECKPOINT-BRIEF.md`. Human asked to discuss before wave 3.
+2. **`decision:widening-is-not-a-new-check`** — Admiral's reading that widenings ship live while new refusals ship report-only. Graded a guess; needs ratification.
+3. **Blocking lints from wave 1** — shipped blocking under an Admiral pre-ruling that contradicted the contract's "surfaced" classification. Needs retroactive ratification or reversal.
+4. **No automated defence against a PR that reds main** — measured in wave 1. Candidate scope.
+5. **The sonnet experiment result** — what each commander named as underspecified in its order.
 
-**The wave-1 commanders were dispatched with the WRONG mechanism, and it is the Admiral's error.**
-They were launched via the Agent tool as in-harness subagents, so they share this session's harness
-id. Consequences you will observe and must not misdiagnose:
+## Known state, do not re-diagnose
 
-- They cannot use `mcp__spine__*` tools; their launch orders carry a CLI override
-  (`python3 scripts/checklist_engine.py --file <spine> <verb>`). That override is working.
-- The **Stop hook will fire at you naming a COMMANDER's spine** (`constellation/w1-wiring` or
-  `constellation/w1-verdict`) and serving you that commander's gate imperative. **The hook is not
-  broken.** It resolves by session identity correctly; the commanders share this session because of
-  the dispatch error. Do not act on those instructions — you would be running a Commander's issue
-  yourself, which `constellation-admiral` forbids. Verify your own spine with `spine_status`; the
-  Admiral's spine is `constellation/569` and nothing else.
-- **Never claim a lease on `constellation/w1-wiring` or `constellation/w1-verdict`.**
+- Wave 1 lanes `w1-wiring` and `w1-verdict` are merged and terminal; their worktrees at /home/tommy/projects/569-w1-* still exist and need sweeping at closeout (collect any CONSTELLATION_FEEDBACK.md export FIRST).
+- Wave 1 was dispatched in-harness via the Agent tool, which was an Admiral error; wave 2 uses run_crew.py so commanders have their own spine doors and the Stop hook resolves correctly.
+- A transient `spine.json` read failure is NOT corruption — the engine writes atomically. Re-read before concluding.
+- Heartbeat age is a poor liveness signal: it only advances on engine verbs, so a commander doing git work or a long plan-alternatives pass looks dead while healthy. Inspect the worktree.
 
-An earlier version of this note claimed the hook resolved spines by walking the filesystem. That was
-wrong and is retracted; see the `ADMIRAL ERROR` entry in ADMIRAL_LOG.md for the full correction.
-
-**A transient `spine.json` read failure is NOT corruption.** The engine writes atomically (temp file,
-then install), so a concurrent read during a commander's engine verb can fail for a fraction of a
-second. Wave 1's monitor reported `spine-unreadable` for `w1-verdict` once; the spine was valid on
-immediate re-read. Re-read before concluding anything, and never "repair" a spine on a single failed
-read — hand-editing a spine is forbidden and would be far worse than the phantom problem.
-
-**Wave 2 must dispatch through `python3 scripts/run_crew.py --role commander`** (sanctioned, gives
-each commander its own session and spine door, and a durable recovery registry). The engine-access
-section of `.agent-work/569/crew-handoffs/WAVE2-PREAMBLE.md` has already been rewritten for this.
-
-_Updated: 2026-08-22T15:15:00+00:00_
+_Updated: 2026-08-22T17:05:00+00:00_

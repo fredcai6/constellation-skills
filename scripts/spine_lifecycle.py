@@ -113,9 +113,20 @@ def worktree_path_for(work_id: str, *, wt_root: str) -> str:
     """`<wt_root>/<last segment of work_id>`. The worktree name is the FINAL
     `/`-separated segment only -- `epic-559/c3-lifecycle` names a worktree
     called `c3-lifecycle`, matching the live convention measured against this
-    run's own worktree."""
+    run's own worktree.
+
+    Joined with a literal `/`, never `os.path.join`: this is a pure string
+    function (the docstring above already promises `<wt_root>/<segment>`,
+    not a platform-dependent join), and its result is compared, elsewhere,
+    against `git worktree list --porcelain` -- which git always renders with
+    forward slashes, even on Windows (git's own documented convention, not
+    this repo's choice). `os.path.join` on `ntpath` would give a
+    backslash-joined answer that git's own porcelain output never produces,
+    so any existing backslashes in `wt_root` are folded to `/` too, keeping
+    the whole answer in the one convention it is actually compared against.
+    """
     last_segment = work_id.rsplit("/", 1)[-1]
-    return os.path.join(wt_root, last_segment)
+    return wt_root.replace("\\", "/").rstrip("/") + "/" + last_segment
 
 
 def branch_name_for(work_id: str) -> str:

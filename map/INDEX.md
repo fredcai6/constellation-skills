@@ -4,9 +4,9 @@
 conftest: 1 modules, 3 entities
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 60 modules, 1293 entities
+scripts: 60 modules, 1296 entities
 skills: 1 modules, 22 entities
-tests: 100 modules, 5538 entities
+tests: 101 modules, 5559 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -41,7 +41,7 @@ tests: 100 modules, 5538 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (60 modules, 1293 entities)
+## scripts (60 modules, 1296 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -66,7 +66,7 @@ tests: 100 modules, 5538 entities
 - [scripts.check_role_spine_bookends](scripts.check_role_spine_bookends/INDEX.md) (6 entities, 4 holes): Lint: every role spine template declares at least one bookend, and the repo's declaration matches what is actually installed.
 - [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
 - [scripts.check_template_overlay_freshness](scripts.check_template_overlay_freshness/INDEX.md) (5 entities, 3 holes): Guard: a project's `.agent-work/templates/` overlay must never be STALE.
-- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (116 entities, 24 holes): Workbench checklist engine: work one gated/survey plan through its gates.
+- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (117 entities, 24 holes): Workbench checklist engine: work one gated/survey plan through its gates.
 - [scripts.collect_feedback](scripts.collect_feedback/INDEX.md) (38 entities, 15 holes): Sweep consuming projects' CONSTELLATION_FEEDBACK.md exports into one report.
 - [scripts.context_manifest](scripts.context_manifest/INDEX.md) (14 entities): Deterministic projection substrate: what was made available to an agent, and at which revision.
 - [scripts.curate_corpus](scripts.curate_corpus/INDEX.md) (18 entities, 4 holes): Curator MEASUREMENT pass over the skills corpus (mechanical-only, flags-never-gates).
@@ -79,11 +79,11 @@ tests: 100 modules, 5538 entities
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
 - [scripts.install_constellation](scripts.install_constellation/INDEX.md) (94 entities, 32 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
-- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (39 entities, 3 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
+- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (40 entities, 3 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
-- [scripts.run_crew](scripts.run_crew/INDEX.md) (85 entities, 23 holes): Safe crew launcher with a durable session-recovery registry.
+- [scripts.run_crew](scripts.run_crew/INDEX.md) (86 entities, 23 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
 - [scripts.spine_done_cli](scripts.spine_done_cli/INDEX.md) (3 entities, 2 holes): Thin CLI wrapping `spine_lifecycle.finish_work` -- the reachable-today "one door verb" (#574 g3): "I'm done" as one call, usable today without waiting on `mcp_s
 - [scripts.spine_lifecycle](scripts.spine_lifecycle/INDEX.md) (28 entities, 3 holes): Open and close Constellation work in one call each: `open_work` builds a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine; `clos
@@ -116,7 +116,7 @@ tests: 100 modules, 5538 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (100 modules, 5538 entities)
+## tests (101 modules, 5559 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -126,10 +126,11 @@ tests: 100 modules, 5538 entities
 
 - [tests.test_agent_work_root](tests.test_agent_work_root/INDEX.md) (38 entities, 33 holes): Tests for the durable-root resolution helper and its wiring into the four recursive-improvement scripts.
 - [tests.test_build_architecture_map](tests.test_build_architecture_map/INDEX.md) (8 entities, 8 holes): HOLE: no docstring
-- [tests.test_bytecode_cache_provenance](tests.test_bytecode_cache_provenance/INDEX.md) (13 entities, 4 holes): #597 — a bytecode cache built in a different tree must be named, not suffered.
+- [tests.test_bytecode_cache_provenance](tests.test_bytecode_cache_provenance/INDEX.md) (14 entities, 4 holes): #597 — a bytecode cache built in a different tree must be named, not suffered.
 - [tests.test_check_corpus_freshness](tests.test_check_corpus_freshness/INDEX.md) (15 entities, 14 holes): HOLE: no docstring
 - [tests.test_check_role_spine_bookends](tests.test_check_role_spine_bookends/INDEX.md) (11 entities, 7 holes): #567 lane L: the role-spine-template bookend lint.
 - [tests.test_check_script_registration](tests.test_check_script_registration/INDEX.md) (13 entities, 8 holes): Registration lint + vocabulary rule for issue #345 ("built but not wired").
+- [tests.test_check_skill_freshness](tests.test_check_skill_freshness/INDEX.md) (13 entities, 7 holes): Coverage for `_resolved_interpreter()`'s sidecar-missing/malformed fallback (issue #532).
 - [tests.test_check_template_overlay_freshness](tests.test_check_template_overlay_freshness/INDEX.md) (14 entities, 3 holes): The overlay-freshness guard `scripts/check_template_overlay_freshness.py` was written to catch exactly what `tests/test_cli_retirement_guard.py`'s own docstring
 - [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (679 entities, 518 holes): HOLE: no docstring
 - [tests.test_checklist_engine_atomic_save](tests.test_checklist_engine_atomic_save/INDEX.md) (32 entities, 19 holes): #613 (atomicity half): `checklist_engine.save()` must install the new document by ATOMIC RENAME, never by writing over the live target in place.
@@ -142,7 +143,7 @@ tests: 100 modules, 5538 entities
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.
 - [tests.test_crew_delivery_addressing](tests.test_crew_delivery_addressing/INDEX.md) (11 entities, 7 holes): Relaunch acceptance test for #507 / #370 / #413 (crew delivery addressing).
 - [tests.test_crew_dispatch_doctrine](tests.test_crew_dispatch_doctrine/INDEX.md) (3 entities, 2 holes): #611 (cleanup-g-crew-tier) g2-doctrine: crew-dispatch.md must name the 'Suggested Model Tier' handoff field as the thing a Commander resolves --model from, conn
-- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (354 entities, 271 holes): HOLE: no docstring
+- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (359 entities, 275 holes): HOLE: no docstring
 - [tests.test_crew_worktree_cwd](tests.test_crew_worktree_cwd/INDEX.md) (19 entities, 13 holes): A dispatched crew runs in ITS OWN worktree (issue #568, the g1b delta).
 - [tests.test_curate_corpus](tests.test_curate_corpus/INDEX.md) (40 entities, 23 holes): Golden-fixture suite for scripts/curate_corpus.py.
 - [tests.test_declared_dispatch](tests.test_declared_dispatch/INDEX.md) (14 entities, 14 holes): Tests for scripts/verify_declared_dispatch.py -- the oracle the generator's injected `[[gate.dispatch]]` postcondition (LIFECYCLE_CONTRACT.md section 5) shells 
@@ -163,7 +164,7 @@ tests: 100 modules, 5538 entities
 - [tests.test_gauge_chain_writer_to_trip](tests.test_gauge_chain_writer_to_trip/INDEX.md) (35 entities, 1 holes): The Context Governor chain, traversed end to end with REAL OS subprocesses:
 - [tests.test_gauge_reader](tests.test_gauge_reader/INDEX.md) (105 entities, 80 holes): HOLE: no docstring
 - [tests.test_gauge_writer](tests.test_gauge_writer/INDEX.md) (103 entities, 26 holes): Unit tests for scripts/hooks/gauge_writer_hook.py.
-- [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (190 entities, 190 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
+- [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (191 entities, 190 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
 - [tests.test_grade_lint](tests.test_grade_lint/INDEX.md) (50 entities, 35 holes): Tests for scripts/grade_lint.py — the @grade: inline-tag linter (issue #230, epic-226).
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_in_harness_crew_isolation](tests.test_in_harness_crew_isolation/INDEX.md) (11 entities, 7 holes): #632: an in-harness subagent shares its dispatcher's harness session id, so the checklist engine's MCP door resolves to the DISPATCHER's spine. The guard is a d
@@ -199,7 +200,7 @@ tests: 100 modules, 5538 entities
 - [tests.test_role_tier_coverage](tests.test_role_tier_coverage/INDEX.md) (19 entities, 11 holes): Coverage guard for #567 lane N -- `ROLE_MODEL_TIERS` must declare every role live doctrine actually hands a model-tier-bearing dispatch artifact.
 - [tests.test_run_skill_eval](tests.test_run_skill_eval/INDEX.md) (121 entities, 106 holes): Agent-free unit layer for scripts/run_skill_eval.py (#106, gate g2).
 - [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
-- [tests.test_shipped_examples_are_portable](tests.test_shipped_examples_are_portable/INDEX.md) (18 entities, 6 holes): A shipped example must run for the person who installed it.
+- [tests.test_shipped_examples_are_portable](tests.test_shipped_examples_are_portable/INDEX.md) (19 entities, 6 holes): A shipped example must run for the person who installed it.
 - [tests.test_shipped_template_gates_satisfiable](tests.test_shipped_template_gates_satisfiable/INDEX.md) (8 entities, 7 holes): Prove the shipped EXECUTE_PLAN.template.json's g1-implement gate is actually satisfiable by a real drive of the real engine (epic-559/b-instructions-to-checks, 
 - [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (214 entities, 190 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
 - [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (32 entities, 17 holes): The `origin` stamp is PROVENANCE: written, and read by nothing (#315/#568/#609).
