@@ -13,6 +13,7 @@ import threading
 import time
 import unittest
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 from pathlib import Path
 
 
@@ -4768,7 +4769,19 @@ class ScratchDirResumeTests(unittest.TestCase):
         # `None` for this case (issue #568); `scratch_dir()` cannot recompute
         # a path with no worktree to hash, so this must degrade to "no
         # CREW_SCRATCH_DIR bound" rather than raise.
-        with tempfile.TemporaryDirectory() as tmp:
+        #
+        # #632: the assertion is about the value the LAUNCHER decided not to
+        # bind, and `_crew_door_env` builds its env from `os.environ` -- so run
+        # this with the variable cleared from the ambient process. Without that,
+        # the test reds inside any dispatched crew (whose own
+        # `CREW_SCRATCH_DIR` is set by the launcher that spawned it), on an
+        # untouched base commit, measuring the runner's environment instead of
+        # the code. The danger was never the red: it was a crew "fixing"
+        # `run_crew.py` to silence a test that was not measuring its change.
+        # Production behaviour is deliberately unchanged -- omitting a
+        # scratch dir leaves the inherited route untouched (`_crew_door_env`).
+        with mock.patch.dict(os.environ), tempfile.TemporaryDirectory() as tmp:
+            os.environ.pop("CREW_SCRATCH_DIR", None)
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g2", "implementer")
             result = result_rel("issue-1", "g2", "implementer")

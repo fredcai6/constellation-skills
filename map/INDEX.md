@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 60 modules, 1279 entities
 skills: 1 modules, 18 entities
-tests: 96 modules, 5337 entities
+tests: 97 modules, 5348 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -116,7 +116,7 @@ tests: 96 modules, 5337 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (96 modules, 5337 entities)
+## tests (97 modules, 5348 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -164,6 +164,7 @@ tests: 96 modules, 5337 entities
 - [tests.test_generate_spine](tests.test_generate_spine/INDEX.md) (190 entities, 190 holes): Tests for scripts/generate_spine.py -- the spine spec compiler and generator.
 - [tests.test_grade_lint](tests.test_grade_lint/INDEX.md) (50 entities, 35 holes): Tests for scripts/grade_lint.py — the @grade: inline-tag linter (issue #230, epic-226).
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
+- [tests.test_in_harness_crew_isolation](tests.test_in_harness_crew_isolation/INDEX.md) (11 entities, 7 holes): #632: an in-harness subagent shares its dispatcher's harness session id, so the checklist engine's MCP door resolves to the DISPATCHER's spine. The guard is a d
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
 - [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (281 entities, 160 holes): HOLE: no docstring
