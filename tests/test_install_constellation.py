@@ -2617,8 +2617,10 @@ class HookWiringOptInTests(_HookWiringFixture):
             self.assertTrue(expected.is_file(), "wired a path with no file behind it")
 
     def test_wired_command_uses_the_probed_interpreter_and_documented_timeout(self):
-        """The interpreter comes from the existing probe, not a hardcoded `py`;
-        the timeout is carried verbatim from docs/GAUGE_WRITER_HOOK.md."""
+        """The interpreter half is portable (#539 residual): `${CONSTELLATION_PYTHON:
+        -<probed>}`, not a hardcoded `py` -- the same env-var knob `.mcp.json` uses
+        (f315d7bf), so a default is still recoverable when the var is unset. The
+        timeout is carried verbatim from docs/GAUGE_WRITER_HOOK.md."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             self._wire(tmp)
@@ -2628,9 +2630,25 @@ class HookWiringOptInTests(_HookWiringFixture):
             self.assertEqual("command", hook["type"])
             self.assertEqual(10, hook["timeout"])
             self.assertEqual(installer.HOOK_TIMEOUT, hook["timeout"])
+            probed = installer.resolve_interpreter().interpreter
+            expected_prefix = f"${{{installer.MCP_INTERPRETER_ENV_VAR}:-{probed}}} "
             self.assertTrue(
-                hook["command"].startswith(installer.resolve_interpreter().interpreter + " "),
-                f"command did not start with the probed interpreter: {hook['command']!r}",
+                hook["command"].startswith(expected_prefix),
+                f"command did not start with the portable interpreter form "
+                f"{expected_prefix!r}: {hook['command']!r}",
+            )
+            # ...and the same env var actually overrides it at run time (real
+            # shell expansion, not a string match) -- the whole point of wrapping.
+            result = subprocess.run(
+                hook["command"], shell=True, input="{}", capture_output=True, text=True,
+                env={**os.environ, "PYTHONIOENCODING": "utf-8",
+                     installer.MCP_INTERPRETER_ENV_VAR: "/no/such/interpreter"},
+            )
+            self.assertNotEqual(
+                0, result.returncode,
+                f"overriding {installer.MCP_INTERPRETER_ENV_VAR} to a bogus interpreter "
+                f"did not change the outcome -- the var is not actually wired into the "
+                f"command: {hook['command']!r}",
             )
 
     def test_the_wired_command_string_actually_executes(self):
@@ -2861,6 +2879,66 @@ class HookWiringOptInTests(_HookWiringFixture):
             self.assertIn("commit", output)
             self.assertIn("absolute path", output)
             self.assertIn("user name", output)
+
+    # -- the gap this class exists to close: the INSTALLED path had no --------
+    # -- is_git_tracked guard at all (#539 residual) ---------------------------
+
+    def test_wire_hooks_at_project_scope_refuses_an_already_tracked_settings_json(self):
+        """`--wire-hooks --scope project` (the default, INSTALLED path -- no
+        `--hooks-from source`) had no `is_git_tracked` guard at all: only
+        `--hooks-from source` refused. Re-wiring an already-committed
+        settings.json would stamp THIS machine's absolute installed path (and,
+        before the interpreter fix above, this machine's probed interpreter)
+        into a file that ships to every other checkout. Mirrors
+        `test_source_wiring_refuses_a_git_tracked_local_settings_file`, for the
+        installed path instead of `--hooks-from source`."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            claude_dir = project / ".claude"
+            claude_dir.mkdir(parents=True)
+            subprocess.run(["git", "init", "-q"], cwd=str(project), capture_output=True)
+            subprocess.run(["git", "config", "user.email", "t@example.com"],
+                            cwd=str(project), capture_output=True)
+            subprocess.run(["git", "config", "user.name", "T"], cwd=str(project), capture_output=True)
+            settings = claude_dir / "settings.json"
+            settings.write_text("{}", encoding="utf-8")
+            subprocess.run(["git", "add", ".claude/settings.json"],
+                            cwd=str(project), capture_output=True)
+            subprocess.run(["git", "commit", "-qm", "x"], cwd=str(project), capture_output=True)
+            before = settings.read_bytes()
+
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "project", "--project", str(project),
+                         "--skills", self.ANY_SKILL, "--wire-hooks"],
+                        env={}, cwd=project, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn("git-tracked", stderr.getvalue())
+            self.assertEqual(before, settings.read_bytes(), "the tracked file was written anyway")
+
+    def test_wire_hooks_at_project_scope_succeeds_when_settings_json_is_not_yet_tracked(self):
+        """Anti-vacuity for the refusal above: it must be about TRACKEDNESS, not
+        about project scope refusing everything in a git repo -- the ordinary
+        first-time wiring flow (write, then `git add`) must still work, exactly
+        as `test_wire_hooks_at_project_scope_warns_the_file_is_committable`
+        already exercises (that fixture is not a git repo at all; this one IS a
+        git repo, but the file is not yet added)."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            project.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=str(project), capture_output=True)
+            code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", self.ANY_SKILL, "--wire-hooks"],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((project / ".claude" / "settings.json").is_file())
 
 
 # --------------------------------------------------------------------------- #
@@ -3304,14 +3382,31 @@ class HookWiringLoudFailureTests(_MultiHookFixture):
                 installer.source_hook_path = original
             self.assertFalse((Path(tmp) / "settings.local.json").exists())
 
-    def test_build_hook_command_refuses_to_emit_a_leading_quote(self):
-        """The trap this whole issue is named for, made unrepresentable at the
-        emit site: a command starting with `"` parses under PowerShell as a
-        string-literal expression, so the hook echoes its path and exits 0."""
+    def test_assert_shell_safe_command_refuses_a_leading_quote_or_whitespace(self):
+        """The trap this whole issue is named for, unit-tested directly on the
+        guard function itself: a command starting with `"` parses under
+        PowerShell as a string-literal expression, so the hook echoes its path
+        and exits 0. Direct, rather than via `build_hook_command` with an empty
+        interpreter (see the test below for why that no longer reaches it)."""
         installer = load_installer()
-        with self.assertRaises(installer.InstallError) as raised:
-            installer.build_hook_command(Path("/repo/scripts/hooks/spine_rail.py"), "", ("Stop",))
-        self.assertIn("does not start with a command word", str(raised.exception))
+        for bad in ('"/repo/scripts/hooks/spine_rail.py" Stop', ' "leading whitespace"', "'single'"):
+            with self.assertRaises(installer.InstallError) as raised:
+                installer.assert_shell_safe_command(bad)
+            self.assertIn("does not start with a command word", str(raised.exception))
+        installer.assert_shell_safe_command('py "/repo/x.py"')  # control: never raises
+
+    def test_build_hook_command_cannot_emit_a_leading_quote_even_with_an_empty_interpreter(self):
+        """#539 residual: `build_hook_command` now wraps the interpreter as
+        `${CONSTELLATION_PYTHON:-<interpreter>}`, which starts with `$` no
+        matter what `interpreter` is -- even the empty string that used to be
+        the adversarial input for this exact test. The leading-quote hazard is
+        now structurally unreachable from this call site, not just refused."""
+        installer = load_installer()
+        command = installer.build_hook_command(
+            Path("/repo/scripts/hooks/spine_rail.py"), "", ("Stop",))
+        self.assertTrue(command.startswith("$"), command)
+        self.assertFalse(command[0] in "\"' \t", command)
+        self.assertIn(f"${{{installer.MCP_INTERPRETER_ENV_VAR}:-}}", command)
 
 
 # --------------------------------------------------------------------------- #
