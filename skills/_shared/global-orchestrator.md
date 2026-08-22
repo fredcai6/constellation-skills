@@ -150,6 +150,25 @@ round-trip** (the same agent continues after you answer a context question it la
 agent swap) and from the **dead-agent recovery drill** (host-process exit, no id left to message): a refresh
 is a *live, correctly-idled* agent whose replacement is a deliberate act, not a resurrection.
 
+**Job-file-not-agent-file buys journal continuity with actor attribution, and that
+trade is deliberate** (#369). The replacement reuses the predecessor's session id,
+so the hash-chained journal reads as one unbroken run of one job — which is what
+you want when reconstructing *what happened to this work*. The cost is that the
+entries cannot tell you *which agent* wrote them: in epic-298 journal seq 44–47
+all carried `commander-304-e298` and none of them were commander-304's. Take the
+trade knowingly; do not expect the journal to answer the actor question.
+
+Where a takeover is *not* the deliberate reuse case, the engine already records
+the actor split for you, with no flag to remember: any reclaim of a stale lease —
+and every `claim --force` — writes `previous_session_id` and `takeover_reason`
+into `engine_session` (`checklist_engine.claim`). A force claim additionally
+prints an **occupancy report** — journal entry count, newest entry's age and
+session id, non-terminal `crew-runs.json` entries — so a resuming agent sees the
+room it is walking into at the moment it walks in. It is information, not
+permission: the takeover still succeeds, and deciding whether to proceed is
+yours. It does not check git authorship (every agent commits under the human's
+identity, so the signal is constant) and it does not walk the worktree.
+
 Adjudication ends with a shutdown, not an idle. Once an agent's work is accepted, merged, and harvested,
 send it a `shutdown_request` and confirm the termination — accepted-but-idle agents accumulate as clutter
 and ambiguity about what is still live. An agent that answers a shutdown request with another idle

@@ -3736,6 +3736,132 @@ def journal_path(spine_path: Path) -> Path:
     return Path(str(spine_path) + ".journal")
 
 
+def _age(ts: str | None) -> str:
+    """`ts` rendered as an age from now ("38s ago"), or a plain marker when it
+    is absent or unparseable. Never raises -- an occupancy report that crashes
+    on a malformed timestamp is worse than one that says it could not read it."""
+    if not ts:
+        return "no timestamp"
+    try:
+        seconds = int((_parse_ts(_now()) - _parse_ts(ts)).total_seconds())
+    except (ValueError, TypeError):
+        return f"unparseable timestamp {ts!r}"
+    if seconds < 90:
+        return f"{seconds}s ago"
+    if seconds < 5400:
+        return f"{seconds // 60}m ago"
+    return f"{seconds // 3600}h ago"
+
+
+def occupancy_report(spine_path: Path) -> str:
+    """What the artifacts around `spine_path` say about who else has been here
+    lately. Counts and ages only -- **never a verdict** (#369).
+
+    This is the resume side of the recovery drill. The dispatcher's half is
+    written everywhere in the corpus ("confirm the predecessor dead before you
+    relaunch"); the resuming agent's half was written nowhere, so an agent
+    handed `claim --force` had no instruction to check whether anyone else was
+    live and every reason to think the question was already settled. Epic-298
+    hit that twice; the second time a commander found eleven commits it had not
+    authored and a reviewer's file written 38 seconds before it looked.
+
+    Delivered as **information, not permission**: this text rides the successful
+    force-takeover's output, so the agent sees the room it just walked into at
+    the moment it walks in. It adds no refusal -- a refusal built on these
+    signals would misfire, and a misfire is worse than the silence it replaces.
+
+    Two artifacts, both chosen because they are free and sit right here:
+
+    - the **journal sidecar** (`<spine>.journal`) -- one line per successful
+      mutating verb, each carrying `ts` and `session_id`, so "someone drove this
+      plan 38 seconds ago under a session that is not you" is a two-field read;
+    - **`crew-runs.json`** in the same work directory -- the durable launch
+      registry, whose non-terminal entries are crews that may still be running.
+
+    Two signals #369 proposed are deliberately NOT here, having been measured
+    and found not to work:
+
+    - *"recent commits by another author"* -- **falsified.** 190 of the last 200
+      commits in this repo are `Tommy <fredcai6@gmail.com>` and the remaining 10
+      are the same human's web identity. Every agent commits under the human's
+      git identity, so no agent is ever "another author" and the signal is
+      constant.
+    - *"newest filesystem write under the worktree"* -- a full-tree walk on
+      every force claim, whose loudest results are build and cache churn. The
+      journal answers the same question about the file that actually matters.
+
+    Classification is left to `scripts/recover_crews.py <work-id>`, which owns
+    the crew state vocabulary. Reproducing a thinner version of it here would be
+    a second answer to a question that already has one."""
+    lines: list[str] = []
+
+    jp = journal_path(spine_path)
+    entries: list[dict] = []
+    if jp.exists():
+        for raw in jp.read_text(encoding="utf-8").splitlines():
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                entry = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(entry, dict):
+                entries.append(entry)
+    if not entries:
+        lines.append(f"  journal      {jp.name}: none (no prior driven verbs recorded here)")
+    else:
+        last = entries[-1]
+        sessions = sorted({e.get("session_id") for e in entries if e.get("session_id")})
+        lines.append(
+            f"  journal      {len(entries)} entries, {len(sessions)} session id(s): "
+            f"{', '.join(repr(s) for s in sessions)}"
+        )
+        lines.append(
+            f"               newest: seq {last.get('seq')} "
+            f"{last.get('verb')} {last.get('task') or ''}".rstrip()
+            + f" as {last.get('session_id')!r}, {_age(last.get('ts'))}"
+        )
+
+    crews = spine_path.parent / "crew-runs.json"
+    if not crews.exists():
+        lines.append("  crew-runs    none in this work directory")
+    else:
+        try:
+            recorded = json.loads(crews.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            recorded = None
+        if not isinstance(recorded, list):
+            lines.append(f"  crew-runs    {crews.name} unreadable")
+        else:
+            open_entries = [
+                e for e in recorded
+                if isinstance(e, dict)
+                and e.get("status") not in ("completed", "abandoned", "failed")
+                and not e.get("abandoned")
+            ]
+            lines.append(
+                f"  crew-runs    {len(recorded)} recorded, {len(open_entries)} not terminal"
+            )
+            for e in open_entries:
+                lines.append(
+                    f"               {e.get('crew_id')} status={e.get('status')} "
+                    f"pid={e.get('pid')} heartbeat {_age(e.get('last_heartbeat'))}"
+                )
+            if open_entries:
+                lines.append(
+                    "               classify these with "
+                    "`scripts/recover_crews.py <work-id>` before you assume they are dead"
+                )
+
+    return (
+        "\nOCCUPANCY (what the artifacts here say; no verdict -- you decide):\n"
+        + "\n".join(lines)
+        + "\n  not checked: git authorship (every agent commits as the human), "
+        "filesystem mtimes under the worktree"
+    )
+
+
 def _all_evidence_ids(cl: dict) -> set[str]:
     ids: set[str] = set()
     for t in cl.get("tasks", {}).values():
@@ -3873,6 +3999,16 @@ def main(argv: list[str] | None = None) -> int:
     ev_before = _all_evidence_ids(cl)
     try:
         message = dispatch(cl, args, base_dir=path.parent)
+        # #369 (resume side): a force takeover is the one moment an agent is
+        # deliberately stepping into a room it did not clear. Hung off main()
+        # rather than claim() because the report reads FILES (the journal
+        # sidecar, the crew registry) and claim() is a pure function on the
+        # checklist dict -- and because this is the CLI boundary the MCP door's
+        # `spine_lease` shells through, so the door gets it with no wiring of
+        # its own. Appended to the success message only: a refused claim already
+        # names its own three options and does not need a second paragraph.
+        if args.verb == "claim" and getattr(args, "force", False):
+            message += occupancy_report(path)
     except EngineError as exc:
         # state may carry legitimate mutations (command results, escalation); persist unless read-only/dry-run
         if not args.dry_run and args.verb != "current":
