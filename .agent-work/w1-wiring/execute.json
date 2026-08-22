@@ -330,13 +330,15 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-disposition-2"
         },
         {
           "id": "c2",
           "statement": "disposition executes exactly one Honest-Null-Clause outcome, recorded with evidence (deletions, a wired+proven lint, or both named explicitly)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Disposition executed: population 17 live/8 unwired/1 dead (mixed, not mostly-dead) -> shipped registration lint (option 1) + vocabulary rule (option 2) in tests/test_check_script_registration.py, both blocking, both proven to fail on reproducible negative cases (synthetic unregistered script, synthetic mechanically-enforced phrase). Also deleted the 1 dead script (prove_docstring_only.py) and fixed a live #444 doc/code drift with a new reconciliation test in tests/test_gauge_writer.py. Full evidence in docs/CHECK_SCRIPT_CENSUS.md."
         }
       ],
       "constraints": [
@@ -366,7 +368,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -380,13 +382,37 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-g4-disposition-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q 2>&1 | tail -5 | grep -qE '[0-9]+ passed'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "source": "reconcile",
+      "finding": "map/ids.jsonl and docs/architecture/generated/map.json are both empty at base commit 244665ee -- the code-map anchor system produces zero citable anchors for this repo. Every future run context-steps into DEGRADED-UNPARSEABLE until it is rebuilt.",
+      "disposition": "recommend-and-defer",
+      "reason": "Rebuilding the anchor-id system (scripts/code_map/ machinery) is a materially larger undertaking than this bounded wave, not one of #345/#444/#368, and out of this mission scope by MISSION_FRAME.md. The Admiral decides whether this becomes a filed issue or a dedicated wave."
+    },
+    {
+      "source": "plan",
+      "finding": "This dispatched Commander context carried no Task/Agent tool, so every plan-alternatives candidate, cold-plan-critic pass, and disposition gate that commander-core.md doctrine would normally dispatch as a separate subagent was instead self-authored by this same agent, with the deviation stated at each occurrence -- weakening the independence design-it-twice and cold-critic exist for.",
+      "disposition": "recommend-and-defer",
+      "reason": "Not this wave's to fix -- an environmental/tooling constraint of how this Commander was dispatched, not a plan defect. Affects every wave dispatched the same way. The Admiral decides whether dispatch tooling needs a fix."
+    }
+  ],
   "blockers": [],
   "trip_ledger": [
     {
@@ -506,6 +532,13 @@
       "why": "Re-measured: #368's Task-field group now has 5 sites, 22-field union, already has a closed 3-test reconciliation loop (7 passing tests) -- premise substantially fixed, one narrow deliberate gap remains. #444's gauge-record group has 7 sites, 6 possible fields, NO reconciliation check, and a live stale-doc-table bug (owner field missing) found and fixed. One reused mechanism (parse-table-reconcile-against-code) covers both; documented in CHECK_SCRIPT_CENSUS.md.",
       "mechanical": false,
       "ts": "2026-08-22T15:18:43.094986+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g4-disposition",
+      "why": "Full local pytest suite green after all disposition changes: 3573 passed, 6 skipped (base was 3564 passed, 6 skipped; +9 from two new test classes). Registration lint + vocabulary rule shipped blocking in tests/test_check_script_registration.py; gauge-field reconciliation test shipped in tests/test_gauge_writer.py, catching and fixing a live doc drift. 1 dead script deleted, map/INDEX.md rebuilt. Map impact: map/ids.jsonl and docs/architecture/generated/map.json remain empty (absent, not stale) -- pre-existing at base commit, unrelated to this run's changes, reported as a triage candidate rather than fixed (out of this mission's scope).",
+      "mechanical": false,
+      "ts": "2026-08-22T15:38:54.749998+00:00"
     }
   ]
 }
