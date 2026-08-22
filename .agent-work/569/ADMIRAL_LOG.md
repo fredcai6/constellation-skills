@@ -264,6 +264,20 @@ Entry grammar (one line of date + tag, then the substance):
 
   Carrying to the checkpoint as a candidate finding, with these five instances attached. **Not proposing a mechanism** — the honest first question is whether the human thinks this is one thing or five coincidences, and that is a judgement call on evidence, not something to build for.
 
+- `2026-08-22` — **PR #657 (`w2-reindex`) MERGED** at `ace7f0c2`, first per the human's interleave ruling. Gated on: both hard constraints verified against the diff rather than the summary (`MapTreeFreshnessTests` untouched; the hook genuinely installed by `install_constellation.py` via `install_git_precommit_hook`, with a marker comment and a refusal to clobber a foreign pre-commit hook); the six-test e2e failure repaired at `74b941a7`; and the full suite run by me on the merged tree — **3672 passed, 6 skipped, 0 failed**.
+
+- `2026-08-22` — **PR #656 (`w2-ledger`) MERGED** at `333f02b4`. Gated on: engine-written-only proved by an AST call-graph test rather than asserted; both #503 defects fixed with a red-proof pinned to shipped SHA `0427898a`; #259 closed on a 117-file census that falsified its premise; suite on the merged tree — **3710 passed, 6 skipped, 0 failed**.
+
+- `2026-08-22` — **PR #653 (`w2-basis`) MERGED** at `55381c12`, last, and re-resolved once because the human's #655 landed mid-verification. Gated on: all three fenced parts present (authored / rendered / resolved); suite on the merged tree — **3731 passed, 9 skipped, 0 failed**.
+
+- `2026-08-22` — `RULING`: **Main verified green after all three merges — 3731 passed, 9 skipped, 0 failed** in a clean detached worktree at `origin/main`. Every one of the three merges was verified by me on the merged tree BEFORE merging, in a scratch worktree, not on the branch and not on a reported number. That protocol caught #657's six failing e2e tests, which no automated signal would have: the PR read MERGEABLE, its reviewer had approved, and its own body claimed "0 failed".
+
+- `2026-08-22` — `RULING`: **Known gap carried out of wave 2, recorded so it is not discovered later as a surprise.** Merging `w2-basis` left three tests permanently SKIPPED on main: `CommanderSpineBasisFields`, which self-skip with *"pinned to shipped revision 9d5aac6d, HEAD is now <merge sha> -- this test's assumptions about the template's shape need re-verifying against the current HEAD before they can be trusted, not silently re-run against drift."*
+
+  **That skip is an unprompted implementation of the measurement-vs-use finding I had logged an hour earlier** — a test refusing to certify a revision it was not verified against, rather than silently passing. The commander built the guard without being asked and landed it precisely on the epic's central tension. It is the best idea to come out of wave 2.
+
+  It also cuts the other way, and both halves are true: those three tests are now **inert on main** and stay inert until someone re-pins them, so nothing currently verifies the shipped template's basis fields. Honest and non-functional. A check that abstains is still a check that cannot fail — which is this epic's subject arriving from an unexpected direction, as the cost of fixing a different instance of it. Merged anyway: the mechanism itself stays covered by `BasisAttestGuard`'s 11 live tests, and blocking the epic's core lane over three self-declared skips would have been disproportionate. Re-pinning is a small follow-up and goes on the checkpoint agenda.
+
 ## Merges
 
 - `2026-08-22` — **PR #644 (`w1-wiring`, #345/#444/#368) MERGED** at `4cbd2cc9`. Gated on: clean-room reviewer verdict APPROVE-WITH-FOLLOWUPS with both findings repaired and re-verified by me; the full suite run **by me** against `origin/main` + the branch in a fresh detached worktree before merging — **3578 passed, 6 skipped, 0 failed**. Not gated on CI (Windows-only, known-red) and not gated on the commander's own reported number. Merged with a merge commit, branch retained pending closeout sweep.
