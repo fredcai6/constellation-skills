@@ -549,7 +549,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "workflow feedback recorded at feedback step, corrected further per Admiral's answer (episode w1-wiring-005, RESULT.md/REPLAN_INPUT.json updated)"
         }
       ],
       "postconditions": [
@@ -636,7 +637,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -658,7 +659,7 @@
     "session_id": "constellation/w1-wiring",
     "status": "active",
     "claimed_at": "2026-08-22T14:53:50.302883+00:00",
-    "last_heartbeat": "2026-08-22T15:46:01.994293+00:00",
+    "last_heartbeat": "2026-08-22T16:03:08.747059+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
