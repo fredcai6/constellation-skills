@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "review",
+  "files": [],
+  "repo_rev": {
+    "commit": "60a5fce2ef1778f91d362a3886b59206e34b222f"
+  },
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T15:43:32Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w1-wiring",
+      "repo": "/home/tommy/projects/569-w1-wiring",
+      "durable": "/home/tommy/projects/569-w1-wiring"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w1-wiring"
+    }
+  }
+}

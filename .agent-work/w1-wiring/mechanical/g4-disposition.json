@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4-disposition",
+  "mechanical": {
+    "run": "w1-wiring",
+    "project": "constellation-skills",
+    "spine-step": "g4-disposition",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w1-wiring-g4-disposition@c95e736c411d736ede2cb10c13a017fb98dd1ea8",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T15:18:55Z"
+  }
+}

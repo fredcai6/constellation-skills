@@ -272,3 +272,10 @@ docs/agents/AGENT_GUIDE.md:| `episodes/` | continuous self-improvement. When a r
 # line of the template says so outright: "An episode is a record of what happened; a
 # rule for a future agent to follow belongs in docs/agents/* and is a human's call."
 skills/_shared/templates/WORKFLOW_CLOSEOUT.template.md:through `scripts/apply_episode_delta.py` and proved by `scripts/verify_episode_captured.py`.
+
+# census row naming verify_episode_observations.py's real caller
+# (apply_episode_delta.py, the sole episode WRITE path) as evidence for that
+# script's live/unwired/dead classification -- descriptive of a write-time
+# guard's own call graph, not an instruction to any agent to read the store
+# and condition behaviour on it (epic-569 w1-wiring, #345).
+docs/CHECK_SCRIPT_CENSUS.md:| `verify_episode_observations.py` | live | `scripts/apply_episode_delta.py:936-937,959` imports it as the write-time instruction-shaped-statement guard, called unconditionally from `_apply_create`/`_apply_restate_assertion` on every real episode write (`apply_episode_delta.py` is the sole episode write path, doctrine-cited) |

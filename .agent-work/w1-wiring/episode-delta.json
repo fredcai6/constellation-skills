@@ -1,0 +1,174 @@
+{
+  "work_id": "w1-wiring",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w1-wiring",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g1-census",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          "docs/CHECK_SCRIPT_CENSUS.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Classify every check-shaped script in scripts/ as live, unwired, or dead, redoing a crude skills/-only grep properly."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A script's own dedicated pytest test file would be sufficient evidence to distinguish coverage from enforcement."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It was not. The first census draft classified verify_retirement.py, verify_context_declaration.py, verify_coverage_ledger.py, verify_skill_registered.py, and check_template_overlay_freshness.py as unwired because each had only its own dedicated tests. Running the full suite against that first draft's own disposition changes tripped verify_retirement.py's unapproved-store-mention guard on a line the census itself had just written -- a live, suite-enforced check, in the act of catching a real thing, while the census still called it unwired."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Five of twenty-six rows were misclassified until this was caught mid-run; the corrected classification changed the census from 12 live/13 unwired/1 dead to 17 live/8 unwired/1 dead, which is the difference between a marginal case for a mechanism and a clear one."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "After the trip, re-checked every remaining unwired candidate's own test file for a test that calls the script's check/scan function unconditionally against the real repo (ROOT/REPO_ROOT), not a temp dir or authored fixture, and asserts pass/fail -- a fifth reachability category the original four-category method missed. Documented the correction in the census itself rather than silently fixing the numbers."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "'Has its own dedicated test' was treated as one signal (coverage) when it actually splits into two (coverage of the tool's own logic against synthetic input, vs. enforcement of the tool's verdict against the real repo), and only the second is 'live' in the two-bin-rule sense this census exists to measure."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w1-wiring",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w1-wiring/PLAN_ALTERNATIVES.md",
+          ".agent-work/w1-wiring/PLAN_CRITIC.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run plan-alternatives (N>=2 parallel candidate authors) and a cold plan critic with no authoring context, per commander-core.md's design-it-twice and critical-spec-review standards."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Dispatch each candidate author and the critic as independent Agent-tool subagents, so the comparison and the critique come from genuinely separate context."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "This dispatched context's tool surface was Bash, Read, Write, Edit, WebFetch, WebSearch, Skill only -- no Task/Agent tool at all. Both plan candidates and the cold critic pass were authored sequentially by this same agent in this same context, with the deviation stated in each artifact rather than silently substituting a lesser mechanism for the real one."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The core property design-it-twice and cold-critic review exist for -- structure and objections a single author's context cannot see -- was only partially achieved. The candidates and critic still surfaced real, concrete objections (folded into execute.json's gate imperatives), but the independence guarantee did not hold."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Authored both candidates and the critic pass as genuinely separate documents with distinct constraints, stated the deviation plainly at each occurrence rather than hiding it, and named it again in Workflow Feedback for the Admiral."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w1-wiring",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 3,
+        "artifact-ref": [
+          ".agent-work/w1-wiring/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author execute.json's gate postconditions as command-kind checks containing POSIX shell text with embedded double quotes (e.g. comparing $n and $r)."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Writing the JSON file directly (Write tool) with backslash-escaped quotes inside the command strings would produce valid JSON."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "json.load repeatedly failed with 'Expecting property name enclosed in double quotes' at the exact lines carrying nested-quote shell comparisons; manual backslash-counting fixes made it worse (extra backslash pairs appeared in the written file that were not in the intended text), and the failure was hard to localize from the error message's byte offset alone."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Several fix-and-recheck cycles were spent hand-editing escaped JSON strings before abandoning that approach."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Rewrote the same content as a Python dict in a throwaway script and used json.dump to serialize it, letting Python's own escaping produce guaranteed-valid JSON, then avoided double-quote-heavy shell comparisons in later postcondition commands (numeric [ $(...) -eq $(...) ] instead of quoted string comparison) so the problem could not recur."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "weak",
+          "statement": "Hand-typing nested JSON-escaped shell-quote sequences (\\\" inside a JSON string inside a shell command) is easy to get subtly wrong by eye, and the Write/Edit tool path offers no immediate JSON-validity feedback the way a direct json.dump call does."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w1-wiring",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g4-disposition",
+        "context-manifest-ref": "none",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run the full local pytest suite (3579+ tests, ~146s) as one foreground command that does not return until the suite's summary line lands, per the documented nohup+until-loop idiom, so the harness never auto-backgrounds it mid-run."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "One Bash tool call running the nohup-launch-then-poll-loop together would complete inside that same call once the suite finished."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The harness moved the call to the background anyway after its own ~120s default timeout, before the poll loop's condition could be observed to have been met inside that same call -- even though the idiom's whole point is that the loop itself is the one foreground command being waited on."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "No work was lost -- the background task notification arrived with the correct completed output -- but the turn's own Bash call reported an unrelated cwd-reset side note that could be mistaken for a problem, and a second, separate polling Bash call was needed to actually observe the result."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Treated the harness's auto-background as expected once the idiom's own single-call form was already tried and moved on: issued the poll loop again as its own Bash call (no new launch, same log file) and read the result from there, rather than re-launching the suite a second time."
+        }
+      }
+    }
+  ]
+}

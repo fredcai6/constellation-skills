@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-field-groups",
+  "mechanical": {
+    "run": "w1-wiring",
+    "project": "constellation-skills",
+    "spine-step": "g3-field-groups",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w1-wiring-g3-field-groups@c92b29b05ec7d9b60003b73e66a80c7947e68d64",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T15:18:43Z"
+  }
+}

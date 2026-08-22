@@ -10,6 +10,7 @@ network; no dependency on a live harness.
 import importlib.util
 import json
 import os
+import re
 import sys
 import tempfile
 import threading
@@ -1687,3 +1688,97 @@ class OwnerKeyedGaugePath(unittest.TestCase):
         self.assertEqual(record["fill_fraction"], pytest.approx(EXPECTED_FILL))
         self.assertEqual(record["owner"], gr.owner_key("admiral-418"))
         self.assertFalse((work / gw.SKIP_FILENAME).exists())
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+# The gauge record's field group, re-measured for issue #444 (epic-569
+# w1-wiring): the record's shape was independently declared across 7 sites
+# with no consistency check tying them together, and docs/GAUGE_WRITER_HOOK.md's
+# own field table -- headed "This is the one place the record's shape is
+# stated" -- had already drifted from the real writer (missing `owner`, added
+# by #600) inside the same document that names itself authoritative. This
+# reuses the pattern proven for the analogous Task-field group (#368,
+# tests/test_checklist_engine.py's `SchemaDocFieldReconciliation`): parse the
+# doc's own table and reconcile it against the code's field-list source of
+# truth, so a future field added to the writer or reader without a doc update
+# fails the suite instead of drifting further.
+
+# Fields the writer adds beyond gauge_reader.REQUIRED_FIELDS, each named with
+# its own reason -- not re-derived from the writer's source (which would let
+# a writer bug and this expectation drift together), but a small, stated set
+# a human updates when a genuinely new conditional field ships.
+_KNOWN_CONDITIONAL_FIELDS = {"owner", "identity_resolution_ms"}
+
+
+def _doc_gauge_field_table(text=None):
+    """The `| Field | Required | Written when |` table under
+    docs/GAUGE_WRITER_HOOK.md's "record is four required fields..." heading,
+    parsed the same way test_checklist_engine.py's `_doc_task_field_table`
+    parses docs/CHECKLIST_SCHEMA.md's Task table: the backtick-quoted first
+    column of every table data row between that heading and the next `## `."""
+    if text is None:
+        text = (ROOT / "docs" / "GAUGE_WRITER_HOOK.md").read_text(encoding="utf-8")
+    lines = text.splitlines()
+    start = next(
+        i for i, line in enumerate(lines)
+        if line.startswith("## ") and "required fields" in line
+    )
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+        len(lines),
+    )
+    fields = set()
+    for line in lines[start:end]:
+        m = re.match(r"\|\s*`([A-Za-z_]+)`\s*\|", line)
+        if m:
+            fields.add(m.group(1))
+    return fields
+
+
+class GaugeRecordFieldTableReconciliation(unittest.TestCase):
+    """#444: the gauge record's field group, previously duplicated across 7
+    sites (gauge_reader.REQUIRED_FIELDS, its Reading dataclass, the writer's
+    own dict literal, this doc's table, and three tests' own field-set
+    literals) with nothing checking them against each other. This test ties
+    the doc's table to gauge_reader.REQUIRED_FIELDS (the required core) plus
+    the stated conditional-field set -- the same shape the `#368` Task-field
+    reconciliation already proved out, applied here where nothing wired it
+    before.
+
+    RED-BEFORE-GREEN: run against the pre-fix doc table (missing `owner`),
+    this raises naming `owner` as expected-but-undocumented -- the exact drift
+    this class exists to catch, and the drift this wave's own audit found
+    live. `test_negative_self_test_catches_a_missing_doc_field` below is the
+    permanent in-suite proof the assertion path can fail."""
+
+    def test_doc_field_table_reconciles_with_reader_and_writer(self):
+        doc_fields = _doc_gauge_field_table()
+        expected = set(gr.REQUIRED_FIELDS) | _KNOWN_CONDITIONAL_FIELDS
+        undocumented = expected - doc_fields
+        unaccounted = doc_fields - expected
+        self.assertEqual(
+            (undocumented, unaccounted), (set(), set()),
+            f"docs/GAUGE_WRITER_HOOK.md's field table is out of sync with "
+            f"gauge_reader.REQUIRED_FIELDS + the known conditional fields: "
+            f"missing from the doc {sorted(undocumented)}, in the doc but not "
+            f"expected {sorted(unaccounted)}",
+        )
+
+    def test_negative_self_test_catches_a_missing_doc_field(self):
+        synthetic_doc = (
+            "## The record is four required fields, plus owner, plus one "
+            "on a subagent\n\n"
+            "| Field | Required | Written when |\n"
+            "|---|---|---|\n"
+            "| `schema_version` | yes | always |\n"
+            "| `fill_fraction` | yes | always |\n"
+            "| `model` | yes | always |\n"
+            "| `observed_at` | yes | always |\n"
+            # `owner` deliberately omitted -- the exact defect this wave found live.
+            "| `identity_resolution_ms` | no | dispatched agents only |\n"
+            "\n## Next section\n"
+        )
+        doc_fields = _doc_gauge_field_table(synthetic_doc)
+        expected = set(gr.REQUIRED_FIELDS) | _KNOWN_CONDITIONAL_FIELDS
+        self.assertIn("owner", expected - doc_fields)

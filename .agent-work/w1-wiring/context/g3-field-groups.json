@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-field-groups",
+  "files": [],
+  "repo_rev": {
+    "commit": "2776f728b6fa68c423d5bdd3ad0b2be2ac7bf0a6"
+  },
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T15:18:43Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w1-wiring",
+      "repo": "/home/tommy/projects/569-w1-wiring",
+      "durable": "/home/tommy/projects/569-w1-wiring"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w1-wiring"
+    }
+  }
+}

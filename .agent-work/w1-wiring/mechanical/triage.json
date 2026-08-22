@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "w1-wiring",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 4,
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w1-wiring-triage@f5297174b94095d97b6e317f6b9252509532a25f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T15:43:07Z"
+  }
+}

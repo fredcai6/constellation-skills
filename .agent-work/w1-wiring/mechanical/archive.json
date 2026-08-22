@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "mechanical": {
+    "run": "w1-wiring",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 5,
+    "spine-step": "archive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w1-wiring-archive@77b362c86e5279b5efc3d368b3f1be14a8b3abdd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T16:03:08Z"
+  }
+}

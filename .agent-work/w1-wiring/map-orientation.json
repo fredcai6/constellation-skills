@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "work_id": "w1-wiring",
+  "root": "/home/tommy/projects/569-w1-wiring",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "parses but carries no nodes[].id"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "0 packet(s), none non-empty"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/AGENT_GUIDE.md",
+      "content_hash": "67f6ab87d82ae2d5e6e813448d5c0dabf84a0ff6ffa17cfba4633db6106b219f",
+      "source": "agent-declared"
+    },
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "3030ee5e0ef467839b5e71fe0775a5d65dcd95b2bfe079d1d1ce74efd9fa34fd",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "4183448e7bd4408b17192f35a3d8abad623553baa6d6fddf9025ce07252c7074",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "574e9ef4f494522653ea8d62cb58a1138f5bf385a17e95a75629bccd3c0340ee",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "ccc03657424cdec7ccaf98e88eea6770c23a1fbc73f2f08f6707328b4f9c5d89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "content_hash": "30e401e6ac3888dfa936d6aecdee99719fc778b4d64b9a1a77ea969fb12c757a"
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": true,
+      "content_hash": "3be528d65d4a3a982c19dd4acc9440316a69e834f7a1c6b99f87dd348ff63ebf"
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "docs/architecture/generated/map.json has zero nodes and map/ids.jsonl is empty at base commit 244665ee -- no citable anchor-id map exists for this repo at this revision; map/INDEX.md (unrebuilt structural listing) stands in for it"
+  ],
+  "escalation": "none required -- docs/agents/AGENT_GUIDE.md documents this repo as a skill-source repo whose only current-map artifacts are map/INDEX.md and map/ids.jsonl (rebuilt via 'python -m scripts.code_map build'), and my mission is a scripts/ census, not a docs/architecture packet-map consumer; noting the empty ids.jsonl/map.json as a Map impact finding in RESULT.md for the Admiral",
+  "emitted_at": "2026-08-22T14:54:47.732761+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
