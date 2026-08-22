@@ -226,6 +226,20 @@ Entry grammar (one line of date + tag, then the substance):
 
   Where it does help the remaining merges is at the resolution step: once installed, resolving each conflict by regenerating is what the hook does automatically on the resolution commit, so the fix is mechanical rather than remembered. That is a real gain and it is smaller than "the ordering problem goes away".
 
+- `2026-08-22` — `RULING`: **PR #657 (`w2-reindex`) BLOCKED. Six of its seven end-to-end tests can only pass while the work is uncommitted, and it reported the suite as green.**
+
+  PR body claims "Full local suite: 3656 passed, 6 skipped, 0 failed". Measured by me on the same commit, in the commander's OWN worktree as well as a fresh one: **6 failed** in `tests/test_code_map_precommit_e2e.py` — cases 2/3, 4, 5, 6, 7, 8, including both partial-commit shapes and the second-worktree case.
+
+  Root cause, from the fixture's own docstring at `tests/test_code_map_precommit_e2e.py:126` — `_snapshot_gates_1_2_onto()`: *"Copy gates 1-2's current **(uncommitted)** shipped code from THIS actual repo onto `worktree` and commit it as a baseline."* The fixture is built on the premise that the lane's own code is sitting uncommitted in the working tree. Once the commander committed at archive, `git commit` in the scratch fixture returns `nothing to commit, working tree clean` and every test that calls it dies with a `RuntimeError`.
+
+  **So these tests were green when run and permanently red the moment the work was committed — which happened BEFORE the PR was opened.** They cannot pass on any clean checkout: not in CI, not in a fresh clone, not for a reviewer, not for me. Its reviewer approved them because the reviewer also ran against a dirty tree.
+
+  **This is the epic's subject reproduced with unusual purity: a check whose green depends on transient state that the act of shipping destroys.** It is a close cousin of #381 (a red-proof not pinned to the revision it proves) — the evidence was true, and was about something other than what shipped. It is also the second time this epic a lane has reported a green suite that a fresh run contradicts, after `w1-wiring`; both times the claim was sincere and the measurement was taken in a state that no longer existed at merge.
+
+  Not a rejection of the lane's substance. The two hard constraints I fenced it with both HOLD, verified against the diff: `MapTreeFreshnessTests` is untouched, and the hook is genuinely installed by `install_constellation.py` via `install_git_precommit_hook`, with a marker comment and a refusal to clobber a foreign pre-commit hook — a safety property I did not ask for and should have. The mechanism looks right; its proof does not survive being shipped. Sending it back to make the fixture work from committed state.
+
+  Also verified, because it was the sharper risk: **no pre-commit hook leaked into the main checkout.** `.git/hooks/` is empty and `core.hooksPath` is unset. The e2e tests build their own scratch repos rather than installing into the real one.
+
 ## Merges
 
 - `2026-08-22` — **PR #644 (`w1-wiring`, #345/#444/#368) MERGED** at `4cbd2cc9`. Gated on: clean-room reviewer verdict APPROVE-WITH-FOLLOWUPS with both findings repaired and re-verified by me; the full suite run **by me** against `origin/main` + the branch in a fresh detached worktree before merging — **3578 passed, 6 skipped, 0 failed**. Not gated on CI (Windows-only, known-red) and not gated on the commander's own reported number. Merged with a merge commit, branch retained pending closeout sweep.
