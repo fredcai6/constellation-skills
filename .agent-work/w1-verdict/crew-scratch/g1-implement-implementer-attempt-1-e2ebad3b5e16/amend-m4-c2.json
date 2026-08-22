@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m4-verify",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q --deselect tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build"
+    }
+  ]
+}

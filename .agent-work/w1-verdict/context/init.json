@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "init",
+  "files": [],
+  "repo_rev": {
+    "commit": "244665ee0f669a0bb23847c8fa695c430910c06d"
+  },
+  "run": {
+    "work_id": "w1-verdict",
+    "generated_at": "2026-08-22T14:54:15Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w1-verdict",
+      "repo": "/home/tommy/projects/569-w1-verdict",
+      "durable": "/home/tommy/projects/569-w1-verdict"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w1-verdict"
+    }
+  }
+}

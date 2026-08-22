@@ -1,0 +1,129 @@
+{
+  "work_id": "w1-verdict",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w1-verdict",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-w1-verdict-feedback@55fc16f58a273e3cdea1943150efebcec8e3482f",
+        "refusals": 10,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w1-verdict/crew-runs.json",
+          ".agent-work/w1-verdict/crew-handoffs/g1-implement-implementer-result.md",
+          ".agent-work/w1-verdict/crew-handoffs/g1-review-reviewer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Both crew dispatches (g1-implement, g1-review) were launched via run_crew.py's cli backend, which crew-runs.json records with door_bound: true."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "door_bound: true implies the spawned claude -p process's environment carries SPINE_FILE/SPINE_SESSION so its MCP door resolves to its own plan/survey from the first call, per checklist-engine.md's own description of the cli backend."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Both the implementer and the reviewer independently reported (in their own Workflow Feedback sections) that their environment carried only SPINE_PARENT -- no SPINE_FILE or SPINE_SESSION -- so spine_status refused with 'no spine is bound to this door'. Each crew worked around it by authoring its own local plan/survey JSON (IMPLEMENTER_PLAN.json, REVIEW_SURVEY.json) and driving it through the checklist_engine.py CLI directly, exactly as this Commander was also instructed to do for its own top-level spine by the launch order's engine-access override."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "No lost work -- both crews completed and delivered correct, independently-reproducible results -- but crew-runs.json's door_bound: true field asserts something the crew's own actual environment did not carry, twice in one run, which is exactly the mismatch a future debugging session would trust and be misled by."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Each crew authored its own local engine-native plan/survey file beside its handoff and drove it via the CLI (never the MCP door), matching the pattern already documented for a prior epic (567-d1 g4, per the reviewer's own note)."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "run_crew.py's cli backend records door_bound: true in the registry based on intent (it is SUPPOSED to bind the spawned process's door) rather than on a verified post-launch check of the child's actual environment -- the registry entry and the child's real environment can silently disagree."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w1-verdict",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-w1-verdict-feedback@55fc16f58a273e3cdea1943150efebcec8e3482f",
+        "refusals": 10,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "This run drove its own top-level spine.json and its child execute.json entirely through the checklist_engine.py CLI (no MCP door), per the launch order's explicit override of the shipped spine template's init imperative."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The launch order's override text quotes the shipped template's framing that 'the door needs no session id argument' once a lease is claimed, which read as implying the CLI path would be similarly frictionless after the initial claim."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Every mutating CLI verb issued after claim -- start, attest, attach, advance, waive -- refused with 'checklist is owned by active session ... pass --session-id' unless --session-id was passed explicitly on that same call, even though the lease was already held by that exact session id. Passing --session-id on every mutating call (dozens of times across this run) resolved it cleanly; nothing was actually broken. The 'no session id argument' framing in the shipped template text describes the MCP door's own behavior (it reads SPINE_SESSION from its process environment) and does not carry over to the CLI path, where the session identity is a per-call argument, not an ambient one."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "No lost work and no wrong state -- every refusal was caught before it did anything -- but it cost one extra failed call at nearly every gate transition in a run that made well over 40 engine calls, which is exactly the kind of friction a delegated Commander driving cold from a launch order has no way to anticipate from the override text alone."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Passed --session-id constellation/w1-verdict explicitly on every start/attest/attach/advance/waive call for the rest of the run, once the pattern was observed after the first few refusals."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w1-verdict",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-w1-verdict-feedback@55fc16f58a273e3cdea1943150efebcec8e3482f",
+        "refusals": 10,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w1-verdict/map-orientation.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "This run's context step ran map_orient.py orient against this repo's own map/ and docs/architecture/ before any source reading, per the shipped spine template's imperative."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "map/INDEX.md exists and lists real packet-style entries (e.g. scripts.checklist_engine, scripts.validate_spine), so a RESOLVED orientation seemed plausible."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "map_orient.py returned DEGRADED-UNPARSEABLE: map/INDEX.md's own listed packet directories (map/scripts.checklist_engine/, map/scripts.validate_spine/) do not exist anywhere under map/ (only INDEX.md and an empty ids.jsonl are present), and docs/architecture/generated/map.json parses but carries zero nodes[].id. Independently, tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build fails at this exact commit (244665ee) for the same underlying reason -- map/INDEX.md is stale against a fresh scripts.code_map build -- and that failure was reproduced three times in this run (by the implementer, the reviewer, and this Commander, each independently via git stash + rerun)."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "This run's mission frame, plan-alternatives, and every crew handoff had to be written against source-line pointers and docs substitutes instead of map: node ids -- workable for a small, fully-specified mechanism change, but the map gave zero navigation value for the entire run despite existing and looking populated at a glance."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Discharged the DEGRADED verdict via map_orient.py's own --substitute/--unmapped/--escalation flags, citing docs/CHECKLIST_SCHEMA.md, docs/CHECKLIST_ENGINE_DESIGN.md, and the two target source files as substitutes; carried the finding forward into REPLAN_INPUT.json as an evidence_only discrepancy for the Admiral/Cartographer reconcile step rather than fixing the map in-mission (out of this mission's scope)."
+        }
+      }
+    }
+  ]
+}

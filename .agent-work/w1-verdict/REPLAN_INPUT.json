@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "#371",
+      "outcome": "A list-valued match[k] on an artifact postcondition now means membership ('any of these acceptable values'), at both engine comparison sites, while every existing scalar match keeps behaving identically. validate_spine.py refuses (blocking) a present-but-non-dict match, and flags (report-only, named promotion trigger) a malformed list value -- so a mistyped match shape can no longer be written and shipped silently.",
+      "evidence": "scripts/checklist_engine.py (_artifact_match_satisfied, _check_condition, attest), scripts/validate_spine.py (shape-artifact-match-not-dict, falsifiable-artifact-malformed-match-list, ValidationResult.report_only), tests/test_checklist_engine.py::ArtifactMatchListMembership, tests/test_validate_spine.py::TestShapeRejectsArtifactMatchNotDict / TestFalsifiabilityArtifactMalformedMatchListBoundary / TestReportOnlyChannelNeverFlipsExitCode"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A list-valued match is silently unsatisfiable today (the wedge #371 describes).",
+      "expected": "Reproduce False at base commit 244665ee0f669a0bb23847c8fa695c430910c06d, per decision:red-proof-pinned-to-shipped-revision.",
+      "observed": "Confirmed False at 244665ee0f669a0bb23847c8fa695c430910c06d before any code change; confirmed True after the fix, at the shipped commit -- see RESULT.md Red-proof section for the exact commands and both SHAs.",
+      "source": "python3 -c invocation of checklist_engine._check_condition, run by Commander before dispatch and reproduced independently by both crews"
+    },
+    {
+      "claim": "Every existing scalar match in the shipped corpus keeps behaving identically.",
+      "expected": "The 2 shipped skills/*/templates/*.json match uses (EXECUTE_PLAN.template.json:21,52) resolve the same pre/post change, both hit and miss cases.",
+      "observed": "4/4 cases (2 matches x hit/miss) reproduce identically pre/post -- reproduced independently by the implementer, the reviewer, and this Commander's own follow-up check.",
+      "source": "tests/test_checklist_engine.py::ArtifactMatchListMembership::test_check_condition_scalar_match_unchanged; inline verification in g1-implement-implementer-result.md Evidence #3"
+    },
+    {
+      "claim": "The widening ships live; the new validate_spine refusal ships report-only and cannot flip exit code at either existing caller.",
+      "expected": "generate_spine.py and spine_lifecycle.py both gate only on ValidationResult's base-list truthiness, per decision:widening-ships-live-refusal-ships-report-only.",
+      "observed": "Confirmed by reading both call sites (generate_spine.py:1043 `if result:`, spine_lifecycle.py:396,454 `if result.undecidable or result:`) -- neither reads .report_only. Standalone positive tests confirm bool(result) is unaffected by a report-only fault.",
+      "source": "tests/test_validate_spine.py::TestReportOnlyChannelNeverFlipsExitCode"
+    },
+    {
+      "claim": "Full local pytest suite is green (base commit was 3564 passed, 6 skipped per LAUNCH_ORDER Inherited Context).",
+      "expected": "No fewer passing tests than base; any new failure is a blocker.",
+      "observed": "1 failed, 3592 passed, 6 skipped -- the 1 failure (tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build) is pre-existing at base commit 244665ee (map/INDEX.md stale, unrelated to this diff), independently reproduced 3 times (implementer, reviewer, this Commander, each via a fresh git stash + rerun at the base commit). Deselecting only that test: 3592 passed, 6 skipped, 1 deselected -- all new passing tests, zero regressions. Waived at g1-integrate.c1 with this evidence.",
+      "source": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q, run independently by this Commander after the implementer's changes landed"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "tests/test_code_map.py's map-freshness test fails at the base commit (244665ee), independent of this mission -- map/INDEX.md and map/ids.jsonl are DEGRADED-UNPARSEABLE per this run's own context-step map_orient.py finding.",
+      "classification": "evidence_only",
+      "affects": "docs/architecture / map reconciliation, not this mission's mechanism",
+      "evidence": ".agent-work/w1-verdict/map-orientation.json; git stash + pytest rerun at base commit reproduced by 3 independent parties this run",
+      "reason": "Not this mission's mechanism (checklist_engine.py match comparison, validate_spine guard); a map-regeneration task, not a #371 fix. Not auto-filed as an issue per standing latitude doctrine -- carried here as evidence for the Admiral/Cartographer reconcile step."
+    },
+    {
+      "id": "D1",
+      "signal": "validate_spine.validate() is only ever called from generate_spine.py and spine_lifecycle.py -- never from the path a Commander actually uses to hand-author execute.json at its own plan step. The new match-shape guard this mission ships therefore does not cover the most common real authoring path (a hand-authored gate plan, including this very run's own execute.json).",
+      "classification": "later_only",
+      "affects": "The built-not-wired census (#345/#444/#368) w1-wiring is running this wave; a future wiring gate for validate_spine into execute.json authoring",
+      "evidence": "PLAN_CRITIC.md Finding 3; grep -rn validate_spine scripts/*.py docs/agents/*.md skills/commander/templates/*.json skills/commander/references/*.md",
+      "reason": "Wiring validate_spine into execute.json authoring is new check-wiring, fenced this wave to the sibling w1-wiring commander (built-not-wired census #345/#444/#368) per LAUNCH_ORDER File Ownership. Floated to the Admiral rather than fixed; same shape of gap that census is measuring."
+    }
+  ]
+}

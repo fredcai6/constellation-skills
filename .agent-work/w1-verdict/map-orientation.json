@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "work_id": "w1-verdict",
+  "root": "/home/tommy/projects/569-w1-verdict",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "parses but carries no nodes[].id"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "0 packet(s), none non-empty"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "86b6df5448df62053699fca2a103e57812e92166fe1770d390df12575b41ad27",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "f5161998180069213f68b76593c516ae02f96af63f52b31c0b1699f8feb134e7",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/checklist_engine.py",
+      "content_hash": "7a518727bcae7801d9859bc06032de1d64b52ef82aefa646c560904d60bfc2fc",
+      "source": "agent-declared"
+    },
+    {
+      "path": "scripts/validate_spine.py",
+      "content_hash": "d59b0accc927c15b60c1db903a6dfa67bc78518784065da85e8f5fdb442ca14e",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "ccc03657424cdec7ccaf98e88eea6770c23a1fbc73f2f08f6707328b4f9c5d89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "content_hash": "30e401e6ac3888dfa936d6aecdee99719fc778b4d64b9a1a77ea969fb12c757a"
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": true,
+      "content_hash": "3be528d65d4a3a982c19dd4acc9440316a69e834f7a1c6b99f87dd348ff63ebf"
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "map/INDEX.md lists scripts.checklist_engine and scripts.validate_spine packets but no map/scripts.checklist_engine/ or map/scripts.validate_spine/ directory exists on disk; map/ids.jsonl is empty; docs/architecture/generated/map.json has zero nodes -- the current-only structural map is stale/absent for this repo"
+  ],
+  "escalation": "noting for the Admiral/Cartographer reconcile step that map/ appears stale (packet dirs referenced but missing) -- not blocking this mechanism-only mission (#371), reading source + docs/CHECKLIST_SCHEMA.md + docs/CHECKLIST_ENGINE_DESIGN.md directly instead",
+  "emitted_at": "2026-08-22T14:55:17.682743+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

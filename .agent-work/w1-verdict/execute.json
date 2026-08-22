@@ -1,0 +1,325 @@
+{
+  "work_id": "w1-verdict",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Context, project deltas, and the mission frame were already loaded/produced at the parent spine's context/plan steps (MISSION_FRAME.md, PLAN_ALTERNATIVES.md, PLAN_CRITIC.md at .agent-work/w1-verdict/). Confirm the frozen plan's intent and scope (bare-list match widening + validate_spine guard, per LAUNCH_ORDER and the converged plan), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed from MISSION_FRAME.md/PLAN_ALTERNATIVES.md/PLAN_CRITIC.md",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Confirmed: bare-list match widening + validate_spine guard, per MISSION_FRAME.md/PLAN_ALTERNATIVES.md/PLAN_CRITIC.md and LAUNCH_ORDER Mission."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "match-shape widening + validate_spine guard: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from PLAN_ALTERNATIVES.md's recommendation (bare-list membership match) and PLAN_CRITIC.md's adopted findings 1, 2, 4, 5 (non-dict-match shape guard, shared comparator helper, named promotion trigger, precise malformed-list definition). Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: `attach` with `evidence_type=implementer-result`, `fields={status: <value>}` copied verbatim lowercase from the returned Return status field.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan confirmed (e0-context complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Do not reintroduce APPROVE-WITH-FOLLOWUPS or touch the verdict vocabulary.",
+        "Do not touch scripts/hooks/, waive()'s produced_by/override_policy.authority (#557), or #558.",
+        "Do not create or wire a new scripts/verify_*.py or scripts/check_*.py script (w1-wiring's fenced territory this wave).",
+        "Every existing scalar match in the shipped corpus must keep working unchanged.",
+        "The widening ships live; the new validate_spine refusal ships report-only with a named promotion trigger in code."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:_check_condition (artifact branch, ~line 1080-1094)",
+          "scripts/checklist_engine.py:attest (artifact branch, ~line 3436-3440)",
+          "scripts/validate_spine.py:_fault_artifact_no_match (~line 456, sibling fault to extend the family beside)",
+          "scripts/validate_spine.py:ValidationResult (~line 535, add a report_only channel parallel to the existing undecidable channel)"
+        ],
+        "capability": [
+          "engine artifact-postcondition match comparison; validate_spine's falsifiability fault family"
+        ],
+        "constraint": [
+          "decision:backward-compatibility-is-non-negotiable",
+          "decision:widening-ships-live-refusal-ships-report-only"
+        ],
+        "decision": [
+          "decision:match-shape-bare-list \u2014 a list-valued match[k] means membership (have in list); every other shape keeps scalar == unchanged; chosen in PLAN_ALTERNATIVES.md over an {any_of:[...]} operator form on Depth (fixes the exact shape #371 documents an author naturally writing) and Locality (no shared-helper shape-detection edge cases), tied on backward/forward corpus-collision risk (zero list- or dict-valued match/payload values exist anywhere in the sampled corpus). @grade: settled/admiral \u00b7 leans g1-implement,g1-review",
+          "decision:match-not-dict-is-shape-fault \u2014 a present-but-non-dict match crashes both comparator sites today (AttributeError on .items()); guarded at both sites (refuse cleanly, do not crash) and flagged by validate_spine as a blocking shape-family fault, not the new report-only family. @grade: settled/admiral \u00b7 leans g1-implement,g1-review",
+          "decision:malformed-list-definition \u2014 malformed (report-only fault) means empty ([]) or containing any non-JSON-scalar element (not str/int/float/bool/None); a single-element list is NOT flagged (redundant, not wrong). @grade: settled/admiral \u00b7 leans g1-implement,g1-review",
+          "decision:promotion-trigger \u2014 promote falsifiable-artifact-match-malformed-list from report-only to blocking when (a) `validate_spine.py --sweep` reports zero occurrences across the shipped corpus AND (b) the Admiral/human ratifies the widening-live/refusal-report-only split at the wave-2 checkpoint decision:widening-ships-live-refusal-ships-report-only already names; then flip the fault code out of REPORT_ONLY_FAULT_CODES. State this verbatim as a code comment beside REPORT_ONLY_FAULT_CODES. @grade: settled/admiral \u00b7 leans g1-implement,g1-review"
+        ],
+        "evidence": [
+          "claim: a list-valued match is silently unsatisfiable today \u2014 red-proof before code change, pinned to the shipped commit SHA",
+          "claim: every existing scalar match in the shipped corpus keeps behaving identically \u2014 corpus inventory in MISSION_FRAME.md plus full local pytest"
+        ],
+        "confidence_flags": [
+          "map/INDEX.md and map/ids.jsonl are stale/unusable at this commit (DEGRADED-UNPARSEABLE); this gate's anchors are source-line pointers, not map: node ids \u2014 see MISSION_FRAME.md"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/w1-verdict/crew-handoffs/g1-implement-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "match-shape widening + validate_spine guard: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, close criteria (both comparator sites widened + guarded, validate_spine shape fault + report-only falsifiability fault with named promotion trigger, backward-compat regression proof, red-proof pinned to the shipped SHA, doc sentence in docs/CHECKLIST_SCHEMA.md), allowed scope, specific exclusions (same constraints list as g1-implement), the inbound anchors, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received (return status complete), evidence e-g1-implement-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2",
+            "lease_claimed_at": "2026-08-22T15:06:40.649594+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/w1-verdict/crew-handoffs/g1-review-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "match-shape widening + validate_spine guard: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself (diff, red-proof reproduction, full suite), then advance this gate. BLOCK: send the implementer back for rework or raise a blocker if unresolvable. Log any out-of-scope finds (e.g. Finding 3 from PLAN_CRITIC.md \u2014 the guard's reach not covering hand-authored execute.json) as triage candidates for RESULT.md, not as fixes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE, evidence e-g1-review-2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full local pytest suite passes",
+          "check": {
+            "kind": "command",
+            "command": "env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1",
+          "waived": {
+            "authority": "human",
+            "reason": "1 failed, 3592 passed, 6 skipped -- the sole failure (tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build) is pre-existing at base commit 244665ee0f669a0bb23847c8fa695c430910c06d (map/INDEX.md stale, unrelated to #371), independently reproduced 3 times: by the implementer crew, by the reviewer crew (via git stash on the diff), and by this Commander (via git stash + rerun at HEAD == base commit, no commits on top). Deselecting only that test: 3592 passed, 6 skipped, 1 deselected -- zero fewer passing than the base-commit baseline (3564 passed), all new tests.",
+            "evidence": "e-g1-integrate-1",
+            "forced": false
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-2",
+          "attested": {
+            "evidence": "e-g1-review-2",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "human",
+            "reason": "1 failed, 3592 passed, 6 skipped -- the sole failure (tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build) is pre-existing at base commit 244665ee0f669a0bb23847c8fa695c430910c06d (map/INDEX.md stale, unrelated to #371), independently reproduced 3 times: by the implementer crew, by the reviewer crew (via git stash on the diff), and by this Commander (via git stash + rerun at HEAD == base commit, no commits on top). Deselecting only that test: 3592 passed, 6 skipped, 1 deselected -- zero fewer passing than the base-commit baseline (3564 passed), all new tests.",
+            "forced": false
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/w1-verdict",
+    "status": "released",
+    "claimed_at": "2026-08-22T15:06:40.649594+00:00",
+    "last_heartbeat": "2026-08-22T15:44:41.073555+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T15:44:45.776783+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution context confirmed; proceeding to g1-implement.",
+      "mechanical": false,
+      "ts": "2026-08-22T15:06:49.713027+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer crew delivered complete: shared comparator helper widening both sites (bare-list membership), non-dict-match clean refusal at both sites, validate_spine blocking shape fault + report-only falsifiability fault with named promotion trigger, doc clause, tests. Independently re-verified: comparator behavior (list/non-dict/scalar cases), validate_spine new-fault behavior, full pytest (1 failed/3592 passed/6 skipped, the 1 failure reproduced independently as pre-existing at base commit 244665ee unrelated to this diff), wiring grep (2 call sites for the shared comparator helper, 1 for the new fault function).",
+      "mechanical": false,
+      "ts": "2026-08-22T15:33:37.434727+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer APPROVE: scope confirmed (exactly the 5 allowed files), all 5 evidence items independently reproduced (not re-read), backward-compat and report-only constraints both independently verified, Fowler pass clean (12/12 absent, duplicated-code specifically removed by the shared helper), pre-existing map-freshness failure independently reproduced at base commit by reviewer too.",
+      "mechanical": false,
+      "ts": "2026-08-22T15:44:07.405350+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "g1 complete: match-shape widening + validate_spine guard implemented and reviewed APPROVE. c1 waived (pre-existing, independently-triple-verified test_code_map failure unrelated to this diff); c2 satisfied by the APPROVE review-result. All execute.json gates complete.",
+      "mechanical": false,
+      "ts": "2026-08-22T15:44:41.073545+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1971,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-22T15:34:19.421127+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-instructed",
+      "fill": 0.1971,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-22T15:34:31.967699+00:00"
+    }
+  ]
+}

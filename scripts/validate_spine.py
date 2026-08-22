@@ -180,6 +180,17 @@ def _shape_task_faults(tid: str, task: dict, spine_type) -> list[Fault]:
                     f"check kind {kind!r} is not one the engine implements "
                     f"({sorted(IMPLEMENTED_CHECK_KINDS)})",
                 ))
+            if kind == "artifact" and "match" in chk and not isinstance(chk.get("match"), dict):
+                # decision:match-not-dict-is-shape-fault -- the engine's own
+                # comparator (`_artifact_match_satisfied`) assumes a dict and
+                # both call sites now guard this themselves rather than
+                # crashing, but a spine that ships this shape is still wrong
+                # to author: blocking, not the falsifiable/report-only family.
+                faults.append(Fault(
+                    "shape-artifact-match-not-dict", f"{tid}.{which}.{cond.get('id', '?')}",
+                    f"`match` must be an object mapping field -> value (or "
+                    f"value-list), got {type(chk.get('match')).__name__}",
+                ))
 
     if spine_type == GATED:
         post = task.get("postconditions")
@@ -479,6 +490,50 @@ def _fault_artifact_no_match(where: str, cond: dict, check: dict) -> list[Fault]
     return []
 
 
+#: The JSON-scalar element types a `match[k]` list value may legally contain
+#: (decision:malformed-list-definition) -- `bool` is deliberately included
+#: even though `isinstance(True, int)` is also true; both are JSON scalars.
+_JSON_SCALAR_TYPES = (str, int, float, bool, type(None))
+
+
+def _fault_artifact_malformed_match_list(where: str, check: dict) -> list[Fault]:
+    """Report-only sibling to `_fault_artifact_no_match`: a `match[k]` list
+    value that is empty, or that contains an element that is not a JSON
+    scalar (decision:malformed-list-definition). A single-element list is a
+    legitimate (if odd) membership check and is NOT flagged. This is a
+    falsifiable-family fault but ships report-only -- see
+    `REPORT_ONLY_FAULT_CODES` -- because the widening it audits
+    (decision:match-shape-bare-list) ships live and this repo's shipped
+    corpus has never authored a list-valued `match` at all, so there is no
+    live-corpus evidence yet that this shape is ever a real mistake vs. a
+    legitimate but unusual author choice."""
+    if check.get("kind") != "artifact":
+        return []
+    match = check.get("match")
+    if not isinstance(match, dict):
+        return []
+    faults = []
+    for k, v in match.items():
+        if not isinstance(v, list):
+            continue
+        if len(v) == 0:
+            faults.append(Fault(
+                "falsifiable-artifact-malformed-match-list", where,
+                f"match[{k!r}] is an empty list -- membership against an "
+                f"empty list can never be satisfied, which is exactly as "
+                f"vacuous (in the opposite direction) as `check: null`",
+            ))
+            continue
+        if any(not isinstance(el, _JSON_SCALAR_TYPES) for el in v):
+            faults.append(Fault(
+                "falsifiable-artifact-malformed-match-list", where,
+                f"match[{k!r}] is a list containing a non-scalar element -- "
+                f"membership only makes sense against JSON scalars "
+                f"(str/int/float/bool/None)",
+            ))
+    return faults
+
+
 #: A bracket token in a `command` check's text that content-shapes like a
 #: placeholder (starts with a letter; letters/digits/space/./-/_ inside) --
 #: narrow enough to leave shell redirection (`< file`, no closing `>`) and
@@ -532,24 +587,49 @@ def _fault_unresolved_placeholder(where: str, check: dict) -> list[Fault]:
 # Entry point
 # --------------------------------------------------------------------------- #
 
+#: Fault codes that are computed like any other but never blocking --
+#: `validate()` routes them into `.report_only` instead of the base list, so
+#: they can never flip `any_faults`/`bool(result)` at either call site
+#: (`generate_spine.py`, `spine_lifecycle.py` -- both checked, both gate on
+#: base-list truthiness only). decision:widening-ships-live-refusal-ships-report-only.
+#:
+#: Promotion trigger (decision:promotion-trigger), verbatim: promote a code
+#: to blocking when (a) `validate_spine.py --sweep` reports zero occurrences
+#: of it across the shipped corpus AND (b) the Admiral/human ratifies
+#: decision:widening-ships-live-refusal-ships-report-only at the wave-2
+#: checkpoint that decision already names -- then remove the code from this
+#: set.
+REPORT_ONLY_FAULT_CODES = {"falsifiable-artifact-malformed-match-list"}
+
+
 class ValidationResult(list):
     """`validate()`'s return value. Behaves exactly like the `list[Fault]` it
     used to be -- every existing caller iterates it, indexes it, or tests its
     truthiness -- but carries a second channel, `.undecidable`, for
-    conditions `validate()` could not evaluate at all (see `Undecidable`).
-    `str()` names both, so a caller that only ever prints the result cannot
-    mistake "0 faults, 3 undecidable" for a clean pass."""
+    conditions `validate()` could not evaluate at all (see `Undecidable`),
+    and a third, `.report_only`, for faults computed the same way as any
+    other but named in `REPORT_ONLY_FAULT_CODES` -- never part of the base
+    list, so they can never affect `bool(result)`/exit code either.
+    `str()` names all three, so a caller that only ever prints the result
+    cannot mistake "0 faults, 3 undecidable, 1 report-only" for a clean pass."""
 
-    def __init__(self, faults=(), undecidable=()):
+    def __init__(self, faults=(), undecidable=(), report_only=()):
         super().__init__(faults)
         self.undecidable: list[Undecidable] = list(undecidable)
+        self.report_only: list[Fault] = list(report_only)
 
     def __str__(self) -> str:
         base = f"{len(self)} fault(s)" if self else "0 fault(s)"
-        if not self.undecidable:
+        extras = []
+        if self.undecidable:
+            detail = "; ".join(str(u) for u in self.undecidable)
+            extras.append(f"{len(self.undecidable)} undecidable: {detail}")
+        if self.report_only:
+            detail = "; ".join(str(f) for f in self.report_only)
+            extras.append(f"{len(self.report_only)} report-only: {detail}")
+        if not extras:
             return base
-        detail = "; ".join(str(u) for u in self.undecidable)
-        return f"{base}, {len(self.undecidable)} undecidable: {detail}"
+        return f"{base}, " + ", ".join(extras)
 
     __repr__ = __str__
 
@@ -568,9 +648,10 @@ def validate(spine: dict, *, repo_root: Path | None = None) -> ValidationResult:
     from "checked, found nothing wrong"."""
     faults = list(_shape_faults(spine))
     undecidable: list[Undecidable] = []
+    report_only: list[Fault] = []
 
     if not isinstance(spine, dict):
-        return ValidationResult(faults, undecidable)
+        return ValidationResult(faults, undecidable, report_only)
     repo_root = repo_root or Path.cwd()
     spine_type = spine.get("type")
     items = spine.get("items")
@@ -598,7 +679,9 @@ def validate(spine: dict, *, repo_root: Path | None = None) -> ValidationResult:
                 undecidable.extend(seg_undecidable)
                 faults.extend(_fault_artifact_no_match(where, cond, check))
                 faults.extend(_fault_unresolved_placeholder(where, check))
-    return ValidationResult(faults, undecidable)
+                for f in _fault_artifact_malformed_match_list(where, check):
+                    (report_only if f.code in REPORT_ONLY_FAULT_CODES else faults).append(f)
+    return ValidationResult(faults, undecidable, report_only)
 
 
 GATED_OR_SURVEY_TYPES = (GATED, SURVEY)
@@ -658,6 +741,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{path}: {len(result.undecidable)} undecidable")
             for u in result.undecidable:
                 print(f"  {u}")
+        if result.report_only:
+            # Never folds into `any_faults` -- report-only findings are
+            # printed for visibility alone (decision:widening-ships-live-refusal-ships-report-only).
+            print(f"{path}: {len(result.report_only)} report-only")
+            for f in result.report_only:
+                print(f"  [REPORT-ONLY] {f}")
     return 1 if any_faults else 0
 
 

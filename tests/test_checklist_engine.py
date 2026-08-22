@@ -300,6 +300,72 @@ class AttestArtifactByReference(unittest.TestCase):
         self.assertIn("postconditions", msg)
 
 
+def _artifact_gate_matching(iid, match, status="in-progress"):
+    t = gate(iid, status)
+    t["postconditions"] = [{
+        "id": "c1", "statement": "approved",
+        "check": {"kind": "artifact", "evidence_type": "review-result", "match": match},
+        "satisfied": False,
+    }]
+    return t
+
+
+class ArtifactMatchListMembership(unittest.TestCase):
+    """decision:match-shape-bare-list -- a list-valued match[k] means
+    membership (`have in want`); scalar match[k] keeps `==` unchanged;
+    a present-but-non-dict `match` is a clean refusal, never an
+    AttributeError (decision:match-not-dict-is-shape-fault)."""
+
+    def test_check_condition_list_match_membership_hit(self):
+        t = _artifact_gate_matching("g1", {"verdict": ["APPROVE", "BLOCK"]})
+        t["evidence"] = [{"id": "e1", "type": "review-result", "payload": {"verdict": "APPROVE"}, "produced_by": "reviewer", "ts": ""}]
+        cond = t["postconditions"][0]
+        self.assertTrue(E._check_condition(cond, t))
+        self.assertTrue(cond["satisfied"])
+
+    def test_check_condition_list_match_membership_miss(self):
+        t = _artifact_gate_matching("g1", {"verdict": ["APPROVE", "BLOCK"]})
+        t["evidence"] = [{"id": "e1", "type": "review-result", "payload": {"verdict": "PENDING"}, "produced_by": "reviewer", "ts": ""}]
+        cond = t["postconditions"][0]
+        self.assertFalse(E._check_condition(cond, t))
+        self.assertFalse(cond["satisfied"])
+
+    def test_check_condition_scalar_match_unchanged(self):
+        cl = gated(g1=_artifact_gate("g1"))
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+        E.attach(cl, "g1", "review-result", {"verdict": "BLOCK"})
+        with self.assertRaises(E.EngineError):
+            E.advance(cl, "g1")
+        E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"})
+        self.assertEqual(E.advance(cl, "g1"), "g1 -> complete")
+
+    def test_check_condition_non_dict_match_is_clean_refusal_not_crash(self):
+        t = _artifact_gate_matching("g1", ["APPROVE", "BLOCK"])
+        t["evidence"] = [{"id": "e1", "type": "review-result", "payload": {"verdict": "APPROVE"}, "produced_by": "reviewer", "ts": ""}]
+        cond = t["postconditions"][0]
+        self.assertFalse(E._check_condition(cond, t))
+        self.assertFalse(cond["satisfied"])
+
+    def test_attest_list_match_membership_hit(self):
+        cl = gated(g1=_artifact_gate_matching("g1", {"verdict": ["APPROVE", "BLOCK"]}))
+        E.attach(cl, "g1", "review-result", {"verdict": "BLOCK"})
+        res = E.attest(cl, "g1", "c1", "postconditions", None, evidence_id="e-g1-1")
+        self.assertEqual(res, "attested g1.c1 via e-g1-1")
+
+    def test_attest_list_match_membership_miss(self):
+        cl = gated(g1=_artifact_gate_matching("g1", {"verdict": ["APPROVE", "BLOCK"]}))
+        E.attach(cl, "g1", "review-result", {"verdict": "PENDING"})
+        with self.assertRaises(E.EngineError):
+            E.attest(cl, "g1", "c1", "postconditions", None, evidence_id="e-g1-1")
+
+    def test_attest_non_dict_match_is_clean_engine_error_not_crash(self):
+        cl = gated(g1=_artifact_gate_matching("g1", ["APPROVE", "BLOCK"]))
+        E.attach(cl, "g1", "review-result", {"verdict": "APPROVE"})
+        with self.assertRaises(E.EngineError):
+            E.attest(cl, "g1", "c1", "postconditions", None, evidence_id="e-g1-1")
+
+
 class SurveyAndConsolidation(unittest.TestCase):
     def test_record_fail_does_not_block(self):
         cl = survey(v1=survey_item("v1", "in-progress"), v2=survey_item("v2"))

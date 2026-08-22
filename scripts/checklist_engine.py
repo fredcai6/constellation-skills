@@ -1033,6 +1033,18 @@ def _run_check_command(command: str) -> tuple[subprocess.CompletedProcess, str]:
     return proc, "no-posix-shell"
 
 
+def _artifact_match_satisfied(payload: dict, want: dict) -> bool:
+    """True if `payload` satisfies every `want[k]`: `have == want[k]` unless
+    `want[k]` is a list, in which case membership (`have in want[k]`) —
+    decision:match-shape-bare-list. Callers guard a non-dict `want` themselves
+    before calling this (each site's own idiom for that refusal differs), so
+    this assumes `want` is already a dict."""
+    return all(
+        payload.get(k) in v if isinstance(v, list) else payload.get(k) == v
+        for k, v in want.items()
+    )
+
+
 def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
     """Verify one condition. command -> run it; artifact -> presence/match;
     git-change-policy -> evaluate the staged/branch diff against an artifact
@@ -1079,13 +1091,18 @@ def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
         return cond["satisfied"]
     if kind == "artifact":
         want = chk.get("match", {})
+        if not isinstance(want, dict):
+            # decision:match-not-dict-is-shape-fault -- a clean refusal, never
+            # the AttributeError `.items()` would raise on e.g. a bare list.
+            cond["satisfied"] = False
+            return False
         for ev in t.get("evidence", []):
             if ev.get("superseded"):
                 # A superseded evidence item (see `reopen` cascade) is inert: it
                 # must not re-satisfy a gate from a stale approval after reopen.
                 continue
-            if ev.get("type") == chk["evidence_type"] and all(
-                ev.get("payload", {}).get(k) == v for k, v in want.items()
+            if ev.get("type") == chk["evidence_type"] and _artifact_match_satisfied(
+                ev.get("payload", {}), want
             ):
                 cond["satisfied"] = True
                 cond["satisfied_by"] = ev["id"]
@@ -3436,7 +3453,11 @@ def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None, evide
                         f"not the required {want_type!r}"
                     )
                 want_match = chk.get("match", {})
-                if not all(ev.get("payload", {}).get(k) == v for k, v in want_match.items()):
+                if not isinstance(want_match, dict):
+                    # decision:match-not-dict-is-shape-fault -- a clean refusal,
+                    # never the AttributeError `.items()` would raise here.
+                    raise EngineError(f"evidence {evidence_id!r} match must be a dict, got {type(want_match).__name__}")
+                if not _artifact_match_satisfied(ev.get("payload", {}), want_match):
                     raise EngineError(f"evidence {evidence_id!r} does not match required {want_match}")
                 c["satisfied"] = True
                 c["satisfied_by"] = evidence_id
