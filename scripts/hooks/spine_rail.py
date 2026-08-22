@@ -667,8 +667,17 @@ def _format_age(total_seconds: float) -> str:
 def reconstruct_current(spine: dict) -> str:
     """Rebuild the engine's `current` output from the state file (no subprocess).
 
-    Optional `LEASE HELD: ...` line, then `ACTIVE <aid> [<status>] -- <imp>`
-    or `DONE: no open items.` when every item is terminal.
+    Optional `LEASE HELD: ...` line, optional `bookend (frozen ...): <ids>`
+    line, then `ACTIVE <aid> [<status>] -- <imp>` or `DONE: no open items.`
+    when every item is terminal.
+
+    The bookend line arrived with #634's follow-up, which taught
+    `checklist_engine.render_human` to show which gates `amend` will refuse to
+    touch. It is mirrored here for the reason the R1 note below records the
+    hard way: this function is a SECOND RENDERER, and a fix applied to only one
+    of the two leaves half the defect live. The freeze is worth showing in this
+    renderer specifically -- the Stop hook is read by an agent deciding what to
+    do next, which is exactly when it might plan an amend.
 
     R1 (deficiency cleanup batch A+B): this is the SECOND renderer of the
     lease line -- checklist_engine._lease_line is the first, fixed by A3.
@@ -699,6 +708,22 @@ def reconstruct_current(spine: dict) -> str:
                 age=age_text,
             )
         )
+    # Mirrors `checklist_engine.state`'s `bookend_gates` and
+    # `render_human`'s line, deliberately verbatim: two renderers that word the
+    # same fact differently are how an agent learns to trust one and not the
+    # other. Item order, emitted only when populated, so a plan predating #634
+    # reconstructs byte-identically to before.
+    tasks = spine.get("tasks") or {}
+    bookends = [
+        iid for iid in (spine.get("items") or [])
+        if isinstance(tasks.get(iid), dict) and tasks[iid].get("bookend")
+    ]
+    if bookends:
+        lines.append(
+            "bookend (frozen -- amend refuses drop/rescope/retext-check, and "
+            "add past the last one): {ids}".format(ids=", ".join(bookends))
+        )
+
     aid = active_id(spine)
     if aid is None:
         lines.append("DONE: no open items.")

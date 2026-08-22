@@ -869,6 +869,55 @@ def test_reconstruct_current_active():
     assert "ACTIVE g1 [in-progress] -- do the thing" in out
 
 
+def test_reconstruct_current_renders_the_bookend_freeze():
+    """#634 follow-up: the Stop hook's reconstruction shows which gates are
+    frozen, because it is read by an agent deciding what to do next -- exactly
+    when it might plan an amend."""
+    spine = make_spine([("init", "complete"), ("mid", "in-progress"), ("archive", "pending")])
+    spine["tasks"]["init"]["bookend"] = True
+    spine["tasks"]["archive"]["bookend"] = True
+    out = sr.reconstruct_current(spine)
+    assert "bookend (frozen" in out
+    assert "init, archive" in out, out
+
+
+def test_reconstruct_current_omits_the_bookend_line_when_none_declared():
+    """A plan predating #634 reconstructs byte-identically to before."""
+    out = sr.reconstruct_current(make_spine([("g1", "in-progress")]))
+    assert "bookend" not in out
+
+
+def test_both_renderers_word_the_bookend_freeze_identically():
+    """The two-renderer guard, in the shape this file already applies to the
+    LEASE HELD line. `reconstruct_current` is the SECOND renderer of this
+    projection, and its own docstring records what a one-sided fix cost last
+    time: the Stop hook called a 22-day-dead plan `active` after `current` had
+    already stopped doing so. Two renderers that word the same fact differently
+    teach an agent to trust one and not the other, so this compares the emitted
+    LINES rather than merely asserting both are non-empty."""
+    spine = make_spine([("init", "in-progress"), ("archive", "pending")])
+    spine["tasks"]["init"]["bookend"] = True
+    spine["tasks"]["archive"]["bookend"] = True
+
+    # This module cannot import the engine at top level (same constraint the
+    # LEASE HELD comparison below works around), so load it the same way.
+    engine_spec = importlib.util.spec_from_file_location(
+        "checklist_engine_for_bookend_shape_check",
+        _REPO_ROOT / "scripts" / "checklist_engine.py")
+    engine = importlib.util.module_from_spec(engine_spec)
+    engine_spec.loader.exec_module(engine)
+
+    hook_line = next(
+        line for line in sr.reconstruct_current(spine).splitlines()
+        if line.startswith("bookend")
+    )
+    engine_line = next(
+        line for line in engine.current(dict(spine, type="gated")).splitlines()
+        if line.startswith("bookend")
+    )
+    assert hook_line == engine_line, f"hook={hook_line!r} engine={engine_line!r}"
+
+
 def test_reconstruct_current_done():
     spine = make_spine([("g1", "complete")])
     out = sr.reconstruct_current(spine)
