@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-census",
+  "mechanical": {
+    "run": "w1-wiring",
+    "project": "constellation-skills",
+    "spine-step": "g1-census",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w1-wiring-g1-census@d3f04205f4d59fdc0d34475034d4233f93fa5649",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T15:04:06Z"
+  }
+}

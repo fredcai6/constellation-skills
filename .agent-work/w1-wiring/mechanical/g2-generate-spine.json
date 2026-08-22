@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-generate-spine",
+  "mechanical": {
+    "run": "w1-wiring",
+    "project": "constellation-skills",
+    "spine-step": "g2-generate-spine",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w1-wiring-g2-generate-spine@8cf71d4b609fdaabaeaa7151622dbc864309de43",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T15:18:35Z"
+  }
+}

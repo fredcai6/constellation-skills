@@ -132,6 +132,12 @@ Entry grammar (one line of date + tag, then the substance):
 
   Amending my own amended gate accordingly, and stating it plainly because this is the second amendment: the pre-existing-map-staleness allowance I granted an hour ago is now VOID, because the thing it made allowance for no longer exists. The gate returns to its original form — full local suite green at the shipped revision — which is now actually meetable. A relaxation that outlives its reason is how a gate quietly stops meaning anything.
 
+- `2026-08-22` — `RULING`: Proved the #645 re-staling claim instead of asserting it, because I have already been burned this epic by reasoning from an unmeasured premise. Method: fresh detached worktree at `origin/main`, `git merge origin/epic-569/w1-verdict` (clean, exit 0), then `pytest tests/test_code_map.py::MapTreeFreshnessTests`. Result: **1 failed**. So a PR that GitHub reports `MERGEABLE`, that merges without conflict, that carries an independent reviewer's APPROVE with zero findings and a commander's correct suite report, produces a RED `main` when merged. Scratch worktree removed after.
+
+  **This is a merge-gate hole worth naming at the checkpoint, and it is bigger than these two PRs.** Every automated signal available at merge time says yes: `mergeable=MERGEABLE`, review approved, no conflict. The one mechanism that would catch it is CI — and CI in this repo runs on `windows-latest` ONLY and is known-red as standing policy, so its verdict is ignored by design. That combination means the repo currently has **no automated defence against a PR that turns `main` red**, and the only thing that caught it here was an Admiral choosing to test the merge result by hand. That is not a repeatable guarantee; it is one agent's diligence on one day. It also rhymes exactly with this epic's own subject and with #345's pattern: the capability exists (a real freshness test that genuinely fails), it is correct, and it is positioned where nothing consults it before the damage lands.
+
+  Not fixing it: out of wave-1 scope, and inventing a merge-gate mechanism mid-epic is the machinery-for-machinery's-sake move the human set this epic against. Carried to the wave-2 checkpoint as a named candidate with the measurement attached.
+
 ## Merges
 
 - `<date>` — `<PR, verification, main commit>`
