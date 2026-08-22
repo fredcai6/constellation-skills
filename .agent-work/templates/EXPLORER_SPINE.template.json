@@ -16,7 +16,7 @@
         {"id": "c2", "statement": "engine session lease claimed for this spine (explorer owns the state)", "check": null, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0, "bookend": true
     },
     "context": {
       "id": "context",
@@ -82,7 +82,7 @@
         {"id": "c2", "statement": "routing disposition accepted by the human", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0, "bookend": true
     }
   },
   "consolidation": null,

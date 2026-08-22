@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-10",
-  "source_commit": "3697e12c99ea3e7673bae675faf40c824598d452",
+  "generated": "2026-08-22",
+  "source_commit": "ec560d73cd5a0dfcbd34b6e3d9590cfa297bb06a",
   "baseline_origin": "baseline-promoted",
   "templates": [
     {
@@ -11,7 +11,7 @@
     {
       "skill": "constellation-admiral",
       "template": "ADMIRAL_SPINE.template.json",
-      "sha256": "6fb0d457d745db5bc033330663f381a1c5a3f75ed0a2fc74dc686f204734b4c8"
+      "sha256": "5925dbdca845dc62f4bd2f3401cd27a3a96d5a991746d2016844fa9444217a98"
     },
     {
       "skill": "constellation-admiral",
@@ -21,7 +21,7 @@
     {
       "skill": "constellation-admiral",
       "template": "LAUNCH_ORDER.template.md",
-      "sha256": "d1a8eb3411ac6b4ac1eb5da8f7df03f66929d910ac3db2d62feabc87efc15195"
+      "sha256": "426807c0fd421acdba57050db7230d2432086c8ee8d3823a17e34ab520a2cd1e"
     },
     {
       "skill": "constellation-cartographer",
@@ -51,17 +51,17 @@
     {
       "skill": "constellation-charter",
       "template": "AGENTS.pointer.template.md",
-      "sha256": "70733e78a5976437f45985ea571e0ecccb678b852ca8586e23ec3e615c6096a1"
+      "sha256": "30e401e6ac3888dfa936d6aecdee99719fc778b4d64b9a1a77ea969fb12c757a"
     },
     {
       "skill": "constellation-charter",
       "template": "AGENT_GUIDE.template.md",
-      "sha256": "da6b2e5c7f3fa8d9b3f2685e30305b921504ce0b9431af946e930b08545062da"
+      "sha256": "9078de0ac3f4a949d4f4912a196887b7ac43bd5396f730bada8ecff67097e432"
     },
     {
       "skill": "constellation-charter",
       "template": "CHARTER.template.json",
-      "sha256": "c0a3397f0d142ab90d3d1929147bda4d5f2ff7a0280a68091e0c85e8b88fcb9c"
+      "sha256": "5df9d7457369643c3ca4bdae3008e422d1c0d05b100ed177815208a30a2306b2"
     },
     {
       "skill": "constellation-charter",
@@ -76,7 +76,7 @@
     {
       "skill": "constellation-charter",
       "template": "CLAUDE.pointer.template.md",
-      "sha256": "650af80278bca3324c9a19c70c0abacdfdcfaf3dd2782e279fd00aa1d7625429"
+      "sha256": "3be528d65d4a3a982c19dd4acc9440316a69e834f7a1c6b99f87dd348ff63ebf"
     },
     {
       "skill": "constellation-charter",
@@ -96,12 +96,12 @@
     {
       "skill": "constellation-charter",
       "template": "ORCHESTRATOR_CONTEXT.template.md",
-      "sha256": "3f61f6ce9d6e7ac4aa63899c8f8db831134862b3c065d3341aa01c93e129d1fc"
+      "sha256": "cda3bae5fc09fdf2f4c87635585c7aa66e80bc08aaa3e3306c8ea52d64ae84cf"
     },
     {
       "skill": "constellation-commander",
       "template": "COMMANDER_SPINE.template.json",
-      "sha256": "a307ee96456b40090770c920eb63306ad770441ae891adb52cea4c2cef8c0d92"
+      "sha256": "65fd7bbdd3e04946b53d51610889483554b07f596c49382c0980f136d2c3b87a"
     },
     {
       "skill": "constellation-commander",
@@ -111,12 +111,12 @@
     {
       "skill": "constellation-commander",
       "template": "EXECUTE_PLAN.template.json",
-      "sha256": "ba72b8a46f1b5195469adfb830733a2d4fdbdd72178b51b0946a7eda5679821b"
+      "sha256": "0c2b1f16a14cd72cc1364a3618783213a2039c2f3a367645586fdd64a4a8188b"
     },
     {
       "skill": "constellation-commander",
       "template": "IMPLEMENTER_HANDOFF.template.md",
-      "sha256": "87a460a8ef6ac1f93cafb8c41f749b0e625c1cfb8338f96c006ced3b800a135a"
+      "sha256": "65312125e732d50598aaed046cdf9db98a6cdd14af033f1a233614c27bd5d6e7"
     },
     {
       "skill": "constellation-commander",
@@ -156,7 +156,7 @@
     {
       "skill": "constellation-explorer",
       "template": "EXPLORER_SPINE.template.json",
-      "sha256": "5a0c774bb9c9d9ce02a21fc7d27aebd8b3e1c996a19066057008e3234497b7d3"
+      "sha256": "ebac764075ae49a4f1a4d9b5bbfe6c723d5d3ee9eefd1d4f05ff14f5101ad8bb"
     },
     {
       "skill": "constellation-explorer",
@@ -176,7 +176,7 @@
     {
       "skill": "constellation-implementer",
       "template": "IMPLEMENTER_RESULT.template.md",
-      "sha256": "ace6e0ec6592c346f20c5785d2ce2491bf8e06d634d2b04753448b08dfb0e47c"
+      "sha256": "74f936754d3a826eebf06ac566ad06bea77d9924d34d465b34255a2f297f71a0"
     },
     {
       "skill": "constellation-interrogator",
@@ -216,12 +216,12 @@
     {
       "skill": "constellation-reviewer",
       "template": "REVIEW_RESULT.template.md",
-      "sha256": "f75ca3015cf6221fb644586e55ca9a918fd0836c4974e486c51b1eb47d4f9842"
+      "sha256": "a612a359327c8e80985d3e7d54f2cb2f750885f2833724978f47d56d64ebbada"
     },
     {
       "skill": "constellation-reviewer",
       "template": "REVIEW_SURVEY.template.json",
-      "sha256": "264be9fc86369806e2fef63ec23668e3200bd6fa1ef45af395bc357d932a58dd"
+      "sha256": "35de0fbdc0085406e057ddb4984c35214abddc3dc557a4763776411e1d6036bc"
     },
     {
       "skill": "constellation-scout",
@@ -271,7 +271,7 @@
     {
       "skill": "constellation-write-a-skill",
       "template": "gated-engine-SKILL.template.md",
-      "sha256": "759ac1d2c0fd7b55f47b4c6c0c9599d56747dda0e9011f0dbe0b9a21b6c59815"
+      "sha256": "61eb8ea0c7e4da0446b97f71e00464e42ec0ae94be0f899b235ea2e6ba1e2d3a"
     },
     {
       "skill": "constellation-write-a-skill",
@@ -281,7 +281,7 @@
     {
       "skill": "constellation-write-a-skill",
       "template": "survey-SKILL.template.md",
-      "sha256": "f562a1637f1592907bce54b97d4409c1a0768dc887060cdf6d52baf39aa7d220"
+      "sha256": "bbce71094e702e3ed2d7e55f0aa8f20b9cff4e01cffea08501ad6a0be2d5dbae"
     }
   ]
 }

@@ -1,65 +1,76 @@
 # Agent Guide
 
-Single entry point for any agent working in this repository — Constellation roles and external/general agents alike. Root pointer files (`AGENTS.md`, `CLAUDE.md`, and any tool-specific equivalents) redirect here so there is one guide, not many.
+Orientation for any agent working in this repository: **what this project is for, and where everything
+lives.** Root pointer files (`AGENTS.md`, `CLAUDE.md`, and any tool-specific equivalents) redirect here so
+there is one guide, not many.
 
-Scope is deliberately narrow: **how this repo is organized and where the important documentation lives** — the shared middle of Orchestrator and Crew context. It does *not* cover how to approach the job. The default approach is inherited global doctrine bundled with each skill (`references/global-everyone.md` plus `references/global-orchestrator.md` / `references/global-crew.md`); the project layers only its deltas on top:
+Scope is deliberately narrow. This guide does **not** cover how to approach the job — no planning,
+evidence, verification, review, authority, or workflow doctrine. That arrives with whatever skills an
+agent is running, and each skill routes its own role to its own context. Do not restate it here and do
+not point at it; duplicated method is conflicting method.
 
-- Planning, authority, gating, evidence, stop/ask — project deltas → `docs/agents/ORCHESTRATOR_CONTEXT.md`
-- Implementation, verification, review/blocking, stop/report — project deltas → `docs/agents/CREW_CONTEXT.md`
-- Shared terms → `docs/agents/GLOSSARY.md`
+Write it so an agent that has never seen this repo, running no particular workflow, can orient in one
+read. Agent-facing: bullets, tables, fragments. Omit anything that does not help an agent find its way
+around. Hold the prose to `constellation-how-to-talk` — plainest word that carries the meaning, one
+point per sentence. Say more with less; a baggy guide stops getting read.
 
-Agent-facing. Bullets, tables, fragments. Omit anything that does not help an agent find its way around.
+Every sentence must stand on its own. No allusions to books, methodologies, or other products: a
+reader who does not catch the reference gets nothing, and a reader who does gets tone rather than
+meaning. Name the thing you mean. Technical terms with a precise, findable definition are fine;
+rhetorical shorthand is not.
 
-## Table of Contents
+## Why This Exists
 
-1. [Repository Organization](#repository-organization)
-2. [Documentation Map](#documentation-map)
-3. [Conventions](#conventions)
-4. [Build, Test, and Run](#build-test-and-run)
-5. [Workflow State](#workflow-state)
-6. [Where to Go Next](#where-to-go-next)
+`<What this project is for, in plain language — two or three sentences. Assume the reader knows the
+technology but nothing about this project or its domain. Lead with the point, not the mechanism.>`
+
+- **Produces:** `<the thing it actually makes>`
+- **For:** `<who or what consumes the output, and what decision or action it feeds>`
+- **Not this:** `<the adjacent things it is deliberately not. These are the boundaries that stop scope
+  drift, so name the plausible mistakes, not implausible ones.>`
+- **Measured by:** `<omit unless the project has a concrete bar it is judged against — the metric, the
+  target, and where it currently stands.>`
 
 ## Repository Organization
 
-`<Top-level layout: what lives where. Keep to directories an agent must know to orient.>`
+`<Top-level layout: what lives where. Keep to directories an agent must know to orient. Where placement
+is not obvious from the path, say what belongs there — and what does not.>`
 
 | Path | Holds |
 |---|---|
-| `<src/ or equivalent>` | `<production code>` |
-| `<tests/>` | `<test suites>` |
+| `<src/ or equivalent>` | `<production code — and where a new module of each kind goes>` |
+| `<tests/>` | `<test suites, and how they are divided>` |
 | `docs/` | `<durable documentation; see Documentation Map>` |
-| `<scripts/ or tooling>` | `<build/dev tooling>` |
-| `.agent-work/` | `<workflow state; see Workflow State>` |
+| `<scripts/ or tooling>` | `<build and dev tooling>` |
+| `<data/ or artifacts>` | `<what is generated vs committed, and which paths are canonical>` |
+| `.agent-work/` | `<workflow state and archived history — temporary and historical, never project truth>` |
 
 ## Documentation Map
 
-Where the important documents live and what each is the source of truth for.
+Where the important documents live and what each is the source of truth for. One row per document that
+an agent could otherwise get wrong by guessing.
+
+**This guide is for agents; `README.md` is for humans.** Do not route agents to the README — list the
+docs an agent works from. The two overlapping on purpose is fine: same facts, different audience, each
+written for its own reader.
 
 | Document | Source of truth for |
 |---|---|
-| `README.md` | `<project overview, install, top-level usage>` |
-| `docs/agents/AGENT_GUIDE.md` | this guide — repo orientation and the documentation map |
-| `docs/agents/ORCHESTRATOR_CONTEXT.md` | project planning/authority deltas over inherited global-orchestrator doctrine |
-| `docs/agents/CREW_CONTEXT.md` | project implementation/review deltas over inherited global-crew doctrine |
-| `docs/agents/GLOSSARY.md` | shared terms |
-| `docs/agents/PLATFORM_NOTES.md` | Windows/harness platform hazards (verbatim copy of the bundled `windows.md`) — for any agent, Constellation or not |
+| `docs/agents/AGENT_GUIDE.md` | this guide — project purpose, repo layout, documentation map |
+| `docs/agents/GLOSSARY.md` | `<project terms — the ones whose meaning here differs from the obvious reading>` |
 | `docs/architecture/index.md` | current structural map entry point |
 | `docs/architecture/packets/` | per-node structural truth and constraints |
 | `docs/architecture/decisions/` | preserved architecture rationale |
 | `<other canonical doc>` | `<what it owns>` |
 
-## Conventions
-
-`<Repo-wide conventions an agent must follow to fit in. Naming, formatting, where things go. Omit lines that do not change agent action.>`
-
-- **Branching / commits:** `<branch off main; commit cadence; PR vs direct>`
-- **Naming:** `<file, module, or work-id naming rules>`
-- **Where new code goes:** `<placement rules by kind>`
-- **Where new docs go:** `<durable vs workflow-local>`
-
 ## Build, Test, and Run
 
-Universal commands only. Area-specific commands belong in handoffs, not here.
+**Portable entry points only.** Give the command that works on any machine this repo is worked on. Never
+encode one operating system's invocation — no `py` vs `python3`, no shell-specific syntax, no
+absolute paths. If a step has no portable entry point, that is a repo defect worth an issue, not a
+caveat here.
+
+Universal commands only. Area-specific commands belong in handoffs, not in this guide.
 
 ```text
 <build command>
@@ -67,18 +78,3 @@ Universal commands only. Area-specific commands belong in handoffs, not here.
 <lint/format command>
 <run/serve command>
 ```
-
-## Workflow State
-
-- Temporary workflow state and archived history live under `.agent-work/` (see `docs/agents/` skills for the full layout). Treat it as recoverable state, not project truth.
-- What a run observed is recorded as **episodes** under the repo-root `episodes/` directory, written only through `scripts/apply_episode_delta.py` structured deltas and never by hand. That path is tracked, so a committed episode survives `git worktree remove` and lands in a fresh clone.
-- An episode is a record of what happened, not planning input for a live run. Do not read the store back and condition behaviour on what you find there; a rule to follow belongs in `docs/agents/*` and putting one there is a human's call.
-- If it is in `docs/`, it is meant to guide future work. If it is in `.agent-work/`, it is temporary or historical.
-
-## Where to Go Next
-
-- Orienting / finding a file or doc → you are in the right place.
-- Planning or shaping work → inherited global-orchestrator doctrine + project deltas in `docs/agents/ORCHESTRATOR_CONTEXT.md`.
-- Implementing or reviewing a bounded change → inherited global-crew doctrine + project deltas in `docs/agents/CREW_CONTEXT.md`.
-- Hitting a Windows/harness platform hazard (shell traps, agent-resume, worktree isolation) → `docs/agents/PLATFORM_NOTES.md`.
-- Understanding current structure before changing it → `docs/architecture/index.md`.
