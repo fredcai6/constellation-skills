@@ -226,12 +226,30 @@ class TestTheRealRepoOverlay:
         )
 
     def test_default_and_workflow_closeout_are_the_known_no_skills_source_files(self):
-        """The two overlay files #639 orphaned by retiring `workbench` as an
-        installable skill. Pinned so a future reader does not mistake
-        `no-skills-source` rows for a bug in this script."""
+        """What is left of the six files #639 displaced when it retired
+        `workbench` as an installable skill. Pinned so a future reader does not
+        mistake a `no-skills-source` row for a bug in this script.
+
+        Four of the six landed in `skills/_shared/`: `checklist-engine.md` and
+        `status-model.md` as references, `STATE_NOTE` and
+        `CONSTELLATION_FEEDBACK` as templates. `WORKFLOW_CLOSEOUT.template.md`
+        joined them there in the same change as this pin -- it was homeless but
+        LIVE, cited by `docs/RECURSIVE_IMPROVEMENT_DESIGN.md` as the artifact
+        that confirms the lesson apply-or-defer gate passed.
+
+        `DEFAULT.template.json` is the last one, and it stays here deliberately
+        rather than being given a home. #639 retired it ON PURPOSE as unused --
+        `tests/test_validate_spine.py` records that decision by pinning the
+        shipped-template count at 11, lowered from 12 for exactly this file,
+        with the reason "one doc citation, no driver". Giving it a
+        `skills/_shared/templates/` home would resurrect a template nothing
+        drives and silently reverse that ruling. The coherent finish is to
+        complete the retirement -- drop it from the overlay, the baseline and
+        `TEMPLATES_MANIFEST.json` -- which is a deletion nobody has authorized,
+        so this row stands as the visible reminder that #639 stopped halfway."""
         rows = CTOF.check(REPO_ROOT)
         no_source = {Path(r["template"]).name for r in rows if r["status"] == "no-skills-source"}
-        assert no_source == {"DEFAULT.template.json", "WORKFLOW_CLOSEOUT.template.md"}, (
+        assert no_source == {"DEFAULT.template.json"}, (
             f"the no-skills-source set changed to {sorted(no_source)} -- either a template "
             f"gained/lost a skills/ home, or the resolution logic broke"
         )
