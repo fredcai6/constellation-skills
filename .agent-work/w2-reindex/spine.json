@@ -585,7 +585,8 @@
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "branch epic-569/w2-reindex committed (da8931e6) and pushed to origin"
         },
         {
           "id": "c2b",
@@ -600,7 +601,8 @@
           "id": "c3",
           "statement": "spine_close is authorized as the sole final advance-and-release transition for this run",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "spine_close is the sole authorized final transition for this run per commander-core.md's archive step doctrine; no manual spine_advance/lease-release will be called."
         },
         {
           "id": "c4",
@@ -659,7 +661,18 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "note": "Archived run accepted. PR #657 open against main, epic-569/w2-reindex pushed. All hard constraints proven, full suite green (3656 passed, 6 skipped, 0 failed), 4 episodes captured, zero issues filed (3 candidates deferred as episodes). Admiral ratifies; human ratifies at the epic return boundary."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "bookend": true
     }
@@ -672,12 +685,12 @@
     "worktree": "/home/tommy/projects/569-w2-reindex",
     "opened_by": "init_work_area"
   },
-  "refusals": 6,
+  "refusals": 7,
   "engine_session": {
     "session_id": "constellation/w2-reindex",
     "status": "active",
     "claimed_at": "2026-08-22T19:42:32.602837+00:00",
-    "last_heartbeat": "2026-08-22T19:46:40.469984+00:00",
+    "last_heartbeat": "2026-08-22T19:47:57.444551+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "constellation/w2-reindex/commander/commander",
