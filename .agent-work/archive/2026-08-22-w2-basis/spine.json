@@ -635,13 +635,15 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py w2-basis --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-3"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Branch epic-569/w2-basis committed (a62d0d0e, e340fea1) and pushed to origin (git push -u origin epic-569/w2-basis succeeded, new branch on remote)."
         },
         {
           "id": "c2b",
@@ -650,13 +652,15 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/569-w2-basis rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-4"
         },
         {
           "id": "c3",
           "statement": "spine_close is authorized as the sole final advance-and-release transition for this run",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "spine_close authorized as sole final transition per launch order + commander-core.md delegated-archive doctrine; will call it once with tree_clean=true, episodes_captured=true, push=false, open_pr=false (both already done: c2 pushed, c2b PR #653 open)."
         },
         {
           "id": "c4",
@@ -691,12 +695,13 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-5"
         },
         {
           "id": "c5",
@@ -705,13 +710,18 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2",
+          "attested": {
+            "evidence": "e-archive-2",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -723,6 +733,48 @@
             "seam": "archive",
             "why_ref": "w-9",
             "lease_claimed_at": "2026-08-22T17:10:54.423996+00:00"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w2-basis --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/569-w2-basis rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-5",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
           },
           "produced_by": "engine",
           "ts": ""
@@ -746,16 +798,17 @@
     "worktree": "/home/tommy/projects/569-w2-basis",
     "opened_by": "init_work_area"
   },
-  "refusals": 10,
+  "refusals": 11,
   "engine_session": {
     "session_id": "constellation/w2-basis/commander/commander",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-22T17:10:54.423996+00:00",
-    "last_heartbeat": "2026-08-22T18:42:29.749194+00:00",
+    "last_heartbeat": "2026-08-22T18:44:57.438306+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-22T18:44:57.450724+00:00"
   },
   "why_trail": [
     {
@@ -820,6 +873,13 @@
       "why": "Honest reflection: this run followed the skills/handoffs/checklists closely, with 4 real improvisations worth recording as episodes (HARD-band trips resolved via the launch order's explicit override, DEGRADED-mode mission-frame anchor mechanics discovered by trial, execute.json's leaseless standalone-CLI driving pattern, and the now-third-observed spine:null crew-dispatch pattern, all self-resolved without rework). 4 episodes applied via apply_episode_delta.py (w2-basis-001..004), capture verified via verify_episode_captured.py.",
       "mechanical": false,
       "ts": "2026-08-22T18:42:18.969621+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Run complete: shipped a report-only basis field on Condition (checklist_engine.py), authored on plan.c2/c4/c5 in COMMANDER_SPINE.template.json, proving epic 569's core render+require mechanism against real corpus content. 3-candidate design-it-twice panel + cold critic ran before execute.json was authored; all 6 critic findings resolved by narrowing scope to this report-only mechanism, deferring the riskier check-kind-promotion batch to triage. All 3 execute.json gates driven through real independent implementer+reviewer crews, every integration independently re-verified fresh-process. Full suite green throughout (3642 passed/6 skipped/0 failed). 4 episodes captured. Committed (a62d0d0e, e340fea1), pushed, PR #653 open against main.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:44:57.438293+00:00"
     }
   ],
   "trip_ledger": [
