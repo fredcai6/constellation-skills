@@ -247,7 +247,8 @@
             "kind": "command",
             "command": "python /home/tommy/projects/constellation-skills/scripts/verify_episode_captured.py 20260820-deficiency-cleanup --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-3"
         },
         {
           "id": "c3",
@@ -270,17 +271,56 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-closeout-1",
+          "type": "human-acceptance",
+          "payload": {
+            "artifact": ".agent-work/20260820-deficiency-cleanup/EPIC_SUMMARY.md",
+            "accepted_by": "Tommy",
+            "accepted_at": "2026-08-21",
+            "verdict": "accepted",
+            "note": "Summary presented with the epic's six Admiral errors and who caught each stated in it, plus the two issues left open against recommendation (#357 and #638). Accepted as written, unmodified."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-2",
+          "type": "user-decision",
+          "payload": {
+            "artifact": ".agent-work/20260820-deficiency-cleanup/EPIC_SUMMARY.md",
+            "decision": "accepted",
+            "decided_by": "Tommy",
+            "decided_at": "2026-08-21",
+            "note": "Epic summary accepted as written, unmodified. Presented with the six Admiral errors and who caught each stated in it, and with the two issues left open against the reconciliation's recommendation (#357, recommended closing in favour of #615; #638, open for the archive-move half) named explicitly."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/scripts/verify_episode_captured.py 20260820-deficiency-cleanup --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "bookend": true
     }
@@ -293,16 +333,17 @@
     "worktree": "/home/tommy/projects/constellation-skills",
     "opened_by": "init_work_area"
   },
-  "refusals": 1,
+  "refusals": 3,
   "engine_session": {
     "session_id": "constellation/20260820-deficiency-cleanup",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-21T12:35:05.405354+00:00",
-    "last_heartbeat": "2026-08-22T00:26:33.862672+00:00",
+    "last_heartbeat": "2026-08-22T00:28:55.807342+00:00",
     "claimed_by": "admiral",
     "worktree": "/home/tommy/projects/constellation-skills",
     "previous_session_id": "admiral-20260820-deficiency-cleanup-root",
-    "takeover_reason": "Prior session admiral-20260820-deficiency-cleanup-root died at the #613 repair-review seam on 2026-08-20T19:13 local and never released. Human directed takeover on 2026-08-21 to resume Wave 2 from the approved wave1-complete-map-repair packet."
+    "takeover_reason": "Prior session admiral-20260820-deficiency-cleanup-root died at the #613 repair-review seam on 2026-08-20T19:13 local and never released. Human directed takeover on 2026-08-21 to resume Wave 2 from the approved wave1-complete-map-repair packet.",
+    "released_at": "2026-08-22T00:29:02.073047+00:00"
   },
   "why_trail": [
     {
@@ -325,6 +366,13 @@
       "why": "The epic is complete and its chartered question is answered by retirement rather than by choice. Five implementation lanes plus the A+B display batch are merged to main at 373f08c3 with the ordinary suite green at 3472/6/1224; three of those lanes were blocked by independent review and repaired before approval. The architecture cluster was not designed: a channel experiment through run_crew --backend cli reproduced none of E1, E2, E3 or E5b, showing the authority half was an artifact of the Admiral's own dispatch channel, and the final ballot put minimal intervention and status quo above two of the three full designs. What the epic actually found is smaller and worse than what it was chartered to find \u2014 _is_stale existed, worked, and was called in four places, none of them a rendering path, so the engine printed LEASE active and 'you are 7 steps from done ... Run it.' over plans dead for weeks, and 58 of 58 active leases in this checkout were stale. That is fixed at both renderers and at SessionStart. Option C was investigated and found dominated rather than broken: the Stop guard is armed by the binding store written by the act of claim, not by the lease record, so demoting the lease would not deliver its own benefit. Every ledger item and related issue is dispositioned, three further defects are recorded as episodes rather than filed, and the residual is a human scoping decision on #615's two questions, not further execution under this contract.",
       "mechanical": false,
       "ts": "2026-08-22T00:21:03.556701+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "closeout",
+      "why": "Closeout is complete and recorded rather than asserted. Thirteen episodes are in the store through the deterministic writer with the capture gate green: three defects the human ruled should be recorded rather than filed, and ten retrospective episodes written one per distinct thing that happened, observation only, with no rule authored for a future agent. An independent Cartographer reconciled the net change 24b4665b..5858a85c and found no structural change, with the docs/architecture honest null still holding and the root map current \u2014 both re-verified by the Admiral. Hygiene is done: six branches merged and deleted, seven worktrees swept, and crew evidence that existed only inside those worktrees copied into the work area and committed before any sweep, which is the one place this closeout could have destroyed the audit trail for the change the human was accepting. The ADMIRAL_LOG is archived. Tommy accepted the epic summary as written, after it was presented with the six Admiral claims that were wrong and the downstream lane, critic, experiment or human that caught each \u2014 the run's own lesson, and the reason its structure rather than its Admiral is what produced a correct result.",
+      "mechanical": false,
+      "ts": "2026-08-22T00:28:55.807324+00:00"
     }
   ]
 }

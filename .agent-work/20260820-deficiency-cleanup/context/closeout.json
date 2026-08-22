@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "closeout",
+  "files": [],
+  "repo_rev": {
+    "commit": "dbe2fc9332b9f9b81db5578cd8d69e69b8a2498e"
+  },
+  "run": {
+    "work_id": "20260820-deficiency-cleanup",
+    "generated_at": "2026-08-22T00:28:44Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills",
+      "repo": "/home/tommy/projects/constellation-skills",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills"
+    }
+  }
+}
