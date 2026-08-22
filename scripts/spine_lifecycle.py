@@ -1070,12 +1070,19 @@ def finish_work(
     Returns, on success: `{"ok": True, "work_id", "branch", "head", "archive",
     "pushed": bool, "push_error": str | None, "pr": None | str,
     "child_plans_released": [...], "unclaimed_active": [...], "reap": dict |
-    None}`. On any of steps 2/4/6 refusing: `{"ok": False, "refusal": <the
-    verbatim engine or closeout text>, "stage": "verify" |
-    "advance-release:<substage>" | "archive"}`. Never raises for a normal
-    closeout refusal -- `SpineLifecycleError` stays reserved for genuine
-    faults elsewhere in the stack (e.g. `close_work`'s own git-command
-    failures), not the ordinary "not ready yet" outcome.
+    None, "overrides": dict}`. On any of steps 2/4/6 refusing: `{"ok": False,
+    "refusal": <the verbatim engine or closeout text>, "stage": "verify" |
+    "advance-release:<substage>" | "archive", "overrides": dict}`. Never
+    raises for a normal closeout refusal -- `SpineLifecycleError` stays
+    reserved for genuine faults elsewhere in the stack (e.g. `close_work`'s
+    own git-command failures), not the ordinary "not ready yet" outcome.
+
+    `overrides` (#504) is `checklist_engine.override_summary(spine)`,
+    computed once from the spine as loaded in step 1 and carried unchanged
+    onto EVERY return point -- so a run that carried override activity is
+    visibly distinguishable from a clean one at the moment `finish_work`
+    returns, not only in the durable episode record `mechanical_fields()`
+    produces separately.
     """
     # The module-level `open_pr` function is captured via the module
     # namespace, NOT the local scope: this function's own `open_pr: bool`
@@ -1096,10 +1103,20 @@ def finish_work(
     # 1. Load the spine dict.
     spine = json.loads(absolute_spine_path.read_text(encoding="utf-8"))
 
+    # Computed once, from the spine as loaded at step 1: no verb reachable from
+    # finish_work's own composition (advance/release/reap/archive) appends an
+    # override-ledger entry (that write path is gated behind dispatch's
+    # claim/release/waive branches -- see checklist_engine's own call-graph
+    # proof), so this stays valid for every return point below. Via
+    # `override_summary`/`_override_entries`, NEVER a raw `trip_ledger`/
+    # `outcome` read: under the schema g1/g2 landed, non-trip kinds carry no
+    # `outcome` field at all.
+    overrides = checklist_engine.override_summary(spine)
+
     # 2. Verify -- refuse and stop; nothing mutated on this path.
     refusal = done_refusal(spine, tree_clean=tree_clean, episodes_captured=episodes_captured)
     if refusal is not None:
-        return {"ok": False, "refusal": refusal, "stage": "verify"}
+        return {"ok": False, "refusal": refusal, "stage": "verify", "overrides": overrides}
 
     # 3. Release every declared child plan's lease -- BEFORE the top-level
     # release and BEFORE any reap.
@@ -1117,6 +1134,7 @@ def finish_work(
             "ok": False,
             "refusal": advance_result["refusal"],
             "stage": f"advance-release:{advance_result['stage']}",
+            "overrides": overrides,
         }
 
     # 5. Reap -- AFTER every release above, never before (#552's ordering
@@ -1129,7 +1147,7 @@ def finish_work(
     try:
         close_result = close_work(absolute_spine_path, root=root, today=today)
     except SpineLifecycleError as exc:
-        return {"ok": False, "refusal": str(exc), "stage": "archive"}
+        return {"ok": False, "refusal": str(exc), "stage": "archive", "overrides": overrides}
 
     # 7. Push -- reported, never fatal to the already-committed archive move.
     pushed = False
@@ -1158,6 +1176,7 @@ def finish_work(
         "child_plans_released": child_result["released"],
         "unclaimed_active": child_result["unclaimed_active"],
         "reap": reap_result,
+        "overrides": overrides,
     }
 
 

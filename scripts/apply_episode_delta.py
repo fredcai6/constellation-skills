@@ -176,7 +176,7 @@ MECHANICAL_SCALAR_FIELDS = (
     "failed-commands",
 )
 MECHANICAL_INT_FIELDS = ("refusals", "reopens", "rework-count", "failed-commands")
-MECHANICAL_ALL_FIELDS = MECHANICAL_SCALAR_FIELDS + ("artifact-ref",)
+MECHANICAL_ALL_FIELDS = MECHANICAL_SCALAR_FIELDS + ("artifact-ref", "overrides")
 
 # Agent-supplied bin: EXACTLY these five kinds, no more, no less (section 4). Order is
 # the record's own a1..a5 numbering (section 3's worked example).
@@ -295,6 +295,7 @@ class Episode:
     failed_commands: int
     artifact_refs: list[str]
     agent_supplied: dict[str, Assertion]  # keyed by kind; always the 5 AGENT_SUPPLIED_KINDS
+    overrides: dict = field(default_factory=dict)
     diagnosis: list[Assertion] = field(default_factory=list)  # d1, d2, ... in order
     status: str = "active"
     retired_reason: str = ""
@@ -333,6 +334,8 @@ def render_episode(ep: Episode) -> str:
     ]
     for ref in ep.artifact_refs:
         parts.append(f"- artifact-ref: {ref}")
+    if ep.overrides:
+        parts.append(f"- overrides: {json.dumps(ep.overrides, sort_keys=True)}")
     parts += ["", "## Agent-supplied", ""]
     ordered = [ep.agent_supplied[kind] for kind in AGENT_SUPPLIED_KINDS]
     for i, assertion in enumerate(ordered):
@@ -393,6 +396,8 @@ def parse_episode(text: str) -> Episode:
             artifact_refs.append(value)
         else:
             mech[key] = value
+
+    overrides = json.loads(mech["overrides"]) if "overrides" in mech else {}
 
     def parse_assertions(block: str) -> list[Assertion]:
         assertions: list[Assertion] = []
@@ -462,6 +467,7 @@ def parse_episode(text: str) -> Episode:
             failed_commands=int(mech["failed-commands"]),
             artifact_refs=artifact_refs,
             agent_supplied=agent_supplied,
+            overrides=overrides,
             diagnosis=diagnosis,
             status=status,
             retired_reason=retire_fields.get("retired-reason", ""),
@@ -1087,6 +1093,9 @@ def _validate_create(op: dict) -> None:
     for ref in artifact_refs:
         _reject_newline(ref, "create.mechanical.artifact-ref")
 
+    if "overrides" in mech and not isinstance(mech["overrides"], dict):
+        raise EpisodeDeltaError("create.mechanical.overrides: must be an object")
+
     agent_supplied = op.get("agent_supplied")
     if not isinstance(agent_supplied, dict):
         raise EpisodeDeltaError("create: agent_supplied is required and must be an object")
@@ -1447,6 +1456,7 @@ def _apply_create(tx: _Transaction, op: dict) -> str:
         failed_commands=mech["failed-commands"],
         artifact_refs=[ref.strip() for ref in mech.get("artifact-ref", [])],
         agent_supplied=agent_supplied,
+        overrides=mech.get("overrides") or {},
         diagnosis=diagnosis,
     )
     tx.create(ep)

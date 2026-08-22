@@ -2242,6 +2242,38 @@ def _override_entries(cl: dict, kind: str | None = None) -> list[dict]:
     return out
 
 
+def override_summary(cl: dict) -> dict:
+    """Closeout-facing summary over the override ledger (#504): counts by kind
+    plus the full ordered list of entry ids, so a run that carried override
+    activity is visibly distinguishable from a clean one at closeout.
+
+    Reads only `_override_entries(cl)` -- same purity discipline as
+    `begin_over_line_records` (no subprocess/gauge/clock read), so this is safe
+    to call from any read-only path, including a refusal path that must not
+    mutate anything.
+
+    `waive_authority_mismatch` is a sub-count of `waive`, not a sixth kind: it
+    counts entries where `kind == "waive"` and `authority_mismatch` is true
+    (the field `_append_override_entry`'s waive call site sets only when
+    `waive()` itself recorded a mismatch -- see the `dispatch` `waive` branch)."""
+    entries = _override_entries(cl)
+    counts = {
+        "trip": 0, "force-claim": 0, "force-release": 0,
+        "waive": 0, "waive_authority_mismatch": 0,
+    }
+    ids: list[str] = []
+    for e in entries:
+        kind = e.get("kind")
+        if kind in ("trip", "force-claim", "force-release", "waive"):
+            counts[kind] += 1
+        if kind == "waive" and e.get("authority_mismatch"):
+            counts["waive_authority_mismatch"] += 1
+        eid = e.get("id")
+        if eid is not None:
+            ids.append(eid)
+    return {**counts, "ids": ids}
+
+
 def begin_over_line_records(cl: dict) -> list[dict]:
     """PURE selector over stored state: every override-ledger `kind="trip"` entry
     (read via `_override_entries`, which also covers a pre-migration spine's

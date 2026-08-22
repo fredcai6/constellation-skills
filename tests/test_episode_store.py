@@ -336,6 +336,133 @@ class ContentGuardTests(EpisodeStoreTestCase):
         self.run_delta({"work_id": "i2", "ops": [op]}, expect_rc=1)
 
 
+class OverridesMechanicalFieldTests(EpisodeStoreTestCase):
+    """#504 PART B: `overrides` is dict-shaped like `artifact-ref`, NOT a scalar --
+    it belongs in `MECHANICAL_ALL_FIELDS` only, with its own shape check in
+    `_validate_create`, mirroring how `artifact-ref` is handled there. The
+    load-bearing round-trip proof (a real `mechanical_fields()` output, including
+    a non-empty `overrides`, surviving this exact validation path) lives in
+    tests/test_episode_fields.py, where the fixture harness that can produce every
+    OTHER required mechanical field honestly (a real repo, a real engine run) already
+    exists -- this class covers the validator's own accept/reject shape rules."""
+
+    def test_overrides_is_in_the_allowlist_but_not_the_scalar_list(self):
+        self.assertIn("overrides", self.m.MECHANICAL_ALL_FIELDS)
+        self.assertNotIn("overrides", self.m.MECHANICAL_SCALAR_FIELDS)
+
+    def test_dict_shaped_overrides_value_is_accepted(self):
+        op = create_op()
+        op["mechanical"]["overrides"] = {
+            "trip": 0, "force-claim": 1, "force-release": 0,
+            "waive": 1, "waive_authority_mismatch": 1, "ids": ["ov-1", "ov-2"],
+        }
+        self.run_delta({"work_id": "issue-1", "ops": [op]})
+        self.assertEqual(episode_files(self.root), ["governor-268-001.md"])
+
+    def test_non_dict_overrides_value_rejected(self):
+        op = create_op()
+        op["mechanical"]["overrides"] = "not-a-dict"
+        self.run_delta({"work_id": "issue-1", "ops": [op]}, expect_rc=1)
+        self.assertEqual(episode_files(self.root), [])
+
+    def test_absent_overrides_is_still_accepted(self):
+        # No regression: a create op that names no overrides at all (the ordinary,
+        # override-free run) must keep working exactly as before this field existed.
+        self.run_delta({"work_id": "issue-1", "ops": [create_op()]})
+        self.assertEqual(episode_files(self.root), ["governor-268-001.md"])
+
+
+class OverridesPersistenceTests(EpisodeStoreTestCase):
+    """#504 PART E (attempt 2 rework): PART B's shape check only guaranteed a create
+    op naming `mechanical.overrides` gets ACCEPTED -- attempt 1 left it silently
+    dropped before `_apply_create` ever built the `Episode`, so the durable half of
+    this gate's Protected Intent was unmet. This class is the fix for exactly that
+    gap: a create op carrying `mechanical.overrides` must produce a persisted `.md`
+    file whose text contains the rendered line, not just a validated-then-discarded
+    value."""
+
+    def test_create_op_with_overrides_persists_rendered_line(self):
+        op = create_op()
+        op["mechanical"]["overrides"] = {
+            "trip": 1, "force-claim": 0, "force-release": 0,
+            "waive": 2, "waive_authority_mismatch": 1,
+            "ids": ["ov-1", "ov-2", "ov-3"],
+        }
+        self.run_delta({"work_id": "issue-1", "ops": [op]})
+        text = read_exact(episode_path(self.root, "governor-268-001"))
+        expected = json.dumps(op["mechanical"]["overrides"], sort_keys=True)
+        self.assertIn(f"- overrides: {expected}", text)
+
+        episode = self.m.parse_episode(text)
+        self.assertEqual(episode.overrides, op["mechanical"]["overrides"])
+        self.assertEqual(self.m.render_episode(episode), text)
+
+    def test_create_op_without_overrides_renders_no_overrides_line(self):
+        self.run_delta({"work_id": "issue-1", "ops": [create_op()]})
+        text = read_exact(episode_path(self.root, "governor-268-001"))
+        self.assertNotIn("- overrides:", text)
+
+        episode = self.m.parse_episode(text)
+        self.assertEqual(episode.overrides, {})
+        self.assertEqual(self.m.render_episode(episode), text)
+
+
+class EpisodeOverridesRoundTripTests(unittest.TestCase):
+    """Direct render/parse round trip over `Episode.overrides`, independent of the
+    writer -- exercises this file's own documented invariant
+    (`render(parse(text)) == text`) for both the overrides-present and
+    overrides-absent cases, per PLAN_CRITIC.md Finding 1 (issue #504)."""
+
+    def setUp(self):
+        self.m = load()
+
+    def _episode(self, **kwargs):
+        fields = dict(
+            episode_id="governor-268-001",
+            run="governor-268",
+            project="constellation-skills",
+            role="implementer",
+            spine_step="g1-implement",
+            context_manifest_ref="ctx-governor-268-g1@a1b2c3d",
+            refusals=0,
+            reopens=0,
+            rework_count=0,
+            failed_commands=0,
+            artifact_refs=[],
+            agent_supplied={
+                kind: self.m.Assertion(
+                    aid=f"a{i}", kind=kind, strength="strong",
+                    lifecycle_standing="active", statement="x.",
+                )
+                for i, kind in enumerate(self.m.AGENT_SUPPLIED_KINDS, start=1)
+            },
+        )
+        fields.update(kwargs)
+        return self.m.Episode(**fields)
+
+    def test_non_empty_overrides_round_trips(self):
+        overrides = {
+            "trip": 1, "force-claim": 0, "force-release": 0,
+            "waive": 0, "waive_authority_mismatch": 0, "ids": ["ov-1"],
+        }
+        ep = self._episode(overrides=overrides)
+        text = self.m.render_episode(ep)
+        self.assertIn(f"- overrides: {json.dumps(overrides, sort_keys=True)}", text)
+
+        parsed = self.m.parse_episode(text)
+        self.assertEqual(parsed.overrides, overrides)
+        self.assertEqual(self.m.render_episode(parsed), text)
+
+    def test_empty_overrides_renders_no_line_and_round_trips(self):
+        ep = self._episode(overrides={})
+        text = self.m.render_episode(ep)
+        self.assertNotIn("- overrides:", text)
+
+        parsed = self.m.parse_episode(text)
+        self.assertEqual(parsed.overrides, {})
+        self.assertEqual(self.m.render_episode(parsed), text)
+
+
 class LineBoundaryGuardTests(EpisodeStoreTestCase):
     """REWORK (g2 review BLOCK, defect 1): _reject_newline() must reject every
     character str.splitlines() treats as a line boundary, not just literal \\n/\\r --

@@ -7728,7 +7728,8 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
         self.assertEqual(callers_of("_append_trip_entry"), ["_trip_hard_gate"])
         self.assertEqual(callers_of("_trip_hard_gate"), ["dispatch"])
         self.assertEqual(callers_of("_override_entries"),
-                         ["begin_over_line_records", "begin_over_line_records_historical"])
+                         ["begin_over_line_records", "begin_over_line_records_historical",
+                          "override_summary"])
         self.assertEqual(callers_of("begin_over_line_records"), ["_trip_advisory"])
         self.assertEqual(callers_of("begin_over_line_records_historical"), ["_trip_advisory"])
         # the append call sites live in `dispatch` around `_run_verb`, never
@@ -7923,6 +7924,78 @@ class OverrideLedgerMigration(unittest.TestCase):
         self.assertEqual([e["id"] for e in merged], ["tl-1", "tl-2", "ov-1"])
         self.assertEqual(merged[-1]["kind"], "trip")
         self.assertEqual(merged[-1]["outcome"], "begin-refused")
+
+
+class OverrideSummaryTests(unittest.TestCase):
+    """#504 PART A: `override_summary` -- the closeout-facing summary over the
+    override ledger. Reads only `_override_entries(cl)` (asserted directly by
+    the call-graph proof above), so these tests exercise it purely on
+    hand-built `cl` dicts, the same fixture idiom `OverrideLedgerMigration`
+    already uses for `_override_entries` itself."""
+
+    def test_no_ledger_at_all_summarizes_to_all_zero_and_no_ids(self):
+        self.assertEqual(E.override_summary({}), {
+            "trip": 0, "force-claim": 0, "force-release": 0,
+            "waive": 0, "waive_authority_mismatch": 0, "ids": [],
+        })
+
+    def test_malformed_ledger_degrades_to_the_same_empty_summary(self):
+        # Same fail-safe posture `_override_entries` documents for a malformed
+        # `override_ledger`/`trip_ledger` (None, a string, a dict): degrade to
+        # nothing rather than raising.
+        cl = {"trip_ledger": "not-a-list", "override_ledger": None}
+        self.assertEqual(E.override_summary(cl), {
+            "trip": 0, "force-claim": 0, "force-release": 0,
+            "waive": 0, "waive_authority_mismatch": 0, "ids": [],
+        })
+
+    def test_mixed_kinds_counted_and_ids_ordered_legacy_first(self):
+        cl = {
+            "trip_ledger": [
+                {"id": "tl-1", "gate": "g1", "verb": "start", "outcome": "begin-refused"},
+            ],
+            "override_ledger": [
+                {"id": "ov-1", "kind": "force-claim", "verb": "claim"},
+                {"id": "ov-2", "kind": "force-release", "verb": "release"},
+                {"id": "ov-3", "kind": "waive", "task": "m1", "cond": "c1"},
+                {"id": "ov-4", "kind": "waive", "task": "m1", "cond": "c2",
+                 "authority_mismatch": True, "expected_authority": "human"},
+                {"id": "ov-5", "kind": "trip", "gate": "g2", "verb": "reopen",
+                 "outcome": "begin-released"},
+            ],
+        }
+        self.assertEqual(E.override_summary(cl), {
+            "trip": 2, "force-claim": 1, "force-release": 1,
+            "waive": 2, "waive_authority_mismatch": 1,
+            "ids": ["tl-1", "ov-1", "ov-2", "ov-3", "ov-4", "ov-5"],
+        })
+
+    def test_waive_authority_mismatch_is_a_sub_count_not_a_sixth_kind(self):
+        # A waive entry that carries no `authority_mismatch` key at all (the
+        # ordinary, matched-authority case) must not be miscounted as a
+        # mismatch -- only an explicit truthy flag counts.
+        cl = {"override_ledger": [
+            {"id": "ov-1", "kind": "waive", "task": "m1", "cond": "c1"},
+            {"id": "ov-2", "kind": "waive", "task": "m1", "cond": "c2",
+             "authority_mismatch": False},
+        ]}
+        summary = E.override_summary(cl)
+        self.assertEqual(summary["waive"], 2)
+        self.assertEqual(summary["waive_authority_mismatch"], 0)
+
+    def test_does_not_read_the_ledger_keys_directly(self):
+        """Purity proof, mirroring the call-graph test's own coverage: patch
+        `_override_entries` itself and confirm `override_summary`'s output is
+        driven entirely by its return value, never by a direct `cl.get(...)`
+        read of `override_ledger`/`trip_ledger`."""
+        cl = {"trip_ledger": "poisoned", "override_ledger": "poisoned"}
+        canned = [{"id": "ov-1", "kind": "waive", "authority_mismatch": True}]
+        with mock.patch.object(E, "_override_entries", return_value=canned) as patched:
+            summary = E.override_summary(cl)
+        patched.assert_called_once_with(cl)
+        self.assertEqual(summary["waive"], 1)
+        self.assertEqual(summary["waive_authority_mismatch"], 1)
+        self.assertEqual(summary["ids"], ["ov-1"])
 
 
 class OverrideLedgerG2ClaimReleaseWiring(unittest.TestCase):

@@ -4,9 +4,9 @@
 conftest: 1 modules, 3 entities
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 60 modules, 1293 entities
+scripts: 60 modules, 1296 entities
 skills: 1 modules, 22 entities
-tests: 100 modules, 5535 entities
+tests: 100 modules, 5592 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -41,7 +41,7 @@ tests: 100 modules, 5535 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (60 modules, 1293 entities)
+## scripts (60 modules, 1296 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -66,7 +66,7 @@ tests: 100 modules, 5535 entities
 - [scripts.check_role_spine_bookends](scripts.check_role_spine_bookends/INDEX.md) (6 entities, 4 holes): Lint: every role spine template declares at least one bookend, and the repo's declaration matches what is actually installed.
 - [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
 - [scripts.check_template_overlay_freshness](scripts.check_template_overlay_freshness/INDEX.md) (5 entities, 3 holes): Guard: a project's `.agent-work/templates/` overlay must never be STALE.
-- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (116 entities, 24 holes): Workbench checklist engine: work one gated/survey plan through its gates.
+- [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (119 entities, 24 holes): Workbench checklist engine: work one gated/survey plan through its gates.
 - [scripts.collect_feedback](scripts.collect_feedback/INDEX.md) (38 entities, 15 holes): Sweep consuming projects' CONSTELLATION_FEEDBACK.md exports into one report.
 - [scripts.context_manifest](scripts.context_manifest/INDEX.md) (14 entities): Deterministic projection substrate: what was made available to an agent, and at which revision.
 - [scripts.curate_corpus](scripts.curate_corpus/INDEX.md) (18 entities, 4 holes): Curator MEASUREMENT pass over the skills corpus (mechanical-only, flags-never-gates).
@@ -116,7 +116,7 @@ tests: 100 modules, 5535 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (100 modules, 5535 entities)
+## tests (100 modules, 5592 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -131,7 +131,7 @@ tests: 100 modules, 5535 entities
 - [tests.test_check_role_spine_bookends](tests.test_check_role_spine_bookends/INDEX.md) (11 entities, 7 holes): #567 lane L: the role-spine-template bookend lint.
 - [tests.test_check_script_registration](tests.test_check_script_registration/INDEX.md) (13 entities, 8 holes): Registration lint + vocabulary rule for issue #345 ("built but not wired").
 - [tests.test_check_template_overlay_freshness](tests.test_check_template_overlay_freshness/INDEX.md) (14 entities, 3 holes): The overlay-freshness guard `scripts/check_template_overlay_freshness.py` was written to catch exactly what `tests/test_cli_retirement_guard.py`'s own docstring
-- [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (679 entities, 518 holes): HOLE: no docstring
+- [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (709 entities, 538 holes): HOLE: no docstring
 - [tests.test_checklist_engine_atomic_save](tests.test_checklist_engine_atomic_save/INDEX.md) (32 entities, 19 holes): #613 (atomicity half): `checklist_engine.save()` must install the new document by ATOMIC RENAME, never by writing over the live target in place.
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
 - [tests.test_cli_retirement_guard](tests.test_cli_retirement_guard/INDEX.md) (38 entities, 24 holes): Regrowth guard for issue #559 -- the door is the interface, not a second path.
@@ -151,11 +151,11 @@ tests: 100 modules, 5535 entities
 - [tests.test_engine_survey_retext_and_newlines](tests.test_engine_survey_retext_and_newlines/INDEX.md) (10 entities, 4 holes): Issue #465: the engine must not churn a file's line endings, and `amend`'s `retext-check` op must be usable on a SURVEY checklist.
 - [tests.test_epic_418_demo](tests.test_epic_418_demo/INDEX.md) (6 entities, 6 holes): Focused tests for the frozen, offline Epic #418 demonstration contract.
 - [tests.test_episode_capture](tests.test_episode_capture/INDEX.md) (41 entities, 20 holes): Tests for `scripts/episode_capture.py` — the assembly seam that makes the context manifest a *byproduct* of starting a spine step.
-- [tests.test_episode_fields](tests.test_episode_fields/INDEX.md) (90 entities, 56 holes): Tests for the MECHANICAL FIELD COMPOSER — `episode_capture.mechanical_fields()` and the snapshot it emits at the g1 seam (#305 gate g2).
+- [tests.test_episode_fields](tests.test_episode_fields/INDEX.md) (98 entities, 61 holes): Tests for the MECHANICAL FIELD COMPOSER — `episode_capture.mechanical_fields()` and the snapshot it emits at the g1 seam (#305 gate g2).
 - [tests.test_episode_negative_control](tests.test_episode_negative_control/INDEX.md) (49 entities, 17 holes): #305 gate g3 — the NEGATIVE CONTROL for `zero agent effort is literal`.
 - [tests.test_episode_observation_guard_at_write](tests.test_episode_observation_guard_at_write/INDEX.md) (18 entities, 8 holes): Tests for the write-time instruction-shaped-statement guard in scripts/apply_episode_delta.py (episode-guard-at-write).
 - [tests.test_episode_observations](tests.test_episode_observations/INDEX.md) (32 entities, 12 holes): Tests for scripts/verify_episode_observations.py — the guard that keeps episode records reading as observations rather than instructions (issue #460).
-- [tests.test_episode_store](tests.test_episode_store/INDEX.md) (214 entities, 127 holes): Tests for the episode store (docs/EPISODE_STORE.md): scripts/apply_episode_delta.py, the validated all-or-nothing writer (gate g2), and scripts/query_episodes.p
+- [tests.test_episode_store](tests.test_episode_store/INDEX.md) (227 entities, 137 holes): Tests for the episode store (docs/EPISODE_STORE.md): scripts/apply_episode_delta.py, the validated all-or-nothing writer (gate g2), and scripts/query_episodes.p
 - [tests.test_explorer_templates](tests.test_explorer_templates/INDEX.md) (43 entities, 42 holes): Verifier<->template cross-check for the constellation-explorer engine artifacts.
 - [tests.test_feedback_tooling](tests.test_feedback_tooling/INDEX.md) (61 entities, 59 holes): HOLE: no docstring
 - [tests.test_force_claim_occupancy](tests.test_force_claim_occupancy/INDEX.md) (14 entities, 9 holes): #369 (resume side): a force takeover reports what the artifacts around the spine say about who else has been here, as counts and ages, with no verdict.
@@ -201,7 +201,7 @@ tests: 100 modules, 5535 entities
 - [tests.test_shipped_check_commands_resolve](tests.test_shipped_check_commands_resolve/INDEX.md) (14 entities, 10 holes): Every shipped command check must actually run after instantiation (epic-559/b-instructions-to-checks, rework r3).
 - [tests.test_shipped_examples_are_portable](tests.test_shipped_examples_are_portable/INDEX.md) (18 entities, 6 holes): A shipped example must run for the person who installed it.
 - [tests.test_shipped_template_gates_satisfiable](tests.test_shipped_template_gates_satisfiable/INDEX.md) (8 entities, 7 holes): Prove the shipped EXECUTE_PLAN.template.json's g1-implement gate is actually satisfiable by a real drive of the real engine (epic-559/b-instructions-to-checks, 
-- [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (214 entities, 190 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
+- [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (220 entities, 194 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
 - [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (32 entities, 17 holes): The `origin` stamp is PROVENANCE: written, and read by nothing (#315/#568/#609).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
 - [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (239 entities, 104 holes): Unit tests for scripts/hooks/spine_rail.py.
