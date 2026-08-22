@@ -19,21 +19,42 @@ recorded in the Evidence column:
    operator cannot skip by forgetting a separate step) — where that caller is itself reachable from (1),
    (2), (3), a role's `SKILL.md` real operational instruction, or another such caller? → **live**,
    transitively wired.
-5. Otherwise: does it have its own dedicated pytest coverage, doc references, and a still-current
+5. Does a `tests/` test call its check/scan/verify function **unconditionally against the real,
+   committed repo** (`ROOT`/`REPO_ROOT`, not a temp dir or an authored fixture) and assert pass/fail on
+   the result — so a real regression in the repo would fail that test, and that test is part of the
+   suite `.github/workflows/ci.yml` runs (`pytest tests/ -q`)? → **live**, suite-gated. This was found
+   by re-checking every "no caller" candidate's own test file after `verify_retirement.py`'s
+   `test_canon_is_clean` caught a real violation in this census's own first draft (below) — proof this
+   category is not academic. A test that only exercises the checker against synthetic/fixture input
+   checks the *tool's* correctness, not the *repo's*; that case falls through to (6).
+6. Otherwise: does it have its own dedicated pytest coverage, doc references, and a still-current
    purpose? → **unwired** (built, usually tested and documented, but nothing outside its own test suite
    or its own prose mentions invokes it — the exact "built but not wired" pattern this census exists to
    measure).
-6. Otherwise (no test coverage, no current caller, purpose superseded or one-off): **dead**.
+7. Otherwise (no test coverage, no current caller, purpose superseded or one-off): **dead**.
 
 **A defined exclusion, stated plainly so it is checkable:** a script that is merely *named in a role's
 `SKILL.md` as a separate, optional CLI step* ("run `verify_X.py <arg>`") is **not** counted live by that
 mention alone. That instruction is prose — the two-bin rule (`docs/agents/GLOSSARY.md`) says enforced
 means checked by command or attested by a named human, and an agent can skip a prose-named step with
 nothing refusing. This is different from a script called unconditionally from *inside* another live
-tool's own function body, which cannot be skipped by omission. Two scripts below (`verify_diagnosis.py`,
-`verify_skill_registered.py`) are classified by this distinction; it is exactly the same-shape defect
-the census is measuring, one layer down, and is called out per-row rather than silently folded into
-either bucket.
+tool's own function body, which cannot be skipped by omission, and different again from category (5)
+above. One script below (`verify_diagnosis.py`) is unwired by this distinction alone; a second
+(`verify_skill_registered.py`) is prose-instructed by this same distinction **and separately** live via
+category (5) — both are stated, not silently folded into one bucket.
+
+**A correction made mid-census, reported rather than hidden.** The first draft of this census applied
+categories (1)-(4) and (6)-(7) only, missing (5) — it treated "has a dedicated test" as evidence of
+*coverage*, not of *enforcement*, without checking whether any of those tests actually assert against
+the real repo. Running the full suite against that first draft's own disposition work (see
+**Disposition** below) tripped `verify_retirement.py`'s own `unapproved-store-mention` guard on a line
+this census itself had just written — a live check, in the suite, catching a real thing, while this
+census still called `verify_retirement.py` "unwired." That failure is what prompted re-checking every
+other "unwired" candidate's test file for the same pattern; five were reclassified as a result
+(`verify_retirement.py`, `verify_context_declaration.py`, `verify_coverage_ledger.py`,
+`verify_skill_registered.py`, `check_template_overlay_freshness.py`) and one launch-order framing
+(`check_template_overlay_freshness.py`'s predicted "sharp irony") is retracted below, not merely
+corrected quietly.
 
 ## Census
 
@@ -51,30 +72,38 @@ either bucket.
 | `verify_issue_set.py` | live | `scripts/file_issue_set.py:262,307` calls `verify_issue_set(manifest, brief)` unconditionally inside the filer's own code; `file_issue_set.py` is named as a real operational step in `skills/to-initial-issues/SKILL.md:32` ("On an authorized filing go-ahead, run `scripts/file_issue_set.py`") |
 | `verify_episode_observations.py` | live | `scripts/apply_episode_delta.py:936-937,959` imports it as the write-time instruction-shaped-statement guard, called unconditionally from `_apply_create`/`_apply_restate_assertion` on every real episode write (`apply_episode_delta.py` is the sole episode write path, doctrine-cited) |
 | `verify_declared_dispatch.py` | live | narrow-path (see note below the table) — `scripts/generate_spine.py:589-598` (`_compile_dispatch_entry`) auto-injects a `command`-kind postcondition running this script for every authored `[[gate.dispatch]]` entry. That compiler path is itself live (see `generate_spine.py` disposition below) — but it is **not** the path that produced this very commander's own spine, so this script is dead weight on the operational template-instantiation path even though it is reachable via the compiler path |
-| `verify_context_declaration.py` | unwired | Mechanical guard ("every declared `context_refs` path must appear verbatim in its own task's `imperative`") documented in `docs/CHECKLIST_SCHEMA.md`'s `context_refs` row; 2 test refs (`tests/`); zero callers in `skills/*/templates/*.json`, `.github/workflows/`, `scripts/hooks/`, or another script. A strong should-probably-be-wired candidate. |
-| `verify_coverage_ledger.py` | unwired | "the mechanical rail behind epic-164's done-condition"; `docs/removability_ledger.json` and `docs/installed_externals_manifest.json` both still exist and are current per `AGENT_GUIDE.md`'s Documentation Map (`docs/REMOVABILITY_LEDGER.md`); 1 test ref; no command check, CI, or hook caller. |
+| `verify_context_declaration.py` | live | Category (5): `tests/test_context_declaration_lint.py::test_lint_passes_over_real_shipped_spine_templates` and `::test_default_discovery_finds_the_commander_spine_and_passes` call its lint unconditionally against every real `skills/*/templates/*.json`, asserting exit 0 -- a real regression in a shipped template fails the suite. No `command`-kind check in any template itself. |
+| `verify_coverage_ledger.py` | live | Category (5): `tests/test_verify_coverage_ledger.py::test_real_repo_ledger_passes` calls `main([])` (default = real repo root) and asserts exit 0 against the actual `docs/removability_ledger.json`/`docs/installed_externals_manifest.json`. |
 | `verify_diagnosis.py` | unwired | prose-instructed (see note above) — `skills/diagnose/SKILL.md:55` step 3 instructs "Clear the rail: `python <skill-dir>/scripts/verify_diagnosis.py <finding.json>`" — a real, separately-run CLI step named in prose, not gated by any `command`-kind check; an agent following the Diagnose role could skip it with nothing refusing. 1 test ref. |
 | `verify_epic_418_demo.py` | unwired | `scripts/verify_iterative_planning_acceptance.py:57` dynamically loads it (`_load`), but that caller is itself unwired (below) — no live path reaches either. 1 test ref. Historical one-time acceptance proof for epic #418. |
 | `verify_installed_bundles.py` | unwired | Referenced only in **comments** in `scripts/install_constellation.py:488,1674` ("reconstructs this dataclass from an..."), never actually imported or called there. 2 test refs. |
 | `verify_iterative_planning_acceptance.py` | unwired | "Verify all ten frozen iterative-planning acceptance items offline" — reads as a durable regression suite for the still-live iterative-planning feature (`REPLAN_INPUT.json`, `verify_iterative_role_artifacts.py`), but nothing re-runs it; only its own 1 test ref calls it. |
-| `verify_retirement.py` | unwired | Documented as a manual maintenance command in `docs/agents/AGENT_GUIDE.md`'s Build/Test/Run table ("retirement + store-mention guards"), same tier as `curate_corpus.py`; not in CI, no command check, no hook. 3 test refs. |
-| `verify_skill_registered.py` | unwired | prose-instructed (see note above) — `skills/write-a-skill/SKILL.md:36` states "`python <skill-dir>/scripts/verify_skill_registered.py --skill <short-name>` must pass" — a real, separately-run CLI step named in prose, not gated by any `command`-kind check. 2 test refs. |
+| `verify_retirement.py` | live | Category (5), found the hard way: `tests/test_retirement_guard.py::test_canon_is_clean` calls `verify_retirement.scan(REPO_ROOT) == []` unconditionally. It caught a real violation on this census's own first draft (see the correction note above) -- direct, in-session proof this is a live, suite-enforced guard, not merely the manual command `AGENT_GUIDE.md` also documents. |
+| `verify_skill_registered.py` | live | Category (5): `tests/test_write_a_skill.py::test_write_a_skill_clears_its_own_rail` and `::test_new_lean_replan_skill_is_registered_and_clears_the_mint_rail` call it unconditionally against the real `skills/` corpus ("Uses the live registration maps + the real skills/ corpus"). Also separately prose-instructed in `skills/write-a-skill/SKILL.md:36` -- both are true; the suite-gated path is what makes it live, not the prose step alone. |
 | `check_corpus_freshness.py` | unwired | Referenced only in comments in `scripts/install_constellation.py:2219,2252`; not called there. 1 test ref. |
 | `check_role_spine_bookends.py` | unwired | Referenced only in `check_template_overlay_freshness.py`'s docstring (prose comparison, no import/call). 2 test refs. |
 | `check_skill_freshness.py` | unwired | Named in `install_constellation.py`'s printed human-facing messages ("Run `check_skill_freshness.py` to reconcile") at 5 sites — advisory text, never an actual call. 3 test refs. |
-| `check_template_overlay_freshness.py` | unwired | The launch order's own predicted "sharp irony" confirmed: zero references in `skills/`, zero in `.github/workflows/`, zero in `scripts/hooks/` (checked directly — the overlay-sync commit `244665ee` cited in this launch order was a **human** manual sync, not this script running automatically). 2 test refs. |
+| `check_template_overlay_freshness.py` | live | Category (5), and the launch order's predicted "sharp irony" is **retracted, not confirmed**: `tests/test_check_template_overlay_freshness.py::test_real_repo_overlay_has_no_stale_templates` calls `CTOF.check(REPO_ROOT)` unconditionally and asserts no template is stale -- its own docstring: "the next time skills/ moves and the overlay does not follow, this is what says so." Zero references in `skills/`, CI workflow, or hooks directly, but the suite-gated test is real enforcement the crude grep cannot see. |
 | `prove_docstring_only.py` | dead | Zero test references (the only script in the 26 with none). No caller anywhere in current `scripts/`, `tests/`, `skills/`, `.github/`. Appears only in **archived** `.agent-work/archive/` run artifacts from three already-closed efforts (epic-298 twice, issue-305, epic-418-redux), each an ad hoc one-time manual proof, never promoted to a reusable, tested mechanism. |
 | `measure_overread.py` | unwired | Real, tested (`tests/test_measure_overread.py`), actively used as a **measurement instrument** across multiple epic-567 launch orders and `skills/_shared/global-everyone.md`'s own doctrine ("Enforcement lint is deliberately deferred until post-ship `measure_overread.py` evidence shows the rule is broken often enough"). Deliberately manual-invocation-only; not miscategorized as forgotten. |
 
-**Row count: 26.** **Classification counts: 12 live (11 mechanically/hook/CI/cross-script-live plus
-`verify_declared_dispatch.py` live-only-on-the-compiler-path), 13 unwired, 1 dead.**
+**Row count: 26.** **Classification counts: 17 live (7 template-command-check, 1 CI-workflow, 4
+cross-script/hard-call, 5 suite-gated-test, 1 compiler-path-only — `verify_declared_dispatch.py`
+double-counts into both the cross-script and compiler-path notes above, so these sub-tallies sum to
+18 against 17 rows by design), 8 unwired, 1 dead.**
 
-This corrects the Admiral's pasted pre-census in two directions: it moves `verify_skip_guard.py`,
-`verify_worktree_isolation.py`, `verify_issue_set.py`, `verify_episode_observations.py`, and
-`verify_declared_dispatch.py` from "zero references" into **live** (found only by checking CI, hooks,
-and cross-script calls the `skills/`-only grep is blind to, exactly as the launch order predicted); it
-leaves `check_template_overlay_freshness.py` in **unwired**, confirming rather than resolving the
-"sharp irony" the launch order named.
+This corrects the Admiral's pasted pre-census in three directions, not one: it moves
+`verify_skip_guard.py`, `verify_worktree_isolation.py`, `verify_issue_set.py`,
+`verify_episode_observations.py`, and `verify_declared_dispatch.py` from "zero references" into
+**live** by checking CI, hooks, and cross-script calls the `skills/`-only grep is blind to, exactly as
+the launch order predicted; then, on top of that first pass, catching this census's **own** initial
+under-count (see the correction note above) moves `verify_context_declaration.py`,
+`verify_coverage_ledger.py`, `verify_retirement.py`, `verify_skill_registered.py`, and
+`check_template_overlay_freshness.py` from "unwired" into **live** by checking whether a `tests/` test
+asserts each one against the real repo, not merely covers its logic. `check_template_overlay_freshness.py`
+in particular **retracts** the launch order's predicted "sharp irony" rather than confirming it: it is
+genuinely enforced, by a suite-gated test the `skills/`-only grep (and this census's own first pass)
+both missed.
 
 ## generate_spine.py disposition
 

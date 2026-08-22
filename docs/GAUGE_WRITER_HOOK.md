@@ -124,7 +124,7 @@ path. Both are advisory-only and never refuse anything, and both resolve from
 whatever gauge path they are handed via `.with_name(...)` — so they keep working
 unchanged from the owned and unowned paths alike.
 
-## The record is four required fields, plus one on a subagent
+## The record is four required fields, plus owner, plus one on a subagent
 
 This is the one place the record's shape is stated; everything else in this
 document points here.
@@ -135,6 +135,7 @@ document points here.
 | `fill_fraction` | yes | always |
 | `model` | yes | always |
 | `observed_at` | yes | always |
+| `owner` | **no** | whenever the candidate has one (#600) |
 | `identity_resolution_ms` | **no** | dispatched agents only (#419) |
 
 The four required fields are what a reader validates —
