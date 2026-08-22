@@ -38,7 +38,7 @@ Drive the gated spine (`templates/EXPLORER_SPINE.template.json`) one step at a t
 | spec | crystallize `DESIGN_SPEC.md` from the board; per-section approval, delta-based after the first pass; design-it-twice on every load-bearing interface |
 | review | cold adversarial critique; findings land in the spec's structured table; closes only when every Disposition cell is filled (`verify_spec_confirmed.py --phase review`) |
 | confirm | hard gate: `user-decision` artifact **and** `verify_spec_confirmed.py`; the Confirmation block records assumptions exercised vs. accepted untested |
-| route | human routes the confirmed spec; archive work area; release lease |
+| route | human routes the confirmed spec; human accepts the routing disposition (`user-decision`, own conjunct at this step); archive work area; release lease |
 
 The engine and the templates hold the exact per-step instructions; this table is the map, not the authority.
 
@@ -107,6 +107,8 @@ The human routes the confirmed spec. **Explorer never cuts issues itself** — t
 - Hand the exact confirmed `SHAPED_BRIEF.json` to constellation-to-initial-issues or directly to a Commander; or
 - File one "shaped design" issue holding the full spec body; or
 - **Shelve unconfirmed**: file the ideas board as the shaped-design issue and place `UNCONFIRMED — DO NOT CUT` as a **standalone header line** on it, so `verify_spec_confirmed.py` and Commander intake refuse to cut it. This is the one place the marker is written standalone on purpose.
+
+The human then accepts the routing disposition itself, recorded as a fresh `user-decision` evidence item attached at this step. This is a genuinely separate acceptance from `confirm`'s — the engine's `artifact` check only sees evidence attached to the current task — and it exists because issue #634 froze `route` against `amend`: `confirm` sits in the mutable middle, where a plan revision could drop or rescope it, but `route` cannot be touched, so putting the run's human-acceptance gate here as well means it can never be planned away. Explorer has no delegated mode (see "Role and tier" above), so this checkpoint is always synchronous with a live human, never a citation.
 
 Then archive the work area (`.agent-work/<work-id>/` → `.agent-work/archive/<date>-<work-id>/`) and `release` the engine lease.
 

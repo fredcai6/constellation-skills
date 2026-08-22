@@ -7693,3 +7693,49 @@ class ShippedTemplateBookendDeclarations(unittest.TestCase):
                     f"{path.name}: expected bookend gates {sorted(expected_bookends)}, "
                     f"got {sorted(actual_bookends)}",
                 )
+
+
+class ShippedBookendHumanAcceptance(unittest.TestCase):
+    """#634 froze `archive` (Commander) and `route` (Explorer) against `amend`
+    -- but it froze COMPLETION, not ACCEPTANCE. Neither bookend carried a
+    human-acceptance postcondition of its own: Commander's five `archive`
+    postconditions were all mechanical (episode captured, branch pushed, PR
+    reachable, `spine_close` authorized, diff clean), and Explorer's one
+    `route` postcondition was an attested outcome, `check: null`. The run's
+    only `user-decision` evidence sat in the MUTABLE middle instead --
+    `review` for Commander, `confirm` for Explorer -- where `amend` can drop
+    or rescope the gate that carries it. Admiral's `closeout` already got this
+    right (`c5`: "epic summary accepted by the human", `{"kind": "artifact",
+    "evidence_type": "user-decision"}`); this pins that Commander's `archive`
+    and Explorer's `route` now carry an equivalent postcondition of their own.
+
+    Pins the exact check SHAPE, not just postcondition count: a test that only
+    counted postconditions would still pass in a world where the new one
+    checked the wrong `evidence_type` or wasn't a `kind: artifact` check at
+    all -- neither actually closes the gap this issue names."""
+
+    EXPECTED_BOOKEND_TASK = {
+        ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json": "archive",
+        ROOT / "skills" / "explorer" / "templates" / "EXPLORER_SPINE.template.json": "route",
+    }
+
+    def test_frozen_bookend_carries_its_own_user_decision_postcondition(self):
+        for path, task_id in self.EXPECTED_BOOKEND_TASK.items():
+            with self.subTest(template=path.name):
+                cl = json.loads(path.read_text(encoding="utf-8"))
+                task = cl["tasks"][task_id]
+                self.assertTrue(task.get("bookend"), f"{task_id} must still be a bookend")
+                matches = [
+                    c for c in task["postconditions"]
+                    if isinstance(c.get("check"), dict)
+                    and c["check"].get("kind") == "artifact"
+                    and c["check"].get("evidence_type") == "user-decision"
+                ]
+                self.assertTrue(
+                    matches,
+                    f"{path.name}'s frozen bookend gate {task_id!r} carries no "
+                    "{'kind': 'artifact', 'evidence_type': 'user-decision'} "
+                    "postcondition -- the run's human-acceptance evidence still "
+                    "lives only in the mutable middle, exactly the #634 residue "
+                    "this pins against.",
+                )
