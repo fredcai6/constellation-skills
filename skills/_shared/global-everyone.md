@@ -22,10 +22,10 @@ its own spine/survey template and drives it, it never re-explains the engine.
 ## Engine verbs
 
 - Artifact postconditions (`kind: artifact` — `user-decision`, `review-result`, …): **attach** the evidence
-  once, then satisfy a sibling gate's identical artifact postcondition **by reference** —
-  `attest <task> --cond <id> --which postconditions --evidence <evidence-id>` — instead of re-attaching. E.g.
-  attach the APPROVE `review-result` to `gN-review`, then
-  `attest gN-integrate --cond <id> --which postconditions --evidence e-gN-review-1`. The engine still verifies
+  once, then satisfy a sibling gate's identical artifact postcondition **by reference** — attest that
+  gate's postcondition against the evidence id you already attached — instead of re-attaching. E.g.
+  attach the APPROVE `review-result` to `gN-review`, then attest `gN-integrate`'s matching
+  postcondition against that same evidence id. The engine still verifies
   the referenced artifact exists and matches the required `evidence_type` + `match` (it is not a thin-air
   assert). (`attach`-ing the same artifact to BOTH gates still works — backward compatible.)
 - A postcondition whose `check` is `null` is confirmed by **attest** (your manual verification); `attach`
@@ -73,7 +73,8 @@ gauge's judgment that continuing risks running past your own understanding, soft
 (Trip, #182) — do not push through, and do not author a handoff document. Write a `refresh-request` into
 **your own** engine work file via the ordinary `attach` verb, pointers only, never a copy of state:
 
-    attach <active-gate> --type refresh-request --field seam=<active-gate> --field why_ref=<latest why-record id>
+    attach a `refresh-request` against your active gate, carrying two pointer fields:
+    `seam` (that gate) and `why_ref` (the latest why-record id)
 
 ...then go idle. This is a *deliberate, governed* idle, not the "wait-by-ending-turn" failure above: there
 you would be idling on a signal you could instead poll for; here there is nothing to poll, because the next

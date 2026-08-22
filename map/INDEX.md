@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 60 modules, 1280 entities
 skills: 1 modules, 22 entities
-tests: 97 modules, 5369 entities
+tests: 97 modules, 5379 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -116,7 +116,7 @@ tests: 97 modules, 5369 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (97 modules, 5369 entities)
+## tests (97 modules, 5379 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -132,7 +132,7 @@ tests: 97 modules, 5369 entities
 - [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (670 entities, 513 holes): HOLE: no docstring
 - [tests.test_checklist_engine_atomic_save](tests.test_checklist_engine_atomic_save/INDEX.md) (32 entities, 19 holes): #613 (atomicity half): `checklist_engine.save()` must install the new document by ATOMIC RENAME, never by writing over the live target in place.
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
-- [tests.test_cli_retirement_guard](tests.test_cli_retirement_guard/INDEX.md) (29 entities, 18 holes): Regrowth guard for issue #559 -- the door is the interface, not a second path.
+- [tests.test_cli_retirement_guard](tests.test_cli_retirement_guard/INDEX.md) (38 entities, 24 holes): Regrowth guard for issue #559 -- the door is the interface, not a second path.
 - [tests.test_code_map](tests.test_code_map/INDEX.md) (348 entities, 191 holes): Tests for scripts/code_map/ — the derived code map (issue #456, gate g0).
 - [tests.test_commander_evidence_convention](tests.test_commander_evidence_convention/INDEX.md) (8 entities, 8 holes): Pin the g1-implement evidence convention (epic-559/b-instructions-to-checks, rework).
 - [tests.test_context_declaration_lint](tests.test_context_declaration_lint/INDEX.md) (22 entities, 18 holes): Tests for `scripts/verify_context_declaration.py` -- the mechanical lint pinning every declared `context_refs` path against the step's own imperative prose.
@@ -174,7 +174,7 @@ tests: 97 modules, 5369 entities
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
 - [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
 - [tests.test_map_orient](tests.test_map_orient/INDEX.md) (125 entities, 91 holes): The falsification floor for scripts/map_orient.py.
-- [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (68 entities, 29 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
+- [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (69 entities, 29 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
 - [tests.test_mcp_door_engine_cwd](tests.test_mcp_door_engine_cwd/INDEX.md) (24 entities, 15 holes): The door stands in the bound spine's own worktree for an engine call (issue #568, the g1b delta).
 - [tests.test_mcp_door_telemetry](tests.test_mcp_door_telemetry/INDEX.md) (18 entities, 4 holes): The MCP door's telemetry writes must never fail a call or kill the server (issue #604, cleanup-a-door gate g1).
 - [tests.test_mcp_door_unbound](tests.test_mcp_door_unbound/INDEX.md) (34 entities, 20 holes): The MCP door must fail CLOSED when nothing usable is bound (issue #603, cleanup-a-door gate g3).

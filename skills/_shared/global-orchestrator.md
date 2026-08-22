@@ -160,7 +160,7 @@ trade knowingly; do not expect the journal to answer the actor question.
 
 Where a takeover is *not* the deliberate reuse case, the engine already records
 the actor split for you, with no flag to remember: any reclaim of a stale lease —
-and every `claim --force` — writes `previous_session_id` and `takeover_reason`
+and every forced claim — writes `previous_session_id` and `takeover_reason`
 into `engine_session` (`checklist_engine.claim`). A force claim additionally
 prints an **occupancy report** — journal entry count, newest entry's age and
 session id, non-terminal `crew-runs.json` entries — so a resuming agent sees the

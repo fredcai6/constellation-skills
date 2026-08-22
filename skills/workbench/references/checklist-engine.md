@@ -16,9 +16,9 @@ Tool, by default when this agent owns the process's bound spine: the MCP door's 
 
 An MCP door (`scripts/mcp_spine_server.py`, tool prefix `mcp__spine__`) wraps this engine as 9 tools covering all 18 of its verbs: `spine_status` (`current`), `spine_lease` (`claim`/`release`/`heartbeat`), `spine_start` (`start`), `spine_advance` (`advance`), `spine_evidence` (`attest`/`attach`/`waive`), `spine_halt` (`block`/`resume`/`skip`/`reopen`), `spine_survey_result` (`record`/`consolidate`), `spine_capture` (`append`/`flag-candidate`), `spine_amend` (`amend`). It never reimplements the engine — every tool builds an argv and calls `checklist_engine.main(argv)`, so refusals, evidence, and the rework cap ride through unchanged.
 
-**Default:** when it is configured for your session and it is YOUR OWN spine — the one this process's door is bound to — call these tools instead of shelling out to the CLI. They wrap the identical engine call and surface the identical refusal/evidence contract, so nothing about drive discipline changes; only the invocation does.
+**Default:** when it is configured for your session and it is YOUR OWN spine — the one this process's door is bound to — call these tools. They wrap the identical engine call and surface the identical refusal/evidence contract, so nothing about drive discipline changes; only the invocation does.
 
-**Where the binding comes from (issue #603).** There are exactly **two** moments, and neither is a per-call argument: `SPINE_FILE`/`SPINE_SESSION` read from the environment at server start, **or** a successful `spine_open`, which binds this process to the spine it just minted. That second moment is what lets a session that starts with nothing bound mint its own work and immediately drive it — before #603 the binding was fixed at launch, which is before the spine exists, so an orchestrator had to fall back to the CLI.
+**Where the binding comes from (issue #603).** There are exactly **two** moments, and neither is a per-call argument: `SPINE_FILE`/`SPINE_SESSION` read from the environment at server start, **or** a successful `spine_open`, which binds this process to the spine it just minted. That second moment is what lets a session that starts with nothing bound mint its own work and immediately drive it — before #603 the binding was fixed at launch, which is before the spine exists, so an orchestrator that minted its own work could not drive it through the door at all.
 
 Two properties follow, and both are enforced rather than described:
 
@@ -31,29 +31,21 @@ Two properties follow, and both are enforced rather than described:
 
 **Every verb has a door tool; none is CLI-only anymore.** The door used to cover 13 of 18 verbs and leave `skip`, `reopen`, `append`, `amend` and `flag-candidate` CLI-only; that carve-out is retired (issue #559: "anything that we want to do for the spine needs to be accessible via mcp... anything that we can only do via the cli is a defect"). There is no CLI-only-verb table below this one — every verb the engine has is reachable through this door.
 
-The CLI is always available and always correct; the door is an additive fast path for the agent that owns the bound spine. Nothing here removes or discourages the CLI.
-
 ## Session lease: who owns the checklist state
 
-The engine enforces **actor authority** over a checklist's state so a resumed or duplicated parent session cannot concurrently mutate the same plan. One session leases the checklist; mutating verbs then require that session's id.
+The engine enforces **actor authority** over a checklist's state so a resumed or duplicated parent session cannot concurrently mutate the same plan. One session leases the checklist; mutating verbs then belong to that session alone.
 
-```
-claim     --session-id <id> --claimed-by <role> [--worktree .] [--force --reason "..."]
-heartbeat --session-id <id>
-release   --session-id <id>
-```
+The `spine_lease` tool takes `action=claim|heartbeat|release`, plus `claimed_by`, `worktree`, `force` and `reason`. There is no session id argument at all: the door reads the bound session from `SPINE_SESSION` in its own environment, so it cannot be pointed at another session's lease by argument.
 
-Door equivalent, when this is your own bound spine: the `spine_lease` tool, with `action=claim|heartbeat|release`, `claimed_by`, `worktree`, `force`, `reason` — no session id argument at all; the door reads the bound session from `SPINE_SESSION` in its own environment, so it cannot be pointed at another session's lease by argument.
-
-- `claim` takes the lease. The **same** `session_id` re-claiming is idempotent (it just refreshes the heartbeat) — safe to call on resume. A **different** active session is refused; take over only with `--force --reason "..."`, which records the prior session for audit.
+- `claim` takes the lease. The **same** `session_id` re-claiming is idempotent (it just refreshes the heartbeat) — safe to call on resume. A **different** active session is refused; take over only with `force=true` and a `reason`, which records the prior session for audit.
 - `heartbeat` proactively refreshes your lease — only needed for an idle wait where no mutating verb will fire (mutating verbs refresh it for you); `release` closes it when you are done.
-- **Once a lease exists, every mutating verb needs `--session-id <id>` matching the active lease** (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `amend`, `attest`, `waive`, `attach`, `flag-candidate`). Pass it on each call. Read-only `current` needs no session and shows the active lease.
-- A lease goes **stale** if its heartbeat lapses (config `lease_stale_seconds`, default 1800s). Staleness gates **non-owners only**: as the **owner** you are never blocked by your own staleness — every mutating verb you issue refreshes the heartbeat, so a long step or idle gap self-heals on your next verb (no re-claim, no takeover record). A **different** session must `claim` the stale lease (same id, or `--force --reason`) before mutating — the engine refuses it and tells it to claim.
-- A checklist with **no lease** behaves exactly as before: mutating verbs work without `--session-id`. Only claim a lease when your workflow wires it (the Commander spine claims at `init`, releases at `archive`).
+- **Once a lease exists, every mutating verb runs under the active lease** (`start`, `advance`, `record`, `consolidate`, `skip`, `block`, `reopen`, `append`, `amend`, `attest`, `waive`, `attach`, `flag-candidate`) — the door supplies the identity, so there is nothing to pass. Read-only `spine_status` needs no lease and shows the active one.
+- A lease goes **stale** if its heartbeat lapses (config `lease_stale_seconds`, default 1800s). Staleness gates **non-owners only**: as the **owner** you are never blocked by your own staleness — every mutating verb you issue refreshes the heartbeat, so a long step or idle gap self-heals on your next verb (no re-claim, no takeover record). A **different** session must `claim` the stale lease (same id, or with `force=true` and a `reason`) before mutating — the engine refuses it and tells it to claim.
+- A checklist with **no lease** behaves exactly as before: mutating verbs work with no lease identity in play. Only claim a lease when your workflow wires it (the Commander spine claims at `init`, releases at `archive`).
 
 ## Refresh: reach-up without a handoff doc
 
-A `refresh-request` (#179) is an ordinary evidence item — `attach <gate> --type refresh-request --field seam=<gate> --field why_ref=<why-record id>` — whose payload contains pointers, never copied state. When the checklist has an active lease, `attach` also stamps the payload with that lease's `claimed_at` as `lease_claimed_at`; callers do not supply it. `has_pending_refresh_request(cl, gate)` is a pure predicate. `current` surfaces a `DIGEST:` line (the latest running understanding — the latest non-mechanical, non-superseded `why`) and, when a request is pending, a `REFRESH REQUESTED:` line naming the gate and the why-record it was raised against. Together these **are** the handoff (`global-everyone.md` §reach-up) — no separate document is written or read.
+A `refresh-request` (#179) is an ordinary evidence item — `spine_evidence` with `action=attach`, `task_id=<gate>`, `evidence_type=refresh-request` and `fields={seam: <gate>, why_ref: <why-record id>}` — whose payload contains pointers, never copied state. When the checklist has an active lease, `attach` also stamps the payload with that lease's `claimed_at` as `lease_claimed_at`; callers do not supply it. `has_pending_refresh_request(cl, gate)` is a pure predicate. `current` surfaces a `DIGEST:` line (the latest running understanding — the latest non-mechanical, non-superseded `why`) and, when a request is pending, a `REFRESH REQUESTED:` line naming the gate and the why-record it was raised against. Together these **are** the handoff (`global-everyone.md` §reach-up) — no separate document is written or read.
 
 **Fulfilment.** A claim-stamped request stays pending only while the active lease's `claimed_at` equals its `lease_claimed_at`; any later claim, including a same-session re-claim, consumes it before the successor's first `current`. A legacy unstamped request keeps the earlier behavior: it stays pending while it is non-superseded and targets the active gate, then stops rendering after that gate advances. `reopen` still supersedes evidence. No new verb mutates or deletes the request.
 
