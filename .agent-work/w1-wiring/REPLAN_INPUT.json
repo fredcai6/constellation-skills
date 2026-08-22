@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "#345",
+      "outcome": "Took a fresh census of every check-shaped script in scripts/ (26 at base commit 244665ee), redoing the Admiral's skills/-only grep against CI, hooks, and pytest tests it could not see. Found 17 live, 8 unwired, 1 dead -- a mixed population, not mostly dead code -- so shipped a registration lint and a vocabulary rule (options 1 and 2), both blocking and both proven to fail on a reproducible negative case. Also settled generate_spine.py's disposition for epic 569's wave 2: it has a live caller (scripts/spine_lifecycle.py -> the MCP spine_open verb), but that path never produces the spines any of the 19 shipped role skills actually drive (init_work_area.py bypasses the compiler entirely, confirmed by COMMANDER_SPINE.template.json carrying 0 `because` fields against 19 check:null postconditions).",
+      "evidence": "docs/CHECK_SCRIPT_CENSUS.md; tests/test_check_script_registration.py::RegistrationLint and ::VocabularyRule"
+    },
+    {
+      "issue_id": "#368",
+      "outcome": "Re-measured the Task-field group: now 5 sites, 22-field union (not the issue's stale 'eleven'). Found the premise ('no consistency check') is already substantially fixed by 3 existing test classes (7 passing tests); one narrow, deliberately-scoped gap remains and is documented, not patched.",
+      "evidence": "docs/CHECK_SCRIPT_CENSUS.md, '#368/#444 re-measurement' section; python -m pytest tests/test_checklist_engine.py -k \"TaskFieldCompleteness or TemplateOnlyFieldAllowlist or SchemaDocFieldReconciliation\" -q"
+    },
+    {
+      "issue_id": "#444",
+      "outcome": "Re-measured the gauge-record field group: 7 sites, 6 possible fields. Found NO existing reconciliation check, and a live, current drift (docs/GAUGE_WRITER_HOOK.md's own field table, headed 'the one place the record's shape is stated', was missing the `owner` field added by #600). Fixed the doc and shipped a reconciliation test reusing #368's proven pattern.",
+      "evidence": "docs/GAUGE_WRITER_HOOK.md; tests/test_gauge_writer.py::GaugeRecordFieldTableReconciliation"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The Admiral's pasted skills/-only grep undercounts live scripts because it cannot see CI workflows, hooks, or test invocation.",
+      "expected": "Redoing the grep properly would find at least some of the 13 zero-reference scripts are actually live.",
+      "observed": "5 scripts moved from zero-reference into live via CI/hook/cross-script checking (verify_skip_guard.py, verify_worktree_isolation.py, verify_issue_set.py, verify_episode_observations.py, verify_declared_dispatch.py).",
+      "source": "docs/CHECK_SCRIPT_CENSUS.md, Census table"
+    },
+    {
+      "claim": "generate_spine.py's because-requiring compile step is 'half the fix already exists' for epic 569 wave 2.",
+      "expected": "The launch order asked this run to verify that framing, not assume it.",
+      "observed": "The framing needed correction, not confirmation: the compiler has a real caller, but that caller is not on the operational path any shipped role's spine is produced through. Wave 2 cannot rely on the compiler already requiring `because`.",
+      "source": "docs/CHECK_SCRIPT_CENSUS.md, 'generate_spine.py disposition' section"
+    },
+    {
+      "claim": "A script with its own dedicated pytest coverage is 'unwired' if nothing else calls it.",
+      "expected": "This was this run's own first-draft census methodology.",
+      "observed": "Wrong for 5 of the 26 scripts: a test asserting the script's check function against the REAL repo (not a fixture) is itself a live, suite-gated enforcement path -- caught mid-run when verify_retirement.py's own test_canon_is_clean failed against this census document's own first draft. Corrected in the census with the finding reported, not hidden.",
+      "source": "docs/CHECK_SCRIPT_CENSUS.md, 'A correction made mid-census' note; tests/test_retirement_guard.py::test_canon_is_clean"
+    },
+    {
+      "claim": "check_template_overlay_freshness.py is the launch order's predicted 'sharp irony' (a freshness checker that is itself stale/unwired).",
+      "expected": "The launch order flagged this as either a live CI/hook caller or a sharp irony.",
+      "observed": "Neither, precisely: it is genuinely enforced via tests/test_check_template_overlay_freshness.py::test_real_repo_overlay_has_no_stale_templates, a suite-gated real-repo assertion the skills/-only grep and this census's own first pass both missed. The 'irony' framing is retracted.",
+      "source": "docs/CHECK_SCRIPT_CENSUS.md, check_template_overlay_freshness.py census row"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-empty-map",
+      "signal": "map/ids.jsonl and docs/architecture/generated/map.json are both empty at base commit 244665ee -- the code-map anchor system produces zero citable anchors for this repo, pre-existing and unrelated to this run's changes.",
+      "classification": "evidence_only",
+      "affects": "Every future run's context-step map orientation for this repo; each will read DEGRADED-UNPARSEABLE until the anchor system is rebuilt",
+      "evidence": ".agent-work/w1-wiring/map-orientation.json (DEGRADED-UNPARSEABLE); map/ids.jsonl (0 lines) unchanged by this run's `python -m scripts.code_map build --root .` rerun",
+      "reason": "Rebuilding the anchor-id system is a materially larger undertaking than this bounded wave (not one of #345/#444/#368), and this run's own MISSION_FRAME.md scoped it out in advance. Reported as a triage candidate in RESULT.md, not filed and not silently fixed."
+    },
+    {
+      "id": "D-no-task-tool",
+      "signal": "This wave had no Task/Agent tool available in its dispatched context, so every plan-alternatives candidate, plan critic pass, and disposition gate that commander-core.md's doctrine would normally dispatch as a separate subagent was instead self-authored/self-driven by this same Commander, with the deviation stated at each occurrence.",
+      "classification": "later_only",
+      "affects": "Design-it-twice and cold-critic rigor on every future delegated Commander dispatched into this same tool surface, not just this wave",
+      "evidence": ".agent-work/w1-wiring/PLAN_ALTERNATIVES.md, .agent-work/w1-wiring/PLAN_CRITIC.md, execute.json gate imperatives (each states 'crew-waived')",
+      "reason": "Not this wave's to fix -- it is an environmental/tooling constraint of the dispatch, not a plan defect. Named explicitly in this run's Workflow Feedback for the Admiral, since it affects every wave dispatched the same way, not just this one."
+    }
+  ]
+}
