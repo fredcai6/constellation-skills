@@ -60,6 +60,7 @@ guidance.
 | `docs/GAUGE_WRITER_HOOK.md` | the context governor's write side |
 | `docs/DEBT_SWEEP_CADENCE.md` | keeping the cross-project feedback sweep current |
 | `docs/REMOVABILITY_LEDGER.md` | which installed externals are still load-bearing |
+| `docs/CHECK_SCRIPT_CENSUS.md` | every check-shaped `scripts/` tool classified live/unwired/dead, and the registration lint that keeps it from going stale (epic-569 #345) |
 | `docs/architecture/` | generated structural map artifacts |
 | `map/INDEX.md` | code-map entry point |
 
