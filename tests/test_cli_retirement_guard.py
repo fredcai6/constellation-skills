@@ -68,9 +68,30 @@ each a directory plus a suffix, never a file list:
     this repo actually instantiates still hands over the second path -- measured
     on this tree, the overlay carries 16 of the corpus's 26 `<engine>`
     OCCURRENCES, across 6 of the 11 files containing one, and 18 of its 34
-    `CLI fallback` occurrences, across 10 of the 21 files containing one. Each
-    overlay file is byte-identical to its `skills/` source and mirrored again
-    under `.baseline/`, so a sweep must edit all three copies.
+    `CLI fallback` occurrences, across 10 of the 21 files containing one.
+
+    THIS FILE ONCE CLAIMED "each overlay file is byte-identical to its
+    `skills/` source and mirrored again under `.baseline/`, so a sweep must
+    edit all three copies" -- stated as settled fact, and nothing in the repo
+    checked it. It was false, and had been for a while: the overlay was
+    seeded 2026-08-10 at `source_commit: 3697e12c`, `skills/` moved 591
+    commits past that with the overlay never following, and
+    `scripts/check_template_overlay_freshness.py` -- written specifically to
+    catch this -- measured 8 overlay files already disagreeing with their
+    `skills/` source: `ADMIRAL_SPINE.template.json`, `CHARTER.template.json`,
+    `COMMANDER_SPINE.template.json`, `EXPLORER_SPINE.template.json`,
+    `AGENT_GUIDE.template.md`, `AGENTS.pointer.template.md`,
+    `CLAUDE.pointer.template.md`, `ORCHESTRATOR_CONTEXT.template.md`. Every
+    one of those 8 is STALE in that guard's vocabulary, not edited: nobody
+    touched the overlay copy, it just sat still (still byte-identical to
+    `.baseline/`) while `skills/` changed underneath it. So a sweep must NOT
+    assume the three copies agree going in -- it must edit whichever of
+    `skills/`, the overlay, and `.baseline/` actually carries the site being
+    fixed, and `check_template_overlay_freshness.py` is what makes which
+    copies those are computable instead of assumed. The census above (16 of
+    26 `<engine>`, 18 of 34 `CLI fallback` living in the overlay) still holds:
+    it counts occurrences in the overlay's OWN content, and says nothing
+    about whether that content currently matches `skills/`.
 
 EVERY CENSUS HERE IS WRITTEN AS "N occurrences of X across M files containing
 X", and reading one in any other unit will mislead you. Occurrences, lines and
