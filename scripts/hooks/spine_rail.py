@@ -1750,6 +1750,13 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
     nudge-tracking / 3-strike escape hatch stays keyed by `sid` ALONE -- never
     fragmented per-entry, which would weaken the escape hatch.
 
+    A strike counts a turn-end that REPEATS inside one user prompt with nothing
+    to show for it. Engine motion (a journal line, a changed active gate) clears
+    it, and so does a changed `prompt_id`, because a human speaking again means
+    the session is conversing, not looping. Firing the hatch clears the record
+    too, so it stands down for the one turn it says it does instead of latching
+    off for the session.
+
     Ownership decides WHAT IS RENDERED, never whether an open gate blocks
     (#609 lane F g3): every visible mid-flight entry blocks, and binding-key
     provenance picks which one the stopping agent is answered with -- its own
@@ -1793,16 +1800,53 @@ def decide_stop(data: dict, project_dir: Path) -> dict:
         active_ids = sorted(
             "{}::{}".format(spine_path, aid) for spine_path, _, aid in mid_flight
         )
+        # A strike means "this agent stopped again without getting anywhere",
+        # and there are two ways to have gotten somewhere. The engine signal
+        # (journal line / active gate) catches an agent that drove the spine.
+        # `prompt_id` catches the far more common case it used to miss: the
+        # HUMAN spoke since the last turn-end. The harness stamps every payload
+        # with a uuid for the user prompt being processed (captured live in
+        # tests/fixtures/probe_payloads.jsonl), so a changed prompt_id is proof
+        # the turn-end being judged belongs to a NEW prompt rather than
+        # repeating inside the blocked one. A session that talks to its human
+        # across three turns mid-gate is not stuck and must not be scored as
+        # though it were -- only a re-stop inside one prompt is evidence of a
+        # loop the rail cannot break. Absent prompt_id (pre-2.1.196 harness, or
+        # before first user input) reads as "unknown, not new" and falls back to
+        # the engine signal alone: the hatch degrades to its old behavior rather
+        # than jamming open.
+        pid = data.get("prompt_id")
         nudges = load_nudges(project_dir)
-        prior = nudges.get(sid) or {"count": 0, "journal_seq": -1, "active_id": None}
-        progress = (seq != prior.get("journal_seq")) or (active_ids != prior.get("active_id"))
-        count = (0 if progress else prior.get("count", 0)) + 1
-        nudges[sid] = {"count": count, "journal_seq": seq, "active_id": active_ids}
-        save_nudges(project_dir, nudges)
+        prior = nudges.get(sid) or {
+            "count": 0, "journal_seq": -1, "active_id": None, "prompt_id": None,
+        }
+        engine_progress = (
+            (seq != prior.get("journal_seq")) or (active_ids != prior.get("active_id"))
+        )
+        new_prompt = pid is not None and pid != prior.get("prompt_id")
+        count = (0 if (engine_progress or new_prompt) else prior.get("count", 0)) + 1
 
         if count >= 3:
-            # Escape hatch: allow the stop, but leave a loud marker.
+            # Escape hatch: allow the stop, but leave a loud marker -- and DROP
+            # the strike record, which is what makes the marker's own promise
+            # ("standing down for this turn") true. Left in place, the count
+            # kept climbing and every later turn-end re-tripped the same
+            # >= 3 branch, so one stuck moment silently disarmed the rail for
+            # the rest of the session and re-printed the banner each turn. The
+            # rail is back up at the next turn-end; a genuinely stuck agent
+            # pays two more refusals to reach the hatch again, which is the
+            # tripwire working, not a trap. Clearing here cannot re-trap the
+            # CURRENT turn: the stop is being allowed, so the turn is over and
+            # no further Stop fires under this prompt.
+            nudges.pop(sid, None)
+            save_nudges(project_dir, nudges)
             return {"continue": True, "systemMessage": STUCK_MSG}
+
+        nudges[sid] = {
+            "count": count, "journal_seq": seq, "active_id": active_ids,
+            "prompt_id": pid,
+        }
+        save_nudges(project_dir, nudges)
 
         # Answer this agent with ITS OWN gate wherever it has one, and fall
         # back to the leading entry only when it has none. Order alone would
