@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-waive-produced-by-and-mismatch",
+  "mechanical": {
+    "run": "w2-ledger/g2-implement/implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m1-waive-produced-by-and-mismatch",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger/g2-implement/implementer-m1-waive-produced-by-and-mismatch@5c37997b0db3ed752c1171b8166a457c37f9a3e2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger/g2-implement/implementer",
+    "generated_at": "2026-08-22T18:21:21Z"
+  }
+}

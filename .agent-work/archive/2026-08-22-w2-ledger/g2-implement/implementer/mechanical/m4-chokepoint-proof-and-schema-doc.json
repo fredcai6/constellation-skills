@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-chokepoint-proof-and-schema-doc",
+  "mechanical": {
+    "run": "w2-ledger/g2-implement/implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m4-chokepoint-proof-and-schema-doc",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger/g2-implement/implementer-m4-chokepoint-proof-and-schema-doc@576040a25a398bdf9acbbb81936b2bd980664270",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger/g2-implement/implementer",
+    "generated_at": "2026-08-22T18:25:47Z"
+  }
+}

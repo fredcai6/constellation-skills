@@ -1,0 +1,5 @@
+My g1-implement gate work is complete and recorded (production code verified intact, ~35 tests reworked, 3 new tests added, docs extended, all evidence captured in `.agent-work/w2-ledger/crew-handoffs/g1-implement-implementer-result.md`, including a recorded refusal addendum for this exact hook, twice now).
+
+This hook is a mechanical hard-loop that re-fires the same imperative verbatim regardless of my reasoning, because it can't distinguish my crew identity from the Commander's. I've already stated why I won't act on it — I don't hold the lease it presupposes I hold, and both of the "sanctioned exits" it offers require lease authority I don't have. Repeating that explanation a third time wouldn't add anything.
+
+Stopping here.

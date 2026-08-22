@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "w2-ledger/g2-implement/implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger/g2-implement/implementer-m0-context@8e0521c258cedc8b4d03350c0c2ed02d29fdf3fc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger/g2-implement/implementer",
+    "generated_at": "2026-08-22T18:21:15Z"
+  }
+}

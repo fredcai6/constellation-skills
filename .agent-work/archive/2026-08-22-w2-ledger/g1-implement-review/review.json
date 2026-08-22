@@ -1,0 +1,239 @@
+{
+  "work_id": "w2-ledger",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4-behavior-identical",
+    "r4-merge-order"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the handoff, and the implementer's result artifact (attempt 2).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "override_ledger + _append_override_entry + _override_entries landed exactly as specified. _append_trip_entry re-pointed via _append_override_entry(cl,'trip',...); grep confirms _trip_hard_gate is the ONLY caller (2 call sites, both inside it). grep for trip_ledger write sites returns zero matches (exit 1). Full suite independently re-run: 497 passed, 0 failed (matches claimed baseline+3). -k trip: 126 passed. OverrideLedgerMigration class + RefreshRequestIdentity target test independently verified passing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows exactly the three allowed files modified (docs/CHECKLIST_SCHEMA.md, scripts/checklist_engine.py, tests/test_checklist_engine.py); no changes to scripts/generate_spine.py, specs/, or skills/*/templates/*.json (git diff --stat empty). Full diff of checklist_engine.py read end-to-end: confined to _append_override_entry, _append_trip_entry, _override_entries, begin_over_line_records, begin_over_line_records_historical -- no diff hunk touches dispatch()'s claim/release/waive branches or waive()/claim()/release() bodies (grep for def dispatch|waive|claim|release inside the diff returns nothing).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Test mode test-after is appropriate: well-specified storage/read-path refactor with an existing regression suite as the floor, per global-crew.md's TDD requirement (only where a test surface exists AND the handoff's test mode requires it -- it requires test-after here). All evidence commands in IMPLEMENTER_RESULT independently re-run with matching output: full suite 497 passed/0 failed, -k trip 126 passed, OverrideLedgerMigration 3/3 passed, the RefreshRequestIdentity target test passed, both grep close-criteria commands reproduced exactly (2 call sites of _append_trip_entry both inside _trip_hard_gate; zero trip_ledger write sites).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Two handoff constraints appended as their own checks (r4-behavior-identical, r4-merge-order) to verify individually later in the queue. Preliminary read: full 497-test suite passing with zero regressions is direct evidence the trip mechanism's three outcome shapes and dispatch/refusal semantics are unchanged; _override_entries's body (read directly) iterates cl.get('trip_ledger',[]) in a loop appended to out BEFORE the loop over cl.get('override_ledger',[]) -- legacy-first confirmed in code, not just docstring.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff matches all Map Anchors: _append_trip_entry re-pointed (not removed), _trip_hard_gate unmodified/context-only (confirmed: both call sites still inside it), _override_entries new as declared. decision:ledger-schema-is-override-ledger-with-kind and decision:merge-order-is-legacy-first (both settled) match the code exactly -- no divergence needing Commander reconciliation. No out-of-scope architecture drift found.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `spine_amend`, whose `delta` carries the single op `retext-check` on this item's c1, never by hand-editing this survey. There, `authority` is the dispatching Commander named in your reviewer handoff (never a string you invent), and `reason` is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-ledger/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-3"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to .agent-work/w2-ledger/FOWLER_PASS.json, all 12 baseline smells rendered a verdict (11 absent, 1 overridden: speculative-generality, subordinated to the settled/human decision:ledger-schema-is-override-ledger-with-kind naming the target kind-discriminated envelope shape). verify_fowler_pass.py exits 0 (fixed the survey's own un-substituted <work-id> placeholder in c1's check command via amend/retext-check first).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-ledger/FOWLER_PASS.json",
+            "output": "fowler pass ok: .agent-work/w2-ledger/FOWLER_PASS.json (smells=12, flagged=[], overridden=['speculative-generality'])",
+            "exit_code": "0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-ledger/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4-behavior-identical": {
+      "id": "r4-behavior-identical",
+      "title": "Trip mechanism observable behavior byte-identical",
+      "imperative": "Verify the three trip outcome shapes (begin-refused, begin-released, begin-instructed) and dispatch/refusal semantics are unchanged -- storage/read-path change only.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full line-by-line diff of scripts/checklist_engine.py confirms zero lines changed in _trip_hard_gate's decision logic (the instructed= computation, outcome assignment, EngineError message text) -- only the storage call target (_append_override_entry via _append_trip_entry) and docstrings changed. The three outcome strings (begin-refused/begin-released/begin-instructed) and the selectors' filter predicates (outcome-in-pair check, why_ref keying) are byte-identical to before. Full 497-test suite, which includes the existing trip-outcome-shape pinning tests (TripTwoBandGatePolicy, TripInstructedBeginIsNotAnOffence, TripHardGuardsBeginNotClose, etc.), passes with zero regressions -- direct behavioral proof, not just a code read.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-merge-order": {
+      "id": "r4-merge-order",
+      "title": "Merge order is legacy-first",
+      "imperative": "Read _override_entries's body directly (not docstring/handoff) and confirm it appends trip_ledger entries before override_ledger entries.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "_override_entries's body (scripts/checklist_engine.py, the function itself, not its docstring) appends every cl.get('trip_ledger', []) entry to out FIRST (with the kind='trip' retag), THEN appends every cl.get('override_ledger', []) entry -- legacy-first confirmed structurally. Also independently confirmed behaviorally by OverrideLedgerMigration::test_live_transition_orders_legacy_entries_before_a_fresh_trip, which drives a real trip through E.dispatch and asserts the merged id order is [tl-1, tl-2, ov-1] -- re-run and passing.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g1-implement (w2-ledger, attempt 2): override_ledger + _append_override_entry + _override_entries land exactly as specified. _trip_hard_gate remains the sole caller of _append_trip_entry (grep-confirmed, 2 call sites). trip_ledger has zero write sites (grep exit 1). Full suite independently re-run: 497 passed, 0 failed (+3 from baseline 494). All 3 new OverrideLedgerMigration tests read and confirmed to exercise exactly what their names claim. AST-based call-graph proof traces the real chain, not a string-grep proxy. docs/CHECKLIST_SCHEMA.md field order matches production emission exactly, waive-count caveat present. 5+ spot-checked rewritten tests confirm mechanical, faithful key-swaps preserving original semantics. Trip mechanism behavior confirmed byte-identical by direct diff read (zero lines changed in _trip_hard_gate's decision logic) plus full regression pass. _override_entries's merge order (legacy-first) confirmed in code body, not docstring. Fowler pass: 11/12 absent, 1 overridden (speculative-generality, subordinated to the settled/human ledger-schema decision) with logged reason; verify_fowler_pass.py exits 0. No blockers."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/w2-ledger/g1-implement/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T18:09:37.767394+00:00",
+    "last_heartbeat": "2026-08-22T18:14:48.549315+00:00",
+    "claimed_by": "constellation/w2-ledger/g1-implement/reviewer/attempt-1",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T18:15:33.004437+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-22T18:14:09.776972+00:00",
+      "reason": "REVIEW_SURVEY.template.json's r6-fowler.c1 check command carries a literal <work-id> placeholder never substituted when this reviewer instantiated its own survey from the template (only the top-level work_id field was substituted) -- the command as written would resolve to a nonexistent path (.agent-work/<work-id>/FOWLER_PASS.json), so the postcondition can never pass. Correcting to the actual FOWLER_PASS.json path for this work-id (w2-ledger), per the item's own REPAIR PATH instruction.",
+      "authority": "constellation/w2-ledger/commander/commander",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

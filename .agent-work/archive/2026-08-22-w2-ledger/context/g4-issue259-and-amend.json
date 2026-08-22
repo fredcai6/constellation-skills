@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4-issue259-and-amend",
+  "files": [],
+  "repo_rev": {
+    "commit": "7627d381330d36ac4da9810c8f80b7a3012ba26b"
+  },
+  "run": {
+    "work_id": "w2-ledger",
+    "generated_at": "2026-08-22T19:27:59Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w2-ledger",
+      "repo": "/home/tommy/projects/569-w2-ledger",
+      "durable": "/home/tommy/projects/569-w2-ledger"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w2-ledger"
+    }
+  }
+}
