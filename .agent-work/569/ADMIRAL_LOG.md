@@ -240,6 +240,30 @@ Entry grammar (one line of date + tag, then the substance):
 
   Also verified, because it was the sharper risk: **no pre-commit hook leaked into the main checkout.** `.git/hooks/` is empty and `core.hooksPath` is unset. The e2e tests build their own scratch repos rather than installing into the real one.
 
+- `2026-08-22` — `RULING`: **Cross-cutting finding, four measured instances, and it is not what epic 569 was filed about.** Recording it as a candidate finding rather than a conclusion, with every instance pinned so a reader can check it.
+
+  The epic's premise is *checks that cannot fail* — a `check: null` condition satisfied by the word "attested", a gate whose criterion is vacuous. That defect is real and wave 1 and 2 both addressed it. But the failures this epic actually HIT, repeatedly, are a different shape:
+
+  | # | Instance | The measurement | Why it was false at the moment it mattered |
+  |---|---|---|---|
+  | 1 | `w1-wiring` reported "3573 passed, 0 failed" | Genuinely run, genuinely green | Taken before `map/INDEX.md` went stale from its own new test module; red by the time it was merged |
+  | 2 | Admiral's "base is green, 3564 passed" | Read from the human's commit message | Never run by me; base `244665ee` was already red on map freshness. Propagated into two launch orders |
+  | 3 | `w1-verdict`'s reviewer: "failure is pre-existing at base" | Correct, and measured by stashing and re-running | I doubted it against my own unmeasured baseline. The reviewer was right; my correction of it was the error |
+  | 4 | `w2-reindex` reported "3656 passed, 0 failed" | True when run | Six e2e tests only pass while the code is UNCOMMITTED; committing at archive made them permanently red, before the PR opened |
+
+  Plus **#381**, already open in this epic and independently filed: *"A red-proof is not bound to the revision it proves, so it can certify a file that never shipped."* Same shape, filed a month earlier, about a different artifact.
+
+  **The distinction that makes this worth naming separately.** A check that cannot fail is VACUOUS — it would pass against anything, so no re-run helps. These checks are the opposite: every one of them genuinely fails when pointed at the wrong thing, and every one was CAUGHT by someone re-running it later. The defect is not in the check. It is that **the check was run against a state that no longer existed when the result was relied upon**, and nothing binds a result to the thing it describes.
+
+  Three properties they share, which is what makes it a family rather than a coincidence:
+  - The agent making the claim was sincere every time. None of these is carelessness or fabrication.
+  - The gap is always **between measurement and use** — a commit, a merge, a rebase, an archive step happens in between.
+  - It was always caught by a **downstream re-run**, never by the check itself, and never by a reviewer reading the claim. Reading cannot catch it; only re-running can.
+
+  Why it matters for what this epic is building: `w2-basis` shipped `basis-check` evidence recording whether a locator resolved *at attest time*. On this evidence, that record needs to be bound to the revision it was taken against, or it becomes instance five — a durable, auditable record of a resolution that was true about a tree nobody shipped. The epic's own `decision:red-proof-pinned-to-shipped-revision` pre-ruling is the seed of the general rule; it was written for red-proofs and this suggests it generalises to every recorded measurement.
+
+  Carrying to the checkpoint as a candidate finding, with these five instances attached. **Not proposing a mechanism** — the honest first question is whether the human thinks this is one thing or five coincidences, and that is a judgement call on evidence, not something to build for.
+
 ## Merges
 
 - `2026-08-22` — **PR #644 (`w1-wiring`, #345/#444/#368) MERGED** at `4cbd2cc9`. Gated on: clean-room reviewer verdict APPROVE-WITH-FOLLOWUPS with both findings repaired and re-verified by me; the full suite run **by me** against `origin/main` + the branch in a fresh detached worktree before merging — **3578 passed, 6 skipped, 0 failed**. Not gated on CI (Windows-only, known-red) and not gated on the commander's own reported number. Merged with a merge commit, branch retained pending closeout sweep.
