@@ -1,0 +1,325 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 1's exit criteria were met: the census is committed, the mechanism question was settled on evidence, both PRs merged, and main is green at 3622 passed / 6 skipped verified in a clean worktree.",
+    "epic_done": "The epic is not complete. Of four definition-of-done clauses, one is satisfied (a wedged verdict can no longer be expressed silently); the declared-basis, journal-fidelity and reachability clauses remain.",
+    "good_enough": "The mandatory quality boundary \u2014 no machinery that is itself unwired \u2014 held in wave 1 and is now an explicit hard constraint on the w2-reindex lane, whose git hook is a new delivery path."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D-basis-path",
+      "action": "revise_plan",
+      "reason": "wave 2's primary lane is re-cut to target hand-written templates plus engine rendering rather than the compiler",
+      "issue_created": false
+    },
+    {
+      "id": "D-spec-migration",
+      "action": "amend_forecast_or_parked",
+      "reason": "human ruled it out of epic 569 and directed an episode; parked with the drift measurement attached",
+      "issue_created": false
+    },
+    {
+      "id": "D-reindex-latency",
+      "action": "revise_plan",
+      "reason": "human approved mechanizing the reindex; wave 2 gains a third lane",
+      "issue_created": false
+    },
+    {
+      "id": "D-merge-gate",
+      "action": "amend_forecast_or_parked",
+      "reason": "real and measured, but inventing a merge-gate mechanism mid-epic is out of scope; carried to the checkpoint",
+      "issue_created": false
+    },
+    {
+      "id": "D-dispatch-mechanism",
+      "action": "record_evidence_only",
+      "reason": "Admiral error already corrected; wave 2 dispatches through run_crew.py --role commander. No plan change",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Make the declared basis actually reach the executor on the path that runs, give every override one auditable home, and stop the map index going stale by construction.",
+    "exit_criteria": [
+      "A bare attest with no locator is refused, red-proved against the shipped revision.",
+      "The basis is rendered at the active step, so the agent is told what would count.",
+      "Every override path lands in one engine-written append-only ledger, and closeout distinguishes a run with overrides from a clean one.",
+      "map/INDEX.md is correct by construction at commit, with the hook installed by install_constellation.py and the freshness test unweakened.",
+      "All three PRs merged green to main."
+    ],
+    "issues": [
+      {
+        "id": "w2-basis",
+        "title": "Declared basis reaches the executor: `because` in shipped templates, rendered by the engine, locator required at attest (#556)",
+        "desired_outcome": "A qualitative condition states, at plan time, what evidence would satisfy it; the engine RENDERS that basis at the active step so the agent is told what would count; and `attest` requires a resolvable locator rather than accepting bare prose.",
+        "useful_now": "This is the epic's core value and the thing that turns attest from composing into pointing. Wave 1 settled which path it must land on.",
+        "appetite": "One commander. Engine mechanism plus basis for ONE template as proof. Not all 65 conditions.",
+        "acceptance_or_falsification_evidence": "A red-proof, pinned to the shipped revision, that a bare `attest` with no locator is REFUSED after the change and accepted before it; plus engine output showing the basis rendered at an active step; plus one shipped template carrying real authored basis on its qualitative conditions.",
+        "implementation_latitude": "Choose the field shape, the rendering point, and what counts as a resolvable locator. Argue the locator definition in plan-alternatives.",
+        "hard_constraints_no_gos": [
+          "HARD: a `because` that is neither rendered nor required is DECORATIVE and is a failure, not a partial win. Precedent: `map_check_note` is documented as 'read by no code at all ... never reaches a run'. Do not reproduce that shape.",
+          "Do NOT touch generate_spine.py, specs/, or the spec-to-template migration. Human ruled it out of scope; see episodes/active/569-001.md.",
+          "Backfill only where it earns it: basis for one template as proof, then only conditions with measured evidence of loose attestation. A rushed `because` reads as rigor and is worse than none.",
+          "A new refusal ships report-only with a named promotion trigger; a widening ships live."
+        ],
+        "local_unknowns": [
+          "What counts as a resolvable locator",
+          "Whether the basis belongs on the condition or beside it"
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "skills/*/templates/*.json",
+          "docs/CHECKLIST_SCHEMA.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "w2-ledger",
+        "title": "One append-only, engine-written override ledger, checked at closeout (#557)",
+        "desired_outcome": "Every override path \u2014 waive, forced claim/release, consolidate override, skip, amend \u2014 lands in one append-only ledger the engine writes and no CLI verb can edit, and closeout reads it rather than rendering a completed runaway identically to a clean run.",
+        "useful_now": "It is the audit surface every other guarantee in this epic reports into, and #556's locator requirement needs somewhere for its escapes to land.",
+        "appetite": "One commander.",
+        "acceptance_or_falsification_evidence": "A proof that an override recorded through each path appears in the ledger, and that no CLI verb can create, edit, or delete an entry; plus a closeout render that visibly distinguishes a run with overrides from one without.",
+        "implementation_latitude": "Ledger shape and closeout rendering. `_append_trip_entry` (checklist_engine.py:1704) is the working model and its docstring states why it is safe.",
+        "hard_constraints_no_gos": [
+          "ENGINE-WRITTEN ONLY: reachable from the dispatch chokepoint before _run_verb, so no CLI verb can forge an entry. This is the property that makes the ledger worth having.",
+          "Known-open and IN SCOPE, deliberately left by commit 244665ee for this issue: waive() hardcodes produced_by 'human', and override_policy.authority is never compared. Fix, do not paper over with doctrine.",
+          "A new refusal ships report-only with a named promotion trigger."
+        ],
+        "local_unknowns": [
+          "Whether #503's authority validation and #504's closeout silence are one fix or two"
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py:1704",
+          "scripts/checklist_engine.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "w2-reindex",
+        "title": "Mechanize the map reindex: pre-commit hook regenerates and stages map/INDEX.md",
+        "desired_outcome": "map/INDEX.md and map/ids.jsonl are correct by construction at every commit, so the freshness test never fires on the routine path and nobody discovers staleness after a merge.",
+        "useful_now": "Measured this wave: three separate reindex rounds across two lanes, and base commit 244665ee shipped its index stale from a human commit. The cost is not the two minutes; it is finding out late.",
+        "appetite": "Small. One hook script, install wiring, tests.",
+        "acceptance_or_falsification_evidence": "A proof the hook fires and stages a regenerated index on a commit that would otherwise be stale; a proof it is INSTALLED by install_constellation.py rather than only existing; and confirmation the freshness test still fails on a stale tree with the hook bypassed.",
+        "implementation_latitude": "Hook implementation and install mechanics.",
+        "hard_constraints_no_gos": [
+          "HARD: do NOT weaken, narrow, or skip tests/test_code_map.py's freshness assertion. The hook removes routine friction; the test remains the backstop for --no-verify, fresh clones, contributors without the hook, and CI. If the hook becomes a reason to soften the test, the change is a net loss.",
+          "HARD: a git hook is a NEW delivery path and nothing currently installs one. Wire it into install_constellation.py and PROVE it fires. Shipping it uninstalled is built-not-wired, inside the epic that just merged a lint against exactly that.",
+          "Regenerate and stage silently per the human's ruling; do not fail the commit.",
+          "code_map build measured at 2.9s and deterministic (byte-identical across runs)."
+        ],
+        "local_unknowns": [
+          "Whether install_constellation.py has a natural place for git-hook installation"
+        ],
+        "anchors": [
+          "scripts/code_map",
+          "scripts/install_constellation.py",
+          "tests/test_code_map.py",
+          "scripts/hooks/"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Plan-freeze validation + journal fidelity (#518 #524 #381 #382 #459 #515 #390)",
+      "why_likely": "Plan-time catches are cheap-moment fixes that fit the intent",
+      "entry_conditions": [
+        "wave-2 checkpoint re-clears",
+        "#558 discussed with the human"
+      ]
+    },
+    {
+      "outcome": "Reviewer machinery (#375 #358 #363 #259 #223 #388 #376 #221)",
+      "why_likely": "Human ruled it stays in 569",
+      "entry_conditions": [
+        "wave-2 checkpoint re-clears"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "What counts as a resolvable evidence locator",
+      "affects": "Whether #556's refusal is enforceable or becomes prose",
+      "settle_by": "wave 2 plan-alternatives",
+      "current_evidence": "none authored yet; the corpus has evidence ids, artifact paths, and command exit codes as candidate shapes",
+      "next_probe": "test each candidate against the 65 existing qualitative conditions"
+    },
+    {
+      "unknown": "Whether a sonnet commander can execute engine surgery from a well-specified launch order",
+      "affects": "Tiering for waves 3-4 and the epic's own thesis",
+      "settle_by": "wave 2 returns",
+      "current_evidence": "wave 1 succeeded at sonnet on both lanes, but neither touched checklist_engine.py deeply; w1-verdict's change was ~2 sites",
+      "next_probe": "count double-block escalations in wave 2, where #556 and #557 are both real engine work"
+    },
+    {
+      "unknown": "Whether the review-level doctrine (#558) yields a runnable issue",
+      "affects": "Wave 3 composition",
+      "settle_by": "human conversation at the wave-2 checkpoint",
+      "current_evidence": "brief prepared at .agent-work/569/558-CHECKPOINT-BRIEF.md; corpus carries exactly one reviewer signature today",
+      "next_probe": "the checkpoint conversation"
+    }
+  ],
+  "revised_parked": [
+    "The stalled spec-to-template migration: 2 specs against 19 roles, already drifted. Human ruled it out of 569; recorded as episodes/active/569-001.md.",
+    "No automated defence against a PR that turns main red: mergeable+approved+no-conflict all say yes, and CI is windows-only and known-red so its verdict is ignored by policy. Measured this wave.",
+    "Imperative bloat across the remaining spine steps.",
+    "Whether record() on a survey should evaluate null-kind postconditions (#422 D-scope)."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "518",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "524",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "381",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "382",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "459",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "515",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "390",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "375",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "358",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "363",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "259",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "223",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "388",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "376",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "221",
+      "action": "keep",
+      "reason": "Still supported; forecast for waves 3-4"
+    },
+    {
+      "id": "558",
+      "action": "defer",
+      "reason": "Design question settled with the human at the wave-2 checkpoint, not dispatched to a commander of any tier"
+    },
+    {
+      "id": "wave-3-plan-freeze",
+      "action": "keep",
+      "reason": "Forecast remains supported"
+    },
+    {
+      "id": "wave-4-reviewer-machinery",
+      "action": "keep",
+      "reason": "Forecast remains supported"
+    },
+    {
+      "id": "locator-definition",
+      "action": "keep",
+      "reason": "Uncertainty still live and probed by wave 2"
+    },
+    {
+      "id": "sonnet-engine-surgery",
+      "action": "keep",
+      "reason": "Uncertainty still live and probed by wave 2"
+    },
+    {
+      "id": "558-yields-runnable-issue",
+      "action": "keep",
+      "reason": "Uncertainty still live and probed by wave 2"
+    },
+    {
+      "id": "spec-template-migration",
+      "action": "keep",
+      "reason": "Parked with a measurement attached"
+    },
+    {
+      "id": "merge-gate-hole",
+      "action": "keep",
+      "reason": "Parked with a measurement attached"
+    },
+    {
+      "id": "imperative-bloat-remaining-steps",
+      "action": "keep",
+      "reason": "Parked with a measurement attached"
+    },
+    {
+      "id": "survey-record-null-postconditions",
+      "action": "keep",
+      "reason": "Parked with a measurement attached"
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave_scope",
+      "before": "Wave 2 was forecast as #556 carrying `because` through generate_spine.py to the executor, plus #557's ledger.",
+      "after": "w2-basis targets the hand-written shipped templates with engine-side rendering and a locator requirement at attest; generate_spine.py is left untouched.",
+      "reason": "Wave 1 measured that no shipped role skill routes through the compiler, so the filed approach would have improved a path nothing drives."
+    },
+    {
+      "surface": "current_wave_scope",
+      "before": "Wave 2 was two lanes.",
+      "after": "Wave 2 is three lanes; w2-reindex mechanizes the map reindex via a pre-commit hook installed by install_constellation.py.",
+      "reason": "Human approved it after wave 1 measured three reindex rounds and a stale index shipped in the human's own base commit. The cost is detection latency, not repair."
+    },
+    {
+      "surface": "dispatch_mechanism",
+      "before": "Commanders dispatched in-harness via the Agent tool.",
+      "after": "Commanders dispatched via scripts/run_crew.py --role commander, each its own process with its own session and spine door.",
+      "reason": "The in-harness dispatch left commanders unable to use their spine door and left one lane with no independent review; run_crew.py is the sanctioned path and restores the durable recovery registry."
+    }
+  ],
+  "wave_review_comment": "## Wave review \u2014 boundary `w1-to-w2`\n\nWave 1 delivered both lanes and merged both PRs. `main` is verified green at `3622 passed, 6 skipped`\nin a clean worktree. The wave's real value, though, is what it falsified.\n\n**The epic's own work package 1 was aimed at the wrong path.** `generate_spine.py` requires a\n`because` per qualitative condition, which the epic read as \"half the fix already exists.\" It is a\nlive, tested compiler \u2014 but no shipped role skill routes through it. Every spine actually driven by a\nCommander, Admiral or Crew comes from `init_work_area.py` resolving a hand-written template, and\n`COMMANDER_SPINE.template.json` carries **0** `because` fields against **19** `check: null`\npostconditions. Had the epic run in its filed order, its central mechanism would have been built on a\npath nothing drives, and the built-not-wired sweep that catches it was scheduled last.\n\n**Every measurement of the built-not-wired population understated it, in the same direction, three\ntimes.** #345 filed six instances. The Admiral's pre-census found 7 live of 26. The commander's first\npass found 12. Its second found **17 live, 8 unwired, 1 dead**. Each measured a narrower surface than\nenforcement actually uses \u2014 a measurement true about a smaller thing than it appeared to describe,\nwhich is this epic's own subject aimed at the people running it.\n\n**A commander's self-report was not sufficient to merge on.** `w1-wiring` ran without any independent\nreview \u2014 a consequence of an Admiral dispatch error \u2014 and reported both negative self-tests sound and\nthe suite green. An Admiral-ordered clean-room review found one negative test never called the real\nscan (proved by breaking `_prose_files()` and watching all seven tests still pass) and the suite\nactually 1-failed. Both defects were exactly the class a self-review cannot catch.\n\n**A `MERGEABLE`, reviewed, conflict-free PR turned `main` red.** Measured directly: merging #645 into\n`main` succeeded cleanly and produced a failing suite. Every automated signal said yes, and CI is\nWindows-only and known-red so its verdict is ignored by policy. Only a hand-run suite on the merged\ntree caught it.\n\n**The sonnet thesis held.** Both lanes delivered at sonnet. `w1-wiring` caught and documented its own\ncensus error mid-run; `w1-verdict` found and fixed an uncaught `AttributeError` crash beyond its brief\nand its crew reproduced every evidence figure independently rather than re-reading the implementer's.\nThe one quality gap traced to the Admiral's dispatch mechanism, not the model tier.\n",
+  "revised_epic_body": "## Current planning truth \u2014 epic 569\n\n**Intent.** Make a green qualitative gate mean something by telling the agent *what would count* at\nplan time, rather than telling it at attest time that it got it wrong. The boundary that must not be\ncrossed: this epic must not add machinery that is itself unwired.\n\n### Wave 1 \u2014 complete, merged\n\n- **#345 / #444 / #368** \u2014 census of all 26 check-shaped scripts (17 live, 8 unwired, 1 dead),\n  registration lint and vocabulary rule shipped blocking with negative self-tests, one dead script\n  deleted, a live doc/code drift found and fixed. PR #644 at `4cbd2cc9`.\n- **#371** \u2014 list-valued `match` means membership at both engine sites, scalar behaviour unchanged;\n  a non-dict `match` that previously crashed is now a clean refusal. PR #645 at `04888e4a`.\n\n### Current wave (launching)\n\n**Objective.** Make the declared basis actually reach the executor on the path that runs, give every\noverride one auditable home, and stop the map index going stale by construction.\n\n- **`w2-basis`** (#556) \u2014 `because` in the shipped hand-written templates, **rendered by the engine\n  at the active step**, with `attest` requiring a resolvable locator. A basis that is neither\n  rendered nor required is decorative and is a failure, not a partial win.\n- **`w2-ledger`** (#557) \u2014 one engine-written, append-only override ledger that no CLI verb can\n  forge, read at closeout. Includes the `waive()` hardcoded `produced_by` and the never-compared\n  `override_policy.authority`, deliberately left by `244665ee` for this issue.\n- **`w2-reindex`** \u2014 a pre-commit hook that regenerates and stages `map/INDEX.md`, wired into\n  `install_constellation.py`, with the freshness test left exactly as strong as it is.\n\n### Nonbinding forecast\n\n1. Plan-freeze validation + journal fidelity (#518 #524 #381 #382 #459 #515 #390).\n2. Reviewer machinery (#375 #358 #363 #259 #223 #388 #376 #221).\n\nThe contract expires at the wave-2 checkpoint, where #558's review-level doctrine is settled with the\nhuman before wave 3 dispatches.\n\n### Parked, with measurements attached\n\n- **The spec-to-template migration stalled at 2 of 19 roles**, and the two specs that exist have\n  drifted from their shipped templates. Ruled out of 569 by the human; recorded as\n  `episodes/active/569-001.md`.\n- **No automated defence against a PR that reds `main`** \u2014 measured, not theorised.\n",
+  "escalation": null
+}

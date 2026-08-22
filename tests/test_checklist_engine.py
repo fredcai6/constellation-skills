@@ -817,6 +817,64 @@ class Waiver(unittest.TestCase):
         self.assertEqual(ev["payload"]["authority"], "human")
         self.assertEqual(ev["payload"]["reason"], "pyright non-blocking")
 
+    def test_waiver_evidence_produced_by_echoes_authority(self):
+        # #503: produced_by must echo the actual authority passed, never the
+        # hardcoded literal "human".
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        E.waive(cl, "g1", "c1", "postconditions", "commander", "accepted risk")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertEqual(ev["produced_by"], "commander")
+
+    def test_waiver_authority_mismatch_is_report_only(self):
+        t = _waivable_gate("g1", FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"]["authority"] = "commander"
+        cl = gated(g1=t)
+        msg = E.waive(cl, "g1", "c1", "postconditions", "implementer", "accepted risk")
+        # never refuses or blocks on the mismatch -- same success shape as before
+        self.assertIn("waived g1.c1", msg)
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertTrue(ev["payload"]["authority_mismatch"])
+        self.assertEqual(ev["payload"]["expected_authority"], "commander")
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertTrue(cond["waived"]["authority_mismatch"])
+        self.assertEqual(cond["waived"]["expected_authority"], "commander")
+        self.assertTrue(cond["satisfied"])
+
+    def test_waiver_authority_mismatch_is_case_and_whitespace_normalized(self):
+        t = _waivable_gate("g1", FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"]["authority"] = "  Commander  "
+        cl = gated(g1=t)
+        E.waive(cl, "g1", "c1", "postconditions", "commander", "accepted risk")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertNotIn("authority_mismatch", ev["payload"])
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertNotIn("authority_mismatch", cond["waived"])
+
+    def test_waiver_no_mismatch_fields_when_authority_matches(self):
+        t = _waivable_gate("g1", FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"]["authority"] = "human"
+        cl = gated(g1=t)
+        E.waive(cl, "g1", "c1", "postconditions", "human", "accepted risk")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertNotIn("authority_mismatch", ev["payload"])
+        self.assertNotIn("expected_authority", ev["payload"])
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertNotIn("authority_mismatch", cond["waived"])
+        self.assertNotIn("expected_authority", cond["waived"])
+
+    def test_waiver_no_mismatch_fields_when_policy_authority_absent(self):
+        # policy.get("authority") absent entirely -- nothing to compare against,
+        # today's silent pass stays unchanged.
+        t = gate("g1", "in-progress", command=FAIL_COMMAND)
+        t["postconditions"][0]["override_policy"] = {"allowed": True, "reason_required": True}
+        cl = gated(g1=t)
+        self.assertNotIn("authority", cl["tasks"]["g1"]["postconditions"][0]["override_policy"])
+        E.waive(cl, "g1", "c1", "postconditions", "human", "accepted risk")
+        ev = cl["tasks"]["g1"]["evidence"][-1]
+        self.assertNotIn("authority_mismatch", ev["payload"])
+        cond = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertNotIn("authority_mismatch", cond["waived"])
+
     def test_reopen_clears_waiver(self):
         cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
         E.waive(cl, "g1", "c1", "postconditions", "human", "accepted")
@@ -3908,15 +3966,15 @@ def _refresh_requests_anywhere(cl):
             if isinstance(ev, dict) and ev.get("type") == "refresh-request"]
 
 
-def _without_trip_ledger(cl):
+def _without_override_ledger(cl):
     """#467: a refused BEGIN now makes exactly ONE state change — `_trip_hard_gate`
-    appends a `trip_ledger` entry recording the attempt before it raises. Every other
-    no-mutation property the guards below assert (no status flip, no manifest, no
-    liveness stamp, no evidence) still holds exactly as it did, so those guards
+    appends an `override_ledger` entry recording the attempt before it raises. Every
+    other no-mutation property the guards below assert (no status flip, no manifest,
+    no liveness stamp, no evidence) still holds exactly as it did, so those guards
     compare with the ledger lifted out — and each one asserts the ledger's OWN
     expected growth separately, so lifting it out cannot hide a regression."""
     out = copy.deepcopy(cl)
-    out.pop("trip_ledger", None)
+    out.pop("override_ledger", None)
     return out
 
 
@@ -4017,10 +4075,10 @@ class TripTwoBandGatePolicy(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(self.cl, _start_ns("g2"), base_dir=Path("."))
-        self.assertEqual(_without_trip_ledger(self.cl), _without_trip_ledger(before))
+        self.assertEqual(_without_override_ledger(self.cl), _without_override_ledger(before))
         # ...and the one mutation a refusal DOES make (#467): the recorded begin.
-        self.assertEqual([e["id"] for e in self.cl["trip_ledger"]], ["tl-1"])
-        self.assertEqual(self.cl["trip_ledger"][0]["outcome"], "begin-refused")
+        self.assertEqual([e["id"] for e in E._override_entries(self.cl, kind="trip")], ["ov-1"])
+        self.assertEqual(E._override_entries(self.cl, kind="trip")[0]["outcome"], "begin-refused")
 
     def test_hard_advisory_on_current_points_at_attach(self):
         # On the read-only `current`, the HARD band still escalates to the exact
@@ -4118,9 +4176,9 @@ class RefreshRequestIdentity(unittest.TestCase):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, ns, base_dir=Path("."))
         self.assertEqual(cl["tasks"]["g3"]["status"], "pending")  # unmutated
-        self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
-        self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])  # #467
-        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-refused")
+        self.assertEqual(_without_override_ledger(cl), _without_override_ledger(before))
+        self.assertEqual([e["id"] for e in E._override_entries(cl, kind="trip")], ["ov-1"])  # #467
+        self.assertEqual(E._override_entries(cl, kind="trip")[0]["outcome"], "begin-refused")
         # a FRESH request keyed to the current digest (w-2) releases HARD
         E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-2"})
         with mock.patch.object(E, "_read_gauge", return_value=_reading(hard)):
@@ -4225,10 +4283,10 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
             self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
             # refused BEFORE any gate mutation or liveness stamp; the ONE state change
             # a refusal now makes is the #467 ledger entry, asserted on its own.
-            self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
-            self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])
-            self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-refused")
-            self.assertEqual(cl["trip_ledger"][0]["verb"], "start")
+            self.assertEqual(_without_override_ledger(cl), _without_override_ledger(before))
+            self.assertEqual([e["id"] for e in E._override_entries(cl, kind="trip")], ["ov-1"])
+            self.assertEqual(E._override_entries(cl, kind="trip")[0]["outcome"], "begin-refused")
+            self.assertEqual(E._override_entries(cl, kind="trip")[0]["verb"], "start")
             self.assertIn("attach g2 --type refresh-request", str(ctx.exception))
 
     def test_trip_begin_reopen_refused_at_hard_without_refresh(self):
@@ -4238,9 +4296,9 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
             with self.assertRaises(E.EngineError) as ctx:
                 E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
         self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
-        self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
-        self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])  # #467
-        self.assertEqual(cl["trip_ledger"][0]["verb"], "reopen")
+        self.assertEqual(_without_override_ledger(cl), _without_override_ledger(before))
+        self.assertEqual([e["id"] for e in E._override_entries(cl, kind="trip")], ["ov-1"])  # #467
+        self.assertEqual(E._override_entries(cl, kind="trip")[0]["verb"], "reopen")
         self.assertIn("attach g1 --type refresh-request", str(ctx.exception))
 
     def test_trip_begin_start_released_by_a_matching_refresh_request(self):
@@ -7008,13 +7066,13 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
         return cl
 
     def _ledger(self, cl):
-        return cl.get("trip_ledger")
+        return cl.get("override_ledger")
 
     # --- shape 1: an over-the-line BEGIN that was REFUSED -------------------- #
     def test_ledger_begin_refused_is_recorded_and_the_healthy_world_records_nothing(self):
         """DEFECTIVE: the agent is told to wrap up, closes g1 — and then begins g2
         anyway. HEALTHY: same spine, same gauge, the agent closes g1 and STOPS.
-        Differing field: `trip_ledger` (absent vs one `begin-refused` entry)."""
+        Differing field: `override_ledger` (absent vs one `begin-refused` entry)."""
         # healthy world — told to wrap up, wrapped up, stopped.
         healthy = self._three_gates()
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
@@ -7042,7 +7100,7 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
     def test_ledger_begin_released_is_recorded_when_the_same_verb_runs_over_the_line(self):
         """Both worlds run the IDENTICAL command on the IDENTICAL spine and both
         succeed — g1 goes back to `in-progress` either way. The ONLY difference is
-        which side of the hard line the gauge reads. Differing field: `trip_ledger`
+        which side of the hard line the gauge reads. Differing field: `override_ledger`
         (absent below the line vs one `begin-released` entry over it).
 
         #510: the begin exercised here is a `reopen`, which the HARD advisory never
@@ -7077,11 +7135,12 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-        entry = cl["trip_ledger"][0]
+        entry = cl["override_ledger"][0]
         self.assertEqual(
             set(entry),
-            {"id", "gate", "verb", "outcome", "fill", "hard", "model", "why_ref", "ts"})
-        self.assertEqual(entry["id"], "tl-1")
+            {"id", "kind", "gate", "verb", "outcome", "fill", "hard", "model", "why_ref", "ts"})
+        self.assertEqual(entry["id"], "ov-1")
+        self.assertEqual(entry["kind"], "trip")
         self.assertEqual(entry["model"], self.MODEL)
         self.assertEqual(entry["why_ref"], "w-1")
         self.assertAlmostEqual(entry["fill"], self.over_hard, places=4)
@@ -7099,7 +7158,7 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-        entry = cl["trip_ledger"][0]
+        entry = cl["override_ledger"][0]
         _, tightened = E._gauge_reader.thresholds_for(self.MODEL, 30_000)
         self.assertAlmostEqual(entry["hard"], tightened, places=4)
         self.assertNotAlmostEqual(entry["hard"], self.hard, places=4)
@@ -7110,14 +7169,14 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-            first = copy.deepcopy(cl["trip_ledger"][0])
+            first = copy.deepcopy(cl["override_ledger"][0])
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
             E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
             E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-        led = cl["trip_ledger"]
+        led = cl["override_ledger"]
         self.assertEqual(len(led), 3)  # the count this guard looped over
-        self.assertEqual([e["id"] for e in led], ["tl-1", "tl-2", "tl-3"])
+        self.assertEqual([e["id"] for e in led], ["ov-1", "ov-2", "ov-3"])
         self.assertEqual([e["verb"] for e in led], ["start", "reopen", "start"])
         # #510: the third begin is the `start` of the pending ACTIVE gate with a
         # matching request on file — the one the HARD advisory itself instructs — so
@@ -7149,7 +7208,7 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
         disk — not by calling the function directly.
 
         Two worlds, same command: a FRESH over-hard gauge vs a STALE one (which the
-        reader discards, so the band is inactive). Differing field: `trip_ledger`
+        reader discards, so the band is inactive). Differing field: `override_ledger`
         on the reloaded file."""
         import contextlib, io
         with tempfile.TemporaryDirectory() as d:
@@ -7158,7 +7217,7 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
             self._write_gauge(d, min(self.hard + 0.05, 1.0), stale)
             self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)  # healthy
             healthy = E.load(f)
-            self.assertIsNone(healthy.get("trip_ledger"))   # <-- the differing field
+            self.assertIsNone(healthy.get("override_ledger"))   # <-- the differing field
 
         with tempfile.TemporaryDirectory() as d:
             f = self._cli_spine(d)
@@ -7170,7 +7229,7 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
             self.assertEqual(rc, 1)
             self.assertIn("REFUSED:", err.getvalue())
             defective = E.load(f)
-            led = defective.get("trip_ledger")             # <-- the differing field
+            led = defective.get("override_ledger")             # <-- the differing field
             self.assertIsInstance(led, list)
             self.assertEqual(len(led), 1)
             self.assertEqual(led[0]["outcome"], "begin-refused")
@@ -7195,7 +7254,7 @@ class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
                 E.main(["--file", str(f), "reopen", "g1", "--reason", "rework"]), 0)
             cl = E.load(f)
             self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
-            led = cl.get("trip_ledger")
+            led = cl.get("override_ledger")
             self.assertIsInstance(led, list)
             self.assertEqual(len(led), 1)
             self.assertEqual(led[0]["outcome"], "begin-released")
@@ -7232,8 +7291,8 @@ class TripLedgerComplianceSignal(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-        self.assertEqual(len(cl["trip_ledger"]), 1)
-        self.assertEqual(cl["trip_ledger"][0]["why_ref"], "w-1")
+        self.assertEqual(len(cl["override_ledger"]), 1)
+        self.assertEqual(cl["override_ledger"][0]["why_ref"], "w-1")
         return cl
 
     def test_compliance_signal_is_empty_in_the_healthy_world_and_names_the_begin_in_the_defective_one(self):
@@ -7254,7 +7313,7 @@ class TripLedgerComplianceSignal(unittest.TestCase):
         `why_ref`. The ONLY difference is whether that entry's understanding is
         still the live one. Differing value: the selector's length (1 vs 0)."""
         defective = self._tripped_at_g2()
-        ledger_snapshot = copy.deepcopy(defective["trip_ledger"])
+        ledger_snapshot = copy.deepcopy(defective["override_ledger"])
         self.assertEqual(len(E.begin_over_line_records(defective)), 1)
 
         # the understanding moves on: a fresh agent closes g2 with its OWN why (w-2)
@@ -7265,7 +7324,7 @@ class TripLedgerComplianceSignal(unittest.TestCase):
         self.assertEqual(E._latest_why_record(superseded)["id"], "w-2")
 
         # the ledger is untouched: the mark is retained, it just stops being current
-        self.assertEqual(superseded["trip_ledger"], ledger_snapshot)
+        self.assertEqual(superseded["override_ledger"], ledger_snapshot)
         self.assertEqual(E.begin_over_line_records(superseded), [])  # <-- differing value
 
     def test_compliance_signal_goes_quiet_when_a_reopen_freshens_the_digest(self):
@@ -7274,11 +7333,11 @@ class TripLedgerComplianceSignal(unittest.TestCase):
         under. Positive control first, so the quiet half means something."""
         cl = self._tripped_at_g2()
         self.assertEqual(len(E.begin_over_line_records(cl)), 1)     # positive control
-        before = copy.deepcopy(cl["trip_ledger"])
+        before = copy.deepcopy(cl["override_ledger"])
         with mock.patch.object(E, "_read_gauge", return_value=None):
             E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
         self.assertIsNone(E._latest_why_record(cl))
-        self.assertEqual(cl["trip_ledger"], before)  # entry retained, never edited
+        self.assertEqual(cl["override_ledger"], before)  # entry retained, never edited
         self.assertEqual(E.begin_over_line_records(cl), [])         # <-- differing value
 
     def test_compliance_signal_counts_both_begin_outcomes_and_nothing_else(self):
@@ -7286,7 +7345,7 @@ class TripLedgerComplianceSignal(unittest.TestCase):
         `begin-released` are the non-compliance record; any other outcome value a
         future writer might add is not silently counted as one."""
         cl = self._tripped_at_g2()
-        entry = cl["trip_ledger"][0]
+        entry = cl["override_ledger"][0]
         for outcome in ("begin-refused", "begin-released"):
             with self.subTest(outcome=outcome):
                 entry["outcome"] = outcome
@@ -7312,9 +7371,9 @@ class TripLedgerComplianceSignal(unittest.TestCase):
 
     def test_compliance_signal_is_empty_on_a_spine_that_never_carried_a_ledger(self):
         """Backward compatibility at the read side: a legacy spine with no
-        `trip_ledger` key is not a crash and not a claim — it is an empty record."""
+        `override_ledger` key is not a crash and not a claim — it is an empty record."""
         cl = self._three_gates()
-        self.assertNotIn("trip_ledger", cl)
+        self.assertNotIn("override_ledger", cl)
         self.assertEqual(E.begin_over_line_records(cl), [])
 
     # --- #467 B1 rework: the HISTORICAL selector, additive and UNKEYED -------- #
@@ -7348,7 +7407,7 @@ class TripLedgerComplianceSignal(unittest.TestCase):
         (1 -> 0, positive control) vs the HISTORICAL selector's length (1 -> 1,
         unchanged — the field this test actually measures)."""
         defective = self._tripped_at_g2()
-        ledger_snapshot = copy.deepcopy(defective["trip_ledger"])
+        ledger_snapshot = copy.deepcopy(defective["override_ledger"])
         self.assertEqual(len(E.begin_over_line_records(defective)), 1)              # positive control (live, before)
         self.assertEqual(len(E.begin_over_line_records_historical(defective)), 1)   # positive control (historical, before)
 
@@ -7359,7 +7418,7 @@ class TripLedgerComplianceSignal(unittest.TestCase):
         E.advance(superseded, "g2", why="u2 — the offender's own close")
         self.assertEqual(E._latest_why_record(superseded)["id"], "w-2")
 
-        self.assertEqual(superseded["trip_ledger"], ledger_snapshot)  # entry retained, never edited
+        self.assertEqual(superseded["override_ledger"], ledger_snapshot)  # entry retained, never edited
         self.assertEqual(E.begin_over_line_records(superseded), [])                 # live goes quiet (positive control)
         self.assertEqual(len(E.begin_over_line_records_historical(superseded)), 1)  # <-- differing value: historical does not
         self.assertEqual(E.begin_over_line_records_historical(superseded)[0]["id"],
@@ -7380,7 +7439,7 @@ class TripLedgerComplianceSignal(unittest.TestCase):
 
     def test_historical_signal_counts_both_begin_outcomes_and_nothing_else(self):
         cl = self._tripped_at_g2()
-        entry = cl["trip_ledger"][0]
+        entry = cl["override_ledger"][0]
         for outcome in ("begin-refused", "begin-released"):
             with self.subTest(outcome=outcome):
                 entry["outcome"] = outcome
@@ -7403,25 +7462,26 @@ class TripLedgerComplianceSignal(unittest.TestCase):
 
     def test_historical_signal_is_empty_on_a_spine_that_never_carried_a_ledger(self):
         cl = self._three_gates()
-        self.assertNotIn("trip_ledger", cl)
+        self.assertNotIn("override_ledger", cl)
         self.assertEqual(E.begin_over_line_records_historical(cl), [])
 
     def test_historical_selector_never_raises_on_a_malformed_ledger(self):
         """Fail-safe parity with the live selector (criterion 8): a corrupted
-        `trip_ledger` value is read as empty, never a crash."""
+        `override_ledger` value is read as empty, never a crash."""
         for malformed in (None, "not-a-list", {"also": "not-a-list"}):
             with self.subTest(malformed=repr(malformed)):
                 cl = self._three_gates()
-                cl["trip_ledger"] = malformed
+                cl["override_ledger"] = malformed
                 self.assertEqual(E.begin_over_line_records_historical(cl), [])
 
     def test_historical_selector_skips_non_dict_entries_in_an_otherwise_valid_ledger(self):
         cl = self._three_gates()
-        cl["trip_ledger"] = [1, "x", None, {"id": "tl-1", "outcome": "begin-refused",
-                                             "gate": "g2", "verb": "start"}]
+        cl["override_ledger"] = [1, "x", None, {"id": "ov-1", "kind": "trip",
+                                                 "outcome": "begin-refused",
+                                                 "gate": "g2", "verb": "start"}]
         records = E.begin_over_line_records_historical(cl)
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0]["id"], "tl-1")
+        self.assertEqual(records[0]["id"], "ov-1")
 
 
 class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
@@ -7555,7 +7615,7 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
             with self.assertRaises(E.EngineError):  # `start` rejects a non-active gate
                 E.dispatch(defective, _start_ns("g3"), base_dir=Path("."))
             E.dispatch(defective, _start_ns("g2"), base_dir=Path("."))  # instructed
-        self.assertEqual([e["outcome"] for e in defective["trip_ledger"]],
+        self.assertEqual([e["outcome"] for e in defective["override_ledger"]],
                          ["begin-released", "begin-instructed"])
         self.assertEqual(
             self._advisory(defective),
@@ -7571,7 +7631,7 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
         E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-        self.assertEqual(len(cl["trip_ledger"]), 3)  # the count this guard looped over
+        self.assertEqual(len(cl["override_ledger"]), 3)  # the count this guard looped over
         # #510: three entries are on the ledger but only TWO are over-the-line
         # begins — the third is the advisory's own instructed `start`. So the
         # rendered count is the count of COUNTED entries, and the named begin is the
@@ -7603,7 +7663,7 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
 
         defective = self._g2_pending_after_g1()
         self._refuse_start(defective, "g2")
-        self.assertEqual(len(defective["trip_ledger"]), 1)
+        self.assertEqual(len(defective["override_ledger"]), 1)
         E.attach(defective, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
         E.start(defective, "g2")
         E.advance(defective, "g2", why="u2 — the offender's own close")
@@ -7626,11 +7686,11 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
         to a compliant agent; it no longer is."""
         cl = self._g2_pending_after_g1()
         self._refuse_start(cl, "g2")
-        self.assertEqual(len(cl["trip_ledger"]), 1)  # positive control: it is there
+        self.assertEqual(len(cl["override_ledger"]), 1)  # positive control: it is there
         E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
         E.start(cl, "g2")
         E.advance(cl, "g2", why="u2 — the offender's own close, the gate its own HARD advisory told it to close")
-        self.assertEqual(len(cl["trip_ledger"]), 1)  # retained, not deleted
+        self.assertEqual(len(cl["override_ledger"]), 1)  # retained, not deleted
         # ADJUDICATED (#510, wave 2). The active gate here is g3 — not the gate this
         # agent is trapped in, but the next one, reached by the agent's OWN close — and
         # g3 is PENDING, so the pending wording is the correct one: `advance` on a
@@ -7668,7 +7728,7 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
         soft, _ = E._gauge_reader.thresholds_for(self.MODEL)
         cl = self._g2_pending_after_g1()
         self._refuse_start(cl)
-        self.assertEqual(len(cl["trip_ledger"]), 1)  # the mark is present either way
+        self.assertEqual(len(cl["override_ledger"]), 1)  # the mark is present either way
         for fill in (max(soft - 0.01, 0.0), (soft + self.hard) / 2):
             with self.subTest(fill=fill):
                 with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
@@ -7755,13 +7815,13 @@ class TripInstructedBeginIsNotAnOffence(unittest.TestCase):
         the line and why it was allowed."""
         cl = self._pending_gate_reached_by_my_own_close()
         self._obey_the_advisory(cl, "g2")
-        led = cl["trip_ledger"]
+        led = cl["override_ledger"]
         self.assertEqual(len(led), 1)
         self.assertEqual(led[0]["outcome"], "begin-instructed")
         self.assertEqual(led[0]["gate"], "g2")
         self.assertEqual(led[0]["verb"], "start")
         self.assertEqual(led[0]["why_ref"], "w-1")
-        self.assertEqual(set(led[0]), {"id", "gate", "verb", "outcome", "fill",
+        self.assertEqual(set(led[0]), {"id", "kind", "gate", "verb", "outcome", "fill",
                                        "hard", "model", "why_ref", "ts"})
 
     def test_the_obedient_agent_is_not_named_on_its_next_current(self):
@@ -7783,7 +7843,7 @@ class TripInstructedBeginIsNotAnOffence(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-refused")
+        self.assertEqual(cl["override_ledger"][0]["outcome"], "begin-refused")
         self.assertEqual(len(E.begin_over_line_records(cl)), 1)  # still branded
 
     def test_a_reopen_over_the_line_is_still_released_and_branded(self):
@@ -7794,7 +7854,7 @@ class TripInstructedBeginIsNotAnOffence(unittest.TestCase):
         E.attach(cl, "g1", "refresh-request", {"seam": "g1", "why_ref": "w-1"})
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
-        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-released")
+        self.assertEqual(cl["override_ledger"][0]["outcome"], "begin-released")
         # the LIVE selector is silent here for a reason that predates this change:
         # `reopen` appends a reopen-marker why-record, which supersedes w-1 (its
         # documented keying). The unkeyed historical line is the one that must
@@ -7810,8 +7870,8 @@ class TripInstructedBeginIsNotAnOffence(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             with self.assertRaises(E.EngineError):   # `start` itself rejects a non-active gate
                 E.dispatch(cl, _start_ns("g3"), base_dir=Path("."))
-        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-released")
-        self.assertEqual(cl["trip_ledger"][0]["gate"], "g3")
+        self.assertEqual(cl["override_ledger"][0]["outcome"], "begin-released")
+        self.assertEqual(cl["override_ledger"][0]["gate"], "g3")
         self.assertEqual(len(E.begin_over_line_records(cl)), 1)  # still branded
 
     def test_below_the_line_nothing_is_recorded_at_all(self):
@@ -7822,7 +7882,7 @@ class TripInstructedBeginIsNotAnOffence(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge",
                                return_value=_reading(max(self.hard - 0.05, 0.0))):
             E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-        self.assertNotIn("trip_ledger", cl)
+        self.assertNotIn("override_ledger", cl)
 
 
 class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
@@ -7868,7 +7928,7 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
                 msg = E.dispatch(cl, _start_ns("g2"), base_dir=base)
                 advisory = E._trip_advisory(cl, base)
             self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
-            self.assertNotIn("trip_ledger", cl)         # half 1: no entry
+            self.assertNotIn("override_ledger", cl)     # half 1: no entry
             self.assertEqual(advisory, "")              # half 2: no claim either way
             self.assertEqual(E.begin_over_line_records(cl), [])
 
@@ -7878,7 +7938,7 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
             with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
                 with self.assertRaises(E.EngineError):
                     E.dispatch(marked, _start_ns("g2"), base_dir=base)
-            self.assertEqual(len(marked["trip_ledger"]), 1)
+            self.assertEqual(len(marked["override_ledger"]), 1)
             with mock.patch.object(E, "_read_gauge", return_value=None):
                 self.assertEqual(E._trip_advisory(marked, base), "")   # no claim
             # POSITIVE CONTROL: the SAME spine, read WITH a gauge over the line, does
@@ -7892,22 +7952,31 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
         """The exhaustive proof, read off the engine's own call graph rather than a
         hand-maintained list of verbs.
 
-        Three facts, each asserted mechanically: (1) exactly three functions in the
-        engine name the `trip_ledger` key at all — one writes it, two read it (the
-        live selector and its #467 B1-rework sibling, the historical selector);
-        (2) the writer's only caller is `_trip_hard_gate`; (3) `_trip_hard_gate`'s
-        only caller is `dispatch`, and `_run_verb` — the function every CLI verb is
-        dispatched through — reaches neither. So no verb can create, edit, or delete
-        an entry, and the new reader is exactly that: a reader, called from the same
-        one render site as the live one."""
+        Post-migration (g1), the write path is `_append_override_entry` (the sole
+        function naming the `override_ledger` key alongside its own reader
+        `_override_entries`), and the read path over BOTH the new key and the
+        legacy `trip_ledger` key is centralized in `_override_entries` — the only
+        function naming `trip_ledger` at all, and the only caller of both
+        selectors below. Facts asserted mechanically: (1) exactly which functions
+        name each key; (2) `_append_override_entry`'s only callers are
+        `_append_trip_entry` (trip kind, via `_trip_hard_gate` <- `dispatch`) and
+        `dispatch` itself (g2: the claim/release/generic-verb branches call it
+        directly for `force-claim`/`force-release`/`waive` kinds); (3) `_run_verb`
+        — the function every CLI verb (`waive`/`claim`/`release` included) is
+        dispatched through — reaches none of the four writer-side functions
+        (`_append_override_entry`, `_append_trip_entry`, `_trip_hard_gate`, and
+        `waive`/`claim`/`release` themselves never call it either). So no verb's
+        own body can create, edit, or delete an entry — only `dispatch`, the CLI
+        chokepoint, can — and the new reader is exactly that: a reader, called
+        from the same two selector sites as before."""
         import ast
         tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
         funcs = {n.name: n for n in ast.walk(tree)
                  if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
         self.assertGreater(len(funcs), 50, "the call-graph scan looked at nothing")
 
-        def names_the_key(node):
-            return any(isinstance(c, ast.Constant) and c.value == "trip_ledger"
+        def names_the_key(node, key):
+            return any(isinstance(c, ast.Constant) and c.value == key
                        for c in ast.walk(node))
 
         def calls_within(node):
@@ -7917,16 +7986,27 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
         def callers_of(name):
             return sorted(f for f, node in funcs.items() if name in calls_within(node))
 
-        self.assertEqual(sorted(f for f, n in funcs.items() if names_the_key(n)),
-                         ["_append_trip_entry", "begin_over_line_records",
-                          "begin_over_line_records_historical"])
+        self.assertEqual(
+            sorted(f for f, n in funcs.items() if names_the_key(n, "override_ledger")),
+            ["_append_override_entry", "_override_entries"])
+        self.assertEqual(
+            sorted(f for f, n in funcs.items() if names_the_key(n, "trip_ledger")),
+            ["_override_entries"])
+        self.assertEqual(callers_of("_append_override_entry"), ["_append_trip_entry", "dispatch"])
         self.assertEqual(callers_of("_append_trip_entry"), ["_trip_hard_gate"])
         self.assertEqual(callers_of("_trip_hard_gate"), ["dispatch"])
+        self.assertEqual(callers_of("_override_entries"),
+                         ["begin_over_line_records", "begin_over_line_records_historical",
+                          "override_summary"])
         self.assertEqual(callers_of("begin_over_line_records"), ["_trip_advisory"])
         self.assertEqual(callers_of("begin_over_line_records_historical"), ["_trip_advisory"])
+        # the append call sites live in `dispatch` around `_run_verb`, never
+        # inside it -- and never inside `waive`/`claim`/`release`'s own bodies.
         run_verb_calls = calls_within(funcs["_run_verb"])
-        for unreachable in ("_append_trip_entry", "_trip_hard_gate"):
+        for unreachable in ("_append_override_entry", "_append_trip_entry", "_trip_hard_gate"):
             self.assertNotIn(unreachable, run_verb_calls)
+        for verb_fn in ("waive", "claim", "release"):
+            self.assertNotIn("_append_override_entry", calls_within(funcs[verb_fn]))
 
     def _write_gauge(self, d, fill, observed_at):
         (Path(d) / "gauge.json").write_text(json.dumps({
@@ -7954,13 +8034,13 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
             for argv in non_begin:
                 with self.subTest(verb=argv[0]):
                     self.assertEqual(E.main(["--file", str(f)] + argv), 0, argv)
-                    self.assertNotIn("trip_ledger", E.load(f))
+                    self.assertNotIn("override_ledger", E.load(f))
             self.assertEqual(len(non_begin), 6)  # the count this guard looped over
 
             import contextlib, io
             with contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
-            led = E.load(f)["trip_ledger"]
+            led = E.load(f)["override_ledger"]
             self.assertEqual(len(led), 1)
             self.assertEqual(led[0]["verb"], "start")
 
@@ -7969,28 +8049,28 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "spine.json"
             E.save(f, self._three_gates())
-            self.assertNotIn("trip_ledger", E.load(f))
+            self.assertNotIn("override_ledger", E.load(f))
             self.assertEqual(E.main(["--file", str(f), "advance", "g1", "--why", "u1"]), 0)
             self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)
             self.assertEqual(E.main(["--file", str(f), "advance", "g2", "--why", "u2"]), 0)
             cl = E.load(f)
-            self.assertNotIn("trip_ledger", cl)  # the key is never created for nothing
+            self.assertNotIn("override_ledger", cl)  # the key is never created for nothing
             self.assertEqual(cl["tasks"]["g2"]["status"], "complete")
 
     def test_ledger_an_existing_ledger_is_extended_never_replaced(self):
         """`setdefault`, not assignment: entries already on the spine survive a new
         trip, and the new entry's id continues the existing sequence."""
         cl = self._g2_pending_after_g1()
-        cl["trip_ledger"] = [{"id": "tl-1", "gate": "g0", "verb": "start",
-                              "outcome": "begin-refused", "fill": 0.99, "hard": 0.9,
-                              "model": self.MODEL, "why_ref": "w-1", "ts": "2026-01-01T00:00:00Z"}]
-        prior = copy.deepcopy(cl["trip_ledger"][0])
+        cl["override_ledger"] = [{"id": "ov-1", "kind": "trip", "gate": "g0", "verb": "start",
+                                  "outcome": "begin-refused", "fill": 0.99, "hard": 0.9,
+                                  "model": self.MODEL, "why_ref": "w-1", "ts": "2026-01-01T00:00:00Z"}]
+        prior = copy.deepcopy(cl["override_ledger"][0])
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-        self.assertEqual(len(cl["trip_ledger"]), 2)
-        self.assertEqual(cl["trip_ledger"][0], prior)   # untouched
-        self.assertEqual(cl["trip_ledger"][1]["id"], "tl-2")
+        self.assertEqual(len(cl["override_ledger"]), 2)
+        self.assertEqual(cl["override_ledger"][0], prior)   # untouched
+        self.assertEqual(cl["override_ledger"][1]["id"], "ov-2")
 
     # --- surveys -------------------------------------------------------------- #
     def test_ledger_a_survey_never_writes_an_entry(self):
@@ -8001,12 +8081,390 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
             msg = E.dispatch(sv, _start_ns("v1"), base_dir=Path("."))
             self.assertTrue(msg.endswith("v1 -> in-progress"), msg)
-            self.assertNotIn("trip_ledger", sv)
+            self.assertNotIn("override_ledger", sv)
             # positive control: the same reading DOES record on a gated checklist
             cl = self._g2_pending_after_g1()
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
-            self.assertEqual(len(cl["trip_ledger"]), 1)
+            self.assertEqual(len(cl["override_ledger"]), 1)
+
+
+class OverrideLedgerMigration(unittest.TestCase):
+    """g1 (override-ledger migration) — the new `override_ledger` key and the
+    `_override_entries` merge-reading function, exercised directly rather than
+    only through the two `trip`-kind selectors the classes above already cover
+    end to end. Pins the migration contract itself: an override_ledger-only
+    spine behaves like a trip_ledger-only one did before; a spine carrying both
+    keys reads without leaking a non-trip kind or dropping a legacy entry; and a
+    spine that straddles the deploy boundary orders legacy entries before a
+    freshly written one."""
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        _, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _two_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def test_override_ledger_only_fixture_feeds_the_trip_selectors_identically_to_a_legacy_one(self):
+        """A checklist carrying ONLY the new key (no `trip_ledger` at all) drives
+        `begin_over_line_records`/`_historical` exactly as a `trip_ledger`-only
+        fixture with the equivalent entry did before this migration."""
+        common = dict(gate="g2", verb="start", outcome="begin-refused",
+                      fill=0.95, hard=self.hard, model=self.MODEL, why_ref="w-1",
+                      ts="2026-01-01T00:00:00Z")
+
+        legacy = self._two_gates()
+        E.advance(legacy, "g1", why="u1")
+        legacy["trip_ledger"] = [{"id": "tl-1", **common}]
+
+        migrated = self._two_gates()
+        E.advance(migrated, "g1", why="u1")
+        migrated["override_ledger"] = [{"id": "ov-1", "kind": "trip", **common}]
+
+        for cl in (legacy, migrated):
+            with self.subTest(cl="legacy" if cl is legacy else "migrated"):
+                live = E.begin_over_line_records(cl)
+                historical = E.begin_over_line_records_historical(cl)
+                self.assertEqual(len(live), 1)
+                self.assertEqual(len(historical), 1)
+
+        # identical in every field but `id` -- the retag `_override_entries`
+        # applies to a legacy entry reproduces exactly what the new key already
+        # carries natively.
+        self.assertEqual(
+            {k: v for k, v in E.begin_over_line_records(legacy)[0].items() if k != "id"},
+            {k: v for k, v in E.begin_over_line_records(migrated)[0].items() if k != "id"})
+
+    def test_override_entries_kind_filter_does_not_leak_non_trip_kinds_and_keeps_legacy_entries(self):
+        """A spine carrying BOTH a legacy `trip_ledger` (simulating an archived
+        spine) and an `override_ledger` holding an unrelated kind (`force-claim`
+        -- nothing writes that kind yet, g2 scope; hand-constructed here) reads
+        correctly through the kind filter: no leakage of the non-trip kind into
+        the trip view, no dropped legacy entries."""
+        cl = self._two_gates()
+        E.advance(cl, "g1", why="u1")
+        cl["trip_ledger"] = [{"id": "tl-1", "gate": "g2", "verb": "start",
+                              "outcome": "begin-refused", "fill": 0.95, "hard": self.hard,
+                              "model": self.MODEL, "why_ref": "w-1",
+                              "ts": "2026-01-01T00:00:00Z"}]
+        cl["override_ledger"] = [
+            {"id": "ov-1", "kind": "force-claim", "gate": "g5", "actor": "someone",
+             "ts": "2026-01-02T00:00:00Z"},
+            {"id": "ov-2", "kind": "trip", "gate": "g3", "verb": "start",
+             "outcome": "begin-released", "fill": 0.96, "hard": self.hard,
+             "model": self.MODEL, "why_ref": "w-1", "ts": "2026-01-03T00:00:00Z"},
+        ]
+
+        trip_only = E._override_entries(cl, kind="trip")
+        self.assertEqual([e["id"] for e in trip_only], ["tl-1", "ov-2"])
+        self.assertTrue(all(e["kind"] == "trip" for e in trip_only))
+
+        everything = E._override_entries(cl)
+        self.assertEqual([e["id"] for e in everything], ["tl-1", "ov-1", "ov-2"])
+
+    def test_live_transition_orders_legacy_entries_before_a_fresh_trip(self):
+        """A spine straddling the migration boundary: legacy `trip_ledger` entries
+        `tl-1`, `tl-2` from before the deploy, THEN a fresh trip driven through the
+        real `_trip_hard_gate` path (not hand-constructed). `_override_entries(cl)`
+        with no kind filter returns all three in order `tl-1, tl-2, ov-1` -- legacy
+        first, chronologically correct."""
+        cl = self._two_gates()
+        E.advance(cl, "g1", why="u1")
+        cl["trip_ledger"] = [
+            {"id": "tl-1", "gate": "g0", "verb": "start", "outcome": "begin-refused",
+             "fill": 0.9, "hard": self.hard, "model": self.MODEL, "why_ref": "w-0",
+             "ts": "2025-01-01T00:00:00Z"},
+            {"id": "tl-2", "gate": "g0", "verb": "reopen", "outcome": "begin-released",
+             "fill": 0.92, "hard": self.hard, "model": self.MODEL, "why_ref": "w-0",
+             "ts": "2025-01-02T00:00:00Z"},
+        ]
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+
+        merged = E._override_entries(cl)
+        self.assertEqual([e["id"] for e in merged], ["tl-1", "tl-2", "ov-1"])
+        self.assertEqual(merged[-1]["kind"], "trip")
+        self.assertEqual(merged[-1]["outcome"], "begin-refused")
+
+
+class OverrideSummaryTests(unittest.TestCase):
+    """#504 PART A: `override_summary` -- the closeout-facing summary over the
+    override ledger. Reads only `_override_entries(cl)` (asserted directly by
+    the call-graph proof above), so these tests exercise it purely on
+    hand-built `cl` dicts, the same fixture idiom `OverrideLedgerMigration`
+    already uses for `_override_entries` itself."""
+
+    def test_no_ledger_at_all_summarizes_to_all_zero_and_no_ids(self):
+        self.assertEqual(E.override_summary({}), {
+            "trip": 0, "force-claim": 0, "force-release": 0,
+            "waive": 0, "waive_authority_mismatch": 0, "ids": [],
+        })
+
+    def test_malformed_ledger_degrades_to_the_same_empty_summary(self):
+        # Same fail-safe posture `_override_entries` documents for a malformed
+        # `override_ledger`/`trip_ledger` (None, a string, a dict): degrade to
+        # nothing rather than raising.
+        cl = {"trip_ledger": "not-a-list", "override_ledger": None}
+        self.assertEqual(E.override_summary(cl), {
+            "trip": 0, "force-claim": 0, "force-release": 0,
+            "waive": 0, "waive_authority_mismatch": 0, "ids": [],
+        })
+
+    def test_mixed_kinds_counted_and_ids_ordered_legacy_first(self):
+        cl = {
+            "trip_ledger": [
+                {"id": "tl-1", "gate": "g1", "verb": "start", "outcome": "begin-refused"},
+            ],
+            "override_ledger": [
+                {"id": "ov-1", "kind": "force-claim", "verb": "claim"},
+                {"id": "ov-2", "kind": "force-release", "verb": "release"},
+                {"id": "ov-3", "kind": "waive", "task": "m1", "cond": "c1"},
+                {"id": "ov-4", "kind": "waive", "task": "m1", "cond": "c2",
+                 "authority_mismatch": True, "expected_authority": "human"},
+                {"id": "ov-5", "kind": "trip", "gate": "g2", "verb": "reopen",
+                 "outcome": "begin-released"},
+            ],
+        }
+        self.assertEqual(E.override_summary(cl), {
+            "trip": 2, "force-claim": 1, "force-release": 1,
+            "waive": 2, "waive_authority_mismatch": 1,
+            "ids": ["tl-1", "ov-1", "ov-2", "ov-3", "ov-4", "ov-5"],
+        })
+
+    def test_waive_authority_mismatch_is_a_sub_count_not_a_sixth_kind(self):
+        # A waive entry that carries no `authority_mismatch` key at all (the
+        # ordinary, matched-authority case) must not be miscounted as a
+        # mismatch -- only an explicit truthy flag counts.
+        cl = {"override_ledger": [
+            {"id": "ov-1", "kind": "waive", "task": "m1", "cond": "c1"},
+            {"id": "ov-2", "kind": "waive", "task": "m1", "cond": "c2",
+             "authority_mismatch": False},
+        ]}
+        summary = E.override_summary(cl)
+        self.assertEqual(summary["waive"], 2)
+        self.assertEqual(summary["waive_authority_mismatch"], 0)
+
+    def test_does_not_read_the_ledger_keys_directly(self):
+        """Purity proof, mirroring the call-graph test's own coverage: patch
+        `_override_entries` itself and confirm `override_summary`'s output is
+        driven entirely by its return value, never by a direct `cl.get(...)`
+        read of `override_ledger`/`trip_ledger`."""
+        cl = {"trip_ledger": "poisoned", "override_ledger": "poisoned"}
+        canned = [{"id": "ov-1", "kind": "waive", "authority_mismatch": True}]
+        with mock.patch.object(E, "_override_entries", return_value=canned) as patched:
+            summary = E.override_summary(cl)
+        patched.assert_called_once_with(cl)
+        self.assertEqual(summary["waive"], 1)
+        self.assertEqual(summary["waive_authority_mismatch"], 1)
+        self.assertEqual(summary["ids"], ["ov-1"])
+
+
+class OverrideLedgerG2ClaimReleaseWiring(unittest.TestCase):
+    """g2 PART B (claim/release branches): force-claim/force-release append to
+    override_ledger from dispatch()'s claim/release arms ONLY, never from
+    claim()/release()'s own bodies -- exercised through the real CLI (`main`)
+    so the whole chokepoint is proven, not just the pure verb functions."""
+
+    def _one_gate(self):
+        return gated(g1=gate("g1", "pending"))
+
+    def test_force_claim_over_genuine_takeover_appends_entry(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, self._one_gate())
+            self.assertEqual(
+                E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                        "--claimed-by", "implementer"]), 0)
+            self.assertEqual(
+                E.main(["--file", str(f), "claim", "--session-id", "session-2",
+                        "--claimed-by", "implementer", "--force",
+                        "--reason", "predecessor abandoned"]), 0)
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "force-claim"]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["session_id"], "session-2")
+            self.assertEqual(entries[0]["previous_session_id"], "session-1")
+            self.assertEqual(entries[0]["takeover_reason"], "predecessor abandoned")
+            self.assertEqual(entries[0]["verb"], "claim")
+
+    def test_force_claim_noop_with_nothing_to_take_over_appends_nothing(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, self._one_gate())
+            # first-ever claim, no existing lease -- --force has nothing to take over
+            self.assertEqual(
+                E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                        "--claimed-by", "implementer", "--force",
+                        "--reason", "belt and suspenders"]), 0)
+            cl = E.load(f)
+            self.assertNotIn("override_ledger", cl)
+
+    def test_force_release_by_non_owner_appends_entry_before_return(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, self._one_gate())
+            E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                    "--claimed-by", "implementer"])
+            self.assertEqual(
+                E.main(["--file", str(f), "release", "--session-id", "session-2",
+                        "--force", "--reason", "orphaned lease"]), 0)
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "force-release"]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["session_id"], "session-2")
+            self.assertEqual(entries[0]["previous_session_id"], "session-1")
+            self.assertEqual(entries[0]["takeover_reason"], "orphaned lease")
+            self.assertEqual(entries[0]["verb"], "release")
+            self.assertEqual(cl["engine_session"]["status"], "released")
+
+    def test_owner_release_appends_nothing(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, self._one_gate())
+            E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                    "--claimed-by", "implementer"])
+            self.assertEqual(
+                E.main(["--file", str(f), "release", "--session-id", "session-1"]), 0)
+            cl = E.load(f)
+            self.assertNotIn("override_ledger", cl)
+
+    def test_force_release_against_archived_path_gets_zero_banner_decoration(self):
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as d:
+            archive_dir = Path(d) / ".agent-work" / "archive" / "run1"
+            archive_dir.mkdir(parents=True)
+            f = archive_dir / "c.json"
+            E.save(f, self._one_gate())
+            E.main(["--file", str(f), "claim", "--session-id", "session-1",
+                    "--claimed-by", "implementer"])
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                code = E.main(["--file", str(f), "release", "--session-id", "session-2",
+                                "--force", "--reason", "orphaned lease"])
+            self.assertEqual(code, 0)
+            self.assertNotIn(E._ARCHIVED_BANNER, out.getvalue())
+            self.assertNotIn("ARCHIVED", out.getvalue())
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "force-release"]
+            self.assertEqual(len(entries), 1)
+
+
+class OverrideLedgerG2WaiveWiring(unittest.TestCase):
+    """g2 PART B (generic/waive branch): every successful waive is recorded
+    from dispatch(), not from waive()'s own body -- and the condition dispatch
+    re-reads for the ledger entry uses the SAME which-only lookup waive()
+    itself exercises (no preconditions/postconditions fallback)."""
+
+    def _one_gate(self):
+        return gated(g1=gate("g1", "in-progress"))
+
+    def test_every_successful_waive_is_recorded_including_plain_matched_authority(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, gated(g1=_waivable_gate("g1", FAIL_COMMAND)))
+            self.assertEqual(
+                E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                        "--authority", "human", "--reason", "accepted risk"]), 0)
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "waive"]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["task"], "g1")
+            self.assertEqual(entries[0]["cond"], "c1")
+            self.assertEqual(entries[0]["authority"], "human")
+            self.assertEqual(entries[0]["reason"], "accepted risk")
+            self.assertFalse(entries[0]["forced"])
+            self.assertNotIn("authority_mismatch", entries[0])
+
+    def test_forced_and_mismatched_waive_carries_those_fields_on_the_ledger_entry(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            t = _waivable_gate("g1", FAIL_COMMAND)
+            t["postconditions"][0]["override_policy"]["authority"] = "commander"
+            E.save(f, gated(g1=t))
+            self.assertEqual(
+                E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                        "--authority", "implementer", "--reason", "accepted", "--force"]), 0)
+            cl = E.load(f)
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "waive"]
+            self.assertEqual(len(entries), 1)
+            self.assertTrue(entries[0]["forced"])
+            self.assertTrue(entries[0]["authority_mismatch"])
+            self.assertEqual(entries[0]["expected_authority"], "commander")
+
+    def test_dispatch_waive_lookup_matches_waive_own_which_only_lookup(self):
+        """Divergence trap: cond id "c1" exists in BOTH preconditions and
+        postconditions with DIFFERENT override_policy.authority. waive() itself
+        only ever searches the requested `which` list (no fallback) -- so
+        waiving preconditions.c1 with authority "alpha" (which matches the
+        PRECONDITION's policy, not the postcondition's "beta") must record a
+        ledger entry carrying the precondition's own waived marker. If
+        dispatch's re-lookup defaulted to postconditions (or otherwise ignored
+        `which`), it would read the untouched postcondition's absent `waived`
+        marker instead and the entry would come out empty."""
+        t = gate("g1", "in-progress")
+        t["preconditions"] = [{
+            "id": "c1", "statement": "precond", "check": None, "satisfied": False,
+            "override_policy": {"allowed": True, "authority": "alpha"},
+        }]
+        t["postconditions"] = [{
+            "id": "c1", "statement": "postcond", "check": {"kind": "command", "command": FAIL_COMMAND},
+            "satisfied": False, "override_policy": {"allowed": True, "authority": "beta"},
+        }]
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, gated(g1=t))
+            self.assertEqual(
+                E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                        "--which", "preconditions",
+                        "--authority", "alpha", "--reason", "accepted"]), 0)
+            cl = E.load(f)
+            # the precondition was waived, the postcondition untouched
+            self.assertTrue(cl["tasks"]["g1"]["preconditions"][0].get("waived"))
+            self.assertFalse(cl["tasks"]["g1"]["postconditions"][0].get("waived"))
+            entries = [e for e in cl.get("override_ledger", []) if e["kind"] == "waive"]
+            self.assertEqual(len(entries), 1)
+            self.assertEqual(entries[0]["authority"], "alpha")
+            self.assertEqual(entries[0]["reason"], "accepted")
+            self.assertNotIn("authority_mismatch", entries[0])
+
+    def test_dispatch_call_records_waive_claim_release_direct_call_does_not(self):
+        """The chokepoint proof, behavioral half: driving waive/claim --force/
+        release --force through checklist_engine.dispatch() (the CLI path)
+        appends entries; calling waive()/claim()/release() directly, as
+        library functions -- simulating anything that is NOT the CLI
+        chokepoint -- leaves override_ledger untouched."""
+        # -- via dispatch() (CLI path) --
+        cl = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            E.main(["--file", str(f), "claim", "--session-id", "s1", "--claimed-by", "x"])
+            E.main(["--file", str(f), "claim", "--session-id", "s2", "--claimed-by", "x",
+                    "--force", "--reason", "takeover"])
+            E.main(["--file", str(f), "waive", "g1", "--cond", "c1",
+                    "--authority", "human", "--reason", "accepted",
+                    "--session-id", "s2"])
+            E.main(["--file", str(f), "release", "--session-id", "s3",
+                    "--force", "--reason", "orphaned"])
+            reloaded = E.load(f)
+            kinds = sorted(e["kind"] for e in reloaded.get("override_ledger", []))
+            self.assertEqual(kinds, ["force-claim", "force-release", "waive"])
+
+        # -- direct library calls (NOT the CLI chokepoint) --
+        direct = gated(g1=_waivable_gate("g1", FAIL_COMMAND))
+        E.claim(direct, "s1", "x", ".", {})
+        E.claim(direct, "s2", "x", ".", {}, force=True, reason="takeover")
+        E.waive(direct, "g1", "c1", "postconditions", "human", "accepted")
+        E.release(direct, "s2", force=True, reason="orphaned")
+        self.assertNotIn("override_ledger", direct)
 
 
 class ShippedTemplateBookendDeclarations(unittest.TestCase):

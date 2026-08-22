@@ -362,9 +362,17 @@ class AtomicSaveTests(unittest.TestCase):
                 n += 1
 
         def reader():
+            # `E.load(self.path)`, not a bare `self.path.read_text()`: `load()`
+            # is the actual API `save()` is meant to interoperate with (it is
+            # what `run_crew.py`'s parent-lease heartbeat calls to read a spine
+            # another process is concurrently `save()`-ing -- #613's own
+            # scenario, and the docstring's own example). A raw `read_text()`
+            # bypasses `load()`'s retry around the same narrow Windows sharing
+            # violation `save()`'s writer side already retries around, so it
+            # was exercising a gap in the TEST, not in the engine.
             while not stop.is_set():
                 try:
-                    doc = json.loads(self.path.read_text(encoding="utf-8"))
+                    doc = E.load(self.path)
                 except json.JSONDecodeError as exc:
                     errors.append(f"TORN READ: {exc}")
                     return

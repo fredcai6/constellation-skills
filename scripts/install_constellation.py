@@ -153,6 +153,15 @@ SCRIPT_RUNTIME_COMPANIONS: dict[str, tuple[str, ...]] = {
 SCRIPT_SOURCE_SUBDIRS: dict[str, str] = {
     "gauge_writer_hook.py": "hooks",
     "spine_rail.py": "hooks",
+    # code_map_precommit.py bundles no skill (no `required_scripts` names it):
+    # it is only ever invoked in place, resolved dynamically at git-hook run
+    # time (see its own docstring and `install_git_precommit_hook` above).
+    # Declared here anyway so `scripts/hooks/` stays fully accounted for --
+    # `ScriptsPackageBundlingTests` requires every script under a subdirectory
+    # be either a declared non-installable package or fully present in this
+    # dict, and a plain module that is neither would fail that gate silently
+    # for the wrong reason (looking unbundled by omission, not by design).
+    "code_map_precommit.py": "hooks",
 }
 
 # NON-INSTALLABLE PACKAGES: directories under scripts/ that are real Python
@@ -1711,14 +1720,39 @@ def build_hook_command(script_path: Path, interpreter: str, args: Sequence[str] 
     one release from changing. An absolute installed path is pinned BY
     CONSTRUCTION and asks the harness to guarantee nothing, which is what
     actually protects the ruling that an agent's own branch cannot edit the code
-    that judges it.
+    that judges it. That reasoning governs the PATH ONLY. The interpreter is a
+    separate half of this string, addressed below, with a different fix.
 
-    `interpreter` comes from the run's single `resolve_interpreter()` probe --
-    never re-probed here, never hardcoded. Naming it at all is only safe
-    BECAUSE this string is written per machine: no single interpreter name
-    works on every platform, which is why the git-tracked settings.json names
-    none (#539)."""
-    command = f'{interpreter} "{script_path.as_posix()}"'
+    The INTERPRETER is written as `${MCP_INTERPRETER_ENV_VAR}:-<interpreter>}`
+    (e.g. `${CONSTELLATION_PYTHON:-py}`), not the bare `interpreter` name --
+    #539's residual on this file, closed by measurement rather than assumption.
+    Every hook entry Claude Code runs shell-form, and (reproduced independently,
+    2026-08-22, via `claude -p` + a temp `--settings` file per
+    `skills/_shared/windows.md` #6: control/single-quoted/double-quoted marker
+    arms, plus a set-but-empty arm) the REAL SHELL performs true POSIX
+    `${VAR:-default}` expansion on a hook `command` -- set-but-empty correctly
+    falls back to the default here, unlike `.mcp.json`'s `command`, which
+    Claude Code's own expander handles with non-POSIX `:-` semantics (#575).
+    So the same env var the MCP door already uses (`MCP_INTERPRETER_ENV_VAR` --
+    one knob, not two) also overrides a hook's interpreter, with no new
+    mechanism and no new failure mode to document.
+
+    `interpreter` -- the DEFAULT inside that expansion -- still comes from the
+    run's single `resolve_interpreter()` probe, never re-probed here, never
+    hardcoded, so behaviour is UNCHANGED when the env var is unset: this only
+    ADDS an override path. It does NOT by itself make the whole command safe to
+    write into a git-tracked settings.json -- the default is still a fact about
+    THIS machine, and the path half stays absolute regardless of the
+    interpreter -- so `wire_hooks` refuses a git-tracked target outright (see
+    `is_git_tracked` there) rather than relying on this wrapping alone.
+
+    A side effect worth naming: `${MCP_INTERPRETER_ENV_VAR}...}` always starts
+    with `$`, never a quote, so the leading-quote hazard `assert_shell_safe_command`
+    guards is now structurally unreachable from this call site (even an empty
+    `interpreter` no longer produces one) -- the call stays, as defense in depth
+    on a public function, not because this site can still trip it."""
+    portable_interpreter = f"${{{MCP_INTERPRETER_ENV_VAR}:-{interpreter}}}"
+    command = f'{portable_interpreter} "{script_path.as_posix()}"'
     if args:
         command = " ".join([command, *args])
     assert_shell_safe_command(command)
@@ -1819,13 +1853,45 @@ def wire_hooks(
 
     settings_path = settings_path_for_wiring(target_root, hooks_from)
 
-    if hooks_from == HOOKS_FROM_SOURCE and is_git_tracked(settings_path):
+    # RAISES on ANY git-tracked target, regardless of `hooks_from` (#539
+    # residual: this guard used to fire only for `hooks_from ==
+    # HOOKS_FROM_SOURCE`, leaving the DEFAULT installed path -- what
+    # `--wire-hooks --scope project` uses against the #180-required tracked
+    # settings.json -- free to write into an already-committed file). Mirrors
+    # f315d7bf's unconditional refusal for a git-tracked `.mcp.json`.
+    #
+    # The interpreter fix in `build_hook_command` above does NOT retire this
+    # guard: it makes the INTERPRETER half portable, but every command this
+    # function builds still carries an ABSOLUTE, per-machine PATH (#269,
+    # deliberately never `${CLAUDE_PROJECT_DIR}` -- see `build_hook_command`'s
+    # docstring). A tracked settings.json ships that path to every other
+    # checkout, where it does not exist, no matter how the interpreter is
+    # spelled -- so this refusal stands on the path half alone.
+    if is_git_tracked(settings_path):
+        portable_interpreter = f"${{{MCP_INTERPRETER_ENV_VAR}:-{interpreter.interpreter}}}"
+        if hooks_from == HOOKS_FROM_SOURCE:
+            raise InstallError(
+                f"--wire-hooks --hooks-from source: refusing to write {settings_path} -- it is "
+                f"git-tracked. Source-tree wiring carries this checkout's absolute path and an "
+                f"interpreter probed on this host, so committing it hands every teammate a "
+                f"path that does not exist on their machine. The interpreter half is portable "
+                f"({portable_interpreter!r}, the same {MCP_INTERPRETER_ENV_VAR} knob `.mcp.json` "
+                f"uses) but the path half is not (#269 keeps it absolute by design), so this "
+                f"refusal stands either way. Untrack it (it belongs in .gitignore) and re-run."
+            )
         raise InstallError(
-            f"--wire-hooks --hooks-from source: refusing to write {settings_path} -- it is "
-            f"git-tracked. Source-tree wiring carries this checkout's absolute path and an "
-            f"interpreter probed on this host, so committing it hands every teammate a "
-            f"path that does not exist on their machine. Untrack it (it belongs in "
-            f".gitignore) and re-run."
+            f"--wire-hooks: refusing to write {settings_path} -- it is git-tracked. Every "
+            f"command this function builds carries an ABSOLUTE path to a hook script on THIS "
+            f"machine (#269: kept absolute by design, never ${{CLAUDE_PROJECT_DIR}}, so an "
+            f"agent's own branch cannot edit the code that judges it), and a tracked "
+            f"settings.json ships that path to every other checkout, where it does not exist. "
+            f"The interpreter half is portable ({portable_interpreter!r}, the same "
+            f"{MCP_INTERPRETER_ENV_VAR} knob `.mcp.json` uses via `rewrite_mcp_config_interpreter`), "
+            f"but that alone does not make the whole command safe to commit, so wiring a "
+            f"git-tracked settings file is refused either way -- see #539's open checklist item "
+            f"on whether tracked config should carry wiring at all. Wire at --scope user instead "
+            f"(writes an untracked ~/.claude/settings.json), or keep {settings_path} out of "
+            f"version control until that question is settled."
         )
 
     commands: list[tuple[HookSpec, str]] = []
@@ -2093,6 +2159,92 @@ def is_git_tracked(path: Path) -> bool:
     except (OSError, subprocess.TimeoutExpired):
         return False
     return result.returncode == 0
+
+
+def resolve_git_hooks_dir(repo_root: Path) -> Path | None:
+    """Resolve the git hooks directory that a real `git commit` in `repo_root`
+    would actually consult, via `git rev-parse --path-format=absolute
+    --git-path hooks` run with `cwd=repo_root`.
+
+    Report-only, matching `is_git_tracked`'s style: any git failure (not a
+    repo, git missing, timeout) returns `None` rather than raising. Correctly
+    resolves the SHARED hooks directory when `repo_root` is a linked worktree
+    (`--git-path` resolves through the worktree's `.git` file to the common
+    dir the main checkout and every sibling worktree share), and honors
+    `core.hooksPath` when the repo sets one, since both are exactly what
+    `--git-path hooks` itself accounts for -- this function adds no path
+    logic of its own beyond invoking git and reading its answer."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-path", "hooks"],
+            cwd=str(repo_root), capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return Path(result.stdout.strip())
+
+
+GIT_PRECOMMIT_HOOK_MARKER = "# constellation-code-map-precommit-hook"
+
+
+def _git_precommit_hook_wrapper_text() -> str:
+    """The shell wrapper body written to `<hooks-dir>/pre-commit`.
+
+    `<toplevel>` is resolved at RUN TIME, inside the wrapper, via `git
+    rev-parse --show-toplevel` -- never a path baked in at install time. This
+    is what lets one shared hooks directory serve every sibling worktree
+    correctly: each invocation resolves and execs ITS OWN worktree's copy of
+    `scripts/hooks/code_map_precommit.py`, which in turn (see that file's own
+    docstring) resolves `repo_root` dynamically the same way for the same
+    reason. This wrapper's job is only the first hop -- finding its own
+    toplevel to locate the shim -- the shim does the rest."""
+    return (
+        "#!/bin/sh\n"
+        f"{GIT_PRECOMMIT_HOOK_MARKER} -- installed by install_constellation.py; "
+        "safe to re-run, refuses to clobber a foreign pre-commit hook.\n"
+        'toplevel="$(git rev-parse --show-toplevel)" || exit 0\n'
+        'exec python3 "$toplevel/scripts/hooks/code_map_precommit.py"\n'
+    )
+
+
+def install_git_precommit_hook(
+    repo_root: Path, *, dry_run: bool, out: Callable[[str], object]
+) -> None:
+    """Write the `pre-commit` wrapper into `repo_root`'s real (possibly
+    shared) git hooks directory, so `git commit` actually reaches
+    `scripts/hooks/code_map_precommit.py` -- the shim's only real caller.
+
+    Report-only on every failure path, matching this file's other
+    report-only detection/wiring functions: a hooks dir that cannot be
+    resolved, or a pre-existing foreign `pre-commit` without this function's
+    own idempotency marker, is reported and skipped, never raised past this
+    function or clobbered."""
+    hooks_dir = resolve_git_hooks_dir(repo_root)
+    if hooks_dir is None:
+        out(f"- git pre-commit hook: could not resolve a hooks directory for {repo_root}; nothing to wire")
+        return
+    hook_path = hooks_dir / "pre-commit"
+    wrapper_text = _git_precommit_hook_wrapper_text()
+    if hook_path.is_file():
+        existing = hook_path.read_text(encoding="utf-8", errors="replace")
+        if GIT_PRECOMMIT_HOOK_MARKER not in existing:
+            out(
+                f"- git pre-commit hook: {hook_path} already exists and is not ours "
+                f"(no {GIT_PRECOMMIT_HOOK_MARKER!r} marker); refusing to clobber it"
+            )
+            return
+        if existing == wrapper_text:
+            out(f"- git pre-commit hook: {hook_path} already up to date; nothing to do")
+            return
+    if dry_run:
+        out(f"- DRY RUN: would write git pre-commit hook -> {hook_path}")
+        return
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+    hook_path.write_text(wrapper_text, encoding="utf-8")
+    hook_path.chmod(hook_path.stat().st_mode | 0o111)
+    out(f"- git pre-commit hook: wired -> {hook_path}")
 
 
 def check_hooks_shippable(
@@ -2749,6 +2901,8 @@ def main(
     out: Callable[[str], object] = print,
     wire_repo_mcp_config: bool = False,
     mcp_config_path: Path | None = None,
+    install_git_pre_commit_hook: bool = False,
+    git_repo_root: Path | None = None,
 ) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -2907,6 +3061,18 @@ def main(
                 dry_run=args.dry_run,
                 out=out,
             )
+        # Same self-install-only shape as the `.mcp.json` wiring immediately above:
+        # `git_repo_root` lets a caller (every test in `GitPreCommitHookWiringTests`)
+        # decouple from `is_self_install(args)` and exercise the write mechanics
+        # directly, while the real CLI entry point below never passes it, so
+        # `is_self_install(args)` alone gates a real run -- this checkout's own
+        # `.git/hooks` is never touched by installing somewhere else.
+        if install_git_pre_commit_hook and (git_repo_root is not None or is_self_install(args)):
+            install_git_precommit_hook(
+                git_repo_root if git_repo_root is not None else REPO_ROOT,
+                dry_run=args.dry_run,
+                out=out,
+            )
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd
             seeded = write_template_baselines(skills, project_root, out=out)
@@ -2918,7 +3084,9 @@ def main(
 
 
 if __name__ == "__main__":
-    # wire_repo_mcp_config=True ONLY here: a real process invocation wires this
-    # checkout's own .mcp.json automatically, with nothing to remember, while a
-    # direct library/test call to main() (every other caller) never touches it.
-    raise SystemExit(main(wire_repo_mcp_config=True))
+    # wire_repo_mcp_config=True / install_git_pre_commit_hook=True ONLY here: a
+    # real process invocation wires this checkout's own .mcp.json AND its own
+    # git pre-commit hook automatically, with nothing to remember, while a
+    # direct library/test call to main() (every other caller) never touches
+    # either.
+    raise SystemExit(main(wire_repo_mcp_config=True, install_git_pre_commit_hook=True))

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "2895dc8b0a2c1e3ba201e823761c55d55dafef78"
+  },
+  "run": {
+    "work_id": "w2-ledger/g2-implement/implementer",
+    "generated_at": "2026-08-22T18:21:15Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w2-ledger",
+      "repo": "/home/tommy/projects/569-w2-ledger",
+      "durable": "/home/tommy/projects/569-w2-ledger"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w2-ledger"
+    }
+  }
+}

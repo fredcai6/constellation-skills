@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m6-regression",
+  "mechanical": {
+    "run": "w2-reindex-g3-implement",
+    "project": "constellation-skills",
+    "role": "g3-implement-implementer",
+    "refusals": 2,
+    "spine-step": "m6-regression",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-g3-implement-m6-regression@c882481f868c52b8546fa1ab97494f3b9fe73664",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex-g3-implement",
+    "generated_at": "2026-08-22T19:00:40Z"
+  }
+}

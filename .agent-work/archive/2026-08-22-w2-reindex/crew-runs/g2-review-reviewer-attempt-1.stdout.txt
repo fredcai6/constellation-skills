@@ -1,0 +1,9 @@
+The g2-review gate is complete: **APPROVE**, driven through a fully consolidated survey and written to `.agent-work/w2-reindex/crew-handoffs/g2-review-reviewer-result.md`.
+
+Summary:
+- Independently reproduced every claimed evidence item (14 passed for the new test class, 230 passed/519 subtests for the full suite, `resolve_git_hooks_dir` resolving correctly against this actual linked worktree's shared `.git/hooks`, wrapper text confirmed run-time-resolving with no baked-in path).
+- Confirmed the `SCRIPT_SOURCE_SUBDIRS` fix is both genuinely needed (mutation-tested it fails without the line) and inert (grepped for zero `code_map_precommit.py` references in skills/`required_scripts`).
+- Ran the required Fowler code-smell pass: 10 smells absent, one flagged (non-blocking `long-parameter-list` growth on `main()`), one overridden with a logged reason (`duplicated-code`, justified by the handoff's own instruction to mirror the `.mcp.json` wiring precedent plus the no-speculative-abstraction doctrine).
+- No scope drift, no exclusions touched, no divergence needing Commander reconciliation.
+
+As with the prior gate on this same work-id, this crew's `SPINE_*` env belongs to the parent Commander (confirmed via `crew-runs.json`'s `spine: null`), so I authored and drove my own survey through the CLI rather than touching that spine — documented in the result's Workflow Feedback section.

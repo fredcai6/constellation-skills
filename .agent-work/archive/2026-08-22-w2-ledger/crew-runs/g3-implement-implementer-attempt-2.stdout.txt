@@ -1,0 +1,13 @@
+All confirmed: every deliverable path is not git-ignored, the full suite is clean, and the result file is written. The run is complete.
+
+## Summary
+
+PART E (attempt 2's rework) is implemented in `scripts/apply_episode_delta.py`:
+- `Episode` dataclass gets a defaulted `overrides: dict` field (placed after `agent_supplied` rather than literally after `artifact_refs`, since `agent_supplied` has no default and dataclass field ordering forbids a defaulted field preceding it — noted as an assumption in the result file).
+- `render_episode` emits a compact-JSON `- overrides: {...}` line when non-empty, nothing when empty.
+- `parse_episode` recovers it back into a dict, defaulting to `{}`.
+- `_apply_create` wires `mech.get("overrides") or {}` through.
+
+Added two new test classes in `tests/test_episode_store.py` covering the writer-level round trip (create-op → persisted `.md` containing the rendered line) and the direct dataclass-level round trip, both for the overrides-present and overrides-absent cases — closing the exact gap attempt 1 flagged as an out-of-scope observation.
+
+PARTS A–D were already correctly in the working tree from attempt 1 and were left untouched. `map/INDEX.md` was regenerated to satisfy the code-map freshness gate. Full suite: `3660 passed, 6 skipped, 1274 subtests passed`. `IMPLEMENTER_RESULT` written to `.agent-work/w2-ledger/crew-handoffs/g3-implement-implementer-result.md`.

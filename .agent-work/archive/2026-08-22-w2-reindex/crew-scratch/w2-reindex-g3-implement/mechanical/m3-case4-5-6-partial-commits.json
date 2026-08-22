@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-case4-5-6-partial-commits",
+  "mechanical": {
+    "run": "w2-reindex-g3-implement",
+    "project": "constellation-skills",
+    "role": "g3-implement-implementer",
+    "refusals": 2,
+    "spine-step": "m3-case4-5-6-partial-commits",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-g3-implement-m3-case4-5-6-partial-commits@8185921d7d5e9afcc923a2a04f2bd6a1e25ba530",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex-g3-implement",
+    "generated_at": "2026-08-22T18:55:41Z"
+  }
+}

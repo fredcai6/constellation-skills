@@ -113,9 +113,20 @@ def worktree_path_for(work_id: str, *, wt_root: str) -> str:
     """`<wt_root>/<last segment of work_id>`. The worktree name is the FINAL
     `/`-separated segment only -- `epic-559/c3-lifecycle` names a worktree
     called `c3-lifecycle`, matching the live convention measured against this
-    run's own worktree."""
+    run's own worktree.
+
+    Joined with a literal `/`, never `os.path.join`: this is a pure string
+    function (the docstring above already promises `<wt_root>/<segment>`,
+    not a platform-dependent join), and its result is compared, elsewhere,
+    against `git worktree list --porcelain` -- which git always renders with
+    forward slashes, even on Windows (git's own documented convention, not
+    this repo's choice). `os.path.join` on `ntpath` would give a
+    backslash-joined answer that git's own porcelain output never produces,
+    so any existing backslashes in `wt_root` are folded to `/` too, keeping
+    the whole answer in the one convention it is actually compared against.
+    """
     last_segment = work_id.rsplit("/", 1)[-1]
-    return os.path.join(wt_root, last_segment)
+    return wt_root.replace("\\", "/").rstrip("/") + "/" + last_segment
 
 
 def branch_name_for(work_id: str) -> str:
@@ -447,7 +458,17 @@ def open_work(
         # 7. Inject origin, then re-run validate_spine.validate on the result.
         base_sha = _git(["rev-parse", "HEAD"], cwd=Path(worktree))
         origin = build_origin(
-            work_id, branch=branch, worktree=str(Path(worktree)), base=base_sha,
+            # `.as_posix()`, not `str(Path(...))`: `init_work_area.py`'s own
+            # origin-stamping (`instantiate_spine`) already writes `worktree`
+            # this way -- the two writers `build_origin`'s own docstring names
+            # as origin.worktree's sources agree on one format, and it is
+            # provenance only (checklist_engine.py's module header: "read by
+            # NOTHING that decides anything" since #609 g2), so nothing forces
+            # this to be OS-native. `str(Path(...))` would instead re-nativize
+            # `worktree` (itself already forward-slash, see
+            # `worktree_path_for`) back to backslash on Windows, diverging
+            # from the `result["worktree"]` this call returns below.
+            work_id, branch=branch, worktree=Path(worktree).as_posix(), base=base_sha,
             opened_at=_now_iso(), parent=parent,
         )
         compiled["origin"] = origin
@@ -1070,12 +1091,19 @@ def finish_work(
     Returns, on success: `{"ok": True, "work_id", "branch", "head", "archive",
     "pushed": bool, "push_error": str | None, "pr": None | str,
     "child_plans_released": [...], "unclaimed_active": [...], "reap": dict |
-    None}`. On any of steps 2/4/6 refusing: `{"ok": False, "refusal": <the
-    verbatim engine or closeout text>, "stage": "verify" |
-    "advance-release:<substage>" | "archive"}`. Never raises for a normal
-    closeout refusal -- `SpineLifecycleError` stays reserved for genuine
-    faults elsewhere in the stack (e.g. `close_work`'s own git-command
-    failures), not the ordinary "not ready yet" outcome.
+    None, "overrides": dict}`. On any of steps 2/4/6 refusing: `{"ok": False,
+    "refusal": <the verbatim engine or closeout text>, "stage": "verify" |
+    "advance-release:<substage>" | "archive", "overrides": dict}`. Never
+    raises for a normal closeout refusal -- `SpineLifecycleError` stays
+    reserved for genuine faults elsewhere in the stack (e.g. `close_work`'s
+    own git-command failures), not the ordinary "not ready yet" outcome.
+
+    `overrides` (#504) is `checklist_engine.override_summary(spine)`,
+    computed once from the spine as loaded in step 1 and carried unchanged
+    onto EVERY return point -- so a run that carried override activity is
+    visibly distinguishable from a clean one at the moment `finish_work`
+    returns, not only in the durable episode record `mechanical_fields()`
+    produces separately.
     """
     # The module-level `open_pr` function is captured via the module
     # namespace, NOT the local scope: this function's own `open_pr: bool`
@@ -1096,10 +1124,20 @@ def finish_work(
     # 1. Load the spine dict.
     spine = json.loads(absolute_spine_path.read_text(encoding="utf-8"))
 
+    # Computed once, from the spine as loaded at step 1: no verb reachable from
+    # finish_work's own composition (advance/release/reap/archive) appends an
+    # override-ledger entry (that write path is gated behind dispatch's
+    # claim/release/waive branches -- see checklist_engine's own call-graph
+    # proof), so this stays valid for every return point below. Via
+    # `override_summary`/`_override_entries`, NEVER a raw `trip_ledger`/
+    # `outcome` read: under the schema g1/g2 landed, non-trip kinds carry no
+    # `outcome` field at all.
+    overrides = checklist_engine.override_summary(spine)
+
     # 2. Verify -- refuse and stop; nothing mutated on this path.
     refusal = done_refusal(spine, tree_clean=tree_clean, episodes_captured=episodes_captured)
     if refusal is not None:
-        return {"ok": False, "refusal": refusal, "stage": "verify"}
+        return {"ok": False, "refusal": refusal, "stage": "verify", "overrides": overrides}
 
     # 3. Release every declared child plan's lease -- BEFORE the top-level
     # release and BEFORE any reap.
@@ -1117,6 +1155,7 @@ def finish_work(
             "ok": False,
             "refusal": advance_result["refusal"],
             "stage": f"advance-release:{advance_result['stage']}",
+            "overrides": overrides,
         }
 
     # 5. Reap -- AFTER every release above, never before (#552's ordering
@@ -1129,7 +1168,7 @@ def finish_work(
     try:
         close_result = close_work(absolute_spine_path, root=root, today=today)
     except SpineLifecycleError as exc:
-        return {"ok": False, "refusal": str(exc), "stage": "archive"}
+        return {"ok": False, "refusal": str(exc), "stage": "archive", "overrides": overrides}
 
     # 7. Push -- reported, never fatal to the already-committed archive move.
     pushed = False
@@ -1158,6 +1197,7 @@ def finish_work(
         "child_plans_released": child_result["released"],
         "unclaimed_active": child_result["unclaimed_active"],
         "reap": reap_result,
+        "overrides": overrides,
     }
 
 

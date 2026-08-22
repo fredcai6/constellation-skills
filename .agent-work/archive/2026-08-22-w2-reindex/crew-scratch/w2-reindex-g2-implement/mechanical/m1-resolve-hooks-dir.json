@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-resolve-hooks-dir",
+  "mechanical": {
+    "run": "w2-reindex-g2-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m1-resolve-hooks-dir",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-g2-implement-m1-resolve-hooks-dir@8522d0be1855d3c7b62dc040b1a08020c761ed72",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex-g2-implement",
+    "generated_at": "2026-08-22T18:28:39Z"
+  }
+}

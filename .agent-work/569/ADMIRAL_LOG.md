@@ -179,3 +179,5 @@ Entry grammar (one line of date + tag, then the substance):
 - `<episodes captured, reconcile status, harvest + hygiene sweep, summary acceptance>`
 
 - TRANSITION | boundary=w1-launch | decision=replan | verified
+
+- TRANSITION | boundary=w1-to-w2 | decision=replan | verified

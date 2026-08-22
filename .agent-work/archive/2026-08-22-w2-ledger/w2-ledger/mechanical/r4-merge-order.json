@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-merge-order",
+  "mechanical": {
+    "run": "w2-ledger",
+    "project": "constellation-skills",
+    "role": "constellation/w2-ledger/g1-implement/reviewer/attempt-1",
+    "refusals": 3,
+    "spine-step": "r4-merge-order",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger-r4-merge-order@6c1fc282ee6bd370d6801926264d32de63932576",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger",
+    "generated_at": "2026-08-22T18:14:38Z"
+  }
+}
