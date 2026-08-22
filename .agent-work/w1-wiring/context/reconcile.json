@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "files": [],
+  "repo_rev": {
+    "commit": "a8b6ed25bd02be5686ca1e1090c5e5ab58ceb072"
+  },
+  "run": {
+    "work_id": "w1-wiring",
+    "generated_at": "2026-08-22T15:42:08Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w1-wiring",
+      "repo": "/home/tommy/projects/569-w1-wiring",
+      "durable": "/home/tommy/projects/569-w1-wiring"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w1-wiring"
+    }
+  }
+}

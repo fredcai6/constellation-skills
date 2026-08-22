@@ -291,7 +291,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "all four gates (e0-context, g1-census, g2-generate-spine, g3-field-groups, g4-disposition) closed with integrated evidence, verified via current at each step"
         },
         {
           "id": "c2",
@@ -300,7 +301,8 @@
             "kind": "command",
             "command": "python scripts/verify_iterative_role_artifacts.py commander --work-id w1-wiring"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "constraints": [],
@@ -328,7 +330,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -338,6 +340,17 @@
           "type": "command-output",
           "payload": {
             "cmd": "python scripts/verify_state_note.py w1-wiring",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_iterative_role_artifacts.py commander --work-id w1-wiring",
             "exit": 0,
             "shell": "posix"
           },
@@ -356,7 +369,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete"
         }
       ],
       "postconditions": [
@@ -364,13 +378,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "No docs/architecture packet map exists (DEGRADED-UNPARSEABLE, pre-existing). Reconciled directly: AGENT_GUIDE.md's Documentation Map gained a row for the new docs/CHECK_SCRIPT_CENSUS.md; docs/GAUGE_WRITER_HOOK.md's own field table was already corrected as part of the #444 fix itself. map/INDEX.md already rebuilt in the disposition gate to reflect the deletion."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -386,7 +401,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
         }
       ],
       "postconditions": [
@@ -394,7 +410,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Both triage candidates routed recommend-and-defer (execute.json triage_candidates array): empty map anchor system, no-Task-tool dispatch constraint. Neither self-filed; both deferred to the Admiral per LAUNCH_ORDER:Filing is the disfavoured exit."
         },
         {
           "id": "c2",
@@ -403,17 +420,32 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Filing-is-the-disfavoured-exit"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -425,7 +457,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete"
         }
       ],
       "postconditions": [
@@ -436,17 +469,28 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return-Shape"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -458,7 +502,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review complete, run summary attached via user-decision e-review-1"
         }
       ],
       "postconditions": [
@@ -469,17 +514,30 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py w1-wiring --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w1-wiring --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -595,12 +653,12 @@
     "worktree": "/home/tommy/projects/569-w1-wiring",
     "opened_by": "init_work_area"
   },
-  "refusals": 3,
+  "refusals": 5,
   "engine_session": {
     "session_id": "constellation/w1-wiring",
     "status": "active",
     "claimed_at": "2026-08-22T14:53:50.302883+00:00",
-    "last_heartbeat": "2026-08-22T15:03:33.017739+00:00",
+    "last_heartbeat": "2026-08-22T15:46:01.994293+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -634,6 +692,41 @@
       "why": "Mission frame written from discharged degraded substitutes, verify-frame FRAME-OK. Two sequential plan candidates (smallest-diff, most-testable) converged in PLAN_ALTERNATIVES.md to a 4-gate hybrid; cold self-critic (no Task tool for independent agent) in PLAN_CRITIC.md, 6 findings accepted and folded into execute.json. execute.json authored: g1-census, g2-generate-spine, g3-field-groups, g4-disposition, covering full file-ownership scope minus the fenced checklist_engine.py/validate_spine.py. Plan approved per LAUNCH_ORDER:Mission.",
       "mechanical": false,
       "ts": "2026-08-22T15:03:07.270133+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "All four execute.json gates closed (e0-context, g1-census, g2-generate-spine, g3-field-groups, g4-disposition). Census committed at docs/CHECK_SCRIPT_CENSUS.md; generate_spine.py disposition settled; #368/#444 re-measured; registration+vocabulary lints shipped and proven to fail; 1 dead script deleted; full suite green (3573 passed, 6 skipped). REPLAN_INPUT.json (RUN_EVIDENCE shape) recorded and verified via verify_iterative_role_artifacts.py commander.",
+      "mechanical": false,
+      "ts": "2026-08-22T15:41:22.371046+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Structural record reconciled directly (no packet map): AGENT_GUIDE.md documentation map updated, GAUGE_WRITER_HOOK.md already corrected, map/INDEX.md already rebuilt.",
+      "mechanical": false,
+      "ts": "2026-08-22T15:42:08.337607+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Two candidates routed recommend-and-defer, neither self-filed. Citation records the deferral, not a filing approval.",
+      "mechanical": false,
+      "ts": "2026-08-22T15:43:22.987291+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary: census (17 live/8 unwired/1 dead) committed at docs/CHECK_SCRIPT_CENSUS.md; generate_spine.py disposition settled for wave 2; #368/#444 re-measured with #444's live drift found and fixed; registration+vocabulary lints shipped, blocking, proven to fail; 1 dead script deleted; AGENT_GUIDE.md reconciled; two candidates deferred to Admiral. Full suite green throughout.",
+      "mechanical": false,
+      "ts": "2026-08-22T15:43:40.563848+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Reflected honestly: 4 episodes captured (w1-wiring-001..004) covering the mid-census reclassification correction, the no-Task-tool dispatch deviation from design-it-twice/cold-critic, execute.json JSON-authoring fragility with nested-quote shell commands, and pytest-suite-timeout polling friction. No 'none' answer needed -- real friction occurred and is recorded. verify_episode_captured.py w1-wiring --store-root episodes --phase feedback confirmed 4 episodes recorded.",
+      "mechanical": false,
+      "ts": "2026-08-22T15:46:01.994275+00:00"
     }
   ]
 }
