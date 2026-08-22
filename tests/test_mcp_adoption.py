@@ -239,6 +239,38 @@ def _engine_verbs() -> set[str]:
     return set(match.group(1).split(","))
 
 
+def _engine_flags() -> set[str]:
+    """The engine's own LONG-FLAG registry, read the same way `_engine_verbs` reads the
+    verbs -- per subparser, from argparse's own `--help`, never hand-typed.
+
+    Why a second oracle rather than a list: `test_cli_retirement_guard.py` builds a
+    pattern from this set, and that file already records what a hand-typed verb list
+    cost -- 17 of 18, wrong the day it was written, leaving a live evasion route open.
+    A flag list would rot the same way, and faster: flags are added to a subparser far
+    more often than verbs are added to the engine.
+
+    `--help` is dropped because argparse adds it to every subparser itself; it is not
+    the engine's. The top-level `--file` never appears here (a subparser's help does not
+    list its parent's options), which is correct for the consumer -- it is a flag that
+    precedes the verb, and the pattern built from this set reads verb-then-flag.
+    """
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import checklist_engine  # noqa: E402 -- same import safety as _engine_verbs above
+
+    flags: set[str] = set()
+    for verb in _engine_verbs():
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(io.StringIO()):
+            try:
+                checklist_engine.parse_args(["--file", "/dev/null", verb, "--help"])
+            except SystemExit:
+                pass
+        flags |= set(re.findall(r"(--[A-Za-z][A-Za-z0-9-]*)", buf.getvalue()))
+    flags.discard("--help")
+    assert flags, "could not read any long flag from the engine's argparse help"
+    return flags
+
+
 def _door_reachable_verbs() -> set[str]:
     """Every engine verb `mcp_spine_server.call_tool` actually reaches, read from its own
     source TEXT via the literal first argument to every `run_engine(...)` call -- never
@@ -1075,8 +1107,12 @@ class TestTier3ChecklistEngineReference:
 
     def test_lease_section_carries_door_equivalent(self):
         text = _text(TIER3_PATH)
-        # Session lease section: the CLI claim/heartbeat/release block must still be there,
-        # AND a door equivalent (spine_lease) must be named near it.
+        # Session lease section: the three lease OPERATIONS must still be named,
+        # AND the door tool that performs them (spine_lease) must be named near
+        # them. This used to read "the CLI claim/heartbeat/release block must
+        # still be there" -- the block is gone (the programless-command guard in
+        # test_cli_retirement_guard.py refuses it), and the assertion never
+        # checked for a block in the first place, only for the three words.
         idx = text.find("## Session lease")
         assert idx != -1, "Session lease section missing"
         section = text[idx: idx + 2000]
@@ -1225,7 +1261,15 @@ class TestTier5DoNotTouch:
     The sweep's own guard draws its line in exactly the same place and leaves these
     mentions alone (`tests/test_cli_retirement_guard.py`, `TestTheInvocationPredicateItself`,
     which pins both directions). Inverting this tier would therefore assert something
-    the epic did not decide, and would go red on two files nothing swept."""
+    the epic did not decide, and would go red on two files nothing swept.
+
+    STILL ACCURATE AFTER THE PROGRAMLESS-COMMAND SWEEP, which DID edit
+    `global-everyone.md` -- it rewrote three engine command lines as
+    interface-neutral prose (the rule, not the invocation), naming neither a CLI
+    syntax nor a door tool. Both halves of this tier therefore still hold, and
+    that is the point: a `_shared` doctrine file states what the engine
+    guarantees and leaves how to invoke it to the door's own tool
+    descriptions (#565)."""
 
     @pytest.mark.parametrize("path", TIER5_UNTOUCHED_FILES)
     def test_still_names_checklist_engine_as_artifact(self, path):

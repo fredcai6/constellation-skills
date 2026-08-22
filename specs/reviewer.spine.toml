@@ -68,7 +68,7 @@ constraints = [
   id        = "c1"
   statement = "context + glossary + handoff + diff + packet loaded"
   kind      = "qualitative"
-  because   = "no doctrine mechanically verifies an agent's comprehension of prose it read; this stated form is what `record --result pass` points at, since a survey item's postcondition list is otherwise empty here"
+  because   = "no doctrine mechanically verifies an agent's comprehension of prose it read; this stated form is what a `record` result of `pass` points at, since a survey item's postcondition list is otherwise empty here"
 
 [[gate]]
 id    = "r1-handoff"
@@ -114,10 +114,10 @@ postcondition command resolves the record path from <work-id> alone -- the
 same substitution you already make everywhere else in this survey -- so no
 separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only
 if the record path ever needs to move off that fixed convention, correct it
-through the engine with `amend --delta <file>` whose single op is
+through the engine with `spine_amend`, whose `delta` carries the single op
 `retext-check` on this item's c1, never by hand-editing this survey. There,
---authority is the dispatching Commander named in your reviewer handoff (never
-a string you invent), and --reason is why the path changed. Do NOT silently
+`authority` is the dispatching Commander named in your reviewer handoff (never
+a string you invent), and `reason` is why the path changed. Do NOT silently
 skip this item.
 """
 constraints = [

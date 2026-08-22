@@ -16,7 +16,7 @@ Build a `survey` plan from `templates/<NAME>_CHECKLIST.template.json`:
 
 1. **<criterion one>** — `record` pass/fail with a finding.
 2. **<criterion two>** — `record` pass/fail with a finding.
-3. Append any context-specific checks as flat siblings, then `consolidate --verdict <APPROVE|BLOCK|...>`.
+3. Append any context-specific checks as flat siblings, then `spine_survey_result` with `action=consolidate` and `verdict=<APPROVE|BLOCK|...>`.
 
 ## Verdict + independence
 

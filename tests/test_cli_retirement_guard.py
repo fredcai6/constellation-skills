@@ -167,6 +167,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_mcp_adoption import (  # noqa: E402
     INSTRUCTION_FILES,
     INSTRUCTION_SUFFIXES,
+    _engine_flags,
     _engine_verbs,
     _instruction_texts,
 )
@@ -368,6 +369,63 @@ _ENGINE_STANDIN = (
 #: already prices, and it costs more.
 ENGINE_STANDIN_COMMAND_RE = re.compile(
     _ENGINE_STANDIN + r"[ \t]+(?:" + _ENGINE_VERBS + r")\b"
+)
+
+
+#: Engine long flags, READ FROM THE ENGINE for the same reason the verbs are.
+#: `_engine_flags()` walks each subparser's own argparse help, so this cannot be
+#: a stale copy of a registry that has moved on.
+_ENGINE_FLAGS = "|".join(re.escape(flag) for flag in sorted(_engine_flags()))
+
+#: The flag set the pattern below ACTUALLY applies, recovered from the alternation
+#: itself rather than from whatever produced it -- the same guard against a later
+#: author swapping the derivation for a literal that happens to agree today.
+ENGINE_FLAGS = frozenset(
+    re.sub(r"\\(.)", r"\1", token) for token in _ENGINE_FLAGS.split("|")
+)
+
+#: A COMMAND LINE WITH NO PROGRAM NAME AT ALL. Patterns 1-4 above all identify a
+#: command by the thing you would type first -- the script, a path to it, or a
+#: stand-in for it. This one drops that assumption, because a CLI lesson does not
+#: need to name its program: the verbs and their real flags ARE the teaching, and
+#: the program name is the one part a reader can infer.
+#:
+#: The live instance that motivated it, in `skills/workbench/references/checklist-engine.md`:
+#:
+#:     claim     --session-id <id> --claimed-by <role> [--worktree .] [--force --reason "..."]
+#:     heartbeat --session-id <id>
+#:     release   --session-id <id>
+#:
+#: No `checklist_engine.py`, no placeholder, no "fallback". Pattern 4 comes closest
+#: and misses on ORDER: it wants stand-in then verb, and this is verb then stand-in.
+#: All four ran green over this block while it taught the lease CLI in full.
+#:
+#: THE INVARIANT IS VERB-THEN-FLAG, one engine verb followed on the SAME LINE by
+#: one engine long flag. Both halves are the engine's own registries, so neither
+#: can drift into a hole. The 60-character window between them is what keeps the
+#: two tokens parts of one command rather than two sentences that happen to share
+#: a line.
+#:
+#: DIRECTION IS A MEASURED CHOICE, NOT AN OVERSIGHT. A reverse arm (flag, then
+#: verb) was priced over the whole walk and rejected: 5 matches, of which the
+#: honest-text cost is immediate -- `--reason is why the path changed. Do NOT
+#: silently skip` fires on the English word "skip", not on the verb. The true
+#: sites it added were already reported by the forward arm in the same file. The
+#: bar here is the one this file applies throughout: a pattern that red-lights
+#: honest text is deleted by the next author who trips it, after which there is
+#: no check at all.
+#:
+#: THIS PATTERN FIRES ON GRAMMAR THE OTHERS WOULD CALL PROSE, AND THAT IS
+#: DELIBERATE. `every \`claim --force\` writes previous_session_id` names an
+#: operation rather than instructing anyone to run one -- but `--force` is CLI
+#: syntax whichever grammatical role the phrase plays, and the door spells the
+#: same thing `force=true`. Reading intent out of English is exactly the
+#: predicate this file refuses to build (see `TestCLIStaysAvailableNotDeprecated`
+#: in `test_mcp_adoption.py`, whose polarity predicates were measured wrong 9/10
+#: and deleted). So the rule is syntactic: verb plus engine flag is CLI surface,
+#: and the sweep rewrites it as the door call it means.
+ENGINE_PROGRAMLESS_COMMAND_RE = re.compile(
+    r"\b(?:" + _ENGINE_VERBS + r")\b[^\n]{0,60}?[ \t](?:" + _ENGINE_FLAGS + r")\b"
 )
 
 
@@ -675,6 +733,120 @@ class TestTheStandInCommandPredicateItself:
             )
 
 
+class TestTheProgramlessCommandPredicateItself:
+    """`ENGINE_PROGRAMLESS_COMMAND_RE` widens past the program name, so like every
+    widening in this file it is judged in BOTH directions.
+
+    The catches are not invented. The first three are the real lease block from
+    `skills/workbench/references/checklist-engine.md`, which ran green against all
+    four earlier patterns while teaching the lease CLI in full; the rest are the
+    live sites the first run over this corpus reported.
+
+    The must-not-match list is the measured false-alarm cost. Two entries matter
+    most: an engine verb used as an ordinary English word near an unrelated flag,
+    and a verb and a flag that merely share a line as separate sentences. Both are
+    what the 60-character window and the verb-then-flag order are buying."""
+
+    PROGRAMLESS_COMMANDS = (
+        'claim     --session-id <id> --claimed-by <role> [--worktree .]',
+        "heartbeat --session-id <id>",
+        "release   --session-id <id>",
+        "attest <task> --cond <id> --which postconditions --evidence <evidence-id>",
+        "attach <active-gate> --type refresh-request --field seam=<active-gate>",
+        "waive gN-integrate --cond <id> --authority human --reason \"...\"",
+        "advance --why 'the gate is closed'",
+        "amend --delta <file>",
+        "consolidate --verdict APPROVE",
+        "record --result pass",
+        "claim --force",
+    )
+
+    NOT_A_PROGRAMLESS_COMMAND = (
+        # An engine verb as plain English, with a flag belonging to another tool.
+        "resume a recoverable attempt (run_crew.py --resume <session>)",
+        "retire it with --abandon <session> --relaunch",
+        # A verb and an engine flag on one line, but as two separate sentences --
+        # further apart than any command line puts its own tokens.
+        "record what you observed in the episode store, and remember that the "
+        "engine stamps every takeover for audit; the --reason it carries is durable",
+        # The verb alone, with no flag at all: how the corpus legitimately names
+        # an operation once the flags are gone. The sweep's OUTPUT must pass.
+        "attach the review-result evidence, then advance the gate",
+        "a forced claim (spine_lease with force=true) records the prior session",
+        # A flag-shaped token that is not an engine flag.
+        "start --verbose",
+    )
+
+    def test_catches_every_programless_command_shape(self):
+        missed = [c for c in self.PROGRAMLESS_COMMANDS
+                  if not ENGINE_PROGRAMLESS_COMMAND_RE.search(c)]
+        assert not missed, (
+            f"the programless pattern missed a command shape, so a CLI lesson that "
+            f"simply omits the script name is back to being invisible to this guard: "
+            f"{missed}"
+        )
+
+    def test_leaves_prose_and_swept_text_alone(self):
+        flagged = [c for c in self.NOT_A_PROGRAMLESS_COMMAND
+                   if ENGINE_PROGRAMLESS_COMMAND_RE.search(c)]
+        assert not flagged, (
+            f"the programless pattern red-lighted text that is not a command line -- a "
+            f"pattern that fires on honest sentences is deleted by the next author who "
+            f"trips it, and the last two entries are the shape the sweep PRODUCES, so "
+            f"firing on them would make the corpus unfixable: {flagged}"
+        )
+
+    def test_the_four_earlier_patterns_miss_what_this_one_catches(self):
+        """The gap, stated as an assertion rather than a claim in a document. The
+        real lease block passed all four earlier patterns; if that stops being
+        true, this pattern's justification has changed and should be re-read."""
+        earlier = (ENGINE_PLACEHOLDER_RE, CLI_FALLBACK_RE, ENGINE_INVOCATION_RE,
+                   ENGINE_STANDIN_COMMAND_RE)
+        for command in self.PROGRAMLESS_COMMANDS[:3]:
+            assert not any(pattern.search(command) for pattern in earlier), (
+                f"this string is supposed to be one the four earlier patterns MISS -- "
+                f"if it now matches one, the gap this pattern was added for has been "
+                f"misrecorded here: {command!r}"
+            )
+            assert ENGINE_PROGRAMLESS_COMMAND_RE.search(command), (
+                f"the widening does not catch the live block it was added for: {command!r}"
+            )
+
+
+class TestTheFlagSetIsTheEnginesOwn:
+    """The same tie as `TestTheVerbSetIsTheEnginesOwn`, for the other registry the
+    programless pattern rests on. A flag missing here is a live evasion route, and
+    flags are added to a subparser far more often than verbs are added to the
+    engine -- so this side drifts faster, not slower."""
+
+    def test_every_flag_the_engine_has_is_caught_in_a_command_line(self):
+        missed = sorted(f for f in _engine_flags()
+                        if not ENGINE_PROGRAMLESS_COMMAND_RE.search(f"advance {f} x"))
+        assert not missed, (
+            f"the engine accepts {missed} but this file's pattern does not catch a "
+            f"command line using it. The alternation must be derived from the engine, "
+            f"never hand-typed"
+        )
+
+    def test_the_flag_set_is_the_engines_own_registry(self):
+        engine = _engine_flags()
+        assert ENGINE_FLAGS == engine, (
+            f"this file's flag set has drifted from the engine's argparse registry.\n"
+            f"  in the engine, missing here: {sorted(engine - ENGINE_FLAGS)}\n"
+            f"  here, not in the engine:     {sorted(ENGINE_FLAGS - engine)}"
+        )
+
+    def test_the_flag_set_is_not_empty(self):
+        # CONTROL for the tie above, mirroring the verb-count pin: a derivation
+        # that started returning the empty set would satisfy the tie and catch
+        # nothing. `_engine_flags` asserts non-empty itself; this pins that the
+        # PATTERN was built from a non-empty one.
+        assert len(ENGINE_FLAGS) >= 20, (
+            f"only {len(ENGINE_FLAGS)} engine flags reached the pattern; the derivation "
+            f"has quietly stopped reading argparse's help"
+        )
+
+
 class TestNoSecondPathReachesAnAgent:
     """The guard proper. Each of these asserts the ABSENCE of the text itself --
     never the presence of a sentence describing the rule, which is the failure
@@ -714,5 +886,14 @@ class TestNoSecondPathReachesAnAgent:
             "command-shaped `checklist_engine.py` invocations -- the rename-around that "
             "survives deleting the phrase, because the runnable command is what the "
             "sentence is for --",
+            sites,
+        )
+
+    def test_no_programless_command_line_reaches_an_agent(self):
+        sites = _sites(ENGINE_PROGRAMLESS_COMMAND_RE)
+        assert not sites, _report(
+            "engine command lines with no program name -- an engine verb followed on the "
+            "same line by an engine long flag, which is what a CLI lesson looks like once "
+            "it stops naming the script, and which all four patterns above read as prose --",
             sites,
         )
