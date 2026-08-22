@@ -1,0 +1,318 @@
+{
+  "work_id": "w2-reindex-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-resolve-hooks-dir",
+    "m2-install-hook",
+    "m3-wire-main",
+    "m4-green-and-report"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the g2-implement handoff, the four named precedents in scripts/install_constellation.py (wire_repo_mcp_config, mcp_config_path, is_self_install, write_template_working_copies), and scripts/hooks/code_map_precommit.py (read-only reference). Confirm handoff completeness. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + precedents + shim read; handoff verified complete (task, intent, scope, exclusions, evidence, test mode, stop conditions all present)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff, wire_repo_mcp_config/mcp_config_path/is_self_install/write_template_working_copies, and code_map_precommit.py all read; handoff has task/intent/scope/exclusions/evidence/test-mode/stop-conditions"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-resolve-hooks-dir": {
+      "id": "m1-resolve-hooks-dir",
+      "title": "resolve_git_hooks_dir + worktree/this-repo tests",
+      "imperative": "Add resolve_git_hooks_dir(repo_root) -> Path | None to scripts/install_constellation.py: runs `git rev-parse --path-format=absolute --git-path hooks` with cwd=repo_root, returns None on any git failure (never raises), matching is_git_tracked's try/except(OSError, subprocess.TimeoutExpired) + returncode style. Add GitPreCommitHookWiringTests to tests/test_install_constellation.py covering: a scratch repo (tempfile.TemporaryDirectory + git init) resolves to its own .git/hooks; a `git worktree add` second worktree off that scratch repo resolves to the SAME shared hooks dir as the main checkout; core.hooksPath override is honored; and resolve_git_hooks_dir called directly against THIS actual checkout (installer.REPO_ROOT or the literal /home/tommy/projects/569-w2-reindex path) resolves to the real shared constellation-skills/.git/hooks. Test-after is allowed; write the function then the tests. Attest c1 (TDD not required as test-after), verify c2 by running the new tests.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "resolve_git_hooks_dir added; worktree case, this-repo case, core.hooksPath case, and git-failure-returns-None case all pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -k resolve_git_hooks_dir -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-resolve-hooks-dir-2"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "never raises on git failure",
+        "scope: scripts/install_constellation.py + tests/test_install_constellation.py only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-resolve-hooks-dir-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k GitPreCommitHookWiringTests -q",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-resolve-hooks-dir-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k resolve_git_hooks_dir -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-install-hook": {
+      "id": "m2-install-hook",
+      "title": "install_git_precommit_hook + write/idempotent/clobber/dry-run tests",
+      "imperative": "Add install_git_precommit_hook(repo_root, dry_run, out) -> None: resolves hooks dir via resolve_git_hooks_dir, no-ops with a report if None; writes an executable shell wrapper at <hooks-dir>/pre-commit that resolves `<toplevel>` at RUN TIME via `git rev-parse --show-toplevel` inside the wrapper (never an install-time-baked path) and execs `python3 <toplevel>/scripts/hooks/code_map_precommit.py`; embeds an idempotency marker comment; re-running with identical intended content is byte-identical; refuses (reports, does not raise or clobber) when a pre-existing pre-commit lacks the marker; chmod +x on write; honors dry_run (prints plan, writes nothing). Add tests: explicit wiring writes the executable wrapper referencing code_map_precommit.py; idempotent re-run is byte-identical; refuse-to-clobber leaves a foreign marker-less pre-commit untouched and reports the refusal; --dry-run writes nothing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "resolve_git_hooks_dir exists and is tested",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "resolve_git_hooks_dir complete and tested (m1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "install_git_precommit_hook added; write/idempotent/refuse-clobber/dry-run tests all pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -k install_git_precommit_hook -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-install-hook-1"
+        }
+      ],
+      "constraints": [
+        "never raises on git/filesystem failure -- report and no-op",
+        "never clobber a foreign hook file",
+        "scope: scripts/install_constellation.py + tests/test_install_constellation.py only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-install-hook-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k install_git_precommit_hook -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-wire-main": {
+      "id": "m3-wire-main",
+      "title": "wire main() params + __main__ + self-install-only guard",
+      "imperative": "Add keyword-only main() params install_git_pre_commit_hook: bool = False, git_repo_root: Path | None = None, mirroring wire_repo_mcp_config/mcp_config_path's exact shape. Call install_git_precommit_hook at the same call site as apply_repo_mcp_config_wiring, guarded by `install_git_pre_commit_hook and (git_repo_root is not None or is_self_install(args))`, passing `git_repo_root if git_repo_root is not None else REPO_ROOT`. Add install_git_pre_commit_hook=True to the if __name__ == \"__main__\": block alongside wire_repo_mcp_config=True. Zero changes to wire_hooks/HOOK_SETS/report_hook_wiring or any Claude Code PostToolUse/settings.json path. Add tests: default no-op (install_git_pre_commit_hook=False leaves a scratch repo's hooks untouched even when present); self-install-only case -- with install_git_pre_commit_hook=True, git_repo_root left at its None default, and args shaped so is_self_install(args) is False (e.g. --dest elsewhere), install_git_precommit_hook must never be invoked (assert via mock.patch.object spy, not by touching this real checkout's own .git/hooks).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "install_git_precommit_hook exists and is tested standalone",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "install_git_precommit_hook complete and tested (m2)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "main() wired; default-no-op and self-install-only tests pass; zero diff to wire_hooks/HOOK_SETS/report_hook_wiring",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -k GitPreCommitHookWiringTests -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-wire-main-1"
+        }
+      ],
+      "constraints": [
+        "exact exclusions per handoff: no touching wire_hooks/HOOK_SETS/report_hook_wiring/Claude Code hook machinery",
+        "every existing main() call in the pre-existing suite must remain unaffected"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-wire-main-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k GitPreCommitHookWiringTests -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-green-and-report": {
+      "id": "m4-green-and-report",
+      "title": "full suite green, wiring grep, write IMPLEMENTER_RESULT",
+      "imperative": "Run the full pre-existing test_install_constellation.py suite green with zero changes to existing test bodies. Run the wiring grep from the handoff and count call sites outside their own definitions (expect: main()'s call-site guard, the __main__ block, and the new test file -- zero real-commit callers, which is expected not a defect). Write IMPLEMENTER_RESULT to .agent-work/w2-reindex/crew-handoffs/g2-implement-implementer-result.md per the handoff's Return Format, including the Note on engine drive (own plan, not the parent's bound execute spine -- crew-runs.json shows spine: null for this crew).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all three new functions + their tests are in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "resolve_git_hooks_dir, install_git_precommit_hook, and main() wiring all complete and independently tested (m1-m3)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "full suite green; grep count reported; result artifact written",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-green-and-report-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-green-and-report-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/w2-reindex/g2-implement/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T18:28:19.604235+00:00",
+    "last_heartbeat": "2026-08-22T18:33:40.649452+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T18:33:46.010460+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:28:34.520457+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-resolve-hooks-dir",
+      "why": "resolve_git_hooks_dir added; scratch-repo, core.hooksPath, git-failure, worktree-shares-hooks, and this-actual-checkout cases all pass",
+      "mechanical": false,
+      "ts": "2026-08-22T18:30:35.477083+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-install-hook",
+      "why": "install_git_precommit_hook added: writes executable wrapper, idempotent re-run byte-identical, refuses to clobber a foreign hook, honors dry-run, reports+no-ops when hooks dir unresolvable -- all 5 pass",
+      "mechanical": false,
+      "ts": "2026-08-22T18:30:46.646538+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-wire-main",
+      "why": "main() wired with install_git_pre_commit_hook/git_repo_root mirroring wire_repo_mcp_config/mcp_config_path exactly; __main__ passes install_git_pre_commit_hook=True; self-install-only guard verified via spy; zero lines touched in wire_hooks/HOOK_SETS/report_hook_wiring; all 14 GitPreCommitHookWiringTests pass",
+      "mechanical": false,
+      "ts": "2026-08-22T18:31:12.048542+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-green-and-report",
+      "why": "full pre-existing test_install_constellation.py suite green (230 passed, 519 subtests) after fixing an unrelated pre-existing gap left by gate 1 (code_map_precommit.py undeclared in SCRIPT_SOURCE_SUBDIRS); wiring grep shows 3 call sites outside definitions (main() guard, call, __main__) plus the test file, zero real-commit callers as expected; IMPLEMENTER_RESULT written to .agent-work/w2-reindex/crew-handoffs/g2-implement-implementer-result.md",
+      "mechanical": false,
+      "ts": "2026-08-22T18:33:40.649429+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-22T18:30:19.182464+00:00",
+      "reason": "c2's check accidentally scoped to the whole test class (including m2/m3-owned tests not yet implemented); narrow to just the resolve_git_hooks_dir tests this gate owns",
+      "authority": "self",
+      "ops": [
+        "retext-check m1-resolve-hooks-dir.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-22T18:30:31.806904+00:00",
+      "reason": "narrow m2's check to just the install_git_precommit_hook tests it owns, same fix as m1's",
+      "authority": "self",
+      "ops": [
+        "retext-check m2-install-hook.c2"
+      ]
+    }
+  ]
+}

@@ -187,7 +187,7 @@ def check(repo_root: Path) -> list[dict[str, str]]:
             rows.append({
                 "template": rel,
                 "status": "no-baseline",
-                "detail": f"no file named this under {baseline_dir.relative_to(repo_root)}/*/ "
+                "detail": f"no file named this under {baseline_dir.relative_to(repo_root).as_posix()}/*/ "
                           f"-- cannot tell stale from project-edited without it",
             })
             continue
@@ -195,18 +195,22 @@ def check(repo_root: Path) -> list[dict[str, str]]:
         skills_text = _read(skills_source)
         baseline_text = _read(baseline_file)
 
+        # `.as_posix()` on every relative path below: `.relative_to(repo_root)`
+        # returns a `WindowsPath` on Windows, whose implicit `str()` in an
+        # f-string is backslash-separated -- these `detail` strings are
+        # compared verbatim by tests written with forward-slash literals.
         if overlay_text == skills_text:
-            status, detail = "ok", f"matches {skills_source.relative_to(repo_root)}"
+            status, detail = "ok", f"matches {skills_source.relative_to(repo_root).as_posix()}"
         elif overlay_text == baseline_text:
             status, detail = "stale", (
-                f"differs from {skills_source.relative_to(repo_root)} but still equals "
-                f"{baseline_file.relative_to(repo_root)} -- nobody edited the overlay, "
+                f"differs from {skills_source.relative_to(repo_root).as_posix()} but still equals "
+                f"{baseline_file.relative_to(repo_root).as_posix()} -- nobody edited the overlay, "
                 f"skills/ moved on underneath it"
             )
         else:
             status, detail = "project-edited", (
-                f"differs from both {skills_source.relative_to(repo_root)} and "
-                f"{baseline_file.relative_to(repo_root)} -- a deliberate project edit, "
+                f"differs from both {skills_source.relative_to(repo_root).as_posix()} and "
+                f"{baseline_file.relative_to(repo_root).as_posix()} -- a deliberate project edit, "
                 f"not drift"
             )
         rows.append({"template": rel, "status": status, "detail": detail})

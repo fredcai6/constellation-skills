@@ -865,10 +865,19 @@ def _worktree_from_spine(abs_spine):
         if not isinstance(abs_spine, str) or not os.path.isabs(abs_spine):
             return None
         target = os.path.normcase(".agent-work")
-        current = os.path.dirname(os.path.normcase(os.path.normpath(abs_spine)))
+        # `current` stays in the CALLER's original case throughout: only the
+        # per-segment match against `target` folds case (so `.AGENT-WORK` is
+        # still found on Windows, per the case table). Folding `current` as a
+        # whole -- the old code normcased it before the loop even started --
+        # returned a lowercased `head` on Windows, which is a lossy answer
+        # nothing downstream needs: the binding.json this feeds is meant to
+        # name the worktree the way a human (or `git worktree list`) would
+        # spell it, and callers who need case-insensitive comparison already
+        # have `_same_path` for that.
+        current = os.path.dirname(os.path.normpath(abs_spine))
         while True:
             head, tail = os.path.split(current)
-            if tail == target:
+            if os.path.normcase(tail) == target:
                 return head or None
             if not head or head == current:
                 return None

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "epic-569/w2-reindex#1",
+      "outcome": "A git pre-commit hook (scripts/hooks/code_map_precommit.py, backed by scripts/code_map/precommit.py's index-snapshot mechanism) regenerates and silently stages map/INDEX.md and map/ids.jsonl whenever they are stale, wired self-install-only into scripts/install_constellation.py, proven to fire end to end against real git commits including both partial-commit shapes and a shared-hooks-directory second-worktree case.",
+      "evidence": "tests/test_code_map_precommit.py (13 tests), tests/test_install_constellation.py::GitPreCommitHookWiringTests (14 tests), tests/test_code_map_precommit_e2e.py (7 tests, real subprocess git)."
+    },
+    {
+      "issue_id": "epic-569/w2-reindex#2",
+      "outcome": "tests/test_code_map.py::MapTreeFreshnessTests left byte-identical to its pre-mission form.",
+      "evidence": "git diff -- tests/test_code_map.py (empty, re-confirmed at every gate boundary through g3-integrate)."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "python -m scripts.code_map build --root . takes 2.9 seconds and is deterministic.",
+      "expected": "Launch order's Prior-Wave Verdicts figure.",
+      "observed": "Build-only baseline held (~2.9s, gate 1). Full mechanism including worktree materialization measured at 3.25-3.77s across independent timing runs (gate 1 implementer, gate 3 case 8) -- a few hundred ms to under a second of overhead on top of the build, well within what a pre-commit hook can absorb.",
+      "source": "g1-implement-implementer-result.md Evidence section; tests/test_code_map_precommit_e2e.py::TimingTests::test_case8_timing_of_a_full_end_to_end_invocation"
+    },
+    {
+      "claim": "A pre-commit hook that silently stages during a partial commit (git commit -p, git commit <path>) risks corrupting what the author intended to commit -- the Honest-Null Clause's named sharpest hazard.",
+      "expected": "The hazard needed active investigation, not presumption; a documented negative result was a legitimate outcome if it proved unclosable.",
+      "observed": "Hazard reproduced empirically by two independently-dispatched plan candidates, closed by an index-snapshot mechanism (build from git write-tree/commit-tree/worktree-add, never the live working tree), and proven closed at three tiers: unit (tests/test_code_map_precommit.py's PartialCommitTests), library-level (gate 3's cross-check), and real end-to-end (tests/test_code_map_precommit_e2e.py cases 4-5, independently reproduced by the g1/g3 reviewers by hand, not merely trusted). No honest-null triggered -- the mechanism holds.",
+      "source": "PLAN_ALTERNATIVES.md; PLAN_CRITIC.md findings 4-5 and their disposition; tests/test_code_map_precommit_e2e.py::PathspecRestrictedPartialCommitTests, ::HunkRestrictedPartialCommitTests"
+    },
+    {
+      "claim": "This repo's own dev checkout is a linked worktree sharing one .git/hooks with sibling worktrees, so a hook installed from one lane governs commits made from every other lane -- a cold plan critic's named blocking finding.",
+      "expected": "The mechanism needed to resolve the shared hooks directory correctly (never a hardcoded .git/hooks join) and be proven to fire from a second worktree it was never installed from.",
+      "observed": "resolve_git_hooks_dir (scripts/install_constellation.py) correctly resolves the shared hooks dir via git rev-parse --path-format=absolute --git-path hooks, verified against this actual checkout's real layout (git worktree list showed 8-12 sibling worktrees across the run). Case 7 of the e2e suite installs from one worktree and commits for real from a second sharing the same .git; the hook fires there with no install step run in that second worktree. Independently reproduced by hand by the g3 reviewer.",
+      "source": "g2-review-reviewer-result.md; tests/test_code_map_precommit_e2e.py::SecondWorktreeSharesInstalledHookTests"
+    },
+    {
+      "claim": "No timeout anywhere would mean fail-open covers a crash but not a hang, which blocks a commit exactly as hard as an uncaught crash -- a cold plan critic's named blocking finding.",
+      "expected": "Every subprocess call in the mechanism needed an explicit timeout with fail-open coverage on TimeoutExpired.",
+      "observed": "Every git subprocess call in scripts/code_map/precommit.py funnels through one _run(runner, ...) helper with an explicit 10s timeout; a forced-timeout test (mocking a hang) confirms the shim still exits 0 within a bounded wall-clock window (~10-15s), independently re-run by the g1 reviewer.",
+      "source": "tests/test_code_map_precommit.py::ConcurrencyTimeoutTests::test_forced_timeout_still_exits_zero_within_bounded_window"
+    },
+    {
+      "claim": "The full local suite would be green at gate 3's close.",
+      "expected": "3622 passed, 6 skipped, 0 failed (base baseline) plus this plan's added tests.",
+      "observed": "First g3 run: 1 failed (tests/test_code_map.py::MapTreeFreshnessTests) -- root-caused to this repo's own map/INDEX.md having gone stale from gate 2's own tracked-file edits, never rebuilt, unrelated to the shipped mechanism's correctness. Fixed by the Commander running python -m scripts.code_map build --root . directly (explicitly authorized by docs/agents/AGENT_GUIDE.md's own build instructions). Re-verified green: 3656 passed, 6 skipped, 0 failed, 1275 subtests passed, independently re-run by the Commander and by the g3 reviewer.",
+      "source": "g3-implement-implementer-result.md (attempt-2's root-cause, attempt-3's re-verification); g3-review-reviewer-result.md"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "A cli-backend implementer/reviewer crew dispatched via scripts/run_crew.py with no --spine argument reported (across all 5 dispatches this run: g1-implement, g1-review, g2-implement, g2-review, g3-review) that its inherited SPINE_FILE/SPINE_SESSION environment resolved toward the dispatching Commander's own bound spine identity, rather than being absent/unbound as expected for a handoff+result-contract crew with no --spine passed.",
+      "classification": "evidence_only",
+      "affects": "run_crew.py / door-binding mechanism, not this mission's own deliverable",
+      "evidence": "Every affected crew's own IMPLEMENTER_RESULT/REVIEW_RESULT Workflow Feedback section (g1-implement, g1-review, g2-implement, g2-review, g3-review implementer-result/reviewer-result files under .agent-work/w2-reindex/crew-handoffs/); each crew's own crew-runs.json entry carries spine: null.",
+      "reason": "Every crew self-corrected safely per this project's own documented branch for the case (authored and drove its own scratch checklist/survey via checklist_engine.py's CLI instead of the MCP door; never advanced or waived the parent's spine). No corruption occurred -- confirmed by this Commander re-reading spine_status after every dispatch throughout the run. Not something this run's own scope could fix; recorded as evidence for whoever investigates run_crew.py's door-binding behavior for a --spine-less cli dispatch next."
+    }
+  ]
+}

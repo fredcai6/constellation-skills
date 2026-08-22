@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-case4-5-6-partial-commits",
+  "files": [],
+  "repo_rev": {
+    "commit": "9d5aac6daa58a72fc6a665cb39879ee5705f7f71"
+  },
+  "run": {
+    "work_id": "w2-reindex-g3-implement",
+    "generated_at": "2026-08-22T18:55:41Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w2-reindex",
+      "repo": "/home/tommy/projects/569-w2-reindex",
+      "durable": "/home/tommy/projects/569-w2-reindex"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w2-reindex"
+    }
+  }
+}

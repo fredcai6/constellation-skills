@@ -113,9 +113,20 @@ def worktree_path_for(work_id: str, *, wt_root: str) -> str:
     """`<wt_root>/<last segment of work_id>`. The worktree name is the FINAL
     `/`-separated segment only -- `epic-559/c3-lifecycle` names a worktree
     called `c3-lifecycle`, matching the live convention measured against this
-    run's own worktree."""
+    run's own worktree.
+
+    Joined with a literal `/`, never `os.path.join`: this is a pure string
+    function (the docstring above already promises `<wt_root>/<segment>`,
+    not a platform-dependent join), and its result is compared, elsewhere,
+    against `git worktree list --porcelain` -- which git always renders with
+    forward slashes, even on Windows (git's own documented convention, not
+    this repo's choice). `os.path.join` on `ntpath` would give a
+    backslash-joined answer that git's own porcelain output never produces,
+    so any existing backslashes in `wt_root` are folded to `/` too, keeping
+    the whole answer in the one convention it is actually compared against.
+    """
     last_segment = work_id.rsplit("/", 1)[-1]
-    return os.path.join(wt_root, last_segment)
+    return wt_root.replace("\\", "/").rstrip("/") + "/" + last_segment
 
 
 def branch_name_for(work_id: str) -> str:
@@ -447,7 +458,17 @@ def open_work(
         # 7. Inject origin, then re-run validate_spine.validate on the result.
         base_sha = _git(["rev-parse", "HEAD"], cwd=Path(worktree))
         origin = build_origin(
-            work_id, branch=branch, worktree=str(Path(worktree)), base=base_sha,
+            # `.as_posix()`, not `str(Path(...))`: `init_work_area.py`'s own
+            # origin-stamping (`instantiate_spine`) already writes `worktree`
+            # this way -- the two writers `build_origin`'s own docstring names
+            # as origin.worktree's sources agree on one format, and it is
+            # provenance only (checklist_engine.py's module header: "read by
+            # NOTHING that decides anything" since #609 g2), so nothing forces
+            # this to be OS-native. `str(Path(...))` would instead re-nativize
+            # `worktree` (itself already forward-slash, see
+            # `worktree_path_for`) back to backslash on Windows, diverging
+            # from the `result["worktree"]` this call returns below.
+            work_id, branch=branch, worktree=Path(worktree).as_posix(), base=base_sha,
             opened_at=_now_iso(), parent=parent,
         )
         compiled["origin"] = origin

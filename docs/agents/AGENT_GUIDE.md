@@ -41,7 +41,7 @@ agent's skills root, copying shared machinery into every bundle. So `skills/diag
 | `specs/` | role spine definitions consumed by the engine |
 | `examples/` | reference wiring: the MCP demo and the CI sync workflow |
 | `episodes/` | continuous self-improvement. When a run hits a challenge, it records what happened — one file per record, written only through `scripts/apply_episode_delta.py`. A record, never a rule. |
-| `map/` | the generated code map. Only `INDEX.md` and `ids.jsonl` are tracked; rebuild the rest with `python -m scripts.code_map build`. |
+| `map/` | the generated code map. Only `INDEX.md` and `ids.jsonl` are tracked; rebuild manually with `python -m scripts.code_map build`, or let the installed git `pre-commit` hook (`scripts/hooks/code_map_precommit.py`, self-install-only, wired by `install_constellation.py`) regenerate and stage them automatically whenever a commit would otherwise leave them stale. |
 | `docs/` | durable documentation — see the map below |
 
 New durable documentation goes in `docs/`. Root-level `notes-*.md` are working notes from past runs, not

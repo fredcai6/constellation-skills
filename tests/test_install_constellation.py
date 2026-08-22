@@ -2617,8 +2617,10 @@ class HookWiringOptInTests(_HookWiringFixture):
             self.assertTrue(expected.is_file(), "wired a path with no file behind it")
 
     def test_wired_command_uses_the_probed_interpreter_and_documented_timeout(self):
-        """The interpreter comes from the existing probe, not a hardcoded `py`;
-        the timeout is carried verbatim from docs/GAUGE_WRITER_HOOK.md."""
+        """The interpreter half is portable (#539 residual): `${CONSTELLATION_PYTHON:
+        -<probed>}`, not a hardcoded `py` -- the same env-var knob `.mcp.json` uses
+        (f315d7bf), so a default is still recoverable when the var is unset. The
+        timeout is carried verbatim from docs/GAUGE_WRITER_HOOK.md."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             self._wire(tmp)
@@ -2628,9 +2630,25 @@ class HookWiringOptInTests(_HookWiringFixture):
             self.assertEqual("command", hook["type"])
             self.assertEqual(10, hook["timeout"])
             self.assertEqual(installer.HOOK_TIMEOUT, hook["timeout"])
+            probed = installer.resolve_interpreter().interpreter
+            expected_prefix = f"${{{installer.MCP_INTERPRETER_ENV_VAR}:-{probed}}} "
             self.assertTrue(
-                hook["command"].startswith(installer.resolve_interpreter().interpreter + " "),
-                f"command did not start with the probed interpreter: {hook['command']!r}",
+                hook["command"].startswith(expected_prefix),
+                f"command did not start with the portable interpreter form "
+                f"{expected_prefix!r}: {hook['command']!r}",
+            )
+            # ...and the same env var actually overrides it at run time (real
+            # shell expansion, not a string match) -- the whole point of wrapping.
+            result = subprocess.run(
+                hook["command"], shell=True, input="{}", capture_output=True, text=True,
+                env={**os.environ, "PYTHONIOENCODING": "utf-8",
+                     installer.MCP_INTERPRETER_ENV_VAR: "/no/such/interpreter"},
+            )
+            self.assertNotEqual(
+                0, result.returncode,
+                f"overriding {installer.MCP_INTERPRETER_ENV_VAR} to a bogus interpreter "
+                f"did not change the outcome -- the var is not actually wired into the "
+                f"command: {hook['command']!r}",
             )
 
     def test_the_wired_command_string_actually_executes(self):
@@ -2861,6 +2879,66 @@ class HookWiringOptInTests(_HookWiringFixture):
             self.assertIn("commit", output)
             self.assertIn("absolute path", output)
             self.assertIn("user name", output)
+
+    # -- the gap this class exists to close: the INSTALLED path had no --------
+    # -- is_git_tracked guard at all (#539 residual) ---------------------------
+
+    def test_wire_hooks_at_project_scope_refuses_an_already_tracked_settings_json(self):
+        """`--wire-hooks --scope project` (the default, INSTALLED path -- no
+        `--hooks-from source`) had no `is_git_tracked` guard at all: only
+        `--hooks-from source` refused. Re-wiring an already-committed
+        settings.json would stamp THIS machine's absolute installed path (and,
+        before the interpreter fix above, this machine's probed interpreter)
+        into a file that ships to every other checkout. Mirrors
+        `test_source_wiring_refuses_a_git_tracked_local_settings_file`, for the
+        installed path instead of `--hooks-from source`."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            claude_dir = project / ".claude"
+            claude_dir.mkdir(parents=True)
+            subprocess.run(["git", "init", "-q"], cwd=str(project), capture_output=True)
+            subprocess.run(["git", "config", "user.email", "t@example.com"],
+                            cwd=str(project), capture_output=True)
+            subprocess.run(["git", "config", "user.name", "T"], cwd=str(project), capture_output=True)
+            settings = claude_dir / "settings.json"
+            settings.write_text("{}", encoding="utf-8")
+            subprocess.run(["git", "add", ".claude/settings.json"],
+                            cwd=str(project), capture_output=True)
+            subprocess.run(["git", "commit", "-qm", "x"], cwd=str(project), capture_output=True)
+            before = settings.read_bytes()
+
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "project", "--project", str(project),
+                         "--skills", self.ANY_SKILL, "--wire-hooks"],
+                        env={}, cwd=project, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn("git-tracked", stderr.getvalue())
+            self.assertEqual(before, settings.read_bytes(), "the tracked file was written anyway")
+
+    def test_wire_hooks_at_project_scope_succeeds_when_settings_json_is_not_yet_tracked(self):
+        """Anti-vacuity for the refusal above: it must be about TRACKEDNESS, not
+        about project scope refusing everything in a git repo -- the ordinary
+        first-time wiring flow (write, then `git add`) must still work, exactly
+        as `test_wire_hooks_at_project_scope_warns_the_file_is_committable`
+        already exercises (that fixture is not a git repo at all; this one IS a
+        git repo, but the file is not yet added)."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            project.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=str(project), capture_output=True)
+            code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", self.ANY_SKILL, "--wire-hooks"],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((project / ".claude" / "settings.json").is_file())
 
 
 # --------------------------------------------------------------------------- #
@@ -3304,14 +3382,31 @@ class HookWiringLoudFailureTests(_MultiHookFixture):
                 installer.source_hook_path = original
             self.assertFalse((Path(tmp) / "settings.local.json").exists())
 
-    def test_build_hook_command_refuses_to_emit_a_leading_quote(self):
-        """The trap this whole issue is named for, made unrepresentable at the
-        emit site: a command starting with `"` parses under PowerShell as a
-        string-literal expression, so the hook echoes its path and exits 0."""
+    def test_assert_shell_safe_command_refuses_a_leading_quote_or_whitespace(self):
+        """The trap this whole issue is named for, unit-tested directly on the
+        guard function itself: a command starting with `"` parses under
+        PowerShell as a string-literal expression, so the hook echoes its path
+        and exits 0. Direct, rather than via `build_hook_command` with an empty
+        interpreter (see the test below for why that no longer reaches it)."""
         installer = load_installer()
-        with self.assertRaises(installer.InstallError) as raised:
-            installer.build_hook_command(Path("/repo/scripts/hooks/spine_rail.py"), "", ("Stop",))
-        self.assertIn("does not start with a command word", str(raised.exception))
+        for bad in ('"/repo/scripts/hooks/spine_rail.py" Stop', ' "leading whitespace"', "'single'"):
+            with self.assertRaises(installer.InstallError) as raised:
+                installer.assert_shell_safe_command(bad)
+            self.assertIn("does not start with a command word", str(raised.exception))
+        installer.assert_shell_safe_command('py "/repo/x.py"')  # control: never raises
+
+    def test_build_hook_command_cannot_emit_a_leading_quote_even_with_an_empty_interpreter(self):
+        """#539 residual: `build_hook_command` now wraps the interpreter as
+        `${CONSTELLATION_PYTHON:-<interpreter>}`, which starts with `$` no
+        matter what `interpreter` is -- even the empty string that used to be
+        the adversarial input for this exact test. The leading-quote hazard is
+        now structurally unreachable from this call site, not just refused."""
+        installer = load_installer()
+        command = installer.build_hook_command(
+            Path("/repo/scripts/hooks/spine_rail.py"), "", ("Stop",))
+        self.assertTrue(command.startswith("$"), command)
+        self.assertFalse(command[0] in "\"' \t", command)
+        self.assertIn(f"${{{installer.MCP_INTERPRETER_ENV_VAR}:-}}", command)
 
 
 # --------------------------------------------------------------------------- #
@@ -4408,6 +4503,208 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
                 f"fixture .mcp.json must stay byte-identical when --dest is set; "
                 f"before={before!r} after={after!r}",
             )
+
+
+def _init_scratch_git_repo(path: Path) -> None:
+    """A minimal, real git repo at `path`: init + identity + one commit, so
+    `git worktree add` (which refuses on a repo with no commits) works."""
+    path.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "init", "-q"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=str(path), check=True, capture_output=True)
+    (path / "README.md").write_text("scratch\n", encoding="utf-8")
+    subprocess.run(["git", "add", "README.md"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-q", "-m", "initial"], cwd=str(path), check=True, capture_output=True)
+
+
+class GitPreCommitHookWiringTests(unittest.TestCase):
+    """g2-implement: wire `scripts/hooks/code_map_precommit.py` (gate 1,
+    already shipped, read-only reference here) into
+    `install_constellation.py` so a real self-install writes it to the
+    git-resolved `pre-commit` hook path -- `git commit` becomes its only real
+    caller. Same fixture idiom as `RepoMcpConfigWiringTests`:
+    `tempfile.TemporaryDirectory()`, explicit `git_repo_root=`, never this
+    repo's own git state for anything that WRITES. `resolve_git_hooks_dir` is
+    read-only (a `git rev-parse`), so it alone is also exercised directly
+    against this actual checkout, per the handoff's evidence requirement."""
+
+    # -- resolve_git_hooks_dir ------------------------------------------------
+
+    def test_resolve_git_hooks_dir_against_a_plain_scratch_repo(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            resolved = installer.resolve_git_hooks_dir(repo)
+            self.assertEqual((repo / ".git" / "hooks").resolve(), resolved.resolve())
+
+    def test_resolve_git_hooks_dir_honors_core_hooksPath(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            custom_hooks = Path(tmp) / "custom-hooks"
+            custom_hooks.mkdir()
+            subprocess.run(
+                ["git", "config", "core.hooksPath", str(custom_hooks)],
+                cwd=str(repo), check=True, capture_output=True,
+            )
+            resolved = installer.resolve_git_hooks_dir(repo)
+            self.assertEqual(custom_hooks.resolve(), resolved.resolve())
+
+    def test_resolve_git_hooks_dir_returns_none_on_git_failure(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            not_a_repo = Path(tmp) / "not-a-repo"
+            not_a_repo.mkdir()
+            self.assertIsNone(installer.resolve_git_hooks_dir(not_a_repo))
+
+    def test_resolve_git_hooks_dir_worktree_shares_main_checkouts_hooks_dir(self):
+        """The one shared-hooks-across-worktrees fact a synthetic
+        single-worktree fixture alone cannot stand in for: a linked worktree
+        must resolve to the SAME hooks directory as its main checkout."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            main_repo = Path(tmp) / "main-repo"
+            _init_scratch_git_repo(main_repo)
+            worktree = Path(tmp) / "second-worktree"
+            subprocess.run(
+                ["git", "worktree", "add", str(worktree), "-b", "wt-branch"],
+                cwd=str(main_repo), check=True, capture_output=True,
+            )
+            from_main = installer.resolve_git_hooks_dir(main_repo)
+            from_worktree = installer.resolve_git_hooks_dir(worktree)
+            self.assertIsNotNone(from_main)
+            self.assertEqual(from_main.resolve(), from_worktree.resolve())
+
+    def test_resolve_git_hooks_dir_against_this_actual_checkout(self):
+        """This checkout IS a linked worktree sharing `.git/hooks` with 8+
+        sibling worktrees (confirmed via `git worktree list`) -- proven
+        against the real thing, not only a synthetic fixture. Read-only
+        (`git rev-parse`), so safe to run against the real checkout."""
+        installer = load_installer()
+        expected = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-path", "hooks"],
+            cwd=str(installer.REPO_ROOT), capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        resolved = installer.resolve_git_hooks_dir(installer.REPO_ROOT)
+        self.assertIsNotNone(resolved)
+        self.assertEqual(Path(expected).resolve(), resolved.resolve())
+        self.assertTrue(str(resolved).endswith("constellation-skills/.git/hooks"))
+
+    # -- install_git_precommit_hook -------------------------------------------
+
+    def test_install_git_precommit_hook_writes_an_executable_wrapper(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            lines = []
+            installer.install_git_precommit_hook(repo, dry_run=False, out=lines.append)
+            hook_path = repo / ".git" / "hooks" / "pre-commit"
+            self.assertTrue(hook_path.is_file())
+            text = hook_path.read_text(encoding="utf-8")
+            self.assertIn("scripts/hooks/code_map_precommit.py", text)
+            self.assertIn("git rev-parse --show-toplevel", text)
+            self.assertTrue(os.access(hook_path, os.X_OK))
+            self.assertTrue(any(str(hook_path) in line for line in lines))
+
+    def test_install_git_precommit_hook_is_idempotent(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            installer.install_git_precommit_hook(repo, dry_run=False, out=lambda _: None)
+            hook_path = repo / ".git" / "hooks" / "pre-commit"
+            first = hook_path.read_bytes()
+            installer.install_git_precommit_hook(repo, dry_run=False, out=lambda _: None)
+            second = hook_path.read_bytes()
+            self.assertEqual(first, second)
+
+    def test_install_git_precommit_hook_refuses_to_clobber_a_foreign_hook(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            hook_path = repo / ".git" / "hooks" / "pre-commit"
+            hook_path.write_text("#!/bin/sh\necho someone elses hook\n", encoding="utf-8")
+            before = hook_path.read_bytes()
+            lines = []
+            installer.install_git_precommit_hook(repo, dry_run=False, out=lines.append)
+            self.assertEqual(before, hook_path.read_bytes())
+            self.assertTrue(any("refus" in line.lower() for line in lines))
+
+    def test_install_git_precommit_hook_dry_run_writes_nothing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            hook_path = repo / ".git" / "hooks" / "pre-commit"
+            lines = []
+            installer.install_git_precommit_hook(repo, dry_run=True, out=lines.append)
+            self.assertFalse(hook_path.exists())
+            self.assertTrue(any("DRY RUN" in line for line in lines))
+
+    def test_install_git_precommit_hook_reports_and_noops_when_hooks_dir_unresolvable(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            not_a_repo = Path(tmp) / "not-a-repo"
+            not_a_repo.mkdir()
+            lines = []
+            installer.install_git_precommit_hook(not_a_repo, dry_run=False, out=lines.append)
+            self.assertFalse((not_a_repo / ".git").exists())
+            self.assertTrue(lines)
+
+    # -- main() wiring ---------------------------------------------------------
+
+    def test_default_is_a_noop_even_with_a_scratch_git_repo_present(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "charter"],
+                env={}, out=lambda _: None, git_repo_root=repo,
+            )
+            self.assertEqual(0, code)
+            self.assertFalse((repo / ".git" / "hooks" / "pre-commit").exists())
+
+    def test_explicit_wiring_through_main_writes_the_hook(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "charter"],
+                env={}, out=lambda _: None,
+                install_git_pre_commit_hook=True, git_repo_root=repo,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((repo / ".git" / "hooks" / "pre-commit").is_file())
+
+    def test_self_install_only_never_touches_git_hooks_when_not_self_install(self):
+        """`git_repo_root` left at its `None` default (the real CLI entry
+        point never passes it) and `is_self_install(args)` False (a `--dest`
+        override) must never even ATTEMPT to wire -- verified as a spy on
+        `install_git_precommit_hook`, never against this real checkout's own
+        `.git/hooks`."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(installer, "install_git_precommit_hook") as spy:
+                code = installer.main(
+                    ["--agent", "claude", "--scope", "user",
+                     "--dest", str(Path(tmp) / "skills"), "--skills", "charter"],
+                    env={}, out=lambda _: None, install_git_pre_commit_hook=True,
+                )
+            self.assertEqual(0, code)
+            spy.assert_not_called()
+
+    def test_the_cli_entry_point_passes_install_git_pre_commit_hook_true(self):
+        text = INSTALLER.read_text(encoding="utf-8")
+        self.assertIn('if __name__ == "__main__":', text)
+        self.assertIn("install_git_pre_commit_hook=True", text)
 
 
 class WireMcpInterpreterReuseTests(unittest.TestCase):

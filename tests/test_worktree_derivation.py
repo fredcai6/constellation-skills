@@ -111,8 +111,16 @@ def _path(*parts: str) -> str:
 
 
 def _expected(*parts: str) -> str:
-    """A derived worktree, in the normalized form the rule returns."""
-    return os.path.normcase(os.path.normpath(os.path.join(_ROOT, *parts)))
+    """A derived worktree, in the normalized form the rule returns.
+
+    `normpath` only -- never `normcase`. The rule folds case ONLY to decide
+    whether a segment IS `.agent-work` (see `_FOLDS_CASE` above and the
+    case-folded-agent-work-segment case below); the worktree path it hands
+    back stays in the caller's original case, because nothing downstream
+    wants a Windows-lowercased path and `_same_path` already exists for
+    callers that need case-insensitive comparison.
+    """
+    return os.path.normpath(os.path.join(_ROOT, *parts))
 
 
 # --- the one shared table ----------------------------------------------------
@@ -289,8 +297,9 @@ def test_derivation_is_lexical_not_realpath(impl_name, tmp_path):
 
     through_link = str(link / ".agent-work" / "w1" / "spine.json")
     # Lexical: the answer follows the path you were GIVEN, not the path on disk.
-    assert derive(through_link) == os.path.normcase(os.path.normpath(str(link)))
-    assert derive(through_link) != os.path.normcase(os.path.normpath(str(real)))
+    # `normpath` only, matching `_expected()` above -- the case is the caller's.
+    assert derive(through_link) == os.path.normpath(str(link))
+    assert derive(through_link) != os.path.normpath(str(real))
 
 
 @pytest.mark.parametrize("impl_name", sorted(IMPLEMENTATIONS))

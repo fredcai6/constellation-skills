@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m2-install-hook",
+      "cond": "c2",
+      "which": "postconditions",
+      "command": "python -m pytest tests/test_install_constellation.py -k install_git_precommit_hook -q"
+    }
+  ]
+}
