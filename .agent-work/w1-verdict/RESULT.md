@@ -204,3 +204,33 @@ conversation.
 friction), `w1-verdict-003.md` (map staleness, reproduced 3×) — applied via
 `scripts/apply_episode_delta.py`, verified via `scripts/verify_episode_captured.py` at both the
 `feedback` and `archive` phases.
+
+## Addendum — branch repair (post-acceptance, at the Admiral's instruction)
+
+The Admiral found the launch order's "base is green, 3564 passed" claim was itself wrong —
+`map/INDEX.md` shipped stale at base commit `244665ee` (measured, not assumed: a fresh
+`code_map` build at that commit disagreed with the committed index), which is *why* the
+`test_map_tree_freshness_...` failure this run waived as "pre-existing, unrelated" existed at
+all. The human's own fix landed on `main` at `3c0ae817`; merging this branch as-is would have
+re-introduced staleness (this branch's new entities — `_artifact_match_satisfied`,
+`_fault_artifact_malformed_match_list`, and their tests — were never indexed).
+
+Repair, branch-only, spine untouched (already terminal, lease released, per the Admiral's
+explicit instruction not to reopen or re-drive it):
+1. `git fetch origin && git merge origin/main` — clean, no conflicts (merge commit `09350ac3`;
+   touched only Admiral epic-569 bookkeeping files, the `spine_rail` hook fix, and
+   `map/INDEX.md`, none overlapping this mission's own changed files).
+2. `python -m scripts.code_map build --root .` — regenerated `map/INDEX.md` (not hand-edited);
+   diff confirms it now reflects this branch's new entities (`scripts.checklist_engine` 115→116,
+   `scripts.validate_spine` 23→24, plus the corresponding test-file entity growth) on top of the
+   human's fix.
+3. `tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build`
+   now passes on its own (no waiver needed).
+4. Full suite, no allowance: **3598 passed, 6 skipped** (up from 3592/3564 — all new tests, zero
+   regressions, zero waived failures).
+5. Committed (`a9924053`) and pushed. PR #645: `mergeable: MERGEABLE`.
+
+Nothing about the mechanism itself (the two comparator sites, the `validate_spine` guard) changed
+in this repair — verified: `git diff a21a8587 a9924053 -- scripts/checklist_engine.py
+scripts/validate_spine.py docs/CHECKLIST_SCHEMA.md tests/test_checklist_engine.py
+tests/test_validate_spine.py` is empty.
