@@ -220,6 +220,12 @@ Entry grammar (one line of date + tag, then the substance):
 
   Not fixed mid-wave. Three things carry to the checkpoint: (1) the two contradictory flows in `LAUNCH_ORDER.template.md` versus `global-everyone.md`, which is a doctrine conflict a human must resolve; (2) whether an over-band commander's output is measurably worse — unknown, and `w2-basis` is a counter-example rather than proof; (3) my monitors must watch for `REFRESH REQUESTED:` from now on, which is the one part I can fix myself and will, before wave 3 dispatches.
 
+- `2026-08-22` — `CHECKPOINT`: Human ruled the merge sequencing: **interleave — `w2-reindex` first, then everything else**, so later merges land on a main where the pre-commit hook keeps `map/INDEX.md` fresh automatically. Four PRs are open besides it: the human's #654 and #655 (both MERGEABLE), and my #653 and #656 (both CONFLICTING on `map/INDEX.md` only).
+
+  **Stating the limit of what this buys, because I would rather the human hear it from me than discover it at the third conflict: merging `w2-reindex` first does NOT stop #653, #656, #654 or #655 from conflicting on `map/INDEX.md`.** The hook prevents *staleness*, not *collision*. Two branches that each independently regenerate a generated file still produce divergent content in the same lines, and git still calls that a conflict. What the hook removes is the OTHER failure — a commit landing with a stale index that nobody noticed until a later suite run, which is the failure that actually cost this epic time and that shipped in base `244665ee`.
+
+  Where it does help the remaining merges is at the resolution step: once installed, resolving each conflict by regenerating is what the hook does automatically on the resolution commit, so the fix is mechanical rather than remembered. That is a real gain and it is smaller than "the ordering problem goes away".
+
 ## Merges
 
 - `2026-08-22` — **PR #644 (`w1-wiring`, #345/#444/#368) MERGED** at `4cbd2cc9`. Gated on: clean-room reviewer verdict APPROVE-WITH-FOLLOWUPS with both findings repaired and re-verified by me; the full suite run **by me** against `origin/main` + the branch in a fresh detached worktree before merging — **3578 passed, 6 skipped, 0 failed**. Not gated on CI (Windows-only, known-red) and not gated on the commander's own reported number. Merged with a merge commit, branch retained pending closeout sweep.
