@@ -2480,6 +2480,29 @@ def _next_verbs(aid: str, t: dict, kind: str) -> list[str]:
     return verbs
 
 
+def _is_bookend(tasks: dict, tid: str) -> bool:
+    """Is gate `tid` in `tasks` a declared bookend (#634) -- frozen against drop,
+    rescope, retext-check, and against a new gate landing after it via add?
+    Optional key, read exactly like the engine's other ad-hoc per-task keys
+    (`why_exempt` at :2374/:2683, `override_policy`) -- no task-schema
+    validator exists to update. A missing key reads as NOT a bookend, so an
+    undeclared plan is unaffected.
+
+    Two callers. `amend()`'s per-op guards pass their in-flight `new_tasks`
+    copy, so a freeze already committed earlier in the SAME delta is honored
+    against a later op in that delta. `state()`'s projection passes the
+    checklist's canonical `cl["tasks"]`, so `current()` can render which gates
+    are frozen BEFORE an agent attempts an amend and is refused -- #634
+    shipped the freeze but not its visibility in the projection every role is
+    told to read instead of the spine file; that gap is what added this
+    second caller, not a second declaration form.
+
+    This stays the single seam a future swap to a positional rule or a
+    plan-level region key would change; every call site passes `tasks` and
+    `tid` through here, none re-reads task.get('bookend') directly."""
+    return bool(tasks[tid].get("bookend"))
+
+
 def state(cl: dict) -> dict:
     """Pure state projection: `cl -> StateView`. Read-only — see the INV-2
     purity note above. `current()` is `render_human(state(cl))`; the whole
@@ -2522,10 +2545,20 @@ def state(cl: dict) -> dict:
                 for c in wt.get("postconditions", []) or []:
                     if c.get("waived"):
                         waived_postconditions.append(f"{iid}.{c['id']}")
+    # #634 follow-up: which gates `amend` will refuse to drop/rescope/
+    # retext-check (and refuse to `add` past), rendered so an agent can see
+    # the freeze BEFORE attempting the amend and being refused. Whole-plan,
+    # not scoped to `active` like anchors/directives -- an amend can target
+    # ANY pending gate, not just the one currently active, so the freeze list
+    # has to cover the whole plan too. Cheap: one pass over `items`, no probe
+    # (INV-2), empty on every plan that declares no bookend (unchanged output
+    # for the corpus that predates #634).
+    bookend_gates = [iid for iid in cl.get("items", []) if _is_bookend(cl["tasks"], iid)]
     return {
         "kind": kind,
         "active": active,
         "lease_line": _lease_line(cl),
+        "bookend_gates": bookend_gates,
         # A4 (deficiency cleanup batch A+B): whether ANY session currently
         # holds this plan -- used only to relabel the `next:` hint below, so
         # it is addressed to "the holder" rather than silently assuming the
@@ -2641,8 +2674,20 @@ def render_human(view: dict) -> str:
     (`_why_suffix`, composed — not replaced — into `view["why_text"]` by
     `state()`) rides last, same relative order as before this change; the Trip
     `CONTEXT` advisory is a `dispatch()`-level suffix outside `current()`
-    entirely and is untouched."""
+    entirely and is untouched. The `bookend:` line (#634 follow-up) joins
+    `lease_line` in the PREFIX rather than the body below, for the same
+    reason `lease_line` sits there: it is true regardless of whether there is
+    an active gate, `DONE`, or awaiting consolidation, so it must render on
+    every branch rather than duplicating a check into each one. Emitted only
+    when `bookend_gates` is populated, same emitted-only-when-populated rule
+    as `constraints:`/`anchors:`/`directives:`."""
     prefix = f"{view['lease_line']}\n" if view.get("lease_line") else ""
+    bookend_gates = view.get("bookend_gates") or []
+    if bookend_gates:
+        prefix += (
+            "bookend (frozen -- amend refuses drop/rescope/retext-check, and "
+            f"add past the last one): {', '.join(bookend_gates)}\n"
+        )
     active = view.get("active")
     if active is None:
         if view.get("consolidation_pending"):
@@ -3153,16 +3198,11 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
                 floor = idx + 1
         return floor
 
-    def _is_bookend(tid: str) -> bool:
-        """Is gate `tid` a declared bookend (#634) -- frozen against drop,
-        rescope, retext-check, and against a new gate landing after it via add?
-        Optional key, read exactly like the engine's other ad-hoc per-task keys
-        (`why_exempt` at :2374/:2683, `override_policy`) -- no task-schema
-        validator exists to update. A missing key reads as NOT a bookend, so an
-        undeclared plan is unaffected. This is the single seam a future swap to
-        a positional rule or a plan-level region key would change; every guard
-        site below calls this, none re-reads task.get('bookend') directly."""
-        return bool(new_tasks[tid].get("bookend"))
+    # _is_bookend (module-level, above state()) is the single declaration
+    # predicate -- amend()'s guards below pass the in-flight `new_tasks` copy
+    # so a freeze committed earlier in THIS delta is honored against a later
+    # op in the same delta; state()'s projection passes canonical
+    # `cl["tasks"]` instead. See its docstring for the two-caller contract.
 
     for op in ops:
         kind = op.get("op")
@@ -3192,7 +3232,7 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
                 raise EngineError(
                     f"add {nid}: cannot insert before frozen (non-pending) gate {frozen}"
                 )
-            bookends = [idx for idx, t in enumerate(new_items) if _is_bookend(t)]
+            bookends = [idx for idx, t in enumerate(new_items) if _is_bookend(new_tasks, t)]
             if bookends:
                 ceiling = max(bookends)
                 if insert_at > ceiling:
@@ -3208,7 +3248,7 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
             if tid not in new_tasks:
                 raise EngineError(f"drop {tid}: no such gate")
             status = new_tasks[tid]["status"]
-            if _is_bookend(tid):
+            if _is_bookend(new_tasks, tid):
                 raise EngineError(
                     f"drop {tid}: a declared bookend gate cannot be dropped, "
                     "regardless of status",
@@ -3227,7 +3267,7 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
             if tid not in new_tasks:
                 raise EngineError(f"rescope {tid}: no such gate")
             status = new_tasks[tid]["status"]
-            if _is_bookend(tid):
+            if _is_bookend(new_tasks, tid):
                 raise EngineError(
                     f"rescope {tid}: a declared bookend gate cannot be rescoped "
                     "(the flag is a one-way latch through the engine -- this "
@@ -3260,7 +3300,7 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
             if tid not in new_tasks:
                 raise EngineError(f"retext-check {tid}: no such gate")
             status = new_tasks[tid]["status"]
-            if _is_bookend(tid):
+            if _is_bookend(new_tasks, tid):
                 raise EngineError(
                     f"retext-check {tid}: a declared bookend gate's check text "
                     "cannot be corrected -- a freeze that only stops deletion is "

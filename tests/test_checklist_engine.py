@@ -1004,7 +1004,17 @@ class ShippedTemplates(unittest.TestCase):
                 if "items" not in data:
                     continue  # config file (e.g. ENGINE_CONFIG), not a checklist
                 self.assertTrue(data["items"])
-                self.assertTrue(E.current(data).startswith("ACTIVE"))
+                # Not a literal startswith: the role spines (Admiral,
+                # Commander, Explorer) declare `bookend` gates (#634), and
+                # since the #634-follow-up fix to state()/render_human() a
+                # populated `bookend_gates` list renders its own line ahead
+                # of the ACTIVE line -- same PREFIX slot `lease_line`
+                # already occupies. The walk claim this test makes ("the
+                # checklist actually has an active gate") survives; only the
+                # exact string position moved.
+                self.assertTrue(
+                    any(line.startswith("ACTIVE") for line in E.current(data).splitlines())
+                )
 
 
 def _policy(**overrides):
@@ -5503,6 +5513,63 @@ class GoldenOutputBriefing(unittest.TestCase):
         self.assertEqual(E.current(cl), "ALL ITEMS VISITED. Next: consolidate")
 
 
+class RenderBookendFreeze(unittest.TestCase):
+    """#634 follow-up: `bookend: true` changes what `amend` will accept, but
+    until this change `current()` never mentioned it -- the freeze was
+    discoverable only by attempting the refused amend, or by reading
+    spine.json directly (itself a doctrine violation; see global-everyone.md's
+    "current is the complete gate briefing"). Golden (exact-output) tests for
+    the new `bookend:` prefix line, on the model of GoldenOutputBriefing
+    above: one per branch that must carry it (active gate, DONE), plus the
+    unchanged-output regression for a plan that declares no bookend at all."""
+
+    def test_active_gate_briefing_carries_bookend_line_for_other_gate(self):
+        # g1 is the active (pending) gate; g2 is a declared bookend further
+        # down the plan. The freeze line names g2 even though g1, not g2, is
+        # what the agent is about to act on -- exactly the case the defect
+        # describes: an agent planning an amend on g1 needs to see that g2
+        # is off-limits WITHOUT touching amend or spine.json.
+        g2 = gate("g2", "pending")
+        g2["bookend"] = True
+        cl = gated(g1=gate("g1", "pending"), g2=g2)
+        self.assertEqual(E.current(cl), (
+            "bookend (frozen -- amend refuses drop/rescope/retext-check, and "
+            "add past the last one): g2\n"
+            "ACTIVE g1 [pending] — do g1\n"
+            "next: start g1"
+        ))
+
+    def test_multiple_bookends_render_in_item_order(self):
+        init = gate("init", "pending")
+        init["bookend"] = True
+        archive = gate("archive", "pending")
+        archive["bookend"] = True
+        cl = gated(init=init, mid=gate("mid", "pending"), archive=archive)
+        out = E.current(cl)
+        self.assertTrue(out.startswith("bookend (frozen"), out)
+        self.assertIn("init, archive", out)
+
+    def test_done_state_still_shows_bookend_line(self):
+        # The freeze is a whole-plan property, not scoped to the active gate:
+        # it must render on the DONE branch too, not just while a gate is
+        # active.
+        g1 = gate("g1", "complete")
+        g1["bookend"] = True
+        cl = gated(g1=g1)
+        self.assertEqual(E.current(cl), (
+            "bookend (frozen -- amend refuses drop/rescope/retext-check, and "
+            "add past the last one): g1\n"
+            "DONE: no open items."
+        ))
+
+    def test_no_bookend_declared_adds_no_line(self):
+        # Regression: an undeclared plan's current() output is byte-identical
+        # to before this change (matches GoldenOutputBriefing's un-prefixed
+        # goldens above).
+        cl = gated(g1=gate("g1", "pending"))
+        self.assertEqual(E.current(cl), "ACTIVE g1 [pending] — do g1\nnext: start g1")
+
+
 class RenderAnchorsAndConstraints(unittest.TestCase):
     """Issue #420, defect 2: `anchors` and `constraints` are real, populated
     corpus content on execute.json gates (Commander mission-frame anchors,
@@ -5625,11 +5692,15 @@ class RenderDirectives(unittest.TestCase):
         )
         out = E.current(cl)
 
-        # INV-1's frozen first line: byte-identical to `ACTIVE {id} [{status}]
-        # — {imperative}`, unchanged by this issue (GoldenOutputBriefing pins
-        # the same format across every shipped template).
-        self.assertEqual(out.splitlines()[0],
-                          f"ACTIVE execute [pending] — {t['imperative']}")
+        # The ACTIVE line stays byte-identical to `ACTIVE {id} [{status}] —
+        # {imperative}`, unchanged by this issue (GoldenOutputBriefing pins
+        # the same format across every shipped template) -- but it is no
+        # longer necessarily splitlines()[0]. COMMANDER_SPINE declares
+        # init/archive as bookends (#634), so since the #634-follow-up fix
+        # a `bookend:` line now occupies the same PREFIX slot `lease_line`
+        # already used, ahead of it.
+        active_line = next(line for line in out.splitlines() if line.startswith("ACTIVE"))
+        self.assertEqual(active_line, f"ACTIVE execute [pending] — {t['imperative']}")
 
         self.assertIn(
             "\ndirectives:\n"

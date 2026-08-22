@@ -379,6 +379,14 @@ helper (`_is_bookend`), so the form it takes is one function's worth of change. 
 plans, whose template is compiled by `scripts/generate_spine.py` — its gate compiler emits a fixed field list, so a
 `bookend` key in a spec would be dropped silently.
 
+`current` renders which gates are frozen. #634 shipped the refusal but not its visibility: an agent planning an
+amend had no sanctioned way to learn a gate was frozen except attempting the amend and being refused, since
+opening `spine.json` to check `bookend` directly is itself a doctrine violation. `current`'s output now carries a
+`bookend (frozen …): <id>[, <id>…]` line, listing every declared bookend gate in plan order, whenever the plan has
+at least one — emitted once, ahead of the `ACTIVE …` line (or `DONE …` / `ALL ITEMS VISITED …`), in the same prefix
+slot the lease line already occupies. A plan with no `bookend` key anywhere renders no such line, so an undeclared
+plan's `current` output is unchanged.
+
 **All-or-nothing.** The whole delta is validated and built on **copies**; canonical state is touched only once *every* op passes. Any invalid op refuses the entire amendment and leaves the checklist **unmutated** — important, because the engine persists state even on the error path, so a partially-applied delta could otherwise leak. On success the engine appends one audit entry to the top-level `amendments` list: `{ts, reason, authority, ops:[…]}` (the `ops` are human-readable summaries such as `"added g3"`, `"dropped g4"`, `"rescoped g2"`). `amend` is a mutating verb: once a lease exists it needs the owning `--session-id`, and a successful amend refreshes the lease.
 
 ## Why-capture — the running-understanding trail (`why_trail`)
