@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 569: attestation that can fail \u2014 evidence, review, instruments",
+      "spec_path": ".agent-work/569/LATITUDE_CONTRACT.md",
+      "intent_and_why": "Make a green qualitative gate mean something by telling the agent what would count at plan time, not by telling it at attest time that it got it wrong. 65 of 105 conditions in the shipped spine templates are check:null."
+    },
+    "definition_of_done": [
+      "A qualitative condition declares, at plan time, what evidence would satisfy it.",
+      "A wedged verdict is impossible to express silently.",
+      "The journal distinguishes a repaired fail from a gate that never failed.",
+      "Every check this epic ships is reachable from a template command check, or allowlisted with a stated reason."
+    ],
+    "good_enough": {
+      "mandatory_quality": "This epic must not add machinery that is itself unwired.",
+      "sufficient_evidence": "Measured census plus red-proof pinned to the shipped revision; a report-only check must name its promotion trigger.",
+      "appetite": "Four waves; cleared autonomous through wave 2, stop-and-present before wave 3."
+    },
+    "hard_constraints": [
+      "No new unwired checker.",
+      "Report-only is a staging state for an unmeasured signal, never a substitute for adjudication.",
+      "Sonnet for every commander and crew slot; escalate to opus only on a double block.",
+      "Fix or write an episode; filing an issue is the disfavoured exit.",
+      "Do not engage the spec-to-template migration (human ruling; episodes/active/569-001.md)."
+    ],
+    "fixed_decisions": [
+      "Delivery-first inversion: the built-not-wired guarantee ran first, not last.",
+      "WP5 reviewer machinery stays inside 569 as wave 4.",
+      "#558 is a design question settled with the human before wave 3, not dispatched to a commander.",
+      "The declared basis lands in hand-written templates, not through generate_spine.py.",
+      "Launched identities remain stable."
+    ],
+    "current_wave": {
+      "objective": "Guarantee that what this epic delivers is actually wired, and close the one gate in the corpus that cannot pass.",
+      "exit_criteria": [
+        "A committed census with the generate_spine.py disposition settled.",
+        "Either a registration lint plus vocabulary rule, or deletions and a recorded honest null.",
+        "A list-valued match works and is red-proved against the shipped revision.",
+        "Both PRs merged green to main."
+      ],
+      "issues": [
+        {
+          "id": "w1-wiring",
+          "title": "Built-not-wired: census, then lint or delete (#345 #444 #368)",
+          "desired_outcome": "Every check-shaped script is reachable from a real check, deleted, or allowlisted with a stated reason, and generate_spine.py's disposition is settled with evidence.",
+          "useful_now": "Nothing later in the epic is trustworthy until 'built' stops meaning 'not wired'.",
+          "appetite": "One commander, one wave.",
+          "acceptance_or_falsification_evidence": "A committed census classifying all 26 scripts live/unwired/dead with evidence per row.",
+          "implementation_latitude": "Lint shape and where it runs.",
+          "hard_constraints_no_gos": [
+            "Do not fix this by adding another unwired checker."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/",
+            "skills/*/templates/*.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "w1-verdict",
+          "title": "Verdict mechanism: list-valued match, refuse a mistyped match shape (#371)",
+          "desired_outcome": "A match may name a set of acceptable values; a mistyped match shape is refused rather than becoming a silently unsatisfiable gate.",
+          "useful_now": "It is a check that cannot pass, and the wedge pushes a Commander toward fabricating a verdict.",
+          "appetite": "Small; two comparison sites plus tests.",
+          "acceptance_or_falsification_evidence": "A red-proof pinned to the shipped revision that a list-valued match is unsatisfiable before and satisfiable after.",
+          "implementation_latitude": "The accepted match shape.",
+          "hard_constraints_no_gos": [
+            "Backward compatibility with every existing scalar match is non-negotiable."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/validate_spine.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Plan-freeze validation + journal fidelity (#518 #524 #381 #382 #459 #515 #390)",
+        "why_likely": "Plan-time catches are cheap-moment fixes that fit the intent",
+        "entry_conditions": [
+          "wave-2 checkpoint re-clears",
+          "#558 discussed with the human"
+        ]
+      },
+      {
+        "outcome": "Reviewer machinery (#375 #358 #363 #259 #223 #388 #376 #221)",
+        "why_likely": "Human ruled it stays in 569",
+        "entry_conditions": [
+          "wave-2 checkpoint re-clears"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "What counts as a resolvable evidence locator",
+        "affects": "Whether #556's refusal is enforceable or becomes prose",
+        "settle_by": "wave 2 plan-alternatives",
+        "current_evidence": "none authored yet; the corpus has evidence ids, artifact paths, and command exit codes as candidate shapes",
+        "next_probe": "test each candidate against the 65 existing qualitative conditions"
+      },
+      {
+        "unknown": "Whether a sonnet commander can execute engine surgery from a well-specified launch order",
+        "affects": "Tiering for waves 3-4 and the epic's own thesis",
+        "settle_by": "wave 2 returns",
+        "current_evidence": "wave 1 succeeded at sonnet on both lanes, but neither touched checklist_engine.py deeply; w1-verdict's change was ~2 sites",
+        "next_probe": "count double-block escalations in wave 2, where #556 and #557 are both real engine work"
+      },
+      {
+        "unknown": "Whether the review-level doctrine (#558) yields a runnable issue",
+        "affects": "Wave 3 composition",
+        "settle_by": "human conversation at the wave-2 checkpoint",
+        "current_evidence": "brief prepared at .agent-work/569/558-CHECKPOINT-BRIEF.md; corpus carries exactly one reviewer signature today",
+        "next_probe": "the checkpoint conversation"
+      }
+    ],
+    "parked_possibilities": [
+      "The stalled spec-to-template migration: 2 specs against 19 roles, already drifted. Human ruled it out of 569; recorded as episodes/active/569-001.md.",
+      "No automated defence against a PR that turns main red: mergeable+approved+no-conflict all say yes, and CI is windows-only and known-red so its verdict is ignored by policy. Measured this wave.",
+      "Imperative bloat across the remaining spine steps.",
+      "Whether record() on a survey should evaluate null-kind postconditions (#422 D-scope)."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "w1-wiring",
+      "outcome": "Census of all 26 check-shaped scripts (17 live, 8 unwired, 1 dead) committed at docs/CHECK_SCRIPT_CENSUS.md; RegistrationLint and VocabularyRule shipped blocking with negative self-tests; #444 gauge-field reconciliation shipped after finding a live doc/code drift; prove_docstring_only.py deleted as dead.",
+      "evidence": "PR #644 merged at 4cbd2cc9"
+    },
+    {
+      "issue_id": "w1-verdict",
+      "outcome": "List-valued artifact match now means membership at both engine comparison sites with scalar behaviour unchanged; a present-but-non-dict match, which previously crashed with an uncaught AttributeError, is now a clean refusal.",
+      "evidence": "PR #645 merged at 04888e4a"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "generate_spine.py's because-requirement is a cheap entry point for work package 1",
+      "expected": "a live compiler whose discarded field could be carried through",
+      "observed": "FALSIFIED as a route. The compiler is live via spine_lifecycle -> MCP spine_open and is genuinely tested, but no shipped role skill routes through it. Every driven spine comes from init_work_area.py resolving a hand-written template, and COMMANDER_SPINE.template.json carries 0 `because` fields against 19 check-null postconditions.",
+      "source": "docs/CHECK_SCRIPT_CENSUS.md, w1-wiring"
+    },
+    {
+      "claim": "The built-not-wired population is mostly dead code",
+      "expected": "an honest-null outcome of deletions and no lint",
+      "observed": "FALSIFIED. 17 live, 8 unwired, 1 dead. Every successive measurement \u2014 #345's original six, the Admiral's pre-census of 7 live, the commander's first pass of 12 \u2014 understated enforcement, because each measured a narrower surface than enforcement actually uses.",
+      "source": "docs/CHECK_SCRIPT_CENSUS.md"
+    },
+    {
+      "claim": "A commander's self-reported quality signals are sufficient to merge on",
+      "expected": "the commander's own account of its work would hold",
+      "observed": "FALSIFIED for w1-wiring. An Admiral-ordered clean-room review found its VocabularyRule negative self-test never called the real scan (verified by breaking _prose_files() and watching all 7 tests still pass), and that its reported green suite was actually 1 failed. Both were caught only because an independent reviewer ran, which it had not.",
+      "source": ".agent-work/w1-wiring/REVIEW_RESULT-clean-room.md"
+    },
+    {
+      "claim": "A MERGEABLE, reviewed, conflict-free PR is safe to merge",
+      "expected": "the available automated signals would be sufficient",
+      "observed": "FALSIFIED by direct test. Merging #645 into main cleanly produced a tree where the map freshness test failed. Every automated signal said yes; CI is windows-only and known-red so its verdict is ignored by policy. Only a hand-run suite on the merged tree caught it.",
+      "source": "Admiral merge-verification in a scratch worktree"
+    },
+    {
+      "claim": "A well-specified launch order lets a sonnet commander do this work",
+      "expected": "unknown; this was the epic's own thesis under test",
+      "observed": "SUPPORTED for wave 1. Both lanes delivered at sonnet. w1-wiring self-corrected its own census mid-run and documented the correction; w1-verdict found and fixed a crash beyond its brief and its crew reproduced every evidence figure independently. The one quality gap was caused by the Admiral's dispatch mechanism, not the tier.",
+      "source": "both RESULT.md artifacts and the crew registries"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D-basis-path",
+      "signal": "Work package 1 was aimed at a spine-production path that no shipped role skill drives",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "wave 2's primary lane",
+      "evidence": "docs/CHECK_SCRIPT_CENSUS.md generate_spine.py disposition; 0 `because` fields against 19 check-null postconditions in COMMANDER_SPINE.template.json",
+      "reason": "The lane must target hand-written templates plus engine rendering, not the compiler"
+    },
+    {
+      "id": "D-spec-migration",
+      "signal": "The spec-to-template migration stalled at 2 of 19 roles and the two that exist have drifted from their shipped templates",
+      "classification": "later_only",
+      "affects": "the epic's forecast, not its current wave",
+      "evidence": "compiled specs/reviewer.spine.toml vs shipped REVIEW_SURVEY.template.json: r0-context 373 words and 1 postcondition against 31 words and 0",
+      "reason": "Human ruled it out of epic 569 and directed it be recorded as an episode for future dealing"
+    },
+    {
+      "id": "D-reindex-latency",
+      "signal": "map/INDEX.md staleness is discovered after merge rather than prevented at commit, and base 244665ee shipped stale from a human commit",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "wave 2 composition \u2014 adds a third lane",
+      "evidence": "three reindex rounds across two lanes this wave; code_map build measured at 2.9s and deterministic",
+      "reason": "Human approved mechanizing it; the cost is the detection latency, not the repair"
+    },
+    {
+      "id": "D-merge-gate",
+      "signal": "No automated defence exists against a PR that turns main red",
+      "classification": "later_only",
+      "affects": "integration practice across all remaining waves",
+      "evidence": "measured: #645 merged clean into main and produced a failing suite",
+      "reason": "Real, but inventing a merge-gate mechanism mid-epic is out of scope; carried as a checkpoint candidate"
+    },
+    {
+      "id": "D-dispatch-mechanism",
+      "signal": "Wave 1 was dispatched via the Agent tool rather than run_crew.py, so commanders shared the Admiral's harness session, could not use their spine door, and one ran with no independent review",
+      "classification": "evidence_only",
+      "affects": "wave 2 dispatch mechanics",
+      "evidence": "w1-wiring had no crew-runs.json; w1-verdict, using run_crew.py, had real implementer and reviewer crews",
+      "reason": "Admiral error, already corrected for wave 2; no plan change beyond the dispatch method"
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "518",
+      "kind": "issue"
+    },
+    {
+      "id": "524",
+      "kind": "issue"
+    },
+    {
+      "id": "381",
+      "kind": "issue"
+    },
+    {
+      "id": "382",
+      "kind": "issue"
+    },
+    {
+      "id": "459",
+      "kind": "issue"
+    },
+    {
+      "id": "515",
+      "kind": "issue"
+    },
+    {
+      "id": "390",
+      "kind": "issue"
+    },
+    {
+      "id": "375",
+      "kind": "issue"
+    },
+    {
+      "id": "358",
+      "kind": "issue"
+    },
+    {
+      "id": "363",
+      "kind": "issue"
+    },
+    {
+      "id": "259",
+      "kind": "issue"
+    },
+    {
+      "id": "223",
+      "kind": "issue"
+    },
+    {
+      "id": "388",
+      "kind": "issue"
+    },
+    {
+      "id": "376",
+      "kind": "issue"
+    },
+    {
+      "id": "221",
+      "kind": "issue"
+    },
+    {
+      "id": "558",
+      "kind": "issue"
+    },
+    {
+      "id": "wave-3-plan-freeze",
+      "kind": "forecast"
+    },
+    {
+      "id": "wave-4-reviewer-machinery",
+      "kind": "forecast"
+    },
+    {
+      "id": "locator-definition",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "sonnet-engine-surgery",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "558-yields-runnable-issue",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "spec-template-migration",
+      "kind": "parked"
+    },
+    {
+      "id": "merge-gate-hole",
+      "kind": "parked"
+    },
+    {
+      "id": "imperative-bloat-remaining-steps",
+      "kind": "parked"
+    },
+    {
+      "id": "survey-record-null-postconditions",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "skills/*/templates/*.json",
+      "scripts/install_constellation.py",
+      "tests/test_code_map.py"
+    ],
+    "map_status": "map/INDEX.md fresh at origin/main 9d5aac6d; full suite 3622 passed / 6 skipped verified by the Admiral in a clean worktree"
+  }
+}
