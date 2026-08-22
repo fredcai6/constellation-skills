@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "w1-verdict",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w1-verdict-r4-quality@e9a9f6636e6f139ad6d5fe15c7e5b80f9ae8021e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w1-verdict",
+    "generated_at": "2026-08-22T15:40:14Z"
+  }
+}

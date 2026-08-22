@@ -1,0 +1,218 @@
+{
+  "work_id": "w1-verdict",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-backcompat",
+    "r4b-report-only-shipping"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1-review handoff, the implementer result, and the full diff (5 files).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Change matches the handoff exactly: shared _artifact_match_satisfied helper at both call sites (_check_condition ~1080-1112, attest ~3450-3463), list-valued match[k]=membership verified independently (True/False cases), scalar match unchanged (4-case corpus proof reproduced independently against the only 2 shipped match sites), non-dict match crash reproduced pre-change at base commit and confirmed clean post-change (False / EngineError). validate_spine gained blocking shape-artifact-match-not-dict and report-only falsifiable-artifact-malformed-match-list, verified both callers (generate_spine.py:1043, spine_lifecycle.py:396,454) only test base-list truthiness. Promotion trigger comment present verbatim beside REPORT_ONLY_FAULT_CODES and is actionable (zero-occurrence sweep AND Admiral ratification). Full suite reproduced: 1 failed, 3592 passed, 6 skipped in 144.08s; the one failure (test_code_map map freshness) independently reproduced as pre-existing by stashing the 5 diff files at the unchanged base commit HEAD (244665ee) and rerunning it in isolation -- fails identically. Stash was popped back cleanly afterward.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status/diff --name-only confirm exactly the 5 allowed files touched, no others. Grepped the diff for APPROVE-WITH-FOLLOWUPS/verdict-vocabulary and produced_by/override_policy strings -- zero matches. No scripts/hooks/, no new verify_*.py/check_*.py script, no skills/*/templates/*.json or .agent-work/templates/ edit.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 5 required evidence items independently reproduced (not just re-read from the implementer result): (1) list-membership True/hit and False/miss cases via _artifact_match_satisfied; (2) non-dict-match crash reproduced at base commit (AttributeError: 'list' object has no attribute items) and clean post-change refusal at both _check_condition (False) and attest (EngineError) sites; (3) 4-case scalar corpus backward-compat proof against the only 2 shipped match sites (EXECUTE_PLAN.template.json:21,52); (4) validate_spine standalone positive tests match claimed output exactly (match:{k:[]} -> report_only only, bool=False; match:[a,b] -> base fault shape-artifact-match-not-dict, bool=True); (5) full suite reproduced verbatim (1 failed, 3592 passed, 6 skipped, 144.08s) and the one failure independently confirmed pre-existing by stashing the diff and rerunning at the unmodified base commit -- fails identically there.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both handoff constraints appended as r4a-backcompat and r4b-report-only-shipping (visited later in this survey's item order); both already independently verified during r1-handoff/r3-evidence: backward-compat corpus proof (4/4 cases identical pre/post), and report_only channel demonstrably never reaches bool(result)/exit code at either existing caller, with the promotion trigger stated verbatim as an actionable code comment.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes match the diff: structural anchors (_check_condition artifact branch, attest artifact branch, new _artifact_match_satisfied, _shape_task_faults inline check, new _fault_artifact_malformed_match_list, ValidationResult.report_only) all confirmed present at the claimed locations in the actual diff. Capability claim (artifact-match membership widening; validate_spine falsifiability family gaining a report-only member) matches observed behavior. Both named constraints honored (see r4-quality). Decision anchors match-shape-bare-list/match-not-dict-is-shape-fault/malformed-list-definition/promotion-trigger are all implemented exactly as specified, no new decision needed. No new triage candidate from this gate's own work; the pre-existing map/INDEX.md staleness (test_code_map freshness failure) was already flagged DEGRADED-UNPARSEABLE in this gate's own Map Anchors and is correctly routed as an out-of-scope observation, not silently fixed or auto-filed as an issue. Map itself is DEGRADED-UNPARSEABLE at this commit per the handoff -- no live map entry point to reconcile against; this does not block review per the handoff's own note.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/<work-id>/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/<work-id>/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from <work-id> alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `spine_amend`, whose `delta` carries the single op `retext-check` on this item's c1, never by hand-editing this survey. There, `authority` is the dispatching Commander named in your reviewer handoff (never a string you invent), and `reason` is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w1-verdict/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to .agent-work/w1-verdict/FOWLER_PASS.json, all 12 baseline smells rendered a verdict (all absent, none flagged/overridden), scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=[]). Notably duplicated-code went from present pre-diff (near-identical match logic at two call sites) to absent post-diff, since this change's own point is consolidating that duplication into one shared helper. No smell rose to a blocking or observational finding.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w1-verdict/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w1-verdict/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-backcompat": {
+      "id": "r4a-backcompat",
+      "title": "Backward-compatibility rule",
+      "imperative": "decision:backward-compatibility-is-non-negotiable -- every existing scalar match in the shipped corpus behaves identically. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Verified independently (r1-handoff): both shipped scalar match sites (EXECUTE_PLAN.template.json:21 status:complete, :52 verdict:APPROVE) reproduce identical True/False outcomes pre- and post-change via direct _artifact_match_satisfied calls, and via the full attach/advance engine path (test_check_condition_scalar_match_unchanged).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-report-only-shipping": {
+      "id": "r4b-report-only-shipping",
+      "title": "Widening-live/refusal-report-only rule",
+      "imperative": "decision:widening-ships-live-refusal-ships-report-only -- the widening ships live, the new validate_spine refusal ships report-only with a named, actionable promotion trigger. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Verified independently (r1-handoff): the comparator widening (_artifact_match_satisfied) is unconditional/live in checklist_engine.py with no flag gating it. validate_spine's falsifiable-artifact-malformed-match-list fault is routed exclusively through ValidationResult.report_only, and both existing callers (generate_spine.py:1043 'if result:', spine_lifecycle.py:396,454 'if result.undecidable or result:') were read directly and confirmed to test only base-list truthiness -- report_only content cannot reach either. Promotion trigger is a verbatim, actionable code comment above REPORT_ONLY_FAULT_CODES (zero-occurrence --sweep AND Admiral/human ratification at the named wave-2 checkpoint).",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 9 checks pass. Independently reproduced every claimed evidence figure (comparator red/green, non-dict-match crash at base + clean refusal post-change, 4-case corpus backward-compat, validate_spine positive tests, full suite 1 failed/3592 passed/6 skipped with the one failure independently confirmed pre-existing by stashing the diff and re-running at base commit 244665ee). Scope exactly the 5 allowed files, no excluded content touched. Both named constraints (backward-compat non-negotiable, widening-live/refusal-report-only) honored and independently verified against both existing validate() callers. docs/CHECKLIST_SCHEMA.md row extended, not rewritten. Fowler pass: all 12 baseline smells rendered, all absent (verify_fowler_pass.py exits 0); the diff's own effect is removing pre-existing duplication, not adding a new smell."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "reviewer-g1-attempt1",
+    "status": "released",
+    "claimed_at": "2026-08-22T15:35:25.673663+00:00",
+    "last_heartbeat": "2026-08-22T15:42:14.696844+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/569-w1-verdict",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T15:42:57.078027+00:00"
+  }
+}

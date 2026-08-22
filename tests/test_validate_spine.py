@@ -730,3 +730,131 @@ class TestCorpusSweepFindings:
             f"placeholders (EXECUTE_PLAN.template.json, IMPLEMENTER_PLAN.template.json), "
             f"found {by_code.get('falsifiable-unresolved-placeholder', 0)}"
         )
+
+
+# --------------------------------------------------------------------------- #
+# decision:match-shape-bare-list widening (#371): a non-dict `match` is now a
+# blocking SHAPE fault (never the falsifiable/report-only family), and a
+# malformed list-valued match[k] (empty, or a non-scalar element) is a
+# report-only falsifiable fault that must never affect `bool(result)`.
+# --------------------------------------------------------------------------- #
+
+class TestShapeRejectsArtifactMatchNotDict:
+    def test_list_valued_match_itself_is_not_the_shape_fault(self):
+        # A list-valued match (membership) is the WIDENED, legal shape --
+        # only a match that is present but not a dict at all is the fault.
+        spine = _valid_gated()
+        spine["tasks"]["g1"]["postconditions"][0]["check"] = {
+            "kind": "artifact", "evidence_type": "review-result", "match": {"verdict": ["APPROVE", "BLOCK"]},
+        }
+        faults = vs.validate(spine)
+        assert "shape-artifact-match-not-dict" not in _codes(faults)
+
+    def test_non_dict_match_is_a_blocking_shape_fault(self):
+        spine = _valid_gated()
+        spine["tasks"]["g1"]["postconditions"][0]["check"] = {
+            "kind": "artifact", "evidence_type": "review-result", "match": ["APPROVE", "BLOCK"],
+        }
+        result = vs.validate(spine)
+        assert "shape-artifact-match-not-dict" in _codes(result)
+        assert result  # blocking: in the base list, bool(result) is True
+        assert not result.report_only
+
+    def test_no_match_at_all_is_not_this_fault(self):
+        spine = _valid_gated()
+        spine["tasks"]["g1"]["postconditions"][0]["check"] = {
+            "kind": "artifact", "evidence_type": "user-decision",
+        }
+        assert "shape-artifact-match-not-dict" not in _codes(vs.validate(spine))
+
+    def test_non_artifact_kind_is_not_this_fault(self):
+        spine = _valid_gated()
+        spine["tasks"]["g1"]["postconditions"][0]["check"] = {"kind": "command", "command": "true"}
+        assert "shape-artifact-match-not-dict" not in _codes(vs.validate(spine))
+
+
+class TestFalsifiabilityArtifactMalformedMatchListBoundary:
+    """VIOLATING / INNOCENT, per the handoff's malformed-list definition
+    (decision:malformed-list-definition): empty or non-scalar element is
+    malformed; a single-element list is NOT flagged."""
+
+    def _faults(self, match):
+        check = {"kind": "artifact", "evidence_type": "review-result", "match": match}
+        return vs._fault_artifact_malformed_match_list("g1.postconditions.c1", check)
+
+    def test_empty_list_is_malformed(self):
+        assert self._faults({"verdict": []})
+
+    def test_non_scalar_element_is_malformed(self):
+        assert self._faults({"verdict": [{"nested": "dict"}]})
+
+    def test_single_element_list_is_not_flagged(self):
+        assert not self._faults({"verdict": ["APPROVE"]})
+
+    def test_multi_element_scalar_list_is_not_flagged(self):
+        assert not self._faults({"verdict": ["APPROVE", "BLOCK"]})
+
+    @pytest.mark.parametrize("scalar", ["s", 1, 1.5, True, None])
+    def test_every_json_scalar_type_is_accepted(self, scalar):
+        assert not self._faults({"k": [scalar, scalar]})
+
+    def test_scalar_match_value_untouched(self):
+        assert not self._faults({"verdict": "APPROVE"})
+
+    def test_non_dict_match_is_not_this_faults_job(self):
+        # The non-dict case is `shape-artifact-match-not-dict`'s job, not this
+        # one's -- this function is defensive and returns nothing for it.
+        assert not self._faults(["APPROVE", "BLOCK"])
+
+
+class TestReportOnlyChannelNeverFlipsExitCode:
+    """decision:widening-ships-live-refusal-ships-report-only: the malformed-
+    list fault is computed but never blocks -- `ValidationResult.report_only`
+    carries it, `bool(result)`/the base list/`main()`'s exit code do not see
+    it, exactly like `generate_spine.py`/`spine_lifecycle.py`'s own
+    `if result:` / `if result.undecidable or result:` call sites."""
+
+    def _gated_with_match(self, match):
+        spine = _valid_gated()
+        spine["tasks"]["g1"]["postconditions"][0]["check"] = {
+            "kind": "artifact", "evidence_type": "review-result", "match": match,
+        }
+        return spine
+
+    def test_empty_list_match_lands_in_report_only_not_base(self):
+        result = vs.validate(self._gated_with_match({"verdict": []}))
+        assert "falsifiable-artifact-malformed-match-list" not in _codes(result)
+        assert "falsifiable-artifact-malformed-match-list" in _codes(result.report_only)
+
+    def test_empty_list_match_does_not_flip_bool_or_len(self):
+        result = vs.validate(self._gated_with_match({"verdict": []}))
+        assert len(result) == 0
+        assert bool(result) is False
+
+    def test_report_only_fault_code_is_in_the_named_set(self):
+        assert "falsifiable-artifact-malformed-match-list" in vs.REPORT_ONLY_FAULT_CODES
+
+    def test_cli_prints_report_only_but_exit_code_stays_zero(self, tmp_path, capsys):
+        spine = self._gated_with_match({"verdict": []})
+        p = tmp_path / "spine.json"
+        p.write_text(json.dumps(spine))
+        exit_code = vs.main([str(p), "--root", str(ROOT)])
+        out = capsys.readouterr().out
+        assert exit_code == 0
+        assert "REPORT-ONLY" in out
+
+    def test_two_arg_validation_result_construction_still_works(self):
+        # Both existing 2-arg call sites inside validate() itself must keep
+        # working unchanged -- report_only defaults to empty.
+        result = vs.ValidationResult([], [])
+        assert result.report_only == []
+        assert not result
+
+    def test_str_names_report_only_when_present(self):
+        result = vs.validate(self._gated_with_match({"verdict": []}))
+        assert "report-only" in str(result).lower()
+
+    def test_str_of_a_genuinely_sound_result_does_not_claim_report_only(self):
+        result = vs.validate(_valid_gated())
+        assert not result.report_only
+        assert "report-only" not in str(result).lower()

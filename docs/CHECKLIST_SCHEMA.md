@@ -230,7 +230,7 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 | `check.kind` | the engine does | satisfied when |
 |---|---|---|
 | `command` | runs `check.command` | exit 0 — "the tests/build actually pass" |
-| `artifact` | confirms an evidence item of `check.evidence_type` is attached (optional field match, e.g. `verdict: APPROVE`) | present + shape-valid |
+| `artifact` | confirms an evidence item of `check.evidence_type` is attached (optional field match, e.g. `verdict: APPROVE`) — a list-valued `match[k]` means membership (`have in want`, e.g. `verdict: [APPROVE, BLOCK]`), any other `match[k]` shape keeps scalar `==` | present + shape-valid |
 | `git-change-policy` | collects the staged (`git diff --cached`) or branch (`git diff <base>...HEAD`) diff and evaluates each changed file against an inline artifact policy (globs, size, binary) | **no** files violate the policy — "the closeout diff carries no suspicious artifacts" |
 
 That is the entire mechanical surface. A human checkpoint is `artifact`/`user-decision`; a crew review gate is `artifact`/`review-result` matching `verdict: APPROVE` (produced by a `survey` review's consolidation). An `artifact` postcondition may also be satisfied by `attest --evidence <id>` referencing an already-attached artifact of the matching type, instead of re-attaching it to a second task — the engine still verifies the referenced artifact exists and matches the required `evidence_type` + `match`, so this never asserts an artifact from thin air.

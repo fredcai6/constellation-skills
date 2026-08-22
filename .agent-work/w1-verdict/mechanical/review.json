@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "review",
+  "mechanical": {
+    "run": "w1-verdict",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 9,
+    "spine-step": "review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w1-verdict-review@7df5f68b2cea23faefd3f0cb133b9836b7071764",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w1-verdict",
+    "generated_at": "2026-08-22T15:47:03Z"
+  }
+}

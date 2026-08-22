@@ -1,0 +1,20 @@
+{
+  "work_id": "w1-verdict",
+  "diff_ref": "uncommitted working tree at base commit 244665ee0f669a0bb23847c8fa695c430910c06d: docs/CHECKLIST_SCHEMA.md, scripts/checklist_engine.py, scripts/validate_spine.py, tests/test_checklist_engine.py, tests/test_validate_spine.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "New/changed functions are all short: _artifact_match_satisfied (~4 lines body), _fault_artifact_malformed_match_list (~20 lines, one loop with two early-continue branches), the inline non-dict-match guards at both call sites (1 isinstance check each). No method grew unreasonably.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No class gained responsibilities beyond one new attribute (ValidationResult.report_only) and its constructor/str wiring; ValidationResult stays a thin list subclass.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "The diff actively REMOVES pre-existing duplication: _check_condition's and attest's near-identical match-comparison expressions are now both delegated to one shared _artifact_match_satisfied helper.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No method reaches into another object's internals more than its own; the new helper operates on plain dicts passed in directly.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "No repeated group of parameters travels together across signatures; payload/match stay as single dict arguments.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "Fault codes remain plain strings, consistent with the pre-existing Fault dataclass's own convention (code: str) used throughout validate_spine.py before this diff -- not a new primitive obsession introduced here.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "_artifact_match_satisfied(payload, want) and _fault_artifact_malformed_match_list(where, check) both take 2 parameters.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "One conceptual change (widen the match comparator + add a matching validate_spine shape/falsifiability fault) touches checklist_engine.py at 2 call sites plus validate_spine.py's fault family -- that is the change's natural footprint, not scattered incidental edits.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "checklist_engine.py and validate_spine.py each changed for exactly one reason (the match-shape widening and its corresponding shape/falsifiability faults respectively); no unrelated reason for change was mixed in.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No new chained accessor calls; chk.get(\"match\", {}) and payload.get(k) are single-hop lookups, unchanged in shape from the pre-existing code.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "_JSON_SCALAR_TYPES and the malformed-list check exist only to serve decision:malformed-list-definition, which the handoff names explicitly -- no unused hook or generalized-for-the-future abstraction was added.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The new comments (decision: pointers, the promotion-trigger block, the bool/int JSON-scalar note) explain non-obvious WHY -- a graded decision, a subtle invariant (isinstance(True, int)), a promotion rule -- not WHAT; the code itself (short, well-named helpers) does not need the comments to be understood. This matches the repo's existing convention of inline `# decision:<id>` comments beside code implementing a graded decision (2 pre-existing instances already in scripts/gauge_reader.py before this diff), so the comment density is not compensating for unclear structure.", "override": null}
+  ],
+  "rail_exception": null
+}
