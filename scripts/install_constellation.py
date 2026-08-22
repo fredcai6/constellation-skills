@@ -220,13 +220,6 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     # tests/test_install_constellation.py pins companions against actual dynamic
     # loads.
     "commander": ("checklist_engine.py", "init_work_area.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_episode_delta.py", "verify_episode_captured.py", "verify_worktree_isolation.py", "agent_work_root.py", "map_orient.py", "verify_iterative_role_artifacts.py"),
-    # workbench is the checklist engine's home skill, so it is the canonical (and
-    # only) owner of the gauge WRITER hook -- the gauge exists solely to feed
-    # checklist_engine.py's `current` advisory. Deliberately NOT a companion of
-    # checklist_engine.py: that would copy the hook into every engine-carrying
-    # skill and leave "which copy is canonical?" ambiguous for whatever later
-    # wires it into a settings.json.
-    "workbench": ("checklist_engine.py", "gauge_writer_hook.py"),
     "interrogator": ("checklist_engine.py", "verify_interrogation.py"),
     "cartographer": ("checklist_engine.py", "build_architecture_map.py"),
     "docent": ("docent_freshness.py",),
@@ -239,6 +232,38 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "diagnose": ("verify_diagnosis.py",),
     "write-a-skill": ("verify_skill_registered.py", "curate_corpus.py", "install_constellation.py"),
 }
+
+# THE ONE SHIPPING UNIT THAT IS NOT A SKILL (#639).
+#
+# `discover_skills` refuses a directory under `skills/` that has no `SKILL.md`,
+# so before this constant the only way to ship a bundle of scripts was to dress
+# it as a skill an agent could load. `constellation-workbench` was that dress:
+# vestigial as a skill, load-bearing as a bundle, and named for the wrapper
+# rather than the cargo -- so anyone reading `skills/workbench/` to decide
+# whether it still earned its place measured inert files and concluded it was
+# dead. It was not: deleting it unwired the Stop hook, the SessionStart hook,
+# the gauge writer and the engine path on every installed machine.
+#
+# This unit has no `SKILL.md`, never appears in an agent's skill list, and is
+# installed on every run regardless of `--skills`, because the hook wiring on a
+# consuming machine points into it and a subset install must not leave that
+# wiring dangling.
+#
+# ITS SOURCES DO NOT MOVE, deliberately. The install DESTINATION is what #639 is
+# about; `SCRIPT_SOURCE_SUBDIRS` above already proves source location and
+# install location are independent, and `AGENT_GUIDE.md`'s layout table names
+# `scripts/` as where shared machinery lives. Relocating the hook pair would
+# additionally break this repo's own `.claude/settings.json`, 28 test
+# references, and the frozen-source-layout decision recorded above -- all to
+# move files the installer can already reach where they sit.
+ENGINE_BUNDLE_INSTALL_NAME = "constellation-engine"
+
+# Exactly what `constellation-workbench` shipped before #639: the engine, the
+# gauge writer hook, and the transitive runtime closure of both. Expanded from
+# the same two roots through the same companion table, so the cargo cannot drift
+# from what the hooks and the door actually need.
+ENGINE_BUNDLE_ROOTS: tuple[str, ...] = ("checklist_engine.py", "gauge_writer_hook.py")
+ENGINE_BUNDLE_SCRIPTS: tuple[str, ...] = expand_script_bundle(ENGINE_BUNDLE_ROOTS)
 # Global doctrine buckets (single source: skills/_shared/), bundled into each skill's
 # references/ at install exactly as the scripts above are bundled into scripts/. The
 # audience Venn is enforced by which buckets a skill carries: everyone-global is shared
@@ -784,6 +809,96 @@ def remove_existing_constellation_set(target_root: Path) -> None:
             target.unlink()
 
 
+def install_engine_bundle(
+    target_root: Path,
+    *,
+    dry_run: bool,
+    out: Callable[[str], object],
+) -> None:
+    """Install the non-skill engine bundle (#639).
+
+    Unconditional: every install writes it, whatever `--skills` selected, because
+    a consuming machine's settings.json wires five hook entries into this
+    directory and a subset install that skipped it would leave every one of them
+    naming a path with no file behind it.
+
+    Replace-in-place rather than merge, matching how a skill target is written:
+    a script dropped from `ENGINE_BUNDLE_SCRIPTS` must not survive as a stale
+    copy that an old settings.json can still resolve.
+    """
+    target = target_root / ENGINE_BUNDLE_INSTALL_NAME
+    out(f"- {ENGINE_BUNDLE_INSTALL_NAME}: {len(ENGINE_BUNDLE_SCRIPTS)} script(s) -> {target}")
+    if dry_run:
+        return
+    ensure_target_is_inside_root(target_root, target)
+    if target.exists():
+        if target.is_dir():
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+    scripts_dir = target / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+    for script in ENGINE_BUNDLE_SCRIPTS:
+        shutil.copy2(script_source_path(script, REPO_ROOT / "scripts"), scripts_dir / script)
+
+
+# The engine's home before #639. A machine that has ever installed this corpus
+# carries hook wiring into it, so vacating the path is a migration, not a rename.
+LEGACY_ENGINE_HOME_INSTALL_NAME = "constellation-workbench"
+
+
+def migrate_legacy_engine_home(
+    target_root: Path,
+    *,
+    force: bool,
+    dry_run: bool,
+    out: Callable[[str], object],
+) -> None:
+    """Remove the engine scripts from their pre-#639 home, loudly.
+
+    THE FAILURE THIS EXISTS TO PREVENT IS SILENT, AND IT IS THE SUBSET INSTALL.
+    A full `--force` install wipes every `constellation-*` directory
+    (`remove_existing_constellation_set`), so the old copies vanish and any
+    settings.json entry still naming them resolves to nothing -- which
+    `detect_hook_wiring` reports as STALE, because it classifies by resolving
+    paths against the filesystem rather than by matching strings. That case is
+    already loud.
+
+    A `--skills <subset>` install does NOT wipe. Without this migration the old
+    `constellation-workbench/scripts/` survives intact, every wired path still
+    resolves, and five hooks plus the engine go on running the PREVIOUS
+    revision's code forever, with nothing anywhere reporting a problem. That is
+    strictly worse than a broken path: a stale hook that runs is indistinguishable
+    from a current one that runs.
+
+    So it runs on every install, subset or not, and requires `--force` -- the
+    same authority `migrate_legacy_initial_cut_destination` requires, for the
+    same reason: removing something a previous install wrote is not a side
+    effect of an install someone already knew how to run.
+    """
+    legacy_scripts = target_root / LEGACY_ENGINE_HOME_INSTALL_NAME / "scripts"
+    if not legacy_scripts.exists():
+        return
+    ensure_target_is_inside_root(target_root, legacy_scripts)
+    if dry_run:
+        # Dry run reports and never raises, including when --force is absent: a
+        # plan is exactly where someone should LEARN a migration is pending, and
+        # this one fires on every machine that has ever installed this corpus, so
+        # raising here would make --dry-run unusable for all of them.
+        needs = "" if force else " (needs --force)"
+        out(f"- DRY RUN: would remove the engine's pre-#639 home {legacy_scripts}{needs}")
+        return
+    if not force:
+        raise InstallError(
+            f"the engine's pre-#639 home still exists at {legacy_scripts}; it holds the "
+            f"copies five wired hook entries resolve to, so leaving it in place would keep "
+            f"those hooks running the old code with nothing reporting it. Migrate with "
+            f"--force."
+        )
+    shutil.rmtree(legacy_scripts)
+    out(f"- removed the engine's pre-#639 home {legacy_scripts}")
+
+
 INITIAL_CUT_INSTALL_NAME = "constellation-to-initial-issues"
 LEGACY_INITIAL_CUT_INSTALL_NAME = "constellation-to-issues"
 
@@ -843,10 +958,12 @@ SETTINGS_FILENAME = "settings.json"
 LOCAL_SETTINGS_FILENAME = "settings.local.json"
 GAUGE_WRITER_HOOK_SCRIPT = "gauge_writer_hook.py"
 SPINE_RAIL_HOOK_SCRIPT = "spine_rail.py"
-# The canonical owner (see SKILL_SCRIPT_BUNDLES["workbench"]): exactly one
-# installed copy exists, so the wiring has an unambiguous path to point at.
-HOOK_OWNER_SKILL = "workbench"
-HOOK_OWNER_INSTALL_NAME = "constellation-workbench"
+# The canonical owner (see ENGINE_BUNDLE_INSTALL_NAME): exactly one installed
+# copy exists, so the wiring has an unambiguous path to point at. Since #639
+# that owner is the non-skill engine bundle rather than a skill -- which is what
+# lets the wiring name the cargo instead of a wrapper, and what lets
+# `--wire-hooks` stop depending on a particular skill being in the install set.
+HOOK_OWNER_INSTALL_NAME = ENGINE_BUNDLE_INSTALL_NAME
 HOOK_EVENT = "PostToolUse"
 # Matcher and timeout are carried VERBATIM from the snippet in
 # docs/GAUGE_WRITER_HOOK.md. Neither is tuned, derived, or invented here: the
@@ -926,7 +1043,7 @@ HOOK_SETS: dict[str, tuple[HookSpec, ...]] = {
 DEFAULT_HOOK_SET = "governor"
 
 # Where the wiring points its script paths.
-HOOKS_FROM_INSTALLED = "installed"  # <target_root>/constellation-workbench/scripts/
+HOOKS_FROM_INSTALLED = "installed"  # <target_root>/constellation-engine/scripts/
 HOOKS_FROM_SOURCE = "source"        # this checkout's own scripts/hooks/
 HOOKS_FROM_CHOICES = (HOOKS_FROM_INSTALLED, HOOKS_FROM_SOURCE)
 
@@ -1304,6 +1421,70 @@ def local_settings_note(target_root: Path) -> str:
     )
 
 
+def detect_stale_permission_rules(settings_path: Path) -> list[str]:
+    """READ-ONLY. `permissions.allow` entries naming a path under a
+    `constellation-*` directory that is not on disk.
+
+    WHY THIS IS A REPORT AND NEVER A REWRITE (#639). The installer does not own
+    that block: it has never written a permission rule, and
+    `test_wire_hooks_is_additive_and_preserves_unrelated_settings` pins
+    `permissions` as surviving `wire_hooks` byte-identical. The rules on a given
+    machine are hand-approved, per-machine, and incomplete by construction --
+    they name the engine copies under three skills and not the one a crew
+    actually drives.
+
+    It is also a materially different failure from a stale HOOK. A hook entry
+    naming a moved script fails SILENTLY: nothing fires and nothing says so,
+    which is why that case earns a migration. A permission rule naming a moved
+    script fails LOUDLY, by prompting -- the human sees it, approves once, and
+    their own approval writes the corrected rule. Reporting converts a surprise
+    prompt into an expected one; rewriting would make an installer that edits
+    security config on a human's behalf.
+
+    Classification is by RESOLVING the path, the same discipline
+    `detect_hook_wiring` uses, so a rule pointing at a directory that still
+    exists is never reported.
+    """
+    if not settings_path.is_file():
+        return []
+    try:
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        # Unreadable settings are already reported by the hook detector, which
+        # runs beside this one. Saying it twice would not add information.
+        return []
+    allow = ((settings or {}).get("permissions") or {}).get("allow") or []
+    stale: list[str] = []
+    for rule in allow:
+        if not isinstance(rule, str):
+            continue
+        for token in re.findall(r"[^\s'\"()]*constellation-[^\s'\"()]*", rule):
+            candidate = token.rstrip(":*")
+            if candidate and not Path(candidate).exists():
+                stale.append(rule)
+                break
+    return stale
+
+
+def report_stale_permission_rules(
+    target_root: Path,
+    *,
+    out: Callable[[str], object],
+) -> list[str]:
+    """Print the read-only permission-rule notice, if there is one to print."""
+    settings_path = settings_path_for_target_root(target_root)
+    stale = detect_stale_permission_rules(settings_path)
+    if stale:
+        out(
+            f"- permissions: {len(stale)} `permissions.allow` rule(s) in {settings_path} "
+            f"name a constellation path that is not on disk, so they match nothing and you "
+            f"will be prompted where they used to allow: {'; '.join(stale)}. This installer "
+            f"does not edit permissions -- approve the new path once when prompted, or "
+            f"update the rule yourself."
+        )
+    return stale
+
+
 def report_hook_wiring(
     target_root: Path,
     *,
@@ -1314,6 +1495,7 @@ def report_hook_wiring(
     wiring = detect_hook_wiring(
         settings_path_for_target_root(target_root), env=env, specs=specs)
     out(describe_hook_wiring(wiring) + local_settings_note(target_root))
+    report_stale_permission_rules(target_root, out=out)
     return wiring
 
 
@@ -1941,6 +2123,12 @@ def install_skills(
     if force and full_set and not dry_run:
         remove_existing_constellation_set(target_root)
 
+    # After the set-level wipe (which already vacated the old home on a full
+    # --force run) and before the skills, so the bundle the hook wiring points at
+    # exists no matter which subset of skills this call writes.
+    migrate_legacy_engine_home(target_root, force=force, dry_run=dry_run, out=out)
+    install_engine_bundle(target_root, dry_run=dry_run, out=out)
+
     # Resolved lazily, at most once, and reused for every skill in THIS call --
     # never a module-level global (a hidden global risks one pytest-process test
     # reading a stale value left by an earlier test). A caller installing across
@@ -1990,7 +2178,7 @@ def install_skills(
         corpus_id = write_corpus_marker(
             target_root,
             _source_commit(),
-            names=[skill.install_name for skill in skills],
+            names=[skill.install_name for skill in skills] + [ENGINE_BUNDLE_INSTALL_NAME],
         )
         out(f"- {CORPUS_MARKER}: {corpus_id}")
         out(restart_message)
@@ -2428,16 +2616,14 @@ def main(
                     "--wire-hooks cannot be combined with --baseline-only (which installs "
                     "no skills, so there would be no hook to point at)"
                 )
-            if (
-                args.hooks_from == HOOKS_FROM_INSTALLED
-                and HOOK_OWNER_SKILL not in {skill.source_name for skill in skills}
-            ):
-                raise InstallError(
-                    f"--wire-hooks needs the '{HOOK_OWNER_SKILL}' skill -- the canonical owner "
-                    f"of {GAUGE_WRITER_HOOK_SCRIPT} -- and this install does not include it. "
-                    f"Refusing to wire a hook it cannot locate rather than silently pointing "
-                    f"at some other skill's copy."
-                )
+            # No skill-membership check here since #639. The hook owner used to be
+            # the `workbench` SKILL, which `--skills` could leave out, so wiring had
+            # to refuse a path it could not locate. The owner is now the engine
+            # BUNDLE, installed on every non-dry run regardless of `--skills`
+            # (`install_engine_bundle`), so the condition this guard tested can no
+            # longer be false -- and a guard whose answer is the same in the healthy
+            # and the broken world discriminates nothing. `--baseline-only` is the
+            # one case where no install happens at all, and it is refused above.
             if args.hooks_from == HOOKS_FROM_SOURCE:
                 # Source wiring points at THIS checkout, so the check is about
                 # the checkout, not about what is being installed.

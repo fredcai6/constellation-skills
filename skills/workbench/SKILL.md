@@ -1,6 +1,6 @@
 ---
 name: constellation-workbench
-description: Use when work needs the shared workflow templates, or a pointer to the checklist engine's MCP door -- the engine's verbs and mechanism are taught by the door's own tool descriptions, not by this skill. This package is also the installed home of the checklist engine, the spine rail and the gauge hook, so it is load-bearing even where its teaching is not.
+description: Use when work needs the shared workflow templates, or a pointer to the checklist engine's MCP door -- the engine's verbs and mechanism are taught by the door's own tool descriptions, not by this skill. The engine, the spine rail and the gauge hook now ship as their own non-skill bundle (#639); what remains here is the shared templates and the two references other skills cite.
 ---
 
 # Constellation Workbench
@@ -11,15 +11,12 @@ restates them. What remains: the four shared templates every role's checklist in
 from (`templates/`), and the one pointer below, which stays load-bearing because other skills
 and two independent test suites cite it directly.
 
-**This directory is also the installer's shipping unit for the engine itself.** The installed
-`constellation-workbench` package carries `checklist_engine.py`, `spine_rail.py`,
-`gauge_writer_hook.py`, `gauge_reader.py`, `episode_capture.py`, `context_manifest.py` and
-`agent_work_root.py`, copied from repo-root `scripts/` (`install_constellation.py:229`,
-`HOOK_OWNER_SKILL` at `:848`), and a consuming machine wires five hook entries and one
-permission rule at that path. Do not read the seven inert files here and conclude the
-package is dead: deleting it unwires the Stop hook, the SessionStart hook and the engine
-path on every installed machine. Issue **#639** tracks giving the installer a shipping unit
-that is not a skill, which is what would let this wrapper go.
+The engine itself no longer ships from here. Issue **#639** gave the installer a
+shipping unit that is not a skill — `constellation-engine`, declared by manifest in
+`install_constellation.py`, carrying `checklist_engine.py`, `spine_rail.py`,
+`gauge_writer_hook.py`, `gauge_reader.py`, `episode_capture.py`, `context_manifest.py`
+and `agent_work_root.py`. A consuming machine's hook wiring points there now, and an
+upgrade removes the copies that used to sit under this package.
 
 ## Checklist engine
 
