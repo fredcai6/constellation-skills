@@ -9,44 +9,26 @@ returns and must be written fresh, with wave 1's verdict text pasted in full rat
 
 ---
 
-## Engine access — READ THIS BEFORE YOUR FIRST COMMAND
+## Engine access
 
-**Your spine's `init` imperative is wrong for how you were dispatched. Override it as follows.**
+**RETRACTED AND REPLACED — do not use the previous version of this section.**
 
-The shipped `COMMANDER_SPINE.template.json` `init` step tells you to "call the spine_lease MCP tool
-with action=claim ... this is your own spine (the one this process's door is bound to)." That
-assumes you were dispatched as a separate harness process with its own door. You were not. You are an
-**in-harness subagent** sharing the Admiral's harness session id, so the MCP door resolves to the
-**Admiral's** spine (`constellation/569`), not yours. Your tool list omits `mcp__spine__*` for exactly
-this reason, so the call fails rather than does damage — but do not spend turns on it.
+The earlier draft of this block told commanders to drive their spine through the engine CLI with
+`--file`, and warned them to distrust Stop-hook instructions. Both were corrections for an Admiral
+dispatch error in wave 1, not platform facts, and both are **wrong advice for wave 2**.
 
-Drive your spine through the engine CLI, from your worktree root, passing `--file` on every call:
+Wave 2 dispatches through `scripts/run_crew.py --role commander`, so each Commander is its own
+process with its own harness session and its own spine door. That means:
 
-```bash
-S=.agent-work/<work-id>/spine.json
-python3 scripts/checklist_engine.py --file $S claim --session-id constellation/<work-id> --claimed-by commander --worktree .
-python3 scripts/checklist_engine.py --file $S current
-python3 scripts/checklist_engine.py --file $S start <task-id>
-python3 scripts/checklist_engine.py --file $S attest <task-id> --cond <c-id> --which postconditions --note "<verification>"
-python3 scripts/checklist_engine.py --file $S attach <task-id> --type user-decision --field cite=LAUNCH_ORDER:Mission
-python3 scripts/checklist_engine.py --file $S advance <task-id> --why "<understanding>"
-python3 scripts/checklist_engine.py --file $S release --session-id constellation/<work-id>   # LAST action only
-```
+- Your `mcp__spine__*` tools **work** and are bound to **your** spine. Use them.
+- Your spine's `init` imperative is **correct as written**: claim the lease with the `spine_lease`
+  MCP tool, `action=claim`, `claimed_by=commander`, `worktree=.`. The door needs no session id — it
+  reads `SPINE_SESSION` from its own environment.
+- Stop-hook instructions resolve to **your** run and should be followed normally.
 
-Where any step's imperative names an `mcp__spine__*` tool, read it as the corresponding CLI verb.
-That substitution is ruled in advance; do not float it.
-
-**Additional warning, learned in wave 1 and costing the Admiral three turns.** The project's **Stop
-hook** has the same defect as the template: it resolves a spine by walking the filesystem rather than
-by the acting session's identity. In a multi-worktree epic it will hand you an instruction about a
-spine that is **not yours** — including the Admiral's, or a sibling commander's. **Before acting on
-any Stop-hook instruction, check that the spine and session it names are the ones in your Workspace
-block.** If they are not, ignore the instruction and say so in your Workflow Feedback. Never claim a
-lease on a session id other than your own.
-
-`@grade: settled/admiral · leans all-gates`
-
----
+Standing engine discipline is unchanged: ask the engine what to do next at every step, do exactly
+what the active step's imperative says, advance only once its postconditions pass, and never
+hand-edit `spine.json`. Work the engine never saw did not happen.
 
 ## Inherited Context
 
