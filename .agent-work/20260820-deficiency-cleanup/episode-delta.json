@@ -1,0 +1,430 @@
+{
+  "work_id": "20260820-deficiency-cleanup",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/evidence/LIVED-CLUSTER-EVIDENCE.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Give three architecture candidate lanes a shared evidence base by writing a dossier of what this epic had reproduced on current code."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The dossier records observations accurately, so three independent lanes reason from the same true ground."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Three of its claims were wrong. E1 said no dispatched crew can be engine-railed; run_crew --backend cli assigns the child its own SPINE_FILE and SPINE_SESSION and its crews are fully railed. E3 said a stranded plan cannot be reclaimed from outside; a plain claim with no --force, an unrelated session id and worktree=/anywhere took one cleanly. E2 attributed the hazard to env-var inheritance; the dispatching shell had SPINE_FILE, SPINE_SESSION and SPINE_PARENT all unset, and the in-harness door binds through a session-keyed file instead. A fourth claim, that the lineage edge is empty on both channels, generalised from a single dispatch: 172 of 545 registry entries carry a real parent."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "All three candidate lanes were seeded from the wrong ground, and every one of them produced an authority design partly aimed at a hazard that was not there. Two lanes caught two of the errors unprompted; the experiment caught the third; a fourth lane caught the fourth."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Corrections were appended to the dossier as they were found rather than the file being rewritten, so the record shows what the lanes were actually seeded with."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Each wrong claim was asserted from reasoning about the system rather than from running it. E3 in particular was falsifiable in two commands and was not tested before being written down."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/evidence/CHANNEL-EXPERIMENT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Decide whether the #634/#638/#632/#357/#369/#615 architecture cluster needed a design, by dispatching one wave through the shipped run_crew --backend cli path instead of the in-harness Agent tool."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "If the cluster is an architecture defect, its symptoms reproduce on either dispatch channel."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "None of E1, E2, E3 or E5b reproduced. The crew drove a complete seven-gate plan and its journal verb census for the whole run was 7 record, 1 attest, 1 consolidate, 0 claim, 0 release. require_session permits leaseless operation explicitly. E3 did not merely fail to reproduce, it inverted: no lease was ever taken, so there was nothing to strand."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Most of the authority half of a six-issue cluster was retired by one experiment, after three full architecture designs had already been produced against it. The 58 stranded leases in the checkout come from actors that do claim, which is Admirals and in-harness roles, not from dispatched crews."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The experiment was run as real epic work rather than as a throwaway: the reviewer crew independently reviewed an unreviewed map commit, so the channel measurement and the review both landed."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The Admiral dispatched every wave through the in-harness Agent tool and then measured the resulting friction as though it were a property of the system. The evidence base over-sampled one channel and under-sampled the other, and nothing in the run surfaced that until a lane said so."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/architecture/CRITIC_COMPARISON.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Find what the epic's defect cluster actually amounted to on current code."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The cluster is about ownership and authority, as the six issues describe it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The load-bearing defect was a rendering omission. _is_stale existed, worked, and had four call sites, none of them in any rendering path, so current on a plan whose owner died 22 days ago printed LEASE active plus 'RAIL: A working solution is the MIDDLE of this run -- you are 7 steps from done. Next: the ACTIVE line above. Run it.' All 58 active leases in the checkout were stale. spine_rail.decide_session_start injected the same resume order at SessionStart, unasked, selecting on status == active with no staleness check anywhere in its path."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The system was not failing to warn an honest agent; it was instructing one into the mistake, in the imperative, with an encouraging progress count. Across this repository's history stale leases were reclaimed 0 times by plain claim and 25 times by --force, which is the cost of the lie expressed as behaviour."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The fix shipped as display and message changes with no new subsystem: current left RAIL_VERBS, archived plans gained a banner and lost the rail, the lease line renders HELD plus an age, and _scan_active_spine became staleness-gated."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/architecture/CRITIC_COMPARISON.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Get three genuinely independent architecture candidates by seeding each lane with a different root-cause hypothesis."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Lanes seeded differently diverge, and at least one defends its assigned premise."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "All three rejected or substantially qualified their own seeds, independently and without contact, and converged on identity and naming as the underlying defect. A cold critic then found the convergence real in diagnosis and a shared blind spot in remedy: all three jumped from 'the child plan has no name' to 'build a naming subsystem' without asking what mistake the missing name causes, or whether a carrier already existed. One did -- the session string already encodes work-id, gate, role and attempt, and crew-runs.json already records role, parent, worktree and pid."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Three expensive designs were produced for a problem framing that the human later corrected. Two of the three ranked below status quo on the final ballot."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The critic was asked directly what all five ballot entries had in common that none of them questioned, which is what surfaced the shared blind spot rather than another comparison."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The critic attributed the jump to the frame: forgery needs unforgeable identity, which is a registry, while honest error needs legible identity, which is a display. The Admiral supplied an adversarial frame in the dossier and all three lanes inherited it."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Rank five architecture options for a human decision."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The ranking follows from the evidence the lanes gathered."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The human rejected the threat model the whole exercise had been built on, ruling that there are no bad actors, that the only adversary is an honest agent about to make a mistake, that ease of use is the success criterion, and that added machinery is a cost. Under the corrected criterion the ballot inverted: minimal intervention placed first and status quo placed third, ahead of two of the three full architecture designs."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Three candidate lanes' central move -- grants, capability splits, supervise surfaces -- was answering a question the system did not pose. The correction arrived only because the human read the framing and challenged it."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "A fifth ballot entry was constructed after the ruling, built only from messages, defaults and displays, and the critic scored it alongside the rest rather than treating it as the do-nothing option."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/architecture/C-VIABILITY.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Decide whether option C, demoting the lease from a claim to a presence marker, was viable."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The lease's record arms the Stop hook's anti-abandonment guard, so demoting it while keeping the record preserves the guard."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The guard is armed by the binding store, not by the lease record, and the binding store is written only by the observed act of claim or release. decide_stop returns {} when the binding view is empty and never scans spines. C preserves the record and removes the act, so the guard would have stayed exactly as inert as it already is. C was not broken, it was dominated: changing which verbs arm the binding is one predicate in one hook, touching zero refusal paths and zero spines on disk."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "A design was almost adopted on a mechanism nobody had traced. The claim that the record arms the guard came from a subagent lane, was relayed to the human by the Admiral as the basis for keeping the lease, and was wrong in its mechanism though right in its conclusion."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The investigation was scoped to four questions with the deciding one named first, and it was told that an honest 'not viable, here is the single reason' was the most valuable outcome available."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Commit the human's in-progress documentation work alongside the epic's own records."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "git add on the three known paths followed by git commit records those three paths."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "git commit with no pathspec commits the whole index. The human had a much larger restructure staged, so the commit swept in 275 files and 16,426 insertions under a message describing eight. The message said docs(charter) and the commit contained root pointer files, the removability ledger, three test files and the entire epic work area."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One malformed commit on main. Nothing was lost and nothing was pushed; the working tree was untouched and the reflog held everything."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Recovery was git reset --mixed to the pre-commit head, then three separate commits each limited by an explicit pathspec. The error was surfaced to the human before anything was re-committed, rather than being quietly amended over."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "An unqualified git commit was run in a working tree the human was actively staging into. The index was shared state and the commit read all of it."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Have an independent reviewer verify the follow-up commits on the A+B branch."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The reviewer runs its checks and returns a verdict."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It backgrounded its full-suite run, then ended its turn waiting for a Monitor completion notification that does not route back to a subagent. The lane stalled holding an unfinished verdict after 35 tool calls of completed review work."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "From outside, an agent waiting on a notification it cannot receive is indistinguishable from an agent thinking. It was caught only because the Admiral was watching that lane, which does not scale."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "The lane was resumed with an instruction to run the suite in the foreground with an explicit long timeout and block on it directly, and to report a blocker rather than wait on one. It then completed, including a mutation test proving the regression under review would fail if enforcement moved into argparse."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The Stop hook's guidance covers the reverse case, that an agent must not end its turn waiting on a foreign gate, but nothing tells a crew not to wait on its own backgrounded command."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/lane-evidence"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Sweep the epic's seven worktrees as routine cleanup after merge."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Removing a merged worktree discards a working copy whose commits are already preserved on a branch."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Crew evidence for two lanes existed only as untracked files inside those /tmp worktrees -- handoffs, both reviewer results, engine surveys, journals and Fowler passes, including the entire record for the batch the human was being asked to merge. git worktree remove would have deleted all of it silently and unrecoverably."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The audit trail for the change under decision would have been destroyed by the tidy-up step that followed the decision."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "1.6M of lane evidence was copied into the epic work area and committed before any worktree was removed. A stale bytecode cache came with that copy and was caught immediately afterward by the repository's own provenance guard, which named the foreign source path rather than letting an inherited cache surface later as an unrelated error."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "20260820-deficiency-cleanup",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": "none -- admiral run, no context manifest artifact",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/20260820-deficiency-cleanup/lane-evidence/20260821-ab"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run bounded implementation lanes under a fenced scope, with the Admiral adjudicating anything outside it."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A fenced lane completes its listed items and stops."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The A+B lane exceeded its brief three times in the right direction. It declined an Admiral instruction to share a helper between two renderers, citing a stdlib-only-by-design law documented in three places in the target file, and substituted a regression that runs one fixture through both renderers and fails if either drifts. It disclosed that its own new tests had re-staled the map rather than regenerating it, on a change it could easily have justified making silently. And it ran a doctrine-pinning test unprompted after editing the file that test guards."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Two of the three would have been accepted without notice had they gone the other way. The pushback produced a better mechanism than the one instructed: sharing a helper avoids drift, while the regression detects it."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Each was adjudicated and logged as it arrived, and the instruction that was locally wrong was recorded as such rather than defended."
+        }
+      }
+    }
+  ]
+}

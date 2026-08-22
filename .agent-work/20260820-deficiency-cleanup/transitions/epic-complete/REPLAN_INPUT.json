@@ -1,0 +1,146 @@
+{
+ "schema_version": 1,
+ "current_plan": {
+  "schema_version": 1,
+  "epic": {
+   "title": "Deficiency cleanup after epic #567",
+   "spec_path": "CONSTELLATION_DEFECTS.md",
+   "intent_and_why": "Reconcile observed defects with current code and complete bounded repairs before choosing the remaining one-spine architecture."
+  },
+  "definition_of_done": [
+   "Wave 1 bounded repairs are implemented and independently reviewed.",
+   "Wave 2 residual implementation and architecture evidence are ready at the human checkpoint.",
+   "Every observed defect and related open issue has an explicit disposition."
+  ],
+  "good_enough": {
+   "mandatory_quality": "Regression evidence at the public seam and independent review for every implementation lane.",
+   "sufficient_evidence": "Targeted tests plus the repository verification commands named by each Commander.",
+   "appetite": "Two bounded AFK waves ending before architecture selection or external publication."
+  },
+  "hard_constraints": [
+   "Do not mutate GitHub, push, open pull requests, merge to main, or choose an architecture before the checkpoint.",
+   "Preserve unrelated user changes in the main checkout.",
+   "Run #636 before #613 because both edit scripts/run_crew.py."
+  ],
+  "fixed_decisions": [
+   "Route #639 into epic #572 and retain #575 as its Windows proof obligation.",
+   "Wave 1 contains #500, #636, and only the mechanical closeout half of #638.",
+   "Wave 2 may implement residual #613 and produce architecture evidence, but may not implement the architecture choice."
+  ],
+  "current_wave": {
+   "objective": "Close the epic: everything merged to main, every issue dispositioned, closeout recorded.",
+   "exit_criteria": [
+    "All implementation lanes merged to main and the ordinary suite green there.",
+    "Both current-map surfaces honest.",
+    "Every defect-ledger item and related issue dispositioned.",
+    "Closeout recorded."
+   ],
+   "issues": [
+    {
+     "id": "batch-A-B",
+     "title": "Stop the engine instructing an agent to resume a dead plan, and remove two pieces of friction",
+     "desired_outcome": "The read and rail surfaces stop asserting liveness they cannot back; a cross-session waive is one call; --parent is required and documented.",
+     "useful_now": "It closes the defect the epic actually found, which no architecture candidate addressed.",
+     "appetite": "One bounded Implementer lane plus independent review, on the post-map integration base.",
+     "acceptance_or_falsification_evidence": "A dead plan renders HELD plus an age with no rail; SessionStart injects no resume order for a stale spine; the waiver is still journaled; the recovery verbs still work with no --parent; the ordinary suite is green.",
+     "implementation_latitude": "Choose the smallest change at each site; display only, no new subsystem.",
+     "hard_constraints_no_gos": [
+      "Do not demote the lease (option C, retired as dominated).",
+      "Do not add a refusal on today's liveness signal.",
+      "Render age, never a verdict."
+     ],
+     "local_unknowns": [],
+     "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/hooks/spine_rail.py",
+      "scripts/run_crew.py",
+      "skills/commander/references/crew-dispatch.md"
+     ],
+     "type": "AFK",
+     "blocks": []
+    }
+   ]
+  },
+  "wave_forecast": [],
+  "uncertainty_register": [
+   {
+    "unknown": "Whether one-spine elimination or explicit parent capability produces the smallest coherent architecture.",
+    "affects": "The disposition of #634, #638, #632, #357, #369, and #615.",
+    "settle_by": "Human convergence at the end-of-Wave-2 checkpoint.",
+    "current_evidence": "The issue graph shows both duplicated state and missing authority as plausible roots.",
+    "next_probe": "Produce two independent candidates and a cold critique against current code and map truth."
+   }
+  ],
+  "parked_possibilities": [
+   "Implement #639 inside epic #572 after #575 supplies Windows proof.",
+   "Mutate GitHub issue scope and status after the human checkpoint.",
+   "Apply reusable doctrine lessons discovered during this epic."
+  ]
+ },
+ "completed_outcomes": [
+  {
+   "issue_id": "batch-A-B",
+   "outcome": "The engine no longer renders a dead plan as active or instructs an agent to resume it; a cross-session waive is one call; --parent is required and documented.",
+   "evidence": "Seven commits reviewed twice, the delta review mutation-testing the --parent regression; merged in 373f08c3; ordinary suite on main 3472 passed, 6 skipped, 1224 subtests."
+  }
+ ],
+ "wave_evidence": [
+  {
+   "claim": "Every implementation lane is merged to main and the repository is green there.",
+   "expected": "The ordinary suite passes on main after the merge.",
+   "observed": "3472 passed, 6 skipped, 1224 subtests, zero failures at 5858a85c. One earlier failure was a foreign bytecode cache introduced by the Admiral's own evidence copy and caught by #597's guard.",
+   "source": ".agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md"
+  },
+  {
+   "claim": "The architecture cluster's authority half is an artifact of the dispatch channel.",
+   "expected": "If it is real, its symptoms reproduce on the shipped run_crew --backend cli path.",
+   "observed": "A crew drove a seven-gate plan with 0 claims and 0 releases; E1, E2, E3 and E5b all failed to reproduce. require_session permits leaseless operation explicitly.",
+   "source": ".agent-work/20260820-deficiency-cleanup/evidence/CHANNEL-EXPERIMENT.md"
+  },
+  {
+   "claim": "The display defect is real and general.",
+   "expected": "Some stale leases render as active.",
+   "observed": "58 of 58 active leases in the checkout are stale; a 22-day-dead plan rendered 'LEASE active' plus 'Run it.'; historical reclaims are 0 by plain claim against 25 by --force.",
+   "source": ".agent-work/20260820-deficiency-cleanup/evidence/LIVED-CLUSTER-EVIDENCE.md"
+  }
+ ],
+ "discrepancies": [
+  {
+   "id": "D-ARCH-RETIRED",
+   "signal": "The chartered architecture question was retired by measurement rather than answered.",
+   "classification": "evidence_only",
+   "affects": "The epic's stated deliverable, which the latitude contract allowed to be an honest negative.",
+   "evidence": "Two of three full architecture designs ranked below status quo under the human's criterion; the top two ballot entries were minimal intervention and status quo; the channel experiment retired the authority half.",
+   "reason": "The evidence retired the premise rather than answering the question, which the latitude contract named an acceptable outcome."
+  },
+  {
+   "id": "D-ADMIRAL-ERRORS",
+   "signal": "Six Admiral claims were wrong and were caught downstream rather than by the Admiral.",
+   "classification": "evidence_only",
+   "affects": "Confidence in Admiral-authored evidence; the dossier seeded all three candidate lanes.",
+   "evidence": "E1 overstated, E3 false and untested, E2's mechanism wrong, the lineage edge generalized from n=1, an A3 scoping miss that left the Stop hook still lying, and an unqualified git commit that swept 275 files.",
+   "reason": "Every error was caught by an independent lane, the critic, or the human \u2014 never by the Admiral that made it."
+  },
+  {
+   "id": "D-R9R10",
+   "signal": "spine_bind R9 and R10 are inert on leaseless spines, which the shipped dispatch path makes the normal state.",
+   "classification": "evidence_only",
+   "affects": "Collision protection where two doors could bind one derived identity.",
+   "evidence": "Both gated on _active_lease being non-None; the channel experiment measured 0 claims over a full run. Recorded as episode 20260820-deficiency-cleanup-001 per human ruling.",
+   "reason": "The guard is absent exactly where a collision is most likely, but adding one on today's liveness signal would misfire across a 718-plan population."
+  }
+ ],
+ "open_current_wave_issue_ids": [],
+ "unlaunched_items": [],
+ "repo_state": {
+  "anchors": [
+   "scripts/checklist_engine.py",
+   "scripts/hooks/spine_rail.py",
+   "scripts/run_crew.py",
+   "skills/commander/references/crew-dispatch.md",
+   "map/INDEX.md",
+   ".agent-work/20260820-deficiency-cleanup/ADMIRAL_LOG.md"
+  ],
+  "map_status": "Root map/ is current and independently reviewed; MapTreeFreshnessTests passes on main. docs/architecture carries an accepted evidenced honest null: no packets, overlays or index.md have ever existed here, and build_architecture_map.py --check reports valid inputs on the empty set."
+ }
+}

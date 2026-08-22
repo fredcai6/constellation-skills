@@ -1,5 +1,5 @@
 {
-  "boundary_id": "wave1-complete-map-repair",
-  "launch_id": "wave-2",
-  "trigger": "material_exception"
+  "boundary_id": "epic-complete",
+  "launch_id": null,
+  "trigger": "wave_boundary"
 }

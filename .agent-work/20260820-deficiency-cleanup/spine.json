@@ -137,13 +137,15 @@
           "id": "c1",
           "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every epic issue dispositioned. Merged and closed: #500, #613, #636. Merged, left open with a status comment naming what shipped and what remains: #638 (handshake symptom fixed by B1, archive-move half open). Commented with corrected premises: #457 (both named halves now addressed), #615 (confirmed live, sharpened into two questions), #357 (unreclaimable half measured false, recommend closing in favour of #615), #369 (attribution mostly already fixed), #632 (mis-scoped; one channel done, in-harness channel open). Three further defects recorded as episodes 20260820-deficiency-cleanup-001/002/003 rather than filed, per human ruling."
         },
         {
           "id": "c2",
           "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, transition exits, and errors logged",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "ADMIRAL_LOG is current through the final wave. It records every ruling, wave launch, review verdict, merge, transition exit, and incident \u2014 including the six Admiral errors this run produced and who caught each: E1 overstated (Lane C, from source), E3 false and asserted untested (Lane A, then measured), E2's mechanism wrong (the channel experiment), the lineage edge generalized from n=1 (Lane D), the A3 scoping miss that left the Stop hook still rendering LEASE active (the Implementer), and an unqualified git commit that swept 275 files (caught on inspection, recovered by reset). Two stale-cwd path errors of the same class are also recorded, as is the crew behaviour worth keeping: a lane that disclosed rather than widened scope twice and pushed back correctly once on an Admiral instruction that was locally wrong."
         },
         {
           "id": "c3",
@@ -152,7 +154,8 @@
             "kind": "command",
             "command": "python /home/tommy/projects/constellation-skills/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id 20260820-deficiency-cleanup"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "constraints": [],
@@ -186,7 +189,7 @@
         }
       },
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -196,6 +199,17 @@
           "type": "command-output",
           "payload": {
             "cmd": "python /home/tommy/projects/constellation-skills/scripts/verify_state_note.py 20260820-deficiency-cleanup",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/projects/constellation-skills/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id 20260820-deficiency-cleanup",
             "exit": 0,
             "shell": "posix"
           },
@@ -214,7 +228,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute closed with all three postconditions met: every issue dispositioned, ADMIRAL_LOG current through the final wave, and the epic-complete transition packet verified by admiral-prelaunch with decision=stop."
         }
       ],
       "postconditions": [
@@ -222,7 +237,8 @@
           "id": "c1",
           "statement": "the epic's observations recorded as episodes \u2014 what was observed, with no rule written for a future agent to follow",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Thirteen episodes written through apply_episode_delta.py with --store-root episodes. 001-003 record three defects found and deliberately not filed, per human ruling. 004-013 are the epic retrospective, one per distinct thing that happened rather than one per wave: the dossier whose three wrong claims seeded every candidate lane; the channel experiment that retired the authority half; the rendering-path omission that was the epic's real defect; three lanes rejecting their own seeds and converging on a shared blind spot; the human's threat-model correction inverting the ballot; option C found dominated on a mechanism nobody had traced; the unqualified git commit that swept 275 files; a reviewer stalling on a notification that cannot reach it; crew evidence that a routine worktree sweep would have destroyed; and a fenced lane exceeding its brief three times in the right direction. Each records observation only, with no rule written for a future agent to follow."
         },
         {
           "id": "c2",
@@ -237,13 +253,15 @@
           "id": "c3",
           "statement": "architecture reconciled for the epic's net change",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Architecture reconciled by an independent Cartographer against the epic's net change 24b4665b..5858a85c. Verdict: NO structural change. Every lane \u2014 registry transactions in run_crew, the spine_close rewiring onto the existing finish_work, refresh-request lease-stamp consumption, heartbeat de-duplication, and batch A/B's display and advisory-text changes \u2014 lands inside already-mapped modules calling already-mapped or same-module functions. No new module, no new dependency edge, no ownership transfer, no reversed direction. spine_close's tool contract did materially change, but that is a contract shift on an already-documented dependency rather than new structure, and the source's own docstrings already describe it accurately. Admiral independently re-verified: MapTreeFreshnessTests passes on main, docs/architecture contains only generated/, and build_architecture_map.py --check reports valid inputs on the empty set \u2014 the evidenced honest null still holds and no packet map was authored. One local-only artifact noted and not actioned: an untracked, gitignored per-module packet in the Cartographer's working tree still describes the old spine_close shape; per-module packets are neither tracked nor policed, so it is not a repo-state defect."
         },
         {
           "id": "c4",
           "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Repo hygiene complete. Branches: all six afk/* branches merged into main via 373f08c3 and deleted; zero afk/* or tmp/* branches remain. Two throwaway merge-check branches were created and deleted after use. Older feat/567-* and fix/610-* branches predate this epic and were deliberately left alone. Worktrees: all seven epic worktrees removed; one remains, the main checkout. This epic's /tmp scratch litter cleared. Crew evidence that existed only inside those worktrees was copied to .agent-work/20260820-deficiency-cleanup/lane-evidence/ and committed BEFORE any sweep. ADMIRAL_LOG archived at .agent-work/archive/2026-08-21-20260820-deficiency-cleanup/. main is at 5858a85c, pushed, working tree clean, ordinary suite green at 3472 passed, 6 skipped, 1224 subtests. Skills reinstalled from source and verified to carry this epic's changes; the installer's machine-specific .mcp.json interpreter rewrite was reverted rather than committed."
         },
         {
           "id": "c5",
@@ -280,7 +298,7 @@
     "session_id": "constellation/20260820-deficiency-cleanup",
     "status": "active",
     "claimed_at": "2026-08-21T12:35:05.405354+00:00",
-    "last_heartbeat": "2026-08-21T14:57:12.223919+00:00",
+    "last_heartbeat": "2026-08-22T00:26:33.862672+00:00",
     "claimed_by": "admiral",
     "worktree": "/home/tommy/projects/constellation-skills",
     "previous_session_id": "admiral-20260820-deficiency-cleanup-root",
@@ -300,6 +318,13 @@
       "why": "Signed Interrogator record and confirmed latitude contract freeze the approved AFK-wave boundary.",
       "mechanical": false,
       "ts": "2026-08-20T16:10:32.641769+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "execute",
+      "why": "The epic is complete and its chartered question is answered by retirement rather than by choice. Five implementation lanes plus the A+B display batch are merged to main at 373f08c3 with the ordinary suite green at 3472/6/1224; three of those lanes were blocked by independent review and repaired before approval. The architecture cluster was not designed: a channel experiment through run_crew --backend cli reproduced none of E1, E2, E3 or E5b, showing the authority half was an artifact of the Admiral's own dispatch channel, and the final ballot put minimal intervention and status quo above two of the three full designs. What the epic actually found is smaller and worse than what it was chartered to find \u2014 _is_stale existed, worked, and was called in four places, none of them a rendering path, so the engine printed LEASE active and 'you are 7 steps from done ... Run it.' over plans dead for weeks, and 58 of 58 active leases in this checkout were stale. That is fixed at both renderers and at SessionStart. Option C was investigated and found dominated rather than broken: the Stop guard is armed by the binding store written by the act of claim, not by the lease record, so demoting the lease would not deliver its own benefit. Every ledger item and related issue is dispositioned, three further defects are recorded as episodes rather than filed, and the residual is a human scoping decision on #615's two questions, not further execution under this contract.",
+      "mechanical": false,
+      "ts": "2026-08-22T00:21:03.556701+00:00"
     }
   ]
 }
