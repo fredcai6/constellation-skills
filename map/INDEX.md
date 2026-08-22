@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 60 modules, 1289 entities
 skills: 1 modules, 22 entities
-tests: 100 modules, 5477 entities
+tests: 100 modules, 5482 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -116,7 +116,7 @@ tests: 100 modules, 5477 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (100 modules, 5477 entities)
+## tests (100 modules, 5482 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -204,7 +204,7 @@ tests: 100 modules, 5477 entities
 - [tests.test_spine_lifecycle](tests.test_spine_lifecycle/INDEX.md) (214 entities, 190 holes): Tests for scripts/spine_lifecycle.py -- open and close Constellation work in one call each.
 - [tests.test_spine_origin_isolation](tests.test_spine_origin_isolation/INDEX.md) (32 entities, 17 holes): The `origin` stamp is PROVENANCE: written, and read by nothing (#315/#568/#609).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
-- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (234 entities, 104 holes): Unit tests for scripts/hooks/spine_rail.py.
+- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (239 entities, 104 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_spine_session_id](tests.test_spine_session_id/INDEX.md) (7 entities, 3 holes): `spine_lifecycle.session_id_for` -- the ONE definition of the lease identity a spine for a `work_id` is driven under (epic #567 lane A, gate g2-implement).
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
 - [tests.test_subtest_failures_are_greppable](tests.test_subtest_failures_are_greppable/INDEX.md) (8 entities, 3 holes): A failing subtest must be findable by searching for `FAILED`.
