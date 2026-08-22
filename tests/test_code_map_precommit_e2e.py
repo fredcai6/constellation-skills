@@ -110,36 +110,42 @@ def _resolve_hooks_dir(worktree: Path) -> Path:
 
 
 def _gates_1_2_changed_paths():
-    """The `scripts/` paths gates 1-2 changed in THIS actual repo's own
-    working tree (modified + untracked), read via `git status --porcelain`.
-    Gates 1-2 landed as uncommitted working-tree changes on top of the pinned
-    SHA (per the handoff), so a scratch worktree `git worktree add`ed off
-    that SHA gets none of them from history. Read-only against ROOT."""
+    """The `scripts/` paths gates 1-2 changed in THIS actual repo, relative
+    to the pinned baseline SHA this fixture worktrees off of -- read via
+    `git diff --name-only <pinned SHA> HEAD`, i.e. committed content only.
+    Gates 1-2 landed as a commit on top of the pinned SHA, so a scratch
+    worktree `git worktree add`ed off that SHA gets none of them from
+    history. Read-only against ROOT."""
     out = _git(
-        ["status", "--porcelain", "--",
+        ["diff", "--name-only", PINNED_SHA_PREFIX, "HEAD", "--",
          "scripts/code_map", "scripts/hooks", "scripts/install_constellation.py"],
         ROOT,
     ).stdout
-    return [line[3:].strip() for line in out.splitlines() if line[3:].strip()]
+    return [line.strip() for line in out.splitlines() if line.strip()]
 
 
 def _snapshot_gates_1_2_onto(worktree):
-    """Copy gates 1-2's current (uncommitted) shipped code from THIS actual
-    repo onto `worktree` and commit it as a baseline, so a scratch checkout
-    can actually install and run the mechanism gates 1-2 already shipped.
-    Read-only against ROOT; never any path outside `scripts/code_map`,
-    `scripts/hooks`, `scripts/install_constellation.py`. Case 1 (the RED
-    proof) deliberately never calls this -- it proves the pre-existing
-    backstop's behavior BEFORE gates 1-2 exist at all."""
+    """Copy gates 1-2's shipped code, as committed at THIS actual repo's
+    `HEAD`, onto `worktree` and commit it as a baseline, so a scratch
+    checkout can actually install and run the mechanism gates 1-2 already
+    shipped. Reads each file's content via `git show HEAD:<path>` (never the
+    working tree) so the snapshot is explicitly of committed content and
+    survives THIS lane's own commit. Read-only against ROOT; never any path
+    outside `scripts/code_map`, `scripts/hooks`,
+    `scripts/install_constellation.py`. Case 1 (the RED proof) deliberately
+    never calls this -- it proves the pre-existing backstop's behavior
+    BEFORE gates 1-2 exist at all."""
     changed = _gates_1_2_changed_paths()
     for rel in changed:
-        src = ROOT / rel
         dest = worktree / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_bytes(src.read_bytes())
+        content = _git(["show", "HEAD:{rel}".format(rel=rel)], ROOT).stdout
+        dest.write_text(content, encoding="utf-8", newline="\n")
     _git(["add", "-A", "--",
           "scripts/code_map", "scripts/hooks", "scripts/install_constellation.py"], worktree)
-    _git(["commit", "-q", "-m", "baseline: snapshot gates 1-2 shipped code for e2e proof"], worktree)
+    staged = _git(["diff", "--cached", "--quiet"], worktree, check=False)
+    if staged.returncode != 0:
+        _git(["commit", "-q", "-m", "baseline: snapshot gates 1-2 shipped code for e2e proof"], worktree)
     return changed
 
 
