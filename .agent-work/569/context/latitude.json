@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "latitude",
+  "files": [],
+  "repo_rev": {
+    "commit": "9c8f49e0d521fba1c5a616f9ead2d591c7a100d3"
+  },
+  "run": {
+    "work_id": "569",
+    "generated_at": "2026-08-22T12:26:25Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills",
+      "repo": "/home/tommy/projects/constellation-skills",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills"
+    }
+  }
+}

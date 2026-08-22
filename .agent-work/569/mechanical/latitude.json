@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "latitude",
+  "mechanical": {
+    "run": "569",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "refusals": 2,
+    "spine-step": "latitude",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-569-latitude@5f1b5cda25660712bcb06096a047f2da106d2732",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "569",
+    "generated_at": "2026-08-22T12:26:25Z"
+  }
+}

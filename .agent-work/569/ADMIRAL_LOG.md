@@ -1,0 +1,54 @@
+# Admiral Log — `569`
+
+> Write per `constellation-how-to-talk` — clear, concise, grounded, one name per thing (`docs/agents/GLOSSARY.md`).
+
+Contract: `.agent-work/569/LATITUDE_CONTRACT.md` · Plan: `<wave plan — issues per wave, checkpoints>`
+
+The run's audit trail, and the raw material the closeout episodes are written from. Append
+entries **as they happen** — an unlogged ruling didn't happen. Own errors in the open: an
+ADMIRAL ERROR entry that names the mistake and the fix is a closeout asset, not a liability.
+
+Entry grammar (one line of date + tag, then the substance):
+
+- `RULING` — an adjudication inside delegated latitude: what was decided, under which decision class, and why.
+- `WAVE` — a wave launched: commanders, issues, worktrees, key launch-order terms (pre-rulings, fences, budgets).
+- `INCIDENT` — a commander/crew death, stall, collision, or environmental kill: what died, autopsy, recovery action.
+- `MERGE` — a PR merged: checks gated on exit code, diff verified in-fence, merge style and why.
+- `ADMIRAL ERROR` — a mistake you own: what happened, cost, immediate fix, and what an episode would record about it.
+- `CHECKPOINT` — a contract checkpoint reached: what was presented, what the human decided.
+- `ESCALATION` — a surfaced or out-of-taxonomy decision sent to the human, and the answer.
+
+## Rulings & events
+
+- `2026-08-22` — `RULING`: Pre-latitude scoping measurement run before wave planning. Measured, not taken from the epic body: (a) shipped spine templates carry 105 conditions, 65 of them qualitative `check: null` (61.9%) — the epic's corpus-wide 99.7%-on-self-assertion number reproduces in the templates themselves; (b) `generate_spine.py` requires `because` per qualitative condition and does NOT discard it — it appends it into the statement string at line 521, so the basis survives as prose and dies as structure; (c) `generate_spine.py` has ZERO callers in `skills/` (referenced only from `docs/CHECKLIST_SCHEMA.md`), so work package 1's "half the fix already exists" rests on a script that is itself built-not-wired; (d) of 26 verifier/check scripts in `scripts/`, 13 have no reference anywhere in `skills/` and only 7 appear inside a machine-checked `command` condition — #345's pattern is worse than the six instances it filed; (e) #371 confirmed by reading: `checklist_engine.py:3439` compares match fields with `==`, so a list-valued `match` is silently unsatisfiable, and #562 has already hardened `validate_spine` against a MISSING match but not a mistyped one.
+
+- `2026-08-22` — `CHECKPOINT`: Latitude settled with Tommy across two rounds. Rulings: (1) delivery-first inversion — wave 1 is the built-not-wired guarantee (#345/#444/#368) plus #371, NOT work package 1, because the epic as filed runs its own delivery audit last and WP1 rests on `generate_spine.py`, which has zero callers; (2) WP5 reviewer machinery stays in 569 as wave 4 despite sharing no mechanism with attestation; (3) new refusing checks ship report-only and promote on measured evidence; (4) delegated: merge-to-main, scope change, fix-now triage, issue CLOSING, doctrine-apply — surfaced: architecture, production defaults, issue FILING, and any report-only-to-blocking promotion; (5) template and `skills/_shared/global-*.md` edits pre-cleared so the harness classifier cannot veto a commander's core loop mid-wave; (6) cleared autonomous through wave 2, stop-and-present before wave 3; (7) sonnet for every commander and crew slot, all four waves.
+
+- `2026-08-22` — `RULING`: #558 pulled from wave 1 and from commander dispatch entirely. "Establish high-level vs low-level review doctrine" is a design question, and handing it to a commander of any tier yields doctrine written by whoever drew the card. Human agreed and directed that it be discussed before wave 3; it is now an explicit agenda item on the wave-2 checkpoint.
+
+- `2026-08-22` — `RULING`: Sonnet tiering accepted, and framed as an experiment rather than a saving. 569's thesis is that declaring at plan time what would count takes work off the agent's plate; if a well-specified launch order cannot let a smaller model do this work, the checklist is not taking enough off the plate. Compensating investment is launch-order specificity, not tier. Recorded fallback `decision:double-block-escalation`: a commander blocked twice on the same obstacle is re-dispatched at opus, logged, and treated as evidence that the launch order was underspecified.
+
+- `2026-08-22` — `RULING`: Scope corrections from measurement, against the epic body. (a) `APPROVE-WITH-FOLLOWUPS` no longer exists anywhere in the corpus, so #371 is now purely the mechanism fix and not the vocabulary reconciliation it was filed as. (b) The epic's "three-way verdict-vocabulary inconsistency across four documents" does not survive measurement: the census is APPROVE 34, BLOCK 24, REJECT 4, COMMENT 3 — the strays are REJECT and COMMENT. (c) #371's surface is two identical `==` sites, `checklist_engine.py:1090` and `:3439`. Wave 1 is smaller than filed on all three counts.
+
+- `2026-08-22` — `RULING`: `decision:report-only-is-staging-not-posture`. Human commit `244665ee` landed AFTER the report-only answer and rules against the reflex: "reciting sensitivity 0/4 without its adjudication is what sends the next reader reaching for --report-only", with `plan.c6` ratified blocking on weak numbers. Reconciled rather than silently followed: report-only is a staging state for an unmeasured signal, not a verdict that weak numbers mean a weak check. Teeth attached — every report-only check must name its promotion trigger in the PR that ships it, or the epic is committing its own defect. Graded a guess; settles at the wave-2 checkpoint.
+
+- `2026-08-22` — `RULING`: Wave 1 inherits two consequences of commit `244665ee`. `map_check_note` is a new template-only task field, so #368's eleven-field census is stale by one and must be re-measured rather than copied from the issue. `waive()`'s hardcoded `produced_by: "human"` and the never-compared `override_policy.authority` were deliberately left open and filed onto #557 — wave 2 scope, already human-ruled as fix-not-paper-over.
+
+- `2026-08-22` — `RULING`: `decision:cli-not-mcp-door-for-in-harness-commanders`. The shipped `COMMANDER_SPINE.template.json` `init` imperative instructs the commander to claim its lease via the `spine_lease` MCP tool, saying "this is your own spine (the one this process's door is bound to)". That is FALSE for an in-harness Agent-tool dispatch: the subagent shares the Admiral's harness session id, so the door resolves to the Admiral's own spine (`constellation/569`). Following the shipped instruction would have had a commander claim or drive the epic's spine. The `constellation-crew` agent type omits every `mcp__spine__*` tool for exactly this reason, so the call fails rather than corrupts — but the imperative still misdirects. Both launch orders now carry an "Engine access" section that overrides it with the CLI form (`python3 scripts/checklist_engine.py --file <spine> <verb>`), verified working against both commander spines before dispatch. This is a real corpus defect and a closeout episode: a shipped imperative that is correct for one dispatch mode and wrong for another, with nothing marking which mode it assumes.
+
+- `2026-08-22` — `WAVE`: Wave 1 launched, two commanders, both sonnet, both `constellation-crew` in isolated worktrees.
+  - `w1-wiring` — issues #345/#444/#368. Worktree `/home/tommy/projects/569-w1-wiring`, branch `epic-569/w1-wiring`, base `244665ee`, spine `.agent-work/w1-wiring/spine.json`, notes file `notes-w1a.md`. Mission: census all 26 check-shaped scripts live/unwired/dead, settle `generate_spine.py`'s disposition (wave 2 is blocked on it), then lint or delete. Honest null explicitly a win.
+  - `w1-verdict` — issue #371. Worktree `/home/tommy/projects/569-w1-verdict`, branch `epic-569/w1-verdict`, base `244665ee`, spine `.agent-work/w1-verdict/spine.json`, notes file `notes-w1b.md`. Mission: list-valued `match` support at `checklist_engine.py:1090` and `:3439`, plus a `validate_spine` refusal for a mistyped match shape.
+  - Fences: `w1-wiring` may not edit `checklist_engine.py` or `validate_spine.py`; `w1-verdict` may not create or wire a new check-shaped script. Separate worktrees, so the fence is about not invalidating each other's evidence rather than about git.
+  - Worktree isolation gated before dispatch: `verify_worktree_isolation.py ../569-w1-wiring ../569-w1-verdict` -> "worktree isolation verified: 2 distinct worktrees".
+  - Both orders carry the sonnet-as-experiment framing and require the commander to name, in its Workflow Feedback, any decision the order should have made for it. That feedback is the wave's measurement of the epic's own thesis.
+
+## Merges
+
+- `<date>` — `<PR, verification, main commit>`
+
+## Closeout
+
+- `<episodes captured, reconcile status, harvest + hygiene sweep, summary acceptance>`
+
+- TRANSITION | boundary=w1-launch | decision=replan | verified

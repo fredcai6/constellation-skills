@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 569: attestation that can fail \u2014 evidence, review, instruments",
+      "spec_path": ".agent-work/569/LATITUDE_CONTRACT.md",
+      "intent_and_why": "Make a green qualitative gate mean something by telling the agent what would count at plan time, not by telling it at attest time that it got it wrong. 65 of 105 conditions in the shipped spine templates are check:null, so the agent must invent the standard itself at the most expensive moment in the run."
+    },
+    "definition_of_done": [
+      "A qualitative condition declares, at plan time, what evidence would satisfy it.",
+      "A wedged verdict is impossible to express silently.",
+      "The journal distinguishes a repaired fail from a gate that never failed.",
+      "Every check this epic ships is reachable from a template command check, or allowlisted with a stated reason."
+    ],
+    "good_enough": {
+      "mandatory_quality": "This epic must not add machinery that is itself unwired.",
+      "sufficient_evidence": "Measured census plus red-proof pinned to the shipped revision; a report-only check must name its promotion trigger.",
+      "appetite": "Four waves; cleared autonomous through wave 2, stop-and-present before wave 3."
+    },
+    "hard_constraints": [
+      "No new unwired checker.",
+      "Report-only is a staging state for an unmeasured signal, never a substitute for adjudication.",
+      "Sonnet for every commander and crew slot; escalate to opus only on a double block.",
+      "Fix or write an episode; filing an issue is the disfavoured exit."
+    ],
+    "fixed_decisions": [
+      "Delivery-first inversion: the built-not-wired guarantee runs first, not last.",
+      "WP5 reviewer machinery stays inside 569 as wave 4.",
+      "#558 is a design question settled with the human before wave 3, not dispatched to a commander.",
+      "Launched identities remain stable."
+    ],
+    "current_wave": {
+      "objective": "Guarantee that what this epic delivers is actually wired, and close the one gate in the corpus that cannot pass.",
+      "exit_criteria": [
+        "A committed census classifying all 26 check-shaped scripts, with the generate_spine.py disposition settled on evidence.",
+        "Either a registration lint plus vocabulary rule, or deletions and a recorded honest null.",
+        "A list-valued match works and is red-proved against the shipped revision.",
+        "Both PRs merged green to main."
+      ],
+      "issues": [
+        {
+          "id": "w1-wiring",
+          "title": "Built-not-wired: measure the unwired population, then lint or delete (#345 #444 #368)",
+          "desired_outcome": "Every check-shaped script in scripts/ is either reachable from a template `command` check, or deleted, or on an allowlist with a stated reason \u2014 and a lint keeps it that way. The disposition of generate_spine.py is settled with evidence.",
+          "useful_now": "Nothing later in this epic is trustworthy until 'built' stops meaning 'not wired'. Work package 1 rests on generate_spine.py, which has zero callers in skills/.",
+          "appetite": "One commander, one wave. Measurement first; the lint is only built if measurement says the population is unwired rather than dead.",
+          "acceptance_or_falsification_evidence": "A committed census of all 26 check-shaped scripts classified live/unwired/dead with evidence per row. If mostly dead: deletions and NO lint (honest null, a complete deliverable). If mostly unwired: a registration lint plus the #345 vocabulary rule.",
+          "implementation_latitude": "Choose the lint's implementation and where it runs. Do not choose whether the pattern deserves a mechanism at all without reporting the census that decided it.",
+          "hard_constraints_no_gos": [
+            "Do not fix this by adding another unwired checker (#345's own words).",
+            "Any new refusing check ships report-only WITH a named promotion trigger in the same PR.",
+            "Compact-format JSON templates are edited as raw text, never round-tripped through json.load/json.dump.",
+            "Re-measure #368's field group; the census in the issue is stale by map_check_note (commit 244665ee)."
+          ],
+          "local_unknowns": [
+            "How many of the 19 unreferenced scripts are dead vs merely unwired",
+            "Whether any live path needs generate_spine.py"
+          ],
+          "anchors": [
+            "scripts/",
+            "skills/*/templates/*.json",
+            "docs/CHECKLIST_SCHEMA.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "w1-verdict",
+          "title": "Verdict mechanism: list-valued match, and refuse a mistyped match shape (#371)",
+          "desired_outcome": "A `match` may name a set of acceptable values, and a mistyped match shape is refused at validate rather than becoming a silently unsatisfiable gate.",
+          "useful_now": "This is a check that cannot PASS. The wedge pushes a Commander toward attaching a second evidence item with a verdict the reviewer never gave \u2014 the fabrication this epic exists to prevent.",
+          "appetite": "Small. Two identical comparison sites plus tests.",
+          "acceptance_or_falsification_evidence": "A red-proof that a list-valued match is unsatisfiable before the change and satisfiable after, pinned to the shipped revision; plus a test that a mistyped match shape is reported.",
+          "implementation_latitude": "Choose the accepted match shape (list, or a richer operator form) and argue it. Preserve backward compatibility with every existing scalar match in the corpus.",
+          "hard_constraints_no_gos": [
+            "Widening the comparison ships LIVE. The new validate_spine refusal ships report-only with a named promotion trigger.",
+            "APPROVE-WITH-FOLLOWUPS no longer exists in the corpus \u2014 do not reintroduce it. The measured vocabulary is APPROVE 34 / BLOCK 24 / REJECT 4 / COMMENT 3.",
+            "#558 (review-level doctrine) is NOT in scope and is not to be answered here."
+          ],
+          "local_unknowns": [
+            "Whether REJECT and COMMENT are live vocabulary or strays"
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py:1090",
+            "scripts/checklist_engine.py:3439",
+            "scripts/validate_spine.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Declared basis + evidence locators (#556, #557)",
+        "why_likely": "The epic's core value; carries `because` through to the executor so attest becomes pointing rather than composing",
+        "entry_conditions": [
+          "wave 1 settled whether a compiler path exists to carry it through"
+        ]
+      },
+      {
+        "outcome": "Plan-freeze validation + journal fidelity (#518 #524 #381 #382 #459 #515 #390)",
+        "why_likely": "Plan-time catches are cheap-moment fixes that fit the intent",
+        "entry_conditions": [
+          "wave-2 checkpoint re-clears",
+          "#558 discussed with the human"
+        ]
+      },
+      {
+        "outcome": "Reviewer machinery (#375 #358 #363 #259 #223 #388 #376 #221)",
+        "why_likely": "Human ruled it stays in 569",
+        "entry_conditions": [
+          "wave-2 checkpoint re-clears"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the unwired-script population is dead code or genuinely unwired capability",
+        "affects": "Whether wave 1 ships a lint at all, and whether the contract refreshes early",
+        "settle_by": "wave 1 census",
+        "current_evidence": "13 of 26 check-shaped scripts have no reference anywhere in skills/; only 7 appear inside a machine-checked command condition",
+        "next_probe": "classify each of the 26 with evidence per row"
+      },
+      {
+        "unknown": "Whether generate_spine.py has any live caller",
+        "affects": "Whether WP1 can carry `because` through a compiler or must find the live path",
+        "settle_by": "wave 1",
+        "current_evidence": "zero callers in skills/; referenced only from docs/CHECKLIST_SCHEMA.md",
+        "next_probe": "trace every live spine-instantiation path"
+      },
+      {
+        "unknown": "Whether a sonnet commander can execute this work from a well-specified launch order",
+        "affects": "Tiering for waves 2-4, and the epic's own thesis about moving work off the agent's plate",
+        "settle_by": "wave 1 return quality and any double-block escalation",
+        "current_evidence": "none yet; this is the first wave at sonnet",
+        "next_probe": "count double-block escalations and where the launch order was underspecified"
+      }
+    ],
+    "parked_possibilities": [
+      "Imperative bloat across the remaining spine steps (commander/archive 345 words, commander/execute 302) \u2014 the human fixed commander/plan out-of-band in 244665ee; the rest is a later cut, not 569.",
+      "Whether `record()` on a survey should evaluate null-kind postconditions (#422 D-scope left it out)."
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "Qualitative gates dominate the shipped spines",
+      "expected": "the epic's corpus-wide 99.7%-on-self-assertion reproduces at the template source",
+      "observed": "65 of 105 conditions across shipped spine templates are check:null (61.9%)",
+      "source": "census over skills/*/templates/*.json"
+    },
+    {
+      "claim": "WP1 has a cheap entry point because generate_spine.py already requires `because`",
+      "expected": "a live compiler whose discarded field can simply be carried through",
+      "observed": "generate_spine.py has ZERO callers in skills/ and is referenced only from docs/CHECKLIST_SCHEMA.md; also it does not discard `because` \u2014 line 521 appends it into the statement string, so the basis survives as prose and dies as structure",
+      "source": "grep over skills/ and docs/; read of generate_spine.py:194-204 and :521"
+    },
+    {
+      "claim": "#345's built-not-wired pattern is six instances",
+      "expected": "six",
+      "observed": "of 26 check-shaped scripts in scripts/, 13 are referenced nowhere in skills/ and only 7 appear inside a machine-checked command condition",
+      "source": "census over scripts/ cross-referenced against skills/"
+    },
+    {
+      "claim": "#371's wedge is real",
+      "expected": "a mechanism that silently wedges a gate",
+      "observed": "confirmed \u2014 checklist_engine.py:1090 and :3439 both compare match fields with ==, so a list-valued match is silently unsatisfiable; validate_spine faults a MISSING match (#562) but not a mistyped one",
+      "source": "read of checklist_engine.py and validate_spine.py"
+    },
+    {
+      "claim": "There is a three-way verdict-vocabulary inconsistency across four documents",
+      "expected": "three competing verdict sets",
+      "observed": "not reproduced. APPROVE-WITH-FOLLOWUPS \u2014 the verdict that triggered #371 \u2014 no longer exists anywhere in the corpus. Census: APPROVE 34, BLOCK 24, REJECT 4, COMMENT 3",
+      "source": "token census over skills/ and docs/"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "WP1's stated cheap entry point (generate_spine.py) has no callers, so the epic's foundation is itself an instance of the epic's own work package 6",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "wave ordering for the whole epic",
+      "evidence": "zero references in skills/; only docs/CHECKLIST_SCHEMA.md mentions it",
+      "reason": "Running WP1 before the wiring guarantee would build the epic's core value on ground the epic itself distrusts"
+    },
+    {
+      "id": "D1",
+      "signal": "#371 is smaller than filed: the vocabulary reconciliation half is already done",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "wave 1 sizing and tiering",
+      "evidence": "APPROVE-WITH-FOLLOWUPS absent from the corpus; the surface is two identical == sites",
+      "reason": "The issue as filed would send a commander to reconcile a vocabulary that no longer conflicts"
+    },
+    {
+      "id": "D2",
+      "signal": "#558 is a design question (what does each review level check), not an implementation issue",
+      "classification": "later_only",
+      "affects": "wave 1 composition",
+      "evidence": "the issue body poses an open question and offers no decided shape",
+      "reason": "Human ruled it leaves wave 1 and is settled in conversation before wave 3"
+    },
+    {
+      "id": "D3",
+      "signal": "commit 244665ee added map_check_note, a new template-only task field",
+      "classification": "evidence_only",
+      "affects": "#368's field-group census",
+      "evidence": "TemplateOnlyFieldAllowlist and docs/CHECKLIST_SCHEMA.md updated in that commit",
+      "reason": "The commander must re-measure rather than copy the issue's stale count; no plan change"
+    },
+    {
+      "id": "D4",
+      "signal": "the epic's 'three-way verdict-vocabulary inconsistency across four documents'",
+      "classification": "drop",
+      "affects": "wave 1 scope",
+      "evidence": "token census shows APPROVE 34 / BLOCK 24 / REJECT 4 / COMMENT 3, with no competing approve-flavoured verdict",
+      "reason": "Measurement falsified it"
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "w1-wiring",
+    "w1-verdict"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "556",
+      "kind": "issue"
+    },
+    {
+      "id": "557",
+      "kind": "issue"
+    },
+    {
+      "id": "558",
+      "kind": "issue"
+    },
+    {
+      "id": "518",
+      "kind": "issue"
+    },
+    {
+      "id": "524",
+      "kind": "issue"
+    },
+    {
+      "id": "381",
+      "kind": "issue"
+    },
+    {
+      "id": "382",
+      "kind": "issue"
+    },
+    {
+      "id": "459",
+      "kind": "issue"
+    },
+    {
+      "id": "515",
+      "kind": "issue"
+    },
+    {
+      "id": "390",
+      "kind": "issue"
+    },
+    {
+      "id": "375",
+      "kind": "issue"
+    },
+    {
+      "id": "358",
+      "kind": "issue"
+    },
+    {
+      "id": "363",
+      "kind": "issue"
+    },
+    {
+      "id": "259",
+      "kind": "issue"
+    },
+    {
+      "id": "223",
+      "kind": "issue"
+    },
+    {
+      "id": "388",
+      "kind": "issue"
+    },
+    {
+      "id": "376",
+      "kind": "issue"
+    },
+    {
+      "id": "221",
+      "kind": "issue"
+    },
+    {
+      "id": "wave-2-basis-locators",
+      "kind": "forecast"
+    },
+    {
+      "id": "wave-3-plan-freeze",
+      "kind": "forecast"
+    },
+    {
+      "id": "wave-4-reviewer-machinery",
+      "kind": "forecast"
+    },
+    {
+      "id": "unwired-population-dead-or-live",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "generate-spine-has-a-live-caller",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "sonnet-can-run-this-from-the-order",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "imperative-bloat-remaining-steps",
+      "kind": "parked"
+    },
+    {
+      "id": "survey-record-null-postconditions",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/generate_spine.py",
+      "scripts/validate_spine.py",
+      "skills/*/templates/*.json",
+      "docs/agents/"
+    ],
+    "map_status": "map/INDEX.md rebuilt in commit 244665ee; docs/architecture honest null still holding per the prior epic's cartographer reconcile"
+  }
+}
