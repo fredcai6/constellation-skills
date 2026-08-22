@@ -1,0 +1,298 @@
+{
+  "work_id": "w2-basis-g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-render",
+    "m2-attest-guard",
+    "m3-docs",
+    "m4-full-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the crew skill's references/global-crew.md and references/global-everyone.md, the g1-implementer handoff, the mission frame, docs/CHECKLIST_SCHEMA.md, and the relevant regions of scripts/checklist_engine.py (render_human/_condition_view ~2600-2750, attest ~3404-3472, attach ~3523, _run_verb dispatch ~3730-3776) and tests/test_checklist_engine.py (AttestArtifactByReference, TaskFieldCompleteness, TemplateOnlyFieldAllowlist, GoldenOutputBriefing). Verify the handoff is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + mission frame + schema + engine code + test structure loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "read global-crew.md, global-everyone.md, handoff, MISSION_FRAME.md, CHECKLIST_SCHEMA.md, checklist_engine.py render_human/_condition_view/attest/attach/_run_verb, test_checklist_engine.py AttestArtifactByReference/TaskFieldCompleteness/TemplateOnlyFieldAllowlist; handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-render": {
+      "id": "m1-render",
+      "title": "Render basis line (populated, non-abstain only)",
+      "imperative": "Add `basis` passthrough to `_condition_view` (INV-2-pure: stored field only, no probe) and a `_render_basis_line(basis)` helper wired into `render_human`'s open-conditions loop, emitting one indented `basis: <kind> <locator...>` line immediately after a condition's `{id} [unmet] {kind} \u2014 {statement}` line, only when `c.get('basis')` is populated and `locator_kind != 'abstain'`. TDD: write tests/test_checklist_engine.py tests first (fixture checklist with a basis-bearing postcondition), run pytest and observe them fail (attest c1 with the failure output), then implement until green (c2 = pytest -q tests/test_checklist_engine.py::<new class> green).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded per m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new render tests written and observed failing against current engine \u2014 manual attest with pasted failure output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed: 4/6 BasisRendering tests fail against current engine (basis line missing from render_human output, basis key absent from _condition_view/state() output) -- test_populated_file_basis_renders_basis_line, test_populated_evidence_ref_basis_renders_basis_line, test_basis_line_sits_under_its_own_condition_not_after_all, test_state_passes_basis_through_without_re_running_checks. The other 2 (abstain, absent-basis) already pass since they assert unchanged legacy output."
+        },
+        {
+          "id": "c2",
+          "statement": "new render tests pass; full suite not yet required at this step",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_checklist_engine.py -k Basis"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-render-1"
+        }
+      ],
+      "constraints": [
+        "populated-only rendering, same convention as constraints/anchors/directives",
+        "never probe live state from render_human/state()/_condition_view (INV-2 purity)",
+        "no existing shipped template carries a basis field yet \u2014 GoldenOutputBriefing must stay green"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-render-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_checklist_engine.py -k Basis",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-attest-guard": {
+      "id": "m2-attest-guard",
+      "title": "Report-only basis guard in attest()",
+      "imperative": "Add `_resolve_basis_locator(cl, base_dir, basis) -> str | None` (file: resolve against base_dir, glob-aware; evidence_ref: pure read of cl['tasks']). Thread a new `base_dir: Path | None = None` param into `attest()` and into the `_run_verb` CLI dispatch call site. Inside the existing `if chk is None:` branch, before the unconditional accept: if basis absent or abstain, skip; else resolve, always `attach()` a `basis-check` evidence item `{locator_kind, locator, resolved, problem}` regardless of outcome, then fall through to the unchanged unconditional accept (report-only, never raise). TDD: write the red-proof tests first (no-basis unchanged, file-missing report-only pass + resolved:false evidence, file-present report-only pass + resolved:true evidence, abstain behaves like no-basis, evidence_ref locator resolving against a sibling task condition), observe them fail, then implement until green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-render complete (basis field threading exists)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-render complete, basis field threading exists"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new attest-guard tests written and observed failing against current engine \u2014 manual attest with pasted failure output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed: 8/11 BasisAttestGuard tests fail (attest() has no base_dir kwarg, no _resolve_basis_locator exists, no basis-check evidence is ever attached) -- file-missing/file-present/glob-below/glob-meeting/evidence_ref-resolved/evidence_ref-unresolved/pure-evidence_ref/CLI-wiring all TypeError or AttributeError or IndexError. The other 3 (no-basis unchanged, no-note unchanged, abstain-behaves-like-no-basis) already pass since they assert unchanged legacy output."
+        },
+        {
+          "id": "c2",
+          "statement": "new attest-guard tests pass, report-only confirmed (no raise on unresolved locator)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_checklist_engine.py -k Basis"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-attest-guard-1"
+        }
+      ],
+      "constraints": [
+        "never blocking under any config/flag \u2014 report-only is not a toggle",
+        "only file and evidence_ref locator kinds \u2014 no state_field/command",
+        "_resolve_basis_locator pure for evidence_ref (reads cl only); file touches base_dir only, isolated to that function",
+        "always attach basis-check evidence on every basis-bearing attest, pass or fail",
+        "existing check:null attest without basis must attest exactly as before (satisfied_by shape unchanged)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-attest-guard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_checklist_engine.py -k Basis",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-docs": {
+      "id": "m3-docs",
+      "title": "Document basis in CHECKLIST_SCHEMA.md",
+      "imperative": "Add a `basis` row to the Condition field table in docs/CHECKLIST_SCHEMA.md, and a short subsection near 'Qualitative conditions (check: null) \u2014 trust but verify' documenting: the field shape (locator_kind file|evidence_ref|abstain, locator, optional because), the two locator kinds' resolution rules, that it is report-only by design (never blocks attest), and that a basis-check evidence item is always attached on a basis-bearing attest (the durable record a future promotion-to-blocking decision is measured against). Attest c1 by inspection (no command check for prose).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-attest-guard complete (mechanism finalized, doc describes shipped behavior not aspiration)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-attest-guard complete; mechanism finalized (locator_kind file|evidence_ref|abstain, report-only, basis-check evidence always attached)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "docs/CHECKLIST_SCHEMA.md Condition table + new subsection document basis, locator kinds, report-only, basis-check evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "added basis row to Condition table, basis-check to Evidence type enum + payload row, and new subsection 'Basis -- a report-only locator for a qualitative condition' documenting shape, both locator kinds, report-only guarantee, and always-attached basis-check evidence"
+        }
+      ],
+      "constraints": [
+        "doc describes shipped behavior only \u2014 no state_field/command locator kinds, no blocking mode"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-full-suite": {
+      "id": "m4-full-suite",
+      "title": "Full suite, wiring grep, diff-stat, result artifact",
+      "imperative": "Run the full tests/test_checklist_engine.py suite fresh-process (python -m pytest -q, env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT) and confirm it passes including GoldenOutputBriefing and TemplateOnlyFieldAllowlist. Run the wiring grep for _resolve_basis_locator and basis-check and state the call-site counts. Run `git diff --stat` and confirm only scripts/checklist_engine.py, docs/CHECKLIST_SCHEMA.md, tests/test_checklist_engine.py changed. Write the full IMPLEMENTER_RESULT to .agent-work/w2-basis/crew-handoffs/g1-implementer-result.md per the handoff's Return Format.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3-docs complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-docs complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes fresh-process",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-full-suite-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT.md written to .agent-work/w2-basis/crew-handoffs/g1-implementer-result.md with evidence, wiring grep counts, diff-stat, quoted basis-check payload shape",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT.md written to .agent-work/w2-basis/crew-handoffs/g1-implementer-result.md with completed slice, files changed, TDD red/green evidence for both slices, full-suite result, wiring grep counts, diff-stat, quoted basis-check payload shape, and workflow feedback"
+        }
+      ],
+      "constraints": [
+        "only the three allowed-scope files changed (plus this crew's own scratch plan)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-full-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/w2-basis/g1/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T17:44:19.110381+00:00",
+    "last_heartbeat": "2026-08-22T17:50:25.987472+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T17:50:28.859373+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T17:44:27.533166+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-render",
+      "why": "basis passthrough added to _condition_view (INV-2-pure) and _render_basis_line wired into render_human's open-conditions loop; 6 BasisRendering tests green (4 were red pre-change), GoldenOutputBriefing unaffected",
+      "mechanical": false,
+      "ts": "2026-08-22T17:46:19.502340+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-attest-guard",
+      "why": "_resolve_basis_locator added (file: base_dir-relative, glob-aware; evidence_ref: pure cl-only read), attest() grows base_dir param + report-only guard inside the check:null branch, _run_verb threads base_dir through. All 17 Basis* tests green (8 were red pre-change); full suite 511 passed",
+      "mechanical": false,
+      "ts": "2026-08-22T17:48:07.829973+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-docs",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T17:48:56.673115+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-full-suite",
+      "why": "full suite 511 passed fresh-process; wiring grep confirms exactly 1 production call site for _resolve_basis_locator and basis-check attached at exactly the attest() guard; diff-stat confirms only the 3 allowed-scope files changed; IMPLEMENTER_RESULT.md written with full evidence",
+      "mechanical": false,
+      "ts": "2026-08-22T17:50:25.987451+00:00"
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "work_id": "w2-basis",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-everyone.md, global-crew.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g3 handoff, g3 implementer result, and the working-tree diff for docs/CHECK_SCRIPT_CENSUS.md and map/INDEX.md before starting checks.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently re-ran grep -c against skills/commander/templates/COMMANDER_SPINE.template.json: because=3, basis=3, matching the addendum. Inspected each because hit directly (grep -n -B2 -A6): all 3 are the nested optional because sub-field inside the basis objects on plan.c2, plan.c4, plan.c5 -- none is a stray top-level because. The addendum's explanation (key-name collision with generate_spine.py's unrelated top-level convention, not a reuse of it) is correct on inspection. map/ids.jsonl confirmed unchanged (git status --porcelain empty). Addendum is a pure append before '## #368/#444 re-measurement', prior prose (lines 108-152) byte-identical.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows 8 modified files; 6 are g1/g2's own already-uncommitted work (docs/CHECKLIST_SCHEMA.md, scripts/checklist_engine.py, tests/test_checklist_engine.py, and the 3 template copies), untouched by g3 -- confirmed by mtime (all last modified 10:53-11:09, before g3's own edit window 11:17-11:18) and by numstat matching exactly g2-reviewer-result.md's own reported baseline (schema 35+2=37, engine 105+3=108, tests 378+0, templates 3+3 each). Only docs/CHECK_SCRIPT_CENSUS.md (append-only addendum, +31 lines) and map/INDEX.md (regenerated, entity-count deltas only) changed within this gate's diff, both inside the handoff's allowed scope. map/ids.jsonl confirmed unchanged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reproduced the map build myself: python -m scripts.code_map build --root . rebuilt map/INDEX.md byte-identical to the already-staged version (diff against a pre-run copy: empty) and left map/ids.jsonl unchanged (diff: empty) -- confirms determinism, matching the implementer's claim (scripts.checklist_engine 116->118, tests.test_checklist_engine 679->705). Reproduced tests/test_code_map.py + tests/test_map_orient.py: 239 passed, 102 subtests passed -- exact match to the implementer's reported count. Full pytest -q suite launched (background, actively polled inside this turn, not backgrounded across turns) -- verifying its count next before final consolidation.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff constraint 'Dated, SHA-pinned addendum; no rewrite of prior prose' verified: addendum header reads 'Addendum -- 2026-08-22, epic-569 w2-basis (SHA 9d5aac6d)'; git rev-parse HEAD is 9d5aac6daa58a72fc6a665cb39879ee5705f7f71, short form 9d5aac6d -- exact match, no drift. Prior committed prose (generate_spine.py disposition lines 108-152, #368/#444 re-measurement heading and its body) is byte-identical before and after -- addendum is a pure insertion between them, confirmed via git diff (only + lines, 0 - lines in this file's diff hunk).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence: this gate is a dated addendum to an existing census doc (applies g1/g2's already-shipped, already-ratified basis mechanism to the disposition of an unrelated pre-existing because-in-compile-step finding) plus a mechanical map regeneration. Both are append/regenerate operations over already-recorded architecture, not new capability or structural change. Nothing for Commander to reconcile beyond folding this addendum into the wave's closing record.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/w2-basis/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/w2-basis/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from w2-basis alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `spine_amend`, whose `delta` carries the single op `retext-check` on this item's c1, never by hand-editing this survey. There, `authority` is the dispatching Commander named in your reviewer handoff (never a string you invent), and `reason` is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-basis/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass over this gate's diff (docs/CHECK_SCRIPT_CENSUS.md addendum + regenerated map/INDEX.md): all 12 smells absent -- no code in this gate's diff, only prose and a machine-regenerated index. Recorded to .agent-work/w2-basis/FOWLER_PASS.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=[]).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-basis/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 7 checks pass. Addendum's because-count explanation independently verified correct (3 hits are the nested basis.because sub-field on plan.c2/c4/c5, not a stray top-level because). Addendum is dated, SHA-pinned (9d5aac6d, matches HEAD), pure append -- no rewrite of prior prose. Excluded g1/g2 files untouched by this gate (mtime + numstat both confirm). Map build independently reproduced deterministic; map/ids.jsonl unchanged. Map-freshness tests (239 passed, 102 subtests) and full suite (3642 passed, 6 skipped, 1274 subtests, in 154.68s) independently reproduced, exact match to implementer's claim. Fowler pass: 12/12 absent, docs-only diff, verify_fowler_pass.py exit 0."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/w2-basis/g3/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T18:23:54.563498+00:00",
+    "last_heartbeat": "2026-08-22T18:29:20.912580+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T18:29:54.327906+00:00"
+  }
+}

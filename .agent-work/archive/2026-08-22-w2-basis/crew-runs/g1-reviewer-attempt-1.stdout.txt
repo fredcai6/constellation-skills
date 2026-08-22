@@ -1,0 +1,1 @@
+Repeating identical hook, no new state. Confirmed complete: `g1-reviewer-result.md` written (APPROVE), my survey consolidated and released, `execute.json` untouched (not my spine to drive). Ending turn.

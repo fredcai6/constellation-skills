@@ -225,6 +225,7 @@ A condition is an assertion. The engine can mechanically verify only two kinds o
 | `override_policy` | object \| null | *optional*; makes the condition **waivable** by a human (see below). Absent → not waivable. |
 | `waived` | object \| null | set by the `waive` verb when a human accepts the condition; a durable marker that survives re-evaluation |
 | `attested` | object \| null | set by `attest --evidence` when an `artifact` postcondition is satisfied by reference to an already-attached artifact; a durable marker (like `waived`) that survives re-evaluation; cleared by `reopen` |
+| `basis` | object \| null | *optional*; **`check: null` only.** A plan-authoring-time locator naming where the evidence for a qualitative condition would live — see *Basis — a report-only locator for a qualitative condition* below. Absent → unchanged legacy `attest` behavior. |
 
 ### What "engine-checked" means
 
@@ -297,13 +298,45 @@ When `waive` succeeds it does three durable things on the condition: sets `satis
 
 Most conditions, especially **preconditions**, are qualitative. The engine records the agent's assertion and leans on the tiers for truth. A precondition is verified by **the very agent that depends on it**: told "you need an interface that does X," its first job is to confirm that interface exists — which doubles as a second review of the upstream work. We chose this over mechanical id-chaining: trust but verify, and keep the engine simple.
 
+### Basis — a report-only locator for a qualitative condition (569-w2-basis)
+
+A `check: null` condition is a bare assertion — the engine records `satisfied`/`satisfied_by` from the agent's note and verifies nothing. `basis` lets the **plan author** narrow that gap at authoring time: it names, up front, a *resolvable locator* — a file that should exist, or a sibling condition's evidence — that the agent attesting the condition can be shown, and that the engine can check **without ever blocking on it**. Absent `basis` — the overwhelming majority of `check: null` conditions today — `attest` behaves exactly as it always has; the field is strictly additive.
+
+```json
+{
+  "id": "c2",
+  "statement": "the mission frame was read before planning",
+  "check": null,
+  "satisfied": false,
+  "basis": {
+    "locator_kind": "file",
+    "locator": {"path": ".agent-work/<work-id>/MISSION_FRAME.md"},
+    "because": "the frame is the map-context substitute for this DEGRADED repo"
+  }
+}
+```
+
+| `basis` field | type | notes |
+|---|---|---|
+| `locator_kind` | `"file"` \| `"evidence_ref"` \| `"abstain"` | which locator shape `locator` carries. `"abstain"` is the explicit opt-out — behaves exactly like an absent `basis` (no render line, no `basis-check` evidence, never resolved) — for a condition the plan author has considered and decided has no real locator. Only these three kinds exist; `state_field` and `command` are deliberately not implemented (named untaken roads, not a gap). |
+| `locator` | object | shape depends on `locator_kind`; absent/`{}` when `locator_kind == "abstain"`. |
+| `because` | string | *optional*; one-line authoring rationale for a human reader. Never parsed or required by any code — it is not a substitute for the locator. |
+
+**`locator_kind: "file"`** — `locator: {"path": str, "glob": bool (default false), "min_matches": int (default 1)}`. `path` resolves against the same `base_dir` a `git-change-policy` check resolves a changed file against (`root = base_dir or Path.cwd()`, then `root / path`) — the checklist file's own directory when driven through the CLI. `glob: false` requires the exact path to exist; `glob: true` requires at least `min_matches` matches under `root`.
+
+**`locator_kind: "evidence_ref"`** — `locator: {"task_id": str, "cond_id": str}`. Resolved by walking `cl["tasks"][task_id]`'s preconditions and postconditions for `cond_id`, requiring it `satisfied` with a non-null `satisfied_by`. Pure: reads the checklist only, no filesystem or subprocess.
+
+**Rendering.** `current` shows a populated, non-abstain `basis` as one indented line under its open condition, immediately after the condition's own `{id} [unmet] {kind} — {statement}` line — e.g. `    basis: file .agent-work/<work-id>/MISSION_FRAME.md` or `    basis: evidence_ref g0.p1` — the same populated-only convention `constraints`/`anchors`/`directives` already use. `state()` only ever passes the stored `basis` dict through (INV-2 purity: it is never resolved to build the render line).
+
+**Resolution is report-only, always.** `attest`ing a `check: null` condition that carries a populated, non-abstain `basis` resolves the locator and **always** attaches a `basis-check` evidence item — `{locator_kind, locator, resolved: bool, problem: str|null}` — recording the outcome, **pass or fail**. The attest itself never raises on an unresolved locator: it falls through to the same unconditional accept every other `check: null` condition gets. This is deliberate, not a placeholder for a future toggle — there is no blocking mode to configure. The `basis-check` evidence trail is the durable, auditable record a future decision to promote a specific condition's basis to a real blocking check would be measured against; nothing today reads it to change engine behavior.
+
 ## Evidence
 
 | field | type | notes |
 |---|---|---|
 | `id` | string | |
-| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver \| artifact-policy \| refresh-request` |
-| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `command-output`: `{cmd, exit, shell}` where `shell` is `posix` or `no-posix-shell` (a bash-less Windows box, where the engine refuses to run POSIX-form text through cmd.exe and records a visible failure — returncode 127 — instead); for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed); for `refresh-request`: **POINTERS ONLY** `{seam: <gate/item id it concerns>, why_ref: <why-record id it was raised against>}` — never copies of state (see *Refresh requests*) |
+| `type` | enum | `command-output \| review-result \| file-diff \| user-decision \| cartographer-verification \| waiver \| artifact-policy \| refresh-request \| basis-check` |
+| `payload` | object | command output, diff ref, decision text, verdict, packet ref; for `command-output`: `{cmd, exit, shell}` where `shell` is `posix` or `no-posix-shell` (a bash-less Windows box, where the engine refuses to run POSIX-form text through cmd.exe and records a visible failure — returncode 127 — instead); for `waiver`: `{cond, authority, reason, forced}`; for `artifact-policy`: `{mode, violations, files_checked}` (the violations a `git-change-policy` check found, so a later waiver records which rule was bypassed); for `refresh-request`: **POINTERS ONLY** `{seam: <gate/item id it concerns>, why_ref: <why-record id it was raised against>}` — never copies of state (see *Refresh requests*); for `basis-check`: `{locator_kind, locator, resolved, problem}` — always attached when a basis-bearing `check: null` condition is attested, pass or fail (see *Basis — a report-only locator for a qualitative condition*) |
 | `produced_by` | string | role/tier |
 | `ts` | string | |
 | `superseded` | object \| null | *optional, additive*; set by the `reopen` cascade to `{by, reason, ts}` (`by` is `reopen:<gate-id>`). The evidence is **retained** (the audit trail is never deleted) but rendered **inert for satisfaction**: the `_check_condition` artifact branch skips a superseded item, and `attest --evidence` refuses to satisfy a condition from one. So a reopened gate cannot re-pass an artifact postcondition from the stale approval the reopen just invalidated — fresh evidence is required. |

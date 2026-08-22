@@ -1,0 +1,677 @@
+{
+  "work_id": "w2-basis-execute",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md. Confirm the frozen plan's intent and scope against .agent-work/w2-basis/MISSION_FRAME.md and .agent-work/w2-basis/PLAN_ALTERNATIVES.md (the critic-corrected design: a new report-only `basis` field on Condition, authored on exactly plan.c2/plan.c4/plan.c5 in COMMANDER_SPINE.template.json; no check-kind promotions ship this wave), then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary loaded; plan intent and scope (post-critic-revision) confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doctrine already loaded this session (global-orchestrator.md, global-everyone.md, ORCHESTRATOR_CONTEXT.md, GLOSSARY.md). Plan scope confirmed against MISSION_FRAME.md + PLAN_ALTERNATIVES.md's critic-corrected design."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Engine: add the report-only `basis` field (schema, render, attest guard)",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: implement the new `basis` sibling field on Condition in scripts/checklist_engine.py per PLAN_ALTERNATIVES.md's design: (1) `render_human` (~line 2679-2749, inside the preconditions/postconditions loop) emits one indented sub-line `  basis: <locator_kind> <locator>` under an open condition ONLY when `c.get('basis')` is populated and `locator_kind != 'abstain'` -- populated-only, same convention as constraints/anchors/directives. (2) `attest()` (~line 3404-3472), inside the existing `chk is None` branch, gains a new guard: when the condition carries a populated, non-abstain `basis`, resolve its locator (`file`: check the path/glob exists under base_dir; `evidence_ref`: walk cl['tasks'][task_id] for cond_id, require it satisfied with non-null satisfied_by) BEFORE the unconditional accept, and ALWAYS attach a durable `basis-check` evidence item recording {locator_kind, locator, resolved: bool} regardless of outcome -- on failure this is report-only (attach the evidence, proceed, do not raise) since this is genuinely new attest code with no live precedent per decision:widening-live-refusal-report-only. Add a small pure dispatcher `_resolve_basis_locator(cl, base_dir, basis) -> str | None` (None = resolved). Do NOT implement `state_field` or `command` locator kinds (named untaken roads only). Write the red-proof FIRST against a throwaway fixture checklist (not the real shipped template, which g2 edits): a test demonstrating (a) a `check: null` condition with no `basis` attests exactly as before (unchanged legacy behavior), (b) a condition with a populated `file` basis whose target is missing still attests successfully (report-only) but records a `basis-check` evidence item with resolved: false, (c) the same with the target present records resolved: true, (d) `render_human` emits the basis sub-line only when populated. Validate as a fresh-process run (a standalone `python scripts/checklist_engine.py ...` CLI invocation or pytest) per the mission frame's dogfooding constraint -- do not rely on this run's own live MCP door as evidence. Document the field in docs/CHECKLIST_SCHEMA.md's Condition table and add a short new subsection describing the report-only guard and its promotion trigger (an Admiral audit of accumulated `basis-check` evidence across real runs). Dispatch a subagent invoking constellation-implementer with the completed handoff via `python scripts/run_crew.py --backend cli --parent \"$SPINE_SESSION\" --work-id w2-basis --gate g1 --role implementer --model sonnet ...` per references/crew-dispatch.md. Wait for and integrate the returned IMPLEMENTER_RESULT: attach it as `implementer-result` evidence with field name `status`, value copied verbatim lowercase from the result's Return status.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "e0-context complete; plan design confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete; plan design confirmed against PLAN_ALTERNATIVES.md"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "engine change only -- do not touch skills/commander/templates/COMMANDER_SPINE.template.json in this gate (g2's scope)",
+        "do not implement state_field or command locator kinds",
+        "never edit checklist_engine.py's waive()/forced-claim-release/consolidate --override-reason/trip_ledger paths -- w2-ledger lane fence"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py:render_human (~2679-2749)",
+          "scripts/checklist_engine.py:attest (~3404-3472)"
+        ],
+        "capability": [
+          "report-only basis-field render+require mechanism"
+        ],
+        "constraint": [
+          "ruling-decorative-basis-is-a-failure -- authored+rendered+required, together",
+          "ruling-widening-live-refusal-report-only -- this IS new attest code, ships report-only",
+          "ruling-no-spec-migration -- never touch generate_spine.py/specs/"
+        ],
+        "decision": [
+          "locator kinds narrowed to file/evidence_ref only -- state_field and command are named untaken roads, see PLAN_ALTERNATIVES.md"
+        ],
+        "evidence": [
+          "PLAN_ALTERNATIVES.md's revised design section",
+          "PLAN_CRITIC.md findings 5 and 6"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Review: basis field engine change",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented (basis field schema, render_human sub-line, attest report-only guard, basis-check evidence persistence), how to inspect the diff (git diff on scripts/checklist_engine.py and docs/CHECKLIST_SCHEMA.md), task statement, close criteria (fresh-process red-proof test green, no state_field/command kinds added, no edits to the w2-ledger-fenced paths, full pytest suite green), constraints, the inbound anchors from g1-implement, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer via run_crew.py (--backend cli --parent \"$SPINE_SESSION\" --gate g1 --role reviewer --model sonnet). Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, status complete, attached to g1-implement"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Integrate: basis field engine change",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself (fresh-process pytest run, not this run's own live door) per global-everyone.md; run the verification command yourself, then advance. BLOCK: send the implementer back for rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received for g1: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full local pytest suite passes with the new basis-field code in place",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Template: author basis on plan.c2/plan.c4/plan.c5 + sync overlay",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: hand-edit skills/commander/templates/COMMANDER_SPINE.template.json SURGICALLY (compact-format JSON, edit raw text directly, never round-trip through json.load/json.dump which reflows and destroys blame; re-validate with json.load as a read-only parse check afterward). Add a `basis` field to exactly three conditions: plan.c2 (`{\"locator_kind\": \"file\", \"locator\": {\"path\": \".agent-work/<work-id>/execute.json\"}}`), plan.c4 (`{\"locator_kind\": \"file\", \"locator\": {\"path\": \".agent-work/<work-id>/plan-candidate-*.md\", \"glob\": true, \"min_matches\": 2}}` plus a second file check for PLAN_ALTERNATIVES.md -- use whatever shape g1's implemented schema actually supports, confirmed against its docs/CHECKLIST_SCHEMA.md update), plan.c5 (`{\"locator_kind\": \"file\", \"locator\": {\"path\": \".agent-work/<work-id>/PLAN_CRITIC.md\"}}`). Do NOT touch plan.c1, reconcile.c1, archive.c2, init.c1, or any other condition -- those stay check: null per PLAN_ALTERNATIVES.md's critic-corrected scope (deferred to triage). Sync .agent-work/templates/COMMANDER_SPINE.template.json and .agent-work/templates/.baseline/constellation-commander/COMMANDER_SPINE.template.json to match (PLAN_CRITIC.md finding 7 -- currently byte-identical to the shipped file; keep them that way). Write a red-proof integration test pinned to this gate's shipped git SHA (decision:red-proof-pinned-to-shipped-revision) that loads the REAL shipped COMMANDER_SPINE.template.json and confirms the three basis fields are present, well-formed, and that `current`/render_human on a live checklist built from this template shows the basis line at plan.c2/c4/c5. Dispatch via run_crew.py (--backend cli --parent \"$SPINE_SESSION\" --gate g2 --role implementer --model sonnet).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 complete: basis field engine support shipped",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 complete: basis field engine support shipped, reviewed APPROVE, verified independently"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "edit skills/commander/templates/COMMANDER_SPINE.template.json surgically only -- never json.load/json.dump round-trip it",
+        "touch exactly plan.c2, plan.c4, plan.c5 -- no other condition",
+        "sync .agent-work/templates/ overlay + .baseline copy",
+        "never edit checklist_engine.py's w2-ledger-fenced paths"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander/templates/COMMANDER_SPINE.template.json (plan.c2/c4/c5)",
+          ".agent-work/templates/ overlay mirror"
+        ],
+        "capability": [
+          "authored basis for the proof-of-concept template"
+        ],
+        "constraint": [
+          "ruling-engine-first-backfill-where-it-earns-it -- exactly these 3, not a rollout",
+          "ruling-basis-lives-in-hand-written-templates"
+        ],
+        "decision": [],
+        "evidence": [
+          "PLAN_ALTERNATIVES.md's Output section (revised)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Review: authored basis + overlay sync",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff (git diff on the template + overlay files), close criteria (exactly 3 conditions changed, JSON still parses, overlay/baseline byte-identical to shipped, red-proof integration test green against the real shipped file). Dispatch via run_crew.py (--gate g2 --role reviewer --model sonnet). Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Integrate: authored basis + overlay sync",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification commands yourself (JSON parse-validate both copies, diff overlay vs shipped, run the new integration test fresh-process), then advance. BLOCK: rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received for g2: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "shipped template and .agent-work/templates/ overlay+baseline are byte-identical, and both parse as valid JSON",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-basis && python3 -c \"import json,sys; a=open('skills/commander/templates/COMMANDER_SPINE.template.json').read(); b=open('.agent-work/templates/COMMANDER_SPINE.template.json').read(); c=open('.agent-work/templates/.baseline/constellation-commander/COMMANDER_SPINE.template.json').read(); assert a==b==c, 'overlay drift'; json.loads(a); print('ok')\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-basis && python3 -c \"import json,sys; a=open('skills/commander/templates/COMMANDER_SPINE.template.json').read(); b=open('.agent-work/templates/COMMANDER_SPINE.template.json').read(); c=open('.agent-work/templates/.baseline/constellation-commander/COMMANDER_SPINE.template.json').read(); assert a==b==c, 'overlay drift'; json.loads(a); print('ok')\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Docs: CHECK_SCRIPT_CENSUS.md counts + map build",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: update docs/CHECK_SCRIPT_CENSUS.md's condition counts (currently '65 check:null... 19 in COMMANDER_SPINE.template.json, 0 because') to reflect this wave's change -- state plainly that 3 of the 19 now carry a report-only `basis` field (not `because`; the field name and shape differ, note why in one line), re-run the cited grep commands fresh and paste the new output alongside the doc edit. Run `python -m scripts.code_map build --root .` (2.9s, deterministic) before the final commit so map/INDEX.md does not go stale, per Inherited Context. Dispatch via run_crew.py (--gate g3 --role implementer --model sonnet).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 complete: basis authored into shipped template",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 complete: basis authored into shipped template, reviewed APPROVE, verified independently"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "doc + map-build only -- no further template or engine edits in this gate"
+      ],
+      "anchors": {
+        "structural": [
+          "docs/CHECK_SCRIPT_CENSUS.md:126-152",
+          "map/INDEX.md"
+        ],
+        "capability": [],
+        "constraint": [],
+        "decision": [],
+        "evidence": [
+          "re-run grep pasted alongside the doc edit"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Review: doc counts + map build",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: verify the doc counts match a fresh independent re-run of the grep, and map/INDEX.md is current (freshness test passes). Dispatch via run_crew.py (--gate g3 --role reviewer --model sonnet). Wait for and integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received, status complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Integrate: doc counts + map build",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the full local suite yourself fresh-process, confirm map freshness test passes, then advance. BLOCK: rework or raise a blocker.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received for g3: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full local pytest suite passes (final gate before reconcile)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-basis && env -u SPINE_FILE -u SPINE_SESSION -u SPINE_PARENT python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T17:40:03.472099+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T17:50:33.226304+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T17:58:11.632861+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "g1 (basis field engine change) verified independently: fresh-process pytest run reproduces 511 passed exactly; reviewer's APPROVE re-confirmed. Engine now supports a report-only basis field, unused by any shipped template yet -- g2 authors it into COMMANDER_SPINE.template.json next.",
+      "mechanical": false,
+      "ts": "2026-08-22T17:58:32.216881+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:06:38.375700+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:14:37.744395+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "g2 (basis authored on plan.c2/c4/c5) verified independently: JSON parses, overlay+baseline byte-identical, new CommanderSpineBasisFields test passes fresh-process, reviewer's APPROVE re-confirmed. This is the first real template carrying the basis mechanism -- proof of concept for the epic's core thesis now exists in shipped content. g3 (doc reconciliation) next.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:14:47.207748+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:22:33.680659+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:30:06.525700+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "g3 (doc reconciliation) verified independently: full suite reproduces 3642 passed/6 skipped/0 failed exactly. All three execute.json gates (g1 engine mechanism, g2 authored basis, g3 doc reconciliation) complete, reviewed by real independent crews, integrated with independent re-verification each time. This wave's shipped diff: report-only basis field on Condition (file/evidence_ref locator kinds), authored on plan.c2/c4/c5 in COMMANDER_SPINE.template.json, docs updated. The riskier check-kind-promotion batch is deferred to triage, not shipped.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:37:35.705157+00:00"
+    }
+  ]
+}

@@ -151,6 +151,37 @@ role skill today.** Do not delete it — it is real, tested, load-bearing for th
 do not build wave 2 on the assumption that authoring a `because`-carrying spec and compiling it is what
 happens today.
 
+### Addendum — 2026-08-22, epic-569 w2-basis (SHA `9d5aac6d`)
+
+Wave 2 (epic-569 w2-basis) authored a `basis` field on 3 of the 19 `check: null` conditions in
+`skills/commander/templates/COMMANDER_SPINE.template.json` — `plan.c2`, `plan.c4`, `plan.c5` — per
+`docs/CHECKLIST_SCHEMA.md`'s `basis` schema. **`basis` is a distinct mechanism from `generate_spine.py`'s
+`because`-in-compile-step convention discussed above**: `basis` is a report-only locator (`locator_kind`
+of `file`/`evidence_ref`/`abstain`) with a `basis-check` evidence artifact always attached when it
+resolves, whereas `generate_spine.py`'s convention folds prose directly into the compiled statement at
+compile time. `basis` is authored by hand directly on these template files (the same raw-substitution
+path this section already establishes `init_work_area.py` uses — never `generate_spine.py`'s compiler),
+so nothing in this section's disposition of the compiler is affected by it.
+
+Re-measured fresh at the SHA above:
+
+```
+$ grep -c '"because"' skills/commander/templates/COMMANDER_SPINE.template.json
+3
+$ grep -c '"basis"' skills/commander/templates/COMMANDER_SPINE.template.json
+3
+```
+
+The `"because"` count is **3, not the 0 this section measured before wave 2** — but this is not the
+compiler's `because` reappearing. `docs/CHECKLIST_SCHEMA.md`'s `basis` schema itself has an *optional*
+`because` sub-field ("one-line authoring rationale for a human reader... never parsed or required by
+any code"), nested inside each `basis` object. All 3 `"because"` hits are that nested rationale field on
+the 3 newly-authored `basis` objects — a literal key-name collision with `generate_spine.py`'s top-level
+convention, not a reuse of it. This section's prior finding — that no shipped role skill routes a spine
+through `generate_spine.py`'s compile step — is unchanged by this addendum; it is confirmed above by the
+`basis` count (3) exactly matching the number of `basis` objects added, each carrying its own
+`locator`/`locator_kind` and (optionally) this same-named-but-unrelated `because` rationale string.
+
 ## #368/#444 re-measurement
 
 ### `#368` — the Task-field group

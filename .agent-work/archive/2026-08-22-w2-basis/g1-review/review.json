@@ -1,0 +1,241 @@
+{
+  "work_id": "w2-basis",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-report-only",
+    "r4b-populated-only",
+    "r4c-two-kinds",
+    "r4d-purity-split"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md, the g1-reviewer handoff, full git diff (3 files, 408/-5), and IMPLEMENTER_RESULT.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff matches handoff task statement exactly: basis sibling field (file/evidence_ref/abstain) added to Condition; render_human emits populated-only, non-abstain basis line under open conditions; attest() resolves the locator and always attaches basis-check evidence (pass or fail) inside the existing check-is-None branch, then falls through to the unchanged unconditional accept, so it never raises. No shipped template carries basis, confirmed by GoldenOutputBriefing/TemplateOnlyFieldAllowlist staying green (10/10 passed, reproduced). Scope: exactly the 3 allowed files touched (docs/CHECKLIST_SCHEMA.md, scripts/checklist_engine.py, tests/test_checklist_engine.py), confirmed via git diff --stat.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Only the 3 allowed-scope files changed (git diff --name-only). No touch to COMMANDER_SPINE.template.json, generate_spine.py, or specs/. Grepped the diff hunk for waive/trip_ledger/override_reason/forced-claim patterns: zero hits -- the w2-ledger lane fence is fully respected.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced (not just trusted): full suite 511 passed/145 subtests on this host; stashed engine.py+schema.md against the unmodified tests file and observed the exact 12 Basis tests fail red (KeyError:'basis' etc, matching the implementer's claimed failure shapes), restored and reconfirmed green. Wiring grep for _resolve_basis_locator/basis-check reproduced exactly as claimed (1 production call site at line 3527/3528, 1 direct test call). evidence_ref purity is asserted via mock.patch raising AssertionError on subprocess.run (test_resolve_basis_locator_is_pure_for_evidence_ref). base_dir wiring is tested end-to-end through the CLI dispatch path (test_attest_wires_base_dir_from_cli_dispatch_to_checklist_directory), not just in-process.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 4 handoff constraints independently verified pass via appended sub-checks r4a-r4d: report-only unconditional, populated-only rendering, two locator kinds only, evidence_ref pure/file isolated.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Additive, local change confined to checklist_engine.py (one new dispatcher function + one new render helper + a guard inside an existing function) plus docs/CHECKLIST_SCHEMA.md; no new module/seam/adapter, so no Cartographer map reconciliation needed. Implementer's Map Impact notes (structural anchors, constraints touched: INV-2 purity/ruling-widening-live-refusal-report-only/ruling-decorative-basis-is-a-failure, decision candidates: none, triage: none) verified accurate against the actual diff -- decision anchors already ratified in PLAN_ALTERNATIVES.md per the handoff, not re-litigated here.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/w2-basis/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/w2-basis/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command resolves the record path from w2-basis alone -- the same substitution you already make everywhere else in this survey (line 2) -- so no separate placeholder to fill and no way to leave it stale. REPAIR PATH -- only if the record path ever needs to move off that fixed convention, correct it through the engine with `spine_amend`, whose `delta` carries the single op `retext-check` on this item's c1, never by hand-editing this survey. There, `authority` is the dispatching Commander named in your reviewer handoff (never a string you invent), and `reason` is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-basis/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ran the Fowler baseline pass across all 12 smells against the g1 diff; recorded to .agent-work/w2-basis/FOWLER_PASS.json; verify_fowler_pass.py exited 0 (smells=12, flagged=[], overridden=['primitive-obsession'] with a logged standard+reason: the whole engine represents domain objects as plain dicts with string dispatch, confirmed by grep).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-basis/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-report-only": {
+      "id": "r4a-report-only",
+      "title": "Constraint: report-only unconditionally",
+      "imperative": "No config/flag toggles the new attest guard to blocking. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "attest()'s new basis branch computes 'problem' and always attaches it as basis-check evidence, then unconditionally falls through to the same c['satisfied']=True / return path every check:null condition takes -- no branch inspects 'problem' to refuse or block, and no config/CLI flag exists anywhere in the diff to toggle this.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-populated-only": {
+      "id": "r4b-populated-only",
+      "title": "Constraint: populated-only rendering",
+      "imperative": "No output for absent/abstain basis. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "_render_basis_line returns None (no line emitted) for a non-dict basis, an absent/empty locator_kind, or locator_kind=='abstain' -- confirmed by test_abstain_basis_behaves_like_no_basis and the golden-output tests staying green for all existing (basis-less) templates.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-two-kinds": {
+      "id": "r4c-two-kinds",
+      "title": "Constraint: two locator kinds only",
+      "imperative": "state_field/command not implemented as dispatch branches anywhere. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "grep for state_field in checklist_engine.py: single hit, a docstring comment naming it an untaken road -- zero executable dispatch branches. _resolve_basis_locator dispatches only on kind=='file'/'evidence_ref', with a generic unknown-kind fallback (no special-casing). _render_basis_line likewise special-cases only file/evidence_ref.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d-purity-split": {
+      "id": "r4d-purity-split",
+      "title": "Constraint: evidence_ref pure, file isolated",
+      "imperative": "_resolve_basis_locator is pure for evidence_ref (cl-only, no side effects); file resolution touches filesystem, isolated to that function. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "evidence_ref branch reads only cl (dict walk over tasks[task_id]'s pre/postconditions) -- test_resolve_basis_locator_is_pure_for_evidence_ref asserts this by mock.patch'ing subprocess.run to raise if touched, and it passes. file branch is the only one calling root.glob()/Path.exists(), isolated to that one if-block.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "g1 basis field: all 7 checks pass (context, handoff compliance, scope, evidence reproduced independently, 4 constraint sub-checks, reconciliation, Fowler pass). Report-only guard confirmed never-raise by code inspection + red/green re-derivation from a stashed pristine tree; legacy byte-identical behavior confirmed by dedicated tests; INV-2 purity confirmed by grep (_resolve_basis_locator called from exactly one site, inside attest()); scope/exclusions fully respected; 511 passed/145 subtests reproduced on this host."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/w2-basis/g1/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T17:52:59.234916+00:00",
+    "last_heartbeat": "2026-08-22T17:57:17.003529+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "/home/tommy/projects/569-w2-basis",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T17:57:23.026692+00:00"
+  }
+}

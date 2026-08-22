@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "review",
+  "files": [],
+  "repo_rev": {
+    "commit": "9d5aac6daa58a72fc6a665cb39879ee5705f7f71"
+  },
+  "run": {
+    "work_id": "w2-basis",
+    "generated_at": "2026-08-22T18:40:15Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w2-basis",
+      "repo": "/home/tommy/projects/569-w2-basis",
+      "durable": "/home/tommy/projects/569-w2-basis"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w2-basis"
+    }
+  }
+}

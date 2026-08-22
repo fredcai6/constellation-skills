@@ -300,6 +300,164 @@ class AttestArtifactByReference(unittest.TestCase):
         self.assertIn("postconditions", msg)
 
 
+def _basis_gate(basis=None, cond_id="c1", statement="frame written"):
+    post = [{"id": cond_id, "statement": statement, "check": None, "satisfied": False}]
+    if basis is not None:
+        post[0]["basis"] = basis
+    t = gate("g1", "in-progress")
+    t["postconditions"] = post
+    return t
+
+
+class BasisAttestGuard(unittest.TestCase):
+    """569-w2-basis g1: attest()'s `check: null` branch grows a report-only
+    guard for a basis-bearing condition. It NEVER raises and NEVER changes
+    whether the attest succeeds -- see BasisRendering's docstring for the
+    render half. A basis-bearing attest always attaches a `basis-check`
+    evidence item recording {locator_kind, locator, resolved, problem},
+    pass or fail, so a future promotion-to-blocking decision has a durable
+    record to measure against (PLAN_CRITIC.md finding 5)."""
+
+    def test_no_basis_attest_is_byte_identical_to_legacy(self):
+        # Protected Intent: a check:null condition with no basis attests
+        # EXACTLY as it did before this gate -- same return value, same
+        # satisfied_by shape, and no basis-check evidence appears.
+        cl = gated(g1=_basis_gate(basis=None))
+        res = E.attest(cl, "g1", "c1", "postconditions", "checked it")
+        self.assertEqual(res, "attested g1.c1")
+        c = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertTrue(c["satisfied"])
+        self.assertEqual(c["satisfied_by"], "checked it")
+        self.assertEqual(cl["tasks"]["g1"]["evidence"], [])
+
+    def test_no_note_attest_falls_back_to_attested_literal_unchanged(self):
+        cl = gated(g1=_basis_gate(basis=None))
+        E.attest(cl, "g1", "c1", "postconditions", None)
+        c = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertEqual(c["satisfied_by"], "attested")
+        self.assertEqual(cl["tasks"]["g1"]["evidence"], [])
+
+    def test_abstain_basis_behaves_like_no_basis(self):
+        basis = {"locator_kind": "abstain", "locator": {}}
+        cl = gated(g1=_basis_gate(basis=basis))
+        res = E.attest(cl, "g1", "c1", "postconditions", "checked it")
+        self.assertEqual(res, "attested g1.c1")
+        c = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertTrue(c["satisfied"])
+        self.assertEqual(c["satisfied_by"], "checked it")
+        # No basis-check evidence for abstain -- the explicit opt-out.
+        self.assertEqual(cl["tasks"]["g1"]["evidence"], [])
+
+    def test_file_basis_missing_target_is_report_only_and_records_unresolved(self):
+        basis = {"locator_kind": "file", "locator": {"path": "does-not-exist.md"}}
+        cl = gated(g1=_basis_gate(basis=basis))
+        with tempfile.TemporaryDirectory() as d:
+            # Report-only: the attest SUCCEEDS even though the locator target
+            # is missing -- never raises.
+            res = E.attest(cl, "g1", "c1", "postconditions", "checked it", base_dir=Path(d))
+        self.assertEqual(res, "attested g1.c1")
+        c = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertTrue(c["satisfied"])
+        self.assertEqual(c["satisfied_by"], "checked it")
+        evidence = cl["tasks"]["g1"]["evidence"]
+        self.assertEqual(len(evidence), 1)
+        ev = evidence[0]
+        self.assertEqual(ev["type"], "basis-check")
+        self.assertEqual(ev["payload"]["locator_kind"], "file")
+        self.assertEqual(ev["payload"]["locator"], {"path": "does-not-exist.md"})
+        self.assertFalse(ev["payload"]["resolved"])
+        self.assertIsNotNone(ev["payload"]["problem"])
+
+    def test_file_basis_present_target_is_report_only_and_records_resolved(self):
+        basis = {"locator_kind": "file", "locator": {"path": "MISSION_FRAME.md"}}
+        cl = gated(g1=_basis_gate(basis=basis))
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "MISSION_FRAME.md").write_text("hello", encoding="utf-8")
+            res = E.attest(cl, "g1", "c1", "postconditions", "checked it", base_dir=Path(d))
+        self.assertEqual(res, "attested g1.c1")
+        c = cl["tasks"]["g1"]["postconditions"][0]
+        self.assertTrue(c["satisfied"])
+        ev = cl["tasks"]["g1"]["evidence"][0]
+        self.assertEqual(ev["type"], "basis-check")
+        self.assertTrue(ev["payload"]["resolved"])
+        self.assertIsNone(ev["payload"]["problem"])
+
+    def test_file_basis_glob_below_min_matches_report_only_unresolved(self):
+        basis = {"locator_kind": "file",
+                 "locator": {"path": "*.absent", "glob": True, "min_matches": 1}}
+        cl = gated(g1=_basis_gate(basis=basis))
+        with tempfile.TemporaryDirectory() as d:
+            E.attest(cl, "g1", "c1", "postconditions", "checked it", base_dir=Path(d))
+        ev = cl["tasks"]["g1"]["evidence"][0]
+        self.assertFalse(ev["payload"]["resolved"])
+
+    def test_file_basis_glob_meeting_min_matches_resolved(self):
+        basis = {"locator_kind": "file",
+                 "locator": {"path": "*.md", "glob": True, "min_matches": 2}}
+        cl = gated(g1=_basis_gate(basis=basis))
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "a.md").write_text("x", encoding="utf-8")
+            (Path(d) / "b.md").write_text("x", encoding="utf-8")
+            E.attest(cl, "g1", "c1", "postconditions", "checked it", base_dir=Path(d))
+        ev = cl["tasks"]["g1"]["evidence"][0]
+        self.assertTrue(ev["payload"]["resolved"])
+
+    def test_evidence_ref_basis_resolves_against_a_satisfied_sibling_condition(self):
+        basis = {"locator_kind": "evidence_ref", "locator": {"task_id": "g0", "cond_id": "p1"}}
+        g0 = gate("g0", "complete")
+        g0["preconditions"] = [{"id": "p1", "statement": "upstream", "check": None,
+                                 "satisfied": True, "satisfied_by": "e-g0-1"}]
+        cl = gated(g0=g0, g1=_basis_gate(basis=basis))
+        E.attest(cl, "g1", "c1", "postconditions", "checked it")
+        ev = cl["tasks"]["g1"]["evidence"][0]
+        self.assertTrue(ev["payload"]["resolved"])
+        self.assertIsNone(ev["payload"]["problem"])
+
+    def test_evidence_ref_basis_unresolved_when_sibling_condition_unsatisfied(self):
+        basis = {"locator_kind": "evidence_ref", "locator": {"task_id": "g0", "cond_id": "p1"}}
+        g0 = gate("g0", "in-progress")
+        g0["preconditions"] = [{"id": "p1", "statement": "upstream", "check": None,
+                                 "satisfied": False}]
+        cl = gated(g0=g0, g1=_basis_gate(basis=basis))
+        res = E.attest(cl, "g1", "c1", "postconditions", "checked it")
+        # Report-only: still succeeds despite the unresolved locator.
+        self.assertEqual(res, "attested g1.c1")
+        ev = cl["tasks"]["g1"]["evidence"][0]
+        self.assertFalse(ev["payload"]["resolved"])
+        self.assertIsNotNone(ev["payload"]["problem"])
+
+    def test_resolve_basis_locator_is_pure_for_evidence_ref(self):
+        # Constraint: no filesystem/subprocess touch for evidence_ref.
+        basis = {"locator_kind": "evidence_ref", "locator": {"task_id": "g0", "cond_id": "p1"}}
+        g0 = gate("g0", "complete")
+        g0["preconditions"] = [{"id": "p1", "statement": "upstream", "check": None,
+                                 "satisfied": True, "satisfied_by": "e-g0-1"}]
+        cl = gated(g0=g0)
+        with mock.patch.object(E.subprocess, "run",
+                                side_effect=AssertionError("touched subprocess")):
+            problem = E._resolve_basis_locator(cl, None, basis)
+        self.assertIsNone(problem)
+
+    def test_attest_wires_base_dir_from_cli_dispatch_to_checklist_directory(self):
+        # Fresh-process CLI boundary: dispatch() computes base_dir from the
+        # checklist FILE's own directory (path.parent) -- prove attest's new
+        # base_dir param actually receives that value end to end, not just
+        # when called directly in-process.
+        basis = {"locator_kind": "file", "locator": {"path": "sibling.md"}}
+        cl = gated(g1=_basis_gate(basis=basis))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            (Path(d) / "sibling.md").write_text("x", encoding="utf-8")
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["attest", "g1", "--cond", "c1",
+                                          "--which", "postconditions", "--note", "checked"])
+            self.assertEqual(code, 0, err)
+            reloaded = E.load(f)
+        ev = reloaded["tasks"]["g1"]["evidence"][0]
+        self.assertEqual(ev["type"], "basis-check")
+        self.assertTrue(ev["payload"]["resolved"], ev["payload"])
+
+
 def _artifact_gate_matching(iid, match, status="in-progress"):
     t = gate(iid, status)
     t["postconditions"] = [{
@@ -5976,6 +6134,116 @@ class RenderDirectives(unittest.TestCase):
                           {"replan_input": {"output": "x.json"}})
 
 
+class BasisRendering(unittest.TestCase):
+    """569-w2-basis g1: a `basis` sibling field on a `check: null` Condition
+    lets plan authoring declare a resolvable locator (`file`/`evidence_ref`)
+    for a qualitative postcondition. `current()` must render it -- one
+    indented line immediately under the open condition's own line -- only
+    when populated and not `abstain`, the same populated-only convention
+    `constraints`/`anchors`/`directives` already use. This class covers the
+    render half only; the attest-time report-only guard is BasisAttestGuard."""
+
+    def test_populated_file_basis_renders_basis_line(self):
+        post = [{"id": "c1", "statement": "frame written", "check": None,
+                 "satisfied": False,
+                 "basis": {"locator_kind": "file",
+                           "locator": {"path": ".agent-work/w2-basis/MISSION_FRAME.md"}}}]
+        t = gate("g1", "in-progress")
+        t["postconditions"] = post
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [in-progress] — do g1\n"
+            "postconditions:\n"
+            "  c1 [unmet] null — frame written\n"
+            "    basis: file .agent-work/w2-basis/MISSION_FRAME.md\n"
+            "0/1 met\n"
+            "next: attest g1 --cond c1 --which postconditions"
+        ))
+
+    def test_populated_evidence_ref_basis_renders_basis_line(self):
+        post = [{"id": "c1", "statement": "upstream reviewed", "check": None,
+                 "satisfied": False,
+                 "basis": {"locator_kind": "evidence_ref",
+                           "locator": {"task_id": "g0", "cond_id": "c1"}}}]
+        t = gate("g1", "in-progress")
+        t["postconditions"] = post
+        cl = gated(g1=t)
+        out = E.current(cl)
+        self.assertIn("    basis: evidence_ref g0.c1\n", out)
+
+    def test_abstain_basis_renders_nothing(self):
+        post = [{"id": "c1", "statement": "frame written", "check": None,
+                 "satisfied": False,
+                 "basis": {"locator_kind": "abstain", "locator": {}}}]
+        t = gate("g1", "in-progress")
+        t["postconditions"] = post
+        cl = gated(g1=t)
+        out = E.current(cl)
+        self.assertNotIn("basis:", out)
+        self.assertEqual(out, (
+            "ACTIVE g1 [in-progress] — do g1\n"
+            "postconditions:\n"
+            "  c1 [unmet] null — frame written\n"
+            "0/1 met\n"
+            "next: attest g1 --cond c1 --which postconditions"
+        ))
+
+    def test_absent_basis_renders_nothing_and_baseline_is_unchanged(self):
+        # No basis key at all -- must render byte-identical to the pre-#569
+        # baseline (Protected Intent: no observable change for a condition
+        # that carries no basis).
+        post = [{"id": "c1", "statement": "frame written", "check": None,
+                 "satisfied": False}]
+        t = gate("g1", "in-progress")
+        t["postconditions"] = post
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [in-progress] — do g1\n"
+            "postconditions:\n"
+            "  c1 [unmet] null — frame written\n"
+            "0/1 met\n"
+            "next: attest g1 --cond c1 --which postconditions"
+        ))
+
+    def test_basis_line_sits_under_its_own_condition_not_after_all(self):
+        post = [
+            {"id": "c1", "statement": "first", "check": None, "satisfied": False,
+             "basis": {"locator_kind": "file", "locator": {"path": "a.md"}}},
+            {"id": "c2", "statement": "second", "check": None, "satisfied": False},
+        ]
+        t = gate("g1", "in-progress")
+        t["postconditions"] = post
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [in-progress] — do g1\n"
+            "postconditions:\n"
+            "  c1 [unmet] null — first\n"
+            "    basis: file a.md\n"
+            "  c2 [unmet] null — second\n"
+            "0/2 met\n"
+            "next: attest g1 --cond c1 --which postconditions | attest g1 --cond c2 --which postconditions"
+        ))
+
+    def test_state_passes_basis_through_without_re_running_checks(self):
+        # INV-2: state() is a pure projection reading the stored `basis`
+        # dict only -- it must never probe anything, and a `basis` field
+        # sits beside a `command` check elsewhere on the same gate here to
+        # prove the passthrough doesn't trip that check either.
+        t = gate("g1", "in-progress", command=FAIL_COMMAND, why_exempt=False)
+        t["postconditions"].append(
+            {"id": "c2", "statement": "frame written", "check": None,
+             "satisfied": False,
+             "basis": {"locator_kind": "file", "locator": {"path": "a.md"}}}
+        )
+        cl = gated(g1=t)
+        with mock.patch.object(E.subprocess, "run",
+                                side_effect=AssertionError("state() ran a command check")):
+            view = E.state(cl)
+        basis_conds = [c for c in view["active"]["postconditions"] if c["id"] == "c2"]
+        self.assertEqual(basis_conds[0]["basis"],
+                          {"locator_kind": "file", "locator": {"path": "a.md"}})
+
+
 class TaskFieldCompleteness(unittest.TestCase):
     """Issue #420 defect 3, made falsifiable by #433: a real enumeration of the
     fields a Task may carry (docs/CHECKLIST_SCHEMA.md's Task table, plus
@@ -8270,3 +8538,113 @@ class ShippedBookendHumanAcceptance(unittest.TestCase):
                     "lives only in the mutable middle, exactly the #634 residue "
                     "this pins against.",
                 )
+
+
+class CommanderSpineBasisFields(unittest.TestCase):
+    """569-w2-basis g2: hand-authored `basis` (the report-only locator
+    mechanism g1 shipped -- see docs/CHECKLIST_SCHEMA.md's "Basis" subsection
+    and `_resolve_basis_locator`) on exactly `plan.c2`/`plan.c4`/`plan.c5` in
+    the shipped COMMANDER_SPINE.template.json -- this repo's first live
+    application of the field to real shipped content. Every other condition
+    in the file, across every gate, must stay byte-identical (no `basis` key
+    at all) per the epic's `ruling-engine-first-backfill-where-it-earns-it`
+    (exactly these 3, not a rollout) and the g2 handoff's Protected Intent.
+
+    Pinned to this gate's shipped git HEAD per
+    `ruling-red-proof-pinned-to-shipped-revision`: written and run BEFORE the
+    template carried any `basis` key and observed to fail (RED -- see the g2
+    IMPLEMENTER_RESULT for the transcript), then made to pass by the surgical
+    text edit (GREEN). If HEAD has moved past the pinned commit, skip rather
+    than assert against a template shape this test was never written against."""
+
+    SPINE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
+
+    # Captured via `git rev-parse HEAD` at implementation time (g2 dispatch).
+    PINNED_HEAD = "9d5aac6daa58a72fc6a665cb39879ee5705f7f71"
+
+    EXPECTED_BASIS = {
+        "c2": {
+            "locator_kind": "file",
+            "locator": {"path": ".agent-work/<work-id>/execute.json"},
+        },
+        "c4": {
+            "locator_kind": "file",
+            "locator": {
+                "path": ".agent-work/<work-id>/plan-candidate-*.md",
+                "glob": True,
+                "min_matches": 2,
+            },
+        },
+        "c5": {
+            "locator_kind": "file",
+            "locator": {"path": ".agent-work/<work-id>/PLAN_CRITIC.md"},
+        },
+    }
+
+    def _skip_if_head_moved(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        head = out.stdout.strip()
+        if head != self.PINNED_HEAD:
+            self.skipTest(
+                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
+                f"{head} -- this test's assumptions about the template's "
+                "shape need re-verifying against the current HEAD before "
+                "they can be trusted, not silently re-run against drift"
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_plan_c2_c4_c5_each_carry_the_ratified_basis_shape(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        by_id = {c["id"]: c for c in cl["tasks"]["plan"]["postconditions"]}
+        for cond_id, expected in self.EXPECTED_BASIS.items():
+            with self.subTest(cond=cond_id):
+                basis = by_id[cond_id].get("basis")
+                self.assertIsInstance(
+                    basis, dict, f"plan.{cond_id} carries no basis object")
+                self.assertEqual(basis["locator_kind"], expected["locator_kind"])
+                self.assertEqual(basis["locator"], expected["locator"])
+                self.assertIsInstance(
+                    basis.get("because"), str,
+                    f"plan.{cond_id}'s basis carries no 'because' rationale")
+                self.assertTrue(basis["because"].strip())
+
+    def test_no_condition_outside_plan_c2_c4_c5_carries_a_basis_key(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        carrying = []
+        for task_id, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which, []) or []:
+                    if "basis" in c:
+                        carrying.append(f"{task_id}.{c['id']}")
+        self.assertEqual(
+            sorted(carrying),
+            sorted(f"plan.{cond_id}" for cond_id in self.EXPECTED_BASIS),
+            "exactly plan.c2/c4/c5 -- and no other condition in the whole "
+            "template -- may carry a basis key; a mismatch here means either "
+            "a missed target or drift onto a protected condition",
+        )
+
+    def test_live_checklist_from_the_template_renders_basis_lines_at_plan(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        for iid in cl["items"]:
+            if iid == "plan":
+                break
+            cl["tasks"][iid]["status"] = "complete"
+        self.assertEqual(E.active_id(cl), "plan")
+        out = E.current(cl)
+        self.assertIn(
+            "    basis: file .agent-work/<work-id>/execute.json", out)
+        self.assertIn(
+            "    basis: file .agent-work/<work-id>/plan-candidate-*.md", out)
+        self.assertIn(
+            "    basis: file .agent-work/<work-id>/PLAN_CRITIC.md", out)
