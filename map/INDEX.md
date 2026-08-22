@@ -4,9 +4,9 @@
 conftest: 1 modules, 3 entities
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 60 modules, 1293 entities
+scripts: 60 modules, 1294 entities
 skills: 1 modules, 22 entities
-tests: 100 modules, 5535 entities
+tests: 100 modules, 5540 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -41,7 +41,7 @@ tests: 100 modules, 5535 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (60 modules, 1293 entities)
+## scripts (60 modules, 1294 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -83,7 +83,7 @@ tests: 100 modules, 5535 entities
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
-- [scripts.run_crew](scripts.run_crew/INDEX.md) (85 entities, 23 holes): Safe crew launcher with a durable session-recovery registry.
+- [scripts.run_crew](scripts.run_crew/INDEX.md) (86 entities, 23 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
 - [scripts.spine_done_cli](scripts.spine_done_cli/INDEX.md) (3 entities, 2 holes): Thin CLI wrapping `spine_lifecycle.finish_work` -- the reachable-today "one door verb" (#574 g3): "I'm done" as one call, usable today without waiting on `mcp_s
 - [scripts.spine_lifecycle](scripts.spine_lifecycle/INDEX.md) (28 entities, 3 holes): Open and close Constellation work in one call each: `open_work` builds a worktree, a branch, a scaffolded work area, and a compiled, origin-stamped spine; `clos
@@ -116,7 +116,7 @@ tests: 100 modules, 5535 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (100 modules, 5535 entities)
+## tests (100 modules, 5540 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -142,7 +142,7 @@ tests: 100 modules, 5535 entities
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.
 - [tests.test_crew_delivery_addressing](tests.test_crew_delivery_addressing/INDEX.md) (11 entities, 7 holes): Relaunch acceptance test for #507 / #370 / #413 (crew delivery addressing).
 - [tests.test_crew_dispatch_doctrine](tests.test_crew_dispatch_doctrine/INDEX.md) (3 entities, 2 holes): #611 (cleanup-g-crew-tier) g2-doctrine: crew-dispatch.md must name the 'Suggested Model Tier' handoff field as the thing a Commander resolves --model from, conn
-- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (354 entities, 271 holes): HOLE: no docstring
+- [tests.test_crew_launcher](tests.test_crew_launcher/INDEX.md) (359 entities, 275 holes): HOLE: no docstring
 - [tests.test_crew_worktree_cwd](tests.test_crew_worktree_cwd/INDEX.md) (19 entities, 13 holes): A dispatched crew runs in ITS OWN worktree (issue #568, the g1b delta).
 - [tests.test_curate_corpus](tests.test_curate_corpus/INDEX.md) (40 entities, 23 holes): Golden-fixture suite for scripts/curate_corpus.py.
 - [tests.test_declared_dispatch](tests.test_declared_dispatch/INDEX.md) (14 entities, 14 holes): Tests for scripts/verify_declared_dispatch.py -- the oracle the generator's injected `[[gate.dispatch]]` postcondition (LIFECYCLE_CONTRACT.md section 5) shells 

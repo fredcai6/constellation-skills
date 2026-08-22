@@ -635,8 +635,14 @@ class WaiveHookTests(unittest.TestCase):
         # `command` is `<quoted sys.executable> -c '<script>'`; extract
         # `<script>` rather than asking a shell to parse the quoting, so this
         # test does not depend on a shell being on PATH the same way the real
-        # hook runner does.
-        prefix = f"{shlex.quote(sys.executable)} -c '"
+        # hook runner does. `RC.posix_command_word`, not `shlex.quote` -- on
+        # Linux `sys.executable` rarely needs escaping either way, but only
+        # `posix_command_word` matches what `crew_settings_json` actually
+        # emits on a Windows host, where `sys.executable`'s backslashes make
+        # the two diverge (`shlex.quote` wraps the whole path in a leading
+        # apostrophe; `posix_command_word` never does -- see its module
+        # comment in run_crew.py).
+        prefix = f"{RC.posix_command_word(sys.executable)} -c '"
         self.assertTrue(command.startswith(prefix))
         self.assertTrue(command.endswith("'"))
         script = command[len(prefix):-1]
@@ -712,6 +718,76 @@ class HookPortabilityTests(unittest.TestCase):
                 RC.crew_settings_json()
         finally:
             RC.install_constellation.assert_shell_safe_command = original
+
+
+class WindowsInterpreterQuotingTests(unittest.TestCase):
+    """89 Windows-CI failures, one bug: `crew_settings_json` used to quote
+    `sys.executable` with `shlex.quote`, which wraps ANY string containing a
+    shell-unsafe character -- and a bare backslash counts as unsafe by its
+    definition, not just a space -- in a leading `'...'` literal. A real
+    Windows interpreter path (`C:\\hostedtoolcache\\...\\python.exe`) is all
+    backslashes and no spaces, so `shlex.quote` quoted it every time and the
+    composed hook command started with an apostrophe: exactly the shape
+    `assert_shell_safe_command` (install_constellation.py, #539) exists to
+    refuse. `posix_command_word` fixes this by escaping unsafe characters
+    individually instead of wrapping the whole word, so the result never
+    starts with a quote mark.
+
+    This does not need an actual Windows host: `posix_command_word` is pure
+    string logic, and a Windows-shaped path is just a string. Monkeypatching
+    `sys.executable` exercises the exact failure shape on Linux."""
+
+    def test_windows_backslash_path_survives_the_shell_safety_guard(self):
+        # The exact interpreter string GitHub Actions' windows-latest runner
+        # reported in the CI log that motivated this fix.
+        windows_python = r"C:\hostedtoolcache\windows\Python\3.12.10\x64\python.exe"
+        with mock.patch.object(sys, "executable", windows_python):
+            command = json.loads(RC.crew_settings_json())[
+                "hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+        # Would raise InstallError before this fix -- see the positive
+        # control below, which proves the OLD `shlex.quote` composition
+        # really does trip this same guard on this same input.
+        RC.install_constellation.assert_shell_safe_command(command)
+        self.assertEqual(windows_python, shlex.split(command)[0])
+
+    def test_windows_path_with_spaces_also_survives(self):
+        # A Program-Files-style install path: needs quoting for the space,
+        # same as `shlex.quote` handled correctly -- this is the case the
+        # original docstring cited as `shlex.quote`'s reason for existing.
+        windows_python = r"C:\Program Files\Python312\python.exe"
+        with mock.patch.object(sys, "executable", windows_python):
+            command = json.loads(RC.crew_settings_json())[
+                "hooks"]["PreToolUse"][0]["hooks"][0]["command"]
+        RC.install_constellation.assert_shell_safe_command(command)
+        self.assertEqual(windows_python, shlex.split(command)[0])
+
+    def test_positive_control_shlex_quote_alone_trips_the_guard(self):
+        # Proves this test suite would have caught the original bug: composing
+        # the SAME hook command with plain `shlex.quote` (the pre-fix
+        # behavior) on the SAME Windows-shaped path really does start with an
+        # apostrophe and really does fail `assert_shell_safe_command`. Without
+        # this, the two tests above could pass vacuously -- e.g. if
+        # `assert_shell_safe_command` were accidentally disabled -- and no
+        # test here would notice.
+        windows_python = r"C:\hostedtoolcache\windows\Python\3.12.10\x64\python.exe"
+        old_style_command = f"{shlex.quote(windows_python)} -c 'pass'"
+        self.assertTrue(old_style_command.startswith("'"))
+        with self.assertRaises(RC.install_constellation.InstallError):
+            RC.install_constellation.assert_shell_safe_command(old_style_command)
+
+    def test_posix_command_word_round_trips_special_characters(self):
+        # `shlex.split` (POSIX mode) is the same escaping grammar bash uses,
+        # so a correct escaped word must survive that round trip unchanged --
+        # this is what makes the quoting correct, not just guard-satisfying.
+        for word in (
+            r"C:\hostedtoolcache\windows\Python\3.12.10\x64\python.exe",
+            r"C:\Program Files\Python312\python.exe",
+            "plain/posix/path/python3",
+            "a'quote'in'it",
+        ):
+            escaped = RC.posix_command_word(word)
+            self.assertNotIn(escaped[0], "\"' \t")
+            self.assertEqual([word], shlex.split(escaped))
 
 
 class CrewGrantTiesToDoorTests(unittest.TestCase):

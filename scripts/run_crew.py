@@ -32,7 +32,6 @@ import hashlib
 import json
 import os
 import re
-import shlex
 import shutil
 import subprocess
 import sys
@@ -887,6 +886,36 @@ _WAIVE_HOOK_PY = (
 )
 
 
+#: `shlex.quote` wraps ANY string containing a shell-unsafe character -- and
+#: its definition of "unsafe" includes a bare backslash, not just spaces --
+#: in a single-quoted literal. That is exactly right for a shell ARGUMENT,
+#: but wrong for the one word this module quotes as a hook's leading
+#: COMMAND: `sys.executable`. On a Windows host that path is
+#: `C:\hostedtoolcache\...\python.exe` -- no spaces, but backslashes
+#: throughout -- so `shlex.quote` wraps it in `'...'` regardless, and the
+#: composed command begins with an apostrophe. `assert_shell_safe_command`
+#: exists to catch precisely that shape, and it is not a false alarm: a
+#: command starting with a quote character IS the #539 trap, whichever
+#: function produced it.
+#:
+#: The fix is to quote the way POSIX shells let you quote a word WITHOUT a
+#: leading quote mark: escape each unsafe character individually with a
+#: backslash instead of wrapping the whole word. `\\`, `\ `, `\'` etc. are
+#: literal-next-character escapes under POSIX word expansion -- the same
+#: rule `shlex.split` reverses -- so the escaped form round-trips back to
+#: the original string and still names exactly one word; it just never
+#: starts with a character `assert_shell_safe_command` forbids.
+_SHELL_UNSAFE_CHAR = re.compile(r"[^\w@%+=:,./-]", re.ASCII)
+
+
+def posix_command_word(word: str) -> str:
+    """Quote `word` as a single POSIX/bash word safe to place FIRST in a
+    command string -- unlike `shlex.quote`, this never wraps the result in a
+    leading quote mark. See the module comment above `_SHELL_UNSAFE_CHAR` for
+    why `shlex.quote` is wrong for `sys.executable` on Windows."""
+    return _SHELL_UNSAFE_CHAR.sub(lambda m: "\\" + m.group(0), word)
+
+
 def crew_settings_json() -> str:
     """The `--settings` JSON blob every spawned crew gets: a `PreToolUse` hook on
     `mcp__spine__spine_evidence` that denies only `action=waive` (see
@@ -904,16 +933,18 @@ def crew_settings_json() -> str:
     a crew can waive its own bound spine check with nothing to say so (#539:
     `install_constellation.py::build_hook_command` documents the same rule --
     "never re-probed here, never hardcoded" -- for the installer's own hooks).
-    `shlex.quote` covers an interpreter path containing spaces; `shell: bash`
-    matches every entry in this repo's own `.claude/settings.json`, and without
-    it a single-quoted inline program does not survive a non-POSIX parse
-    (`shlex.split(cmd, posix=False)` leaves the quotes on, so `cmd.exe` reads a
-    program starting with an apostrophe and dies -- another silent fail-open).
+    `posix_command_word` (not `shlex.quote` -- see its module comment) covers
+    an interpreter path containing spaces OR Windows backslashes without ever
+    producing a leading quote mark; `shell: bash` matches every entry in this
+    repo's own `.claude/settings.json`, and without it a quoted inline program
+    does not survive a non-POSIX parse (`shlex.split(cmd, posix=False)` leaves
+    the quotes on, so `cmd.exe` reads a program starting with an apostrophe
+    and dies -- another silent fail-open).
     `assert_shell_safe_command` is the same #539 guard `build_hook_command`
     applies to its own composed command: it raises (never a bare `assert`) if
     the command does not start with a bare command word, which a badly-quoted
     interpreter path could produce."""
-    command = f"{shlex.quote(sys.executable)} -c '{_WAIVE_HOOK_PY}'"
+    command = f"{posix_command_word(sys.executable)} -c '{_WAIVE_HOOK_PY}'"
     install_constellation.assert_shell_safe_command(command)
     return json.dumps({
         "hooks": {
