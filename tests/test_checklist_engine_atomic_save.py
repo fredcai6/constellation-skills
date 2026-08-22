@@ -9,10 +9,27 @@ The load-bearing assertions here are DETERMINISTIC and mechanical, deliberately:
 
 A thread race against the old `write_bytes` implementation would have been
 timing-dependent, so it could come out GREEN against the broken code by luck and
-thereby fake its own red-proof. A flaky red is not a red. The concurrency test at
-the bottom is SUPPORTING evidence -- it exercises the close criterion ("a reader
-concurrent with a writer never observes a partial document") but it is not what
-discriminates old from new.
+thereby fake its own red-proof. A flaky red is not a red.
+
+**A real thread-race test lived here through issue #647 and was deleted.** It
+ran readers concurrent with a writer and asserted every read was complete. Two
+rulings on #647 found it did not discriminate anything the deterministic tests
+below don't already discriminate: on POSIX it could not fail for tearing at all
+(`rename(2)` never invalidates an open reader, and (1)-(3) below already prove
+`save()` never touches the target's bytes in place and installs by exactly one
+atomic rename); on Windows it failed for CONTENTION -- a busy retry budget
+exhausted under synthetic thread-loop load -- not for tearing, which is a
+different invariant than the one it claimed to test and one the (4b)/(4c)
+sections below already pin deterministically and without a race:
+`test_save_never_opens_target_for_writing`, `test_target_inode_is_replaced_exactly_once`,
+`test_a_windows_sharing_violation_is_retried_and_then_succeeds`,
+`test_a_persistent_sharing_violation_RAISES_rather_than_losing_the_write`, and
+`test_a_non_busy_OSError_is_NOT_retried` -- plus their (4c) reader-side mirrors
+added when the racy test was removed. A racy test that cannot prove anything
+beyond what these already prove is the "check that cannot mean what it claims"
+pattern issue #518 tracks generally; do not re-add it. If a NEW invariant needs
+covering, add a deterministic test for that invariant specifically, the way
+(4b)/(4c) do.
 """
 
 import importlib.util
@@ -21,7 +38,6 @@ import errno
 import json
 import os
 import tempfile
-import threading
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -300,6 +316,128 @@ class AtomicSaveTests(unittest.TestCase):
                 E.save(self.path, SAMPLE)
         self.assertEqual(calls[0], 1, "a non-busy OSError was retried; it must not be")
 
+    # -- (4c) the Windows read-busy retry: the reader-side mirror of (4b) --- #
+    #
+    # Added by issue #647's second ruling to close a gap the deleted racy
+    # concurrent-reader test's failure exposed: (4b) above has full
+    # deterministic coverage of `_replace_with_retry` (the WRITER's busy
+    # retry), by mocking `os.replace`; NOTHING anywhere mocked `read_text` to
+    # prove `_read_text_with_retry` (the READER's busy retry) actually
+    # retries, actually gives up correctly, and actually respects the narrow
+    # `os.name == "nt"` scoping `_read_busy_on_windows` documents for its bare
+    # `PermissionError` fallback. These five tests give the reader side the
+    # same shape of proof the writer side already had -- no thread, no race.
+
+    def test_a_windows_read_sharing_violation_is_retried_and_then_succeeds(self):
+        """The reader-side mirror of
+        `test_a_windows_sharing_violation_is_retried_and_then_succeeds`: a
+        concurrent `save()`'s `os.replace` briefly holds the destination name
+        exclusively, so an ordinary `read_text()` can raise the same Windows
+        busy `PermissionError` while the install is mid-flight
+        (`_read_text_with_retry`'s own docstring).
+
+        Simulates that on any host: the first two `read_text` calls raise
+        with `winerror` set to a Windows busy code, the third succeeds and
+        returns the real document."""
+        self.path.write_text(json.dumps(SAMPLE, indent=2) + "\n", encoding="utf-8")
+        real_read_text = Path.read_text
+        calls = [0]
+
+        def flaky(**kwargs):
+            calls[0] += 1
+            if calls[0] <= 2:
+                exc = PermissionError(13, "Access is denied")
+                exc.winerror = 5  # ERROR_ACCESS_DENIED
+                raise exc
+            return real_read_text(self.path, **kwargs)
+
+        with mock.patch.object(Path, "read_text", side_effect=flaky):
+            doc = E.load(self.path)
+        self.assertEqual(calls[0], 3, "the retry did not re-attempt the read")
+        self.assertEqual(doc, SAMPLE)
+
+    def test_a_persistent_read_sharing_violation_RAISES_rather_than_returning_a_partial_document(self):
+        """Fail-loud is the reader's contract too: if every attempt loses the
+        race, `load()` must propagate the error -- never return a partial or
+        wrong document, and never silently retry forever. Also pins that the
+        retry actually runs its full budget (`E._REPLACE_ATTEMPTS` calls)
+        before giving up, rather than bailing early."""
+        self.path.write_text(json.dumps(SAMPLE, indent=2) + "\n", encoding="utf-8")
+        calls = [0]
+
+        def always_busy(**kwargs):
+            calls[0] += 1
+            exc = PermissionError(13, "Access is denied")
+            exc.winerror = 32  # ERROR_SHARING_VIOLATION
+            raise exc
+
+        with mock.patch.object(Path, "read_text", side_effect=always_busy):
+            with self.assertRaises(PermissionError):
+                E.load(self.path)
+        self.assertEqual(calls[0], E._REPLACE_ATTEMPTS,
+                         "the read retry gave up before exhausting its budget")
+
+    def test_a_non_busy_read_OSError_is_NOT_retried(self):
+        """Symmetric with `test_a_non_busy_OSError_is_NOT_retried`: a real read
+        failure -- not the transient busy shape -- must fail on the FIRST
+        attempt, or a genuine problem (a vanished directory, a real
+        permission error) turns into a slow failure instead of a fast,
+        honest one."""
+        self.path.write_text(json.dumps(SAMPLE, indent=2) + "\n", encoding="utf-8")
+        calls = [0]
+
+        def other_error(**kwargs):
+            calls[0] += 1
+            raise OSError(errno.ENOENT, "No such file or directory")
+
+        with mock.patch.object(Path, "read_text", side_effect=other_error):
+            with self.assertRaises(OSError):
+                E.load(self.path)
+        self.assertEqual(calls[0], 1, "a non-busy OSError was retried; it must not be")
+
+    def test_a_bare_permission_error_is_retried_as_busy_on_windows(self):
+        """`_read_busy_on_windows` treats a bare `PermissionError` (`errno.EACCES`,
+        NO `winerror` at all) as busy too -- but its own docstring says this is
+        scoped to `os.name == "nt"` ONLY. This pins the Windows leg of that
+        split: on `nt`, the bare shape IS retried."""
+        self.path.write_text(json.dumps(SAMPLE, indent=2) + "\n", encoding="utf-8")
+        real_read_text = Path.read_text
+        calls = [0]
+
+        def bare_then_ok(**kwargs):
+            calls[0] += 1
+            if calls[0] <= 2:
+                raise PermissionError(errno.EACCES, "Access is denied")  # no winerror
+            return real_read_text(self.path, **kwargs)
+
+        with mock.patch.object(E.os, "name", "nt"), \
+             mock.patch.object(Path, "read_text", side_effect=bare_then_ok):
+            doc = E.load(self.path)
+        self.assertEqual(calls[0], 3, "a bare PermissionError was not retried on Windows")
+        self.assertEqual(doc, SAMPLE)
+
+    def test_a_bare_permission_error_is_NOT_retried_off_windows(self):
+        """The other half of the same split: off Windows, a bare
+        `PermissionError(EACCES)` is a REAL permission problem -- `rename(2)`
+        never invalidates an open reader on POSIX, so nothing transient
+        produces this shape there -- and must fail on the FIRST attempt, not
+        be retried into a slow success-that-should-have-failed (see
+        `test_an_unreadable_spine_file_is_refused` for the same posture
+        enforced elsewhere)."""
+        self.path.write_text(json.dumps(SAMPLE, indent=2) + "\n", encoding="utf-8")
+        calls = [0]
+
+        def bare(**kwargs):
+            calls[0] += 1
+            raise PermissionError(errno.EACCES, "Permission denied")
+
+        with mock.patch.object(E.os, "name", "posix"), \
+             mock.patch.object(Path, "read_text", side_effect=bare):
+            with self.assertRaises(PermissionError):
+                E.load(self.path)
+        self.assertEqual(calls[0], 1,
+                         "a bare PermissionError was retried off Windows; it must not be")
+
     # -- (5) line endings: the behaviour that is easiest to break silently -- #
 
     def test_crlf_file_stays_crlf(self):
@@ -331,74 +469,6 @@ class AtomicSaveTests(unittest.TestCase):
         self.path.write_bytes(b'{\r\n  "work_id": "old"\n}\n')
         E.save(self.path, SAMPLE)
         self.assertNotIn(b"\r", self.path.read_bytes())
-
-    # -- (6) SUPPORTING (racy by nature): the concurrent reader ------------- #
-
-    def test_concurrent_reader_never_observes_a_partial_document(self):
-        """The close criterion, EXERCISED rather than asserted: readers hammer the
-        spine while writers replace it, and every read must yield a COMPLETE
-        document -- the old one or the new one, never a torn one.
-
-        This test is TIMING-DEPENDENT and is therefore supporting evidence only.
-        It is not what proves the fix; tests (1)-(3) are.
-        """
-        big = {"work_id": "w", "items": [{"id": f"i{n}", "note": "x" * 400}
-                                         for n in range(200)]}
-        small = {"work_id": "w", "items": []}
-        E.save(self.path, small)
-
-        stop = threading.Event()
-        errors: list[str] = []
-        reads = [0]
-
-        def writer():
-            payloads = (big, small)
-            n = 0
-            while not stop.is_set():
-                try:
-                    E.save(self.path, payloads[n % 2])
-                except OSError as exc:  # pragma: no cover -- would be a finding
-                    errors.append(f"writer OSError: {exc!r}")
-                n += 1
-
-        def reader():
-            # `E.load(self.path)`, not a bare `self.path.read_text()`: `load()`
-            # is the actual API `save()` is meant to interoperate with (it is
-            # what `run_crew.py`'s parent-lease heartbeat calls to read a spine
-            # another process is concurrently `save()`-ing -- #613's own
-            # scenario, and the docstring's own example). A raw `read_text()`
-            # bypasses `load()`'s retry around the same narrow Windows sharing
-            # violation `save()`'s writer side already retries around, so it
-            # was exercising a gap in the TEST, not in the engine.
-            while not stop.is_set():
-                try:
-                    doc = E.load(self.path)
-                except json.JSONDecodeError as exc:
-                    errors.append(f"TORN READ: {exc}")
-                    return
-                except OSError as exc:  # pragma: no cover
-                    errors.append(f"reader OSError: {exc!r}")
-                    return
-                if doc.get("work_id") != "w":
-                    errors.append(f"partial document: {doc!r}")
-                    return
-                reads[0] += 1
-
-        threads = [threading.Thread(target=writer) for _ in range(2)]
-        threads += [threading.Thread(target=reader) for _ in range(3)]
-        for t in threads:
-            t.start()
-        stop.wait(1.5)
-        stop.set()
-        for t in threads:
-            t.join(timeout=5)
-
-        self.assertEqual(errors, [])
-        self.assertGreater(reads[0], 0, "the reader threads never read anything")
-        self.assertEqual(self._tmp_siblings(), [],
-                         "temp files survived the concurrent run")
-        # Whatever landed last is a whole, parseable document.
-        json.loads(self.path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
