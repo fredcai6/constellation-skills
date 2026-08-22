@@ -128,6 +128,13 @@
   },
   "revised_forecast": [
     {
+      "outcome": "Evaluate the 65: per-condition assessment of whether a resolvable basis locator can honestly be authored, producing the evidence base for re-adjudicating where the blocking line falls",
+      "why_likely": "Human named it as the trigger for the promotion decision deferred out of wave 2",
+      "entry_conditions": [
+        "w2-basis merged so the locator vocabulary and basis-check trail exist to evaluate against"
+      ]
+    },
+    {
       "outcome": "Plan-freeze validation + journal fidelity (#518 #524 #381 #382 #459 #515 #390)",
       "why_likely": "Plan-time catches are cheap-moment fixes that fit the intent",
       "entry_conditions": [
@@ -144,6 +151,13 @@
     }
   ],
   "revised_uncertainty": [
+    {
+      "unknown": "Where the blocking line falls across the 65 qualitative conditions",
+      "affects": "Whether and how the basis check is ever promoted from report-only",
+      "settle_by": "the evaluate-the-65 measurement mission",
+      "current_evidence": "none yet; w2-basis shipped two locator kinds (file, evidence_ref), an abstain escape, and named state_field and command as untaken roads",
+      "next_probe": "walk all 65 check-null conditions and classify each by which locator kind, if any, it can honestly carry"
+    },
     {
       "unknown": "What counts as a resolvable evidence locator",
       "affects": "Whether #556's refusal is enforceable or becomes prose",
