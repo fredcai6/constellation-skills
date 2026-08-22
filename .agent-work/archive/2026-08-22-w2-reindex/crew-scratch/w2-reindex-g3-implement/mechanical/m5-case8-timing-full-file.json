@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-case8-timing-full-file",
+  "mechanical": {
+    "run": "w2-reindex-g3-implement",
+    "project": "constellation-skills",
+    "role": "g3-implement-implementer",
+    "refusals": 2,
+    "spine-step": "m5-case8-timing-full-file",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-g3-implement-m5-case8-timing-full-file@a74d029cbbcd13f76f074db4d866410a2308aa21",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex-g3-implement",
+    "generated_at": "2026-08-22T18:58:43Z"
+  }
+}

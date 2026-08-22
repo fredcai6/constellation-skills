@@ -4505,6 +4505,208 @@ class RepoMcpConfigWiringTests(unittest.TestCase):
             )
 
 
+def _init_scratch_git_repo(path: Path) -> None:
+    """A minimal, real git repo at `path`: init + identity + one commit, so
+    `git worktree add` (which refuses on a repo with no commits) works."""
+    path.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "init", "-q"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "Test"], cwd=str(path), check=True, capture_output=True)
+    (path / "README.md").write_text("scratch\n", encoding="utf-8")
+    subprocess.run(["git", "add", "README.md"], cwd=str(path), check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-q", "-m", "initial"], cwd=str(path), check=True, capture_output=True)
+
+
+class GitPreCommitHookWiringTests(unittest.TestCase):
+    """g2-implement: wire `scripts/hooks/code_map_precommit.py` (gate 1,
+    already shipped, read-only reference here) into
+    `install_constellation.py` so a real self-install writes it to the
+    git-resolved `pre-commit` hook path -- `git commit` becomes its only real
+    caller. Same fixture idiom as `RepoMcpConfigWiringTests`:
+    `tempfile.TemporaryDirectory()`, explicit `git_repo_root=`, never this
+    repo's own git state for anything that WRITES. `resolve_git_hooks_dir` is
+    read-only (a `git rev-parse`), so it alone is also exercised directly
+    against this actual checkout, per the handoff's evidence requirement."""
+
+    # -- resolve_git_hooks_dir ------------------------------------------------
+
+    def test_resolve_git_hooks_dir_against_a_plain_scratch_repo(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            resolved = installer.resolve_git_hooks_dir(repo)
+            self.assertEqual((repo / ".git" / "hooks").resolve(), resolved.resolve())
+
+    def test_resolve_git_hooks_dir_honors_core_hooksPath(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            custom_hooks = Path(tmp) / "custom-hooks"
+            custom_hooks.mkdir()
+            subprocess.run(
+                ["git", "config", "core.hooksPath", str(custom_hooks)],
+                cwd=str(repo), check=True, capture_output=True,
+            )
+            resolved = installer.resolve_git_hooks_dir(repo)
+            self.assertEqual(custom_hooks.resolve(), resolved.resolve())
+
+    def test_resolve_git_hooks_dir_returns_none_on_git_failure(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            not_a_repo = Path(tmp) / "not-a-repo"
+            not_a_repo.mkdir()
+            self.assertIsNone(installer.resolve_git_hooks_dir(not_a_repo))
+
+    def test_resolve_git_hooks_dir_worktree_shares_main_checkouts_hooks_dir(self):
+        """The one shared-hooks-across-worktrees fact a synthetic
+        single-worktree fixture alone cannot stand in for: a linked worktree
+        must resolve to the SAME hooks directory as its main checkout."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            main_repo = Path(tmp) / "main-repo"
+            _init_scratch_git_repo(main_repo)
+            worktree = Path(tmp) / "second-worktree"
+            subprocess.run(
+                ["git", "worktree", "add", str(worktree), "-b", "wt-branch"],
+                cwd=str(main_repo), check=True, capture_output=True,
+            )
+            from_main = installer.resolve_git_hooks_dir(main_repo)
+            from_worktree = installer.resolve_git_hooks_dir(worktree)
+            self.assertIsNotNone(from_main)
+            self.assertEqual(from_main.resolve(), from_worktree.resolve())
+
+    def test_resolve_git_hooks_dir_against_this_actual_checkout(self):
+        """This checkout IS a linked worktree sharing `.git/hooks` with 8+
+        sibling worktrees (confirmed via `git worktree list`) -- proven
+        against the real thing, not only a synthetic fixture. Read-only
+        (`git rev-parse`), so safe to run against the real checkout."""
+        installer = load_installer()
+        expected = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-path", "hooks"],
+            cwd=str(installer.REPO_ROOT), capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        resolved = installer.resolve_git_hooks_dir(installer.REPO_ROOT)
+        self.assertIsNotNone(resolved)
+        self.assertEqual(Path(expected).resolve(), resolved.resolve())
+        self.assertTrue(str(resolved).endswith("constellation-skills/.git/hooks"))
+
+    # -- install_git_precommit_hook -------------------------------------------
+
+    def test_install_git_precommit_hook_writes_an_executable_wrapper(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            lines = []
+            installer.install_git_precommit_hook(repo, dry_run=False, out=lines.append)
+            hook_path = repo / ".git" / "hooks" / "pre-commit"
+            self.assertTrue(hook_path.is_file())
+            text = hook_path.read_text(encoding="utf-8")
+            self.assertIn("scripts/hooks/code_map_precommit.py", text)
+            self.assertIn("git rev-parse --show-toplevel", text)
+            self.assertTrue(os.access(hook_path, os.X_OK))
+            self.assertTrue(any(str(hook_path) in line for line in lines))
+
+    def test_install_git_precommit_hook_is_idempotent(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            installer.install_git_precommit_hook(repo, dry_run=False, out=lambda _: None)
+            hook_path = repo / ".git" / "hooks" / "pre-commit"
+            first = hook_path.read_bytes()
+            installer.install_git_precommit_hook(repo, dry_run=False, out=lambda _: None)
+            second = hook_path.read_bytes()
+            self.assertEqual(first, second)
+
+    def test_install_git_precommit_hook_refuses_to_clobber_a_foreign_hook(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            hook_path = repo / ".git" / "hooks" / "pre-commit"
+            hook_path.write_text("#!/bin/sh\necho someone elses hook\n", encoding="utf-8")
+            before = hook_path.read_bytes()
+            lines = []
+            installer.install_git_precommit_hook(repo, dry_run=False, out=lines.append)
+            self.assertEqual(before, hook_path.read_bytes())
+            self.assertTrue(any("refus" in line.lower() for line in lines))
+
+    def test_install_git_precommit_hook_dry_run_writes_nothing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            hook_path = repo / ".git" / "hooks" / "pre-commit"
+            lines = []
+            installer.install_git_precommit_hook(repo, dry_run=True, out=lines.append)
+            self.assertFalse(hook_path.exists())
+            self.assertTrue(any("DRY RUN" in line for line in lines))
+
+    def test_install_git_precommit_hook_reports_and_noops_when_hooks_dir_unresolvable(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            not_a_repo = Path(tmp) / "not-a-repo"
+            not_a_repo.mkdir()
+            lines = []
+            installer.install_git_precommit_hook(not_a_repo, dry_run=False, out=lines.append)
+            self.assertFalse((not_a_repo / ".git").exists())
+            self.assertTrue(lines)
+
+    # -- main() wiring ---------------------------------------------------------
+
+    def test_default_is_a_noop_even_with_a_scratch_git_repo_present(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "charter"],
+                env={}, out=lambda _: None, git_repo_root=repo,
+            )
+            self.assertEqual(0, code)
+            self.assertFalse((repo / ".git" / "hooks" / "pre-commit").exists())
+
+    def test_explicit_wiring_through_main_writes_the_hook(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            _init_scratch_git_repo(repo)
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "charter"],
+                env={}, out=lambda _: None,
+                install_git_pre_commit_hook=True, git_repo_root=repo,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((repo / ".git" / "hooks" / "pre-commit").is_file())
+
+    def test_self_install_only_never_touches_git_hooks_when_not_self_install(self):
+        """`git_repo_root` left at its `None` default (the real CLI entry
+        point never passes it) and `is_self_install(args)` False (a `--dest`
+        override) must never even ATTEMPT to wire -- verified as a spy on
+        `install_git_precommit_hook`, never against this real checkout's own
+        `.git/hooks`."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.object(installer, "install_git_precommit_hook") as spy:
+                code = installer.main(
+                    ["--agent", "claude", "--scope", "user",
+                     "--dest", str(Path(tmp) / "skills"), "--skills", "charter"],
+                    env={}, out=lambda _: None, install_git_pre_commit_hook=True,
+                )
+            self.assertEqual(0, code)
+            spy.assert_not_called()
+
+    def test_the_cli_entry_point_passes_install_git_pre_commit_hook_true(self):
+        text = INSTALLER.read_text(encoding="utf-8")
+        self.assertIn('if __name__ == "__main__":', text)
+        self.assertIn("install_git_pre_commit_hook=True", text)
+
+
 class WireMcpInterpreterReuseTests(unittest.TestCase):
     """`scripts/wire_mcp_interpreter.py` (M2 job 2) must reuse
     install_constellation.py's rewrite rather than carrying a second copy --

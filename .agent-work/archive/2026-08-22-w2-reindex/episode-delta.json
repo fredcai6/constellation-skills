@@ -1,0 +1,207 @@
+{
+  "work_id": "w2-reindex",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w2-reindex",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "none -- no context_manifest.py invocation recorded this session",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "PLAN_ALTERNATIVES.md",
+          "PLAN_CRITIC.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Close the launch order's named sharpest hazard -- a pre-commit hook that silently stages during a partial commit (git commit -p, git commit <path>) could corrupt what the author intended to commit -- before authoring execute.json."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Two independently-dispatched plan-candidate agents, each under a distinct constraint (smallest-diff vs. most-testable), would investigate the hazard and converge on comparable mechanisms."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Both candidates independently reproduced the exact same partial-commit corruption with real scratch-git experiments before proposing a fix, and a subsequent cold critic (given only the mission frame and the converged plan, no authoring context) found 5 additional blocking gaps in the chosen mechanism's operational specification: shared-hooks-directory blast radius, concurrent-invocation races on git worktree add, no timeout so fail-open does not cover a hang, an unspecified copy-back step from the ephemeral snapshot worktree to the real index, and a truth-source divergence with the pre-existing freshness test on partial-hunk commits."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One extra critic pass and one plan-authoring revision cycle before execute.json could be frozen; all 5 blocking findings were resolved by pinning concrete mechanical specifications (unique tempfile worktree paths, per-subprocess timeouts, plain-file-I/O copy-back, a shared-.git worktree test topology) into the gate constraints rather than left for an implementing crew to invent."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "none -- the critic's findings were resolved by design, not worked around."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A cold critic run after plan-alternatives convergence but before execute.json authoring caught mechanical gaps neither candidate's own investigation surfaced, because each candidate was reasoning from inside its own chosen mechanism rather than adversarially against it."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w2-reindex",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": "none -- no context_manifest.py invocation recorded this session",
+        "refusals": 5,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "crew-handoffs/g1-implement-implementer-result.md",
+          "crew-handoffs/g1-review-reviewer-result.md",
+          "crew-handoffs/g2-implement-implementer-result.md",
+          "crew-handoffs/g2-review-reviewer-result.md",
+          "crew-handoffs/g3-review-reviewer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Dispatch 5 real implementer/reviewer crews via scripts/run_crew.py's cli backend (no --spine argument, since each gate used the handoff+result-artifact contract rather than a nested spine) for gates g1 and g2's implement/review pairs plus g3's review."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A cli-backend crew dispatched with no --spine argument would have an unbound or absent SPINE_FILE/SPINE_SESSION, since the wrapper's own door-env assignment is documented as spine-conditional."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "All 5 of these crews (g1-implement, g1-review, g2-implement, g2-review, g3-review) reported in their own Workflow Feedback / crew-runs.json entries that their inherited SPINE_FILE/SPINE_SESSION resolved toward the dispatching Commander's own bound spine identity rather than being absent, and each one independently recognized this and safely routed around it -- authoring and driving its own scratch checklist/survey through checklist_engine.py's CLI directly, never touching or advancing the Commander's actual spine."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "Zero actual impact on this run -- no spine corruption occurred, confirmed by this Commander re-checking spine_status after every dispatch -- but every one of the 5 affected crews spent part of its own turn diagnosing and routing around the same anomaly independently, a repeated cost that a fixed door-binding contract for --spine-less cli dispatches would remove."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Each crew authored its own scratch checklist/survey and drove it via checklist_engine.py's CLI directly, per this project's own documented branch for a crew whose door resolves to a spine it does not own."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "weak",
+          "statement": "scripts/run_crew.py's _crew_door_env may only assign a fresh SPINE_FILE/SPINE_SESSION to a cli-backend child when --spine is passed, leaving a --spine-less cli dispatch to inherit whatever door-binding state the dispatching process's own environment/MCP session already carries."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "weak",
+          "statement": "Investigate whether a --spine-less cli-backend dispatch should get an explicitly unbound/absent door assignment rather than inheriting the parent's, so a dispatched crew never has to detect and route around this by its own judgment."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w2-reindex",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute:g3-implement",
+        "context-manifest-ref": "none -- no context_manifest.py invocation recorded this session",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 1,
+        "artifact-ref": [
+          "crew-handoffs/g3-implement-handoff.md",
+          "crew-handoffs/g3-implement-handoff-relaunch.md",
+          "tests/test_code_map_precommit_e2e.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "g3-implement's first attempt was dispatched to write and verify the end-to-end proof suite, including running the full local pytest suite as its final regression check."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The crew would run the full suite to completion inside its own turn and write IMPLEMENTER_RESULT before ending."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The crew's own stdout showed it launched the full suite in the background and ended its turn stating it would 'pick this back up automatically when it finishes' -- the CLI process then exited, killing the backgrounded pytest run with it, and no IMPLEMENTER_RESULT was ever written. recover_crews.py classified the attempt NEEDS-ABANDON. The actual substantive work (the 519-line, 7-method end-to-end test file covering all 8 required cases) was already complete and correct at the moment the crew wait-by-ended its turn -- confirmed by directly running the file after the fact -- so the failure was purely in the final verification step, not the implementation."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One abandon+relaunch cycle (attempt-2) to re-verify rather than rewrite, plus a second relaunch (attempt-3) after the Commander separately fixed an unrelated map-staleness gap attempt-2 correctly found and could not fix within its own tests/-only scope."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Abandoned the dead attempt via scripts/run_crew.py --abandon, then relaunched with a handoff that named the already-complete work explicitly (so it was verified, not redone) and gave the exact foreground nohup+until polling idiom to use instead of backgrounding the suite run."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A ~3.5-minute full-suite pytest run is long enough that a crew's own harness may auto-background a bare Bash invocation of it, and the crew's own instructions (the g3-implement handoff) named the required evidence but did not explicitly forbid ending the turn on a backgrounded long-running command, which this project's own doctrine names as a known failure shade ('wait-by-ending-turn')."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "weak",
+          "statement": "Any handoff whose Required Evidence includes a full-suite run should name the foreground nohup+until polling idiom explicitly, not just the bare command, given this failure mode is already documented doctrine but was not spelled out in the first g3-implement handoff."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w2-reindex",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute:g3-implement",
+        "context-manifest-ref": "none -- no context_manifest.py invocation recorded this session",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "map/INDEX.md",
+          "g3-implement-handoff-relaunch2.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "g3's end-to-end proof gate's own full-suite regression check was meant to confirm gates 1-2's shipped mechanism caused no suite regression."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The full suite would go straight to green once the end-to-end test file itself passed, since gates 1-2 had each already run and reported their own targeted suites green."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The full suite reported 1 failed (tests/test_code_map.py::MapTreeFreshnessTests) even though every gate 1-3 test passed. Root-caused by the g3-implement crew (attempt-2): this repo's own map/INDEX.md had gone stale from gate 2's own tracked-file edits to scripts/install_constellation.py and tests/test_install_constellation.py, never rebuilt, because nothing in this branch's own history had committed a real git commit yet -- the very mechanism this mission built would have caught it, but only fires on a real commit, and gates 1-2 landed as uncommitted working-tree edits. Neither gate 1 nor gate 2's own required evidence had included a full-suite run, only their own targeted test files, so this gap was invisible until g3's broader regression check reached it."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One mechanical fix (python -m scripts.code_map build --root ., 6 lines changed) plus one additional short re-verification crew dispatch (attempt-3) to confirm the full suite green afterward, rather than a real defect in gates 1-2's shipped code."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The Commander ran the rebuild directly (a mechanical step explicitly authorized by this repo's own docs/agents/AGENT_GUIDE.md build instructions), then dispatched a short pure-verification relaunch to confirm the full suite green with a real crew's own evidence rather than trusting the Commander's own in-session claim."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "This is the mission's own subject matter recurring inside its own execution: a stale map going undetected until a broad-enough check ran, exactly the class of problem the launch order's whole mission exists to close, surfaced here only because the new hook could not yet fire (no real commit had landed on this branch)."
+        }
+      ]
+    }
+  ]
+}

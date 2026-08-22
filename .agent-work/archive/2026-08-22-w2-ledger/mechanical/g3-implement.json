@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g3-implement",
+  "mechanical": {
+    "run": "w2-ledger",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "g3-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger-g3-implement@fbc8dce9ce43ca24ea6919a7117dfc3fe4bc792a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger",
+    "generated_at": "2026-08-22T18:36:51Z"
+  }
+}

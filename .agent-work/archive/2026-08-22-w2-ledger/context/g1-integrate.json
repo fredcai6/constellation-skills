@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "files": [],
+  "repo_rev": {
+    "commit": "9d5aac6daa58a72fc6a665cb39879ee5705f7f71"
+  },
+  "run": {
+    "work_id": "w2-ledger",
+    "generated_at": "2026-08-22T18:17:09Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w2-ledger",
+      "repo": "/home/tommy/projects/569-w2-ledger",
+      "durable": "/home/tommy/projects/569-w2-ledger"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w2-ledger"
+    }
+  }
+}

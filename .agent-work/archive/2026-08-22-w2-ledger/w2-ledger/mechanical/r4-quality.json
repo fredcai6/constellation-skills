@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "w2-ledger",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 2,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger-r4-quality@470f66e0056b8f3f2657032cf5a89618fe1b27ba",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger",
+    "generated_at": "2026-08-22T19:21:01Z"
+  }
+}

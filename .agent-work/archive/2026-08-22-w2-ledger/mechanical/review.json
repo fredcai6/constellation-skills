@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "review",
+  "mechanical": {
+    "run": "w2-ledger",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 7,
+    "spine-step": "review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger-review@8fe45b84056221a30b29c81f50c875cbbe2011a5",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger",
+    "generated_at": "2026-08-22T19:40:32Z"
+  }
+}

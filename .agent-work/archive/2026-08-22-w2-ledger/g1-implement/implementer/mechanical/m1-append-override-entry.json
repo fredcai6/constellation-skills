@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-append-override-entry",
+  "mechanical": {
+    "run": "w2-ledger/g1-implement/implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m1-append-override-entry",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-ledger/g1-implement/implementer-m1-append-override-entry@3e2f8e5aead60d7b2abe49bef15327919af926a4",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-ledger/g1-implement/implementer",
+    "generated_at": "2026-08-22T17:48:37Z"
+  }
+}

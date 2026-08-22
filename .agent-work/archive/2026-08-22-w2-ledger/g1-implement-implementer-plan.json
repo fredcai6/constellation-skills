@@ -1,0 +1,246 @@
+{
+  "work_id": "w2-ledger/g1-implement/implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-append-override-entry",
+    "m2-override-entries-read-path",
+    "m3-new-tests",
+    "m4-schema-docs",
+    "m5-evidence-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the handoff at .agent-work/w2-ledger/crew-handoffs/g1-implement-handoff.md in full; read scripts/checklist_engine.py around _append_trip_entry (:2167-2187), begin_over_line_records (:2192), begin_over_line_records_historical (:2230), _trip_hard_gate (:2263), and dispatch (:3663-3710) for context only. Read docs/CHECKLIST_SCHEMA.md around line 77 and line 459. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions) -- it is. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + target code + schema doc read; handoff verified complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff, target code sections, and schema doc read; handoff verified complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-append-override-entry": {
+      "id": "m1-append-override-entry",
+      "title": "Add _append_override_entry; re-point _append_trip_entry onto it",
+      "imperative": "Add a top-level `_append_override_entry(cl, kind, **fields) -> str` using the same setdefault('override_ledger', [])/append-only idiom as _append_trip_entry, ids scoped ov-N across all kinds. Re-point _append_trip_entry to call it with kind='trip' plus the existing trip fields (gate, verb, outcome, fill, hard, model, why_ref); _trip_hard_gate remains the only caller of _append_trip_entry, unchanged. Do not touch begin_over_line_records* yet (next item). Run `python -m pytest tests/test_checklist_engine.py -k trip -q` and confirm it is still fully green (regression floor, unmodified tests).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded per m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_append_override_entry exists; _append_trip_entry re-pointed to it; all existing -k trip tests still pass unmodified",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py -k trip -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "never mutate/remove an existing ledger entry",
+        "flat entry dict: id/kind/ts plus **fields, no nesting",
+        "_trip_hard_gate stays the only caller of _append_trip_entry"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Handoff requires (5) checklist_engine.py never writes trip_ledger again after this gate, AND (Close Criteria/Protected Intent) every existing -k trip test in tests/test_checklist_engine.py passes UNMODIFIED. These two requirements conflict: ~34 of ~123 -k trip tests directly index cl['trip_ledger'][0]/assert its raw content after driving a FRESH trip through dispatch() (e.g. test_ledger_entry_carries_every_field_including_the_live_why_ref at :6807, test_hard_refusal_leaves_state_unmutated at :3862 via the _without_trip_ledger helper at :3753 which only pops 'trip_ledger' not 'override_ledger'). With writes re-pointed to override_ledger per spec, trip_ledger stays empty for anything written post-migration, so these assertions fail -- not from any behavioral regression (sampled several: dispatch/refusal/immutability semantics are byte-identical), purely from the storage relocation the gate itself mandates. Fixing this needs either (a) editing ~34 pinned test assertions plus the _without_trip_ledger helper to read through _override_entries/override_ledger instead of raw trip_ledger, which Allowed Scope permits touching the test file for but Close Criteria's own 'passes UNMODIFIED' and 'do not delete or weaken existing trip-ledger assertions' argue against without explicit sign-off, or (b) dual-writing trip_ledger, which requirement 5 explicitly forbids. Not resolving unilaterally per Authority ('stop and report why rather than silently choosing a different shape') and Stop Conditions ('an existing trip-ledger test cannot be made to pass unmodified... [if only] changing trip storage' is named as the exact non-blocking case, but 34 tests is not an edge case, it's the bulk of the suite baked into pinned raw-key assertions).",
+        "authority_needed": "commander (SPINE_PARENT)",
+        "next_action": "Confirm whether Allowed Scope's test-file pre-authorization covers rewriting these ~34 raw-trip_ledger-key assertions (and the _without_trip_ledger helper) to read through _override_entries/override_ledger instead -- this is what 'unmodified' cannot mean literally once storage moves, or clarify a different intended reading.",
+        "prior_status": "in-progress"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-override-entries-read-path": {
+      "id": "m2-override-entries-read-path",
+      "title": "Add _override_entries; rewire begin_over_line_records(_historical) to read through it",
+      "imperative": "Add `_override_entries(cl, kind=None) -> list[dict]`: yields cl.get('trip_ledger', []) entries first, each retagged kind='trip' in the returned dict only (never written back), then cl.get('override_ledger', []) entries; filter by kind when given. Rewrite begin_over_line_records (:2192) and begin_over_line_records_historical (:2230) to source from _override_entries(cl, kind='trip') instead of cl.get('trip_ledger') directly -- read-path swap only, outcome/why_ref filtering logic unchanged. Run `python -m pytest tests/test_checklist_engine.py -k trip -q` again to confirm the swap changed nothing observable.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "_append_override_entry landed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "_override_entries exists with legacy-first merge order and kind filter; begin_over_line_records(_historical) read through it; -k trip tests still pass unmodified",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py -k trip -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "trip_ledger is read here only, never written/migrated in place",
+        "legacy-first order is fixed, not sorted by timestamp"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-new-tests": {
+      "id": "m3-new-tests",
+      "title": "Add the three required new tests",
+      "imperative": "In tests/test_checklist_engine.py add: (1) a fixture using ONLY override_ledger (no trip_ledger key) with kind='trip' entries, asserting begin_over_line_records/_historical behave identically to a trip_ledger-only fixture; (2) a fixture carrying BOTH legacy trip_ledger and an override_ledger with an unrelated hand-constructed kind (e.g. force-claim), asserting _override_entries(cl, kind='trip') shows no leakage and no dropped legacy entries; (3) a live-transition fixture with legacy tl-1/tl-2, then drive a real start/reopen refusal through _trip_hard_gate so _append_trip_entry/_append_override_entry actually run, asserting _override_entries(cl) with no kind filter returns tl-1, tl-2, ov-1 in that order. Run the full test file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "read path landed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "three new tests added and passing; full test_checklist_engine.py green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not delete or weaken existing trip-ledger assertions"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-schema-docs": {
+      "id": "m4-schema-docs",
+      "title": "Extend docs/CHECKLIST_SCHEMA.md",
+      "imperative": "Near the top-of-file schema block (~line 77) add `\"override_ledger\": []` with a one-line comment pointing at the new section. Extend '### The trip ledger' (~line 459) with an override_ledger subsection: the kind discriminant and its four values (trip/force-claim/force-release/waive -- only trip written this gate, name the rest as landing in g2), one example entry per kind (trip example matches what _append_trip_entry actually emits; others illustrative, marked 'landed in a later gate'), the migration-contract paragraph (legacy trip_ledger reads through _override_entries retagged kind='trip', ordered before override_ledger entries, never rewritten in place), and one sentence noting a future waive count is expected to be the loudest/least-exceptional of the four on ordinary runs since a plain policy-allowed waive is this schema's own documented routine path (see :267), not a rare event. Self-check field names/shapes against the actual code.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "code changes landed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both schema doc spots updated and self-consistent with the code",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "doc must match what the code actually emits, not aspirational shapes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-evidence-close": {
+      "id": "m5-evidence-close",
+      "title": "Collect required evidence and write IMPLEMENTER_RESULT",
+      "imperative": "Run and capture verbatim: `pytest tests/test_checklist_engine.py -k trip -q`, full `pytest tests/test_checklist_engine.py -q`, `grep -n 'trip_ledger' scripts/checklist_engine.py`, `grep -n '_append_trip_entry(' scripts/checklist_engine.py`, and the wiring grep for _append_override_entry/_override_entries call-site counts. Verify each deliverable path with `git check-ignore <path>` exiting 1. Write the full IMPLEMENTER_RESULT to .agent-work/w2-ledger/crew-handoffs/g1-implement-implementer-result.md per templates/IMPLEMENTER_RESULT.template.md. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests and docs landed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT written to the named path with all required evidence embedded",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [
+    {
+      "item": "m1-append-override-entry",
+      "blocker": "Handoff requires (5) checklist_engine.py never writes trip_ledger again after this gate, AND (Close Criteria/Protected Intent) every existing -k trip test in tests/test_checklist_engine.py passes UNMODIFIED. These two requirements conflict: ~34 of ~123 -k trip tests directly index cl['trip_ledger'][0]/assert its raw content after driving a FRESH trip through dispatch() (e.g. test_ledger_entry_carries_every_field_including_the_live_why_ref at :6807, test_hard_refusal_leaves_state_unmutated at :3862 via the _without_trip_ledger helper at :3753 which only pops 'trip_ledger' not 'override_ledger'). With writes re-pointed to override_ledger per spec, trip_ledger stays empty for anything written post-migration, so these assertions fail -- not from any behavioral regression (sampled several: dispatch/refusal/immutability semantics are byte-identical), purely from the storage relocation the gate itself mandates. Fixing this needs either (a) editing ~34 pinned test assertions plus the _without_trip_ledger helper to read through _override_entries/override_ledger instead of raw trip_ledger, which Allowed Scope permits touching the test file for but Close Criteria's own 'passes UNMODIFIED' and 'do not delete or weaken existing trip-ledger assertions' argue against without explicit sign-off, or (b) dual-writing trip_ledger, which requirement 5 explicitly forbids. Not resolving unilaterally per Authority ('stop and report why rather than silently choosing a different shape') and Stop Conditions ('an existing trip-ledger test cannot be made to pass unmodified... [if only] changing trip storage' is named as the exact non-blocking case, but 34 tests is not an edge case, it's the bulk of the suite baked into pinned raw-key assertions).",
+      "authority_needed": "commander (SPINE_PARENT)",
+      "next_action": "Confirm whether Allowed Scope's test-file pre-authorization covers rewriting these ~34 raw-trip_ledger-key assertions (and the _without_trip_ledger helper) to read through _override_entries/override_ledger instead -- this is what 'unmodified' cannot mean literally once storage moves, or clarify a different intended reading."
+    }
+  ],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/w2-ledger/g1-implement/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-22T17:47:42.688920+00:00",
+    "last_heartbeat": "2026-08-22T17:51:59.879440+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T17:53:34.248701+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T17:48:31.812034+00:00"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-case2-3-install-green",
+  "mechanical": {
+    "run": "w2-reindex-g3-implement",
+    "project": "constellation-skills",
+    "role": "g3-implement-implementer",
+    "refusals": 2,
+    "spine-step": "m2-case2-3-install-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-g3-implement-m2-case2-3-install-green@9d24a954488a67fec5619ee79d479afc0b79fc69",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex-g3-implement",
+    "generated_at": "2026-08-22T18:50:11Z"
+  }
+}

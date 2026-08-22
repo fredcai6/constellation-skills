@@ -1,0 +1,419 @@
+{
+  "work_id": "w2-reindex-g3-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-case1-red",
+    "m2-case2-3-install-green",
+    "m3-case4-5-6-partial-commits",
+    "m4-case7-second-worktree",
+    "m5-case8-timing-full-file",
+    "m6-regression",
+    "m7-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the g3-implement handoff, the shipped precommit mechanism (scripts/code_map/precommit.py, scripts/hooks/code_map_precommit.py), the installer's git-hook wiring (scripts/install_constellation.py install_git_precommit_hook/is_self_install/main), tests/test_code_map.py::MapTreeFreshnessTests, and the existing tests/test_code_map_precommit.py + tests/test_install_constellation.py::GitPreCommitHookWiringTests for reusable fixture idioms. Confirm current actual HEAD SHA to pin the red-proof against. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + gates 1-2 shipped code + existing test fixtures understood; pinned SHA confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff (8 cases), precommit.py, code_map_precommit.py, install_constellation.py's install_git_precommit_hook/is_self_install/main, MapTreeFreshnessTests, existing test_code_map_precommit.py + GitPreCommitHookWiringTests fixtures all read. Actual repo HEAD confirmed 9d5aac6d."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-case1-red": {
+      "id": "m1-case1-red",
+      "title": "Scratch topology helpers + case 1 RED proof",
+      "imperative": "Create tests/test_code_map_precommit_e2e.py. Add shared-scratch-git helpers: ONE local bare clone of this actual repo's common .git per fixture (never git clone twice to fake worktree topology -- clone once, then git worktree add off that one shared .git for every worktree a case needs). Implement case 1: worktree add at the pinned SHA (confirm via git rev-parse HEAD), hand-edit a tracked .py file, commit normally with NO hook installed, run `python -m pytest tests/test_code_map.py::MapTreeFreshnessTests -q` against that scratch checkout's own copy and assert it FAILS. Attest any check:null precondition before start. Encode RED as manual attest (c1), not a command check (a command check would run pytest and the test's own point is that the underlying freshness test fails, which is fine to assert programmatically here -- so this gate's own postcondition IS a command check: the e2e test itself must PASS, proving it correctly observed the failure).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded per m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "case-1 red-proof test passes: it observes MapTreeFreshnessTests failing pre-install against the pinned-SHA scratch checkout",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map_precommit_e2e.py -k case1 -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-case1-red-1"
+        }
+      ],
+      "constraints": [
+        "never git clone to fake multi-worktree topology",
+        "never touch this actual repo's own git state",
+        "no production code changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-case1-red-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map_precommit_e2e.py -k case1 -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-case2-3-install-green": {
+      "id": "m2-case2-3-install-green",
+      "title": "Case 2 (real CLI install) + case 3 (GREEN proof)",
+      "imperative": "Extend the same scratch worktree from case 1 (or a chained continuation of it): install via `python <scratch>/scripts/install_constellation.py --agent claude --scope project --skills charter` run as a real subprocess with cwd=scratch worktree (no --dest/--project override, so is_self_install(args) is True and install_git_pre_commit_hook=True fires for real via the __main__ entry point -- confirm via the wiring grep that this is the real entry point, not a test-only path). Then repeat the hand-edit-and-commit; assert `git log -1 --stat` includes map/INDEX.md (and map/ids.jsonl if changed) in the same commit, and MapTreeFreshnessTests now passes with no manual rebuild.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "case 1 passing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "case1 passing"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "case 2+3 tests pass: real CLI install fires the hook; post-install commit auto-fixes staleness and MapTreeFreshnessTests passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map_precommit_e2e.py -k \"case1 or case2 or case3\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-case2-3-install-green-1"
+        }
+      ],
+      "constraints": [
+        "no production code changes",
+        "install must go through the real __main__ CLI entry point, never a test-only override of git_repo_root"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-case2-3-install-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map_precommit_e2e.py -k \"case1 or case2 or case3\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-case4-5-6-partial-commits": {
+      "id": "m3-case4-5-6-partial-commits",
+      "title": "Cases 4-6: partial-commit shapes + unrelated-dirty-file",
+      "imperative": "Case 4: pathspec-restricted `git commit -- <path>` naming only one of two changed tracked files; assert map/ untouched and the unstaged sibling stays dirty. Case 5: hunk-restricted `printf 'y\\nn\\n' | git commit -p` on a file with two well-separated hunks; assert map/ untouched and the rejected hunk's effect never lands. Case 6: an unrelated dirty tracked file NOT staged remains dirty and outside the commit after a stale-map commit. Each case gets its own fresh worktree off a shared scratch .git (new clone per case is fine; reuse the m1 helper).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "case 2-3 passing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "case 2-3 passing"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "cases 4, 5, 6 pass as real subprocess git evidence",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map_precommit_e2e.py -k \"case4 or case5 or case6\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-case4-5-6-partial-commits-1"
+        }
+      ],
+      "constraints": [
+        "no production code changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-case4-5-6-partial-commits-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map_precommit_e2e.py -k \"case4 or case5 or case6\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-case7-second-worktree": {
+      "id": "m4-case7-second-worktree",
+      "title": "Case 7: second worktree off the same shared scratch .git",
+      "imperative": "Add a second `git worktree add` off the SAME shared scratch .git as a first worktree (not a second clone). Install once from the first worktree. Commit for real from the second worktree; assert the hook fires there too (shared-hooks-directory fact, honestly exercised) and touches only that worktree's own map/ tree.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "case 4-6 passing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "cases 4-6 passing"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "case 7 passes: hook installed once fires from a second worktree sharing the same .git",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map_precommit_e2e.py -k case7 -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-case7-second-worktree-1"
+        }
+      ],
+      "constraints": [
+        "no production code changes",
+        "never git clone to fake the second worktree -- must be git worktree add off the same shared .git"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-case7-second-worktree-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map_precommit_e2e.py -k case7 -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-case8-timing-full-file": {
+      "id": "m5-case8-timing-full-file",
+      "title": "Case 8: timing + whole new file green",
+      "imperative": "Time a fresh end-to-end invocation equivalent to case 3 (worktree materialization through commit) using time.monotonic(); report the number captured from a real run (print or record it) next to gate 1's 2.9s-build-only / 3.25-3.77s-full-mechanism figures -- do not presume it stays the same. Then run the WHOLE new e2e file and confirm every case passes together.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "case 7 passing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "case 7 passing"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "case 8 (timing) passes and the full new e2e test file is green end to end",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map_precommit_e2e.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-case8-timing-full-file-1"
+        }
+      ],
+      "constraints": [
+        "no production code changes",
+        "report the measured number, do not presume a prior figure"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-case8-timing-full-file-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map_precommit_e2e.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-regression": {
+      "id": "m6-regression",
+      "title": "Full-suite regression + test_code_map.py diff check",
+      "imperative": "Run the full local pytest suite in this actual repo's uncommitted working tree (gates 1-2's code included) and report pass/skip/fail counts against the 3622 passed, 6 skipped, 0 failed baseline plus this plan's new tests. Run `git diff -- tests/test_code_map.py` and confirm it prints nothing (attach that output verbatim in the result).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "case 8 + full new file passing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "case 8 + full new e2e file passing"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green at/above baseline plus new tests; git diff -- tests/test_code_map.py is empty",
+          "check": {
+            "kind": "command",
+            "command": "git diff --quiet -- tests/test_code_map.py"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "no production code changes",
+        "this actual repo's real working tree only for this step, never a scratch checkout"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m7-result": {
+      "id": "m7-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write IMPLEMENTER_RESULT to .agent-work/w2-reindex/crew-handoffs/g3-implement-implementer-result.md per the handoff's Return Format, including the exact SHA the red-proof ran against, all 8 cases' verbatim evidence, the regression counts, the diff output, Workflow Feedback (including the spine/door mismatch encountered), and Map Impact notes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "regression confirmed green and diff empty",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result artifact written at the required path",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/w2-reindex/crew-handoffs/g3-implement-implementer-result.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/w2-reindex/g3-implement/implementer/attempt-1",
+    "status": "active",
+    "claimed_at": "2026-08-22T18:46:49.258298+00:00",
+    "last_heartbeat": "2026-08-22T19:00:40.383315+00:00",
+    "claimed_by": "g3-implement-implementer",
+    "worktree": "/home/tommy/projects/569-w2-reindex",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:47:06.958256+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-case1-red",
+      "why": "case1 red-proof test verified: fresh shared bare clone + worktree at pinned SHA 9d5aac6d, hand-edit with no hook installed, real commit, real pytest subprocess run of MapTreeFreshnessTests fails as expected (FAILED observed in output). 1 passed in 7.37s.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:50:07.431192+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-case2-3-install-green",
+      "why": "Discovered gates 1-2's git-hook wiring code is uncommitted in this actual repo's working tree, so a pinned-SHA scratch worktree checked out via git worktree add does not carry it from history. Added _snapshot_gates_1_2_onto() to copy gates 1-2's current (uncommitted) scripts/code_map + scripts/hooks + scripts/install_constellation.py content onto each scratch worktree used for cases 2+ (never for case 1's red proof, which must run without it) and commit it as a baseline. Also fixed hook-path resolution: a linked worktree's .git is a file pointer, so hooks live at the shared bare clone's own hooks/ dir, not <worktree>/.git/hooks -- added _resolve_hooks_dir() mirroring installer's own resolve_git_hooks_dir(). Cases 1-3 now pass for real: 2 passed in 17.97s.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:55:41.786647+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-case4-5-6-partial-commits",
+      "why": "Cases 4-6 pass for real. Fixed an initial hunk-splitting bug in case 5's fixture (two end-of-file insertions merge into one contiguous diff hunk with no unchanged context between them; moved one insertion to right after EXCLUDED_PREFIXES with ~20 unchanged original lines before the EOF insertion, which correctly splits into two hunks). Also fixed an assertion bug: function names never survive the copy-back into root map/INDEX.md (only per-module entity counts do, per this repo's own MANAGED_PATHS constraint) -- added _module_entity_count() to read the per-module (N entities) figure instead of substring-matching a function name. 3 passed in 16.36s.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:58:12.775278+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-case7-second-worktree",
+      "why": "Case 7 passes: installed once from the first worktree, both worktrees resolve to the identical shared hooks dir, second worktree's commit fires the hook for real (map/INDEX.md in its own commit stat, MapTreeFreshnessTests green there), and the first worktree's own status stays clean throughout. 1 passed in 12.16s.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:58:43.488558+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-case8-timing-full-file",
+      "why": "Case 8 measured 5.49s for a full fresh end-to-end invocation (bare clone + worktree add + real CLI install + hand-edit + commit), reported next to gate 1's build/commit-only figures with the extra scope named explicitly. Full new e2e file green: 7 passed in 52.61s (all 8 numbered cases covered across 7 test methods, cases 2+3 share one method since they are explicitly sequential per the handoff).",
+      "mechanical": false,
+      "ts": "2026-08-22T19:00:40.256274+00:00"
+    }
+  ]
+}
