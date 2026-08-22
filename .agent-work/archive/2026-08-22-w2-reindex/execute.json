@@ -1,0 +1,741 @@
+{
+  "work_id": "w2-reindex",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope from MISSION_FRAME.md, PLAN_ALTERNATIVES.md, and PLAN_CRITIC.md (including its Commander disposition section) are all still on disk and unchanged since plan approval. Re-read docs/agents/ORCHESTRATOR_CONTEXT.md's Dogfooding section before dispatching any gate that touches hook code -- in-session observation of hook behaviour is not evidence; every hook-behavior claim must come from a fresh-process scratch checkout. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent, scope, and critic disposition confirmed current; dogfooding doctrine re-read",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MISSION_FRAME.md, PLAN_ALTERNATIVES.md, PLAN_CRITIC.md (incl. Commander disposition) confirmed on disk, unchanged since plan approval. ORCHESTRATOR_CONTEXT.md's Dogfooding section re-read: hook-behavior claims must come from fresh-process scratch checkouts, never in-session observation."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Precommit library: index-snapshot build, staleness/stage, fail-open shim",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from the constraints and anchors below (which carry the full pinned specification -- every mechanical detail PLAN_CRITIC.md found underspecified is resolved here, not left for the implementer to invent). Dispatch a subagent invoking constellation-implementer with the completed handoff via scripts/run_crew.py (--parent your own SPINE_SESSION, --model sonnet unless complexity warrants escalation). Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: spine_evidence action=attach, task_id=g1-implement, evidence_type=implementer-result, fields={status: <verbatim lowercase Return status>}.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved (c3) and execute context loaded (e0-context complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan approved (top-level spine c3 user-decision); e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "New files only: scripts/code_map/build.py (a build(root, *, artifacts=None, out=None) -> int plain-importable seam wrapping the same extract/render calls cli._build makes -- cli._build refactored to call it, one build path not two), scripts/code_map/precommit.py (the mechanism), scripts/hooks/code_map_precommit.py (the fail-open shim). Zero changes to scripts/code_map/discovery.py, extract.py, render.py internals, and zero changes to tests/test_code_map.py's existing content (MapTreeFreshnessTests stays byte-identical -- hard constraint).",
+        "Mechanism, exact specification (resolves PLAN_CRITIC.md findings 2-4,7-9): (1) opportunistically run `git worktree prune` first to self-heal any admin residue from a prior crashed run; (2) snapshot the INDEX (not the working tree) via `git write-tree` -> `git commit-tree <tree> -p HEAD -m <marker>` (a dangling, non-ref-touching commit) -> `git worktree add --detach <unique-path> <that commit>`, where <unique-path> comes from `tempfile.mkdtemp(prefix='code-map-precommit-')` every invocation (never a fixed name -- this is what makes two concurrent invocations from sibling worktrees collision-free, since each gets a distinct admin entry); (3) run build() against that ephemeral worktree; (4) copy-back is PLAIN FILE I/O, not git plumbing -- read the built map/INDEX.md and map/ids.jsonl bytes from the ephemeral worktree, write those bytes to the same two paths in the REAL working tree (the repo_root resolved via `git rev-parse --show-toplevel` from cwd at hook run time -- dynamic per invoking worktree, never a path baked in at install time, so a hook shared across sibling worktrees on different branches always resolves and imports each worktree's OWN copy of this module), compare against the staged blobs (`git show :map/INDEX.md`, `git show :map/ids.jsonl`) to decide which of the two actually changed; (5) `git add -- map/INDEX.md map/ids.jsonl` in the real repo naming only the paths that changed (never a directory/glob add, never touching any other path) -- this is what makes 'exactly two paths, never an unrelated file' true by construction, since no step ever writes or adds any other path; (6) remove the ephemeral worktree (`git worktree remove --force <unique-path>`) in a `finally` block INSIDE the outer try/except, so cleanup runs on every path including fail-open, and a cleanup failure is itself swallowed and logged, never allowed to propagate.",
+        "Timeout, exact specification (resolves PLAN_CRITIC.md finding 3, the sharpest gap): every subprocess call in the mechanism (write-tree, commit-tree, worktree add, the build call, worktree remove, worktree prune) passes an explicit timeout= to subprocess.run (10 seconds each -- roughly 3x the measured 2.9s build baseline). A subprocess.TimeoutExpired is caught by the SAME outer try/except boundary as any other exception and results in the same fail-open exit 0 -- a hang must never block the commit any more than a crash does.",
+        "Fail-open contract, exact specification (resolves PLAN_CRITIC.md finding 9): the shim's entire body (including the finally-block cleanup) is wrapped in one broad try/except Exception; ANY exception, including subprocess.TimeoutExpired, results in exit 0. On every fail-open exit, print exactly one diagnostic line to stderr naming what was swallowed (git shows hook stderr on a normal commit without failing it -- zero UX cost, and it is the only signal against this mechanism regressing to a silent dead hook, which is precisely the human-process failure mode this mission exists to close). On the success (no staleness) path, print nothing. On the fixed-staleness path, print one line naming the two paths staged.",
+        "Auditable-boundary and partial-commit test coverage required in tests/test_code_map_precommit.py (new file, disposable scratch git repos under tempfile.TemporaryDirectory() only -- never this repo's own git state): fresh/no-op (map already matches the index, no stage, git status clean after); stale/rebuild-and-stage (source change staged, hook rebuilds+stages exactly the two paths); pathspec-restricted partial commit (two tracked files change, only one staged via `git add <one>`, then the mechanism is called directly -- built map reflects only the staged file's effect, unstaged sibling untouched); hunk-restricted partial commit (one file two hunks, only one staged via `git apply --cached`, the same net index state `git commit -p` produces -- built map excludes the unstaged hunk's effect); unrelated-dirty-file audit (a third tracked file dirty, staged or unstaged, present throughout -- `git diff --cached --name-only` after the mechanism runs is exactly {map/INDEX.md, map/ids.jsonl} or a subset, never includes the third file); concurrent-invocation (two mechanism calls launched against clones/worktrees of the same scratch repo at effectively the same time, e.g. via threading -- both complete successfully, no `git worktree add` collision, `git worktree list` shows zero residue afterward from either); forced-timeout (a fake runner that sleeps past the timeout on one subprocess call -- shim still exits 0 within a bounded wall-clock window, e.g. under 15s); forced-exception (a fake runner that raises -- shim exits 0, working tree otherwise unmodified, zero worktree/dangling-commit residue); worktree-run-time-resolution (invoke the shim from a second worktree of the scratch repo whose checkout predates this feature, i.e. lacks scripts/code_map/precommit.py at that commit -- shim still exits 0, fail-open covers the ImportError cleanly).",
+        "Stdlib only -- no new third-party dependency (matches scripts/code_map's own existing constraint).",
+        "Honest-Null escape hatch: if the concurrent-invocation test or the forced-timeout test cannot be made to pass with the pinned mechanism above (e.g. unique tempfile paths still collide under real concurrent load, or the timeout does not actually bound a real git-level hang), stop implementation and return-and-query the Commander with the negative evidence attached -- do not ship a hook whose own tests demonstrate it can corrupt state or hang under load. Per the Honest-Null Clause this is a complete, successful deliverable if it occurs; it has not been observed in either candidate's investigation, so it is a contingency, not the expected outcome.",
+        "File ownership: scripts/code_map/ (new files + cli._build refactor only, no other internals), scripts/hooks/, tests/. Nothing outside those touched."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ -- checks.py, cli.py, discovery.py, extract.py, render.py, thresholds.py, __main__.py (existing, read not modified except cli._build's one-line delegation to the new build())",
+          "scripts/hooks/ -- gauge_writer_hook.py, spine_rail.py (existing fail-open precedent to mirror)",
+          "tests/test_code_map.py -- MapTreeFreshnessTests at ~line 4656 (read for the exact freshness comparison this mechanism must not disturb)"
+        ],
+        "capability": [
+          "python -m scripts.code_map build (existing CLI entrypoint; build() wraps its same extract/render calls)"
+        ],
+        "constraint": [
+          "do-not-weaken-the-freshness-test (hard, LAUNCH_ORDER)",
+          "hook-must-be-honest-about-what-it-stages (LAUNCH_ORDER)",
+          "regenerate-and-stage-silently, never fail the commit (LAUNCH_ORDER)"
+        ],
+        "decision": [
+          "index-snapshot mechanism over skip-on-dirty, per PLAN_ALTERNATIVES.md convergence -- @grade: settled/measured \u00b7 leans g1-implement,g1-review \u00b7 settle: this gate's own concurrent/timeout tests are the settlement evidence"
+        ],
+        "evidence": [
+          "build is fast and deterministic (2.9s, LAUNCH_ORDER Prior-Wave Verdicts) -- re-time the real mechanism including worktree materialization, do not assume it stays 2.9s"
+        ],
+        "confidence_flags": [
+          "map is DEGRADED-UNPARSEABLE for this repo (MISSION_FRAME.md) -- this gate's map entry point is the path-level anchors above, not a resolvable struct: id"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Precommit library: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement (from g1-implement's constraints), close criteria, allowed scope, specific exclusions (no edits to tests/test_code_map.py), constraints, the inbound anchors, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer via scripts/run_crew.py. Verify independently: git diff on tests/test_code_map.py is empty; re-run the concurrent-invocation and forced-timeout tests yourself rather than trusting the implementer's report of them, since these are exactly the two properties a self-reviewed crew got wrong in wave 1 (LAUNCH_ORDER). Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated for g1-implement (status complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [
+        "Reviewer must independently re-run tests/test_code_map_precommit.py, not merely inspect implementer's output",
+        "Reviewer must confirm git diff -- tests/test_code_map.py is empty"
+      ],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Precommit library: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects against the world yourself (re-run the command below, confirm tests/test_code_map.py has zero diff, confirm the new test file exercises every pathway named in g1-implement's constraints -- count them explicitly, do not assume completeness from a passing summary line), then advance -- the command postcondition is satisfied by advance re-running it, not by attest. BLOCK: return the implementer for rework with the reviewer's specific findings, or raise a blocker if unresolvable. Log any out-of-scope finds as triage candidates via spine_capture flag-candidate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new precommit library tests pass; tests/test_code_map.py (including MapTreeFreshnessTests) still passes unmodified",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map_precommit.py tests/test_code_map.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": "reviewer verdict APPROVE, by reference to g1-review's already-attached review-result"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map_precommit.py tests/test_code_map.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Installer wiring: install_constellation.py + git hooks-dir resolution",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md from the constraints and anchors below. Dispatch a subagent invoking constellation-implementer via scripts/run_crew.py. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: spine_evidence action=attach, task_id=g2-implement, evidence_type=implementer-result, fields={status: <verbatim lowercase Return status>}.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 precommit library merged (g1-integrate complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-integrate complete: precommit library merged, tests green, freshness test untouched"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Add resolve_git_hooks_dir(repo_root) -> Path | None to scripts/install_constellation.py: runs `git rev-parse --path-format=absolute --git-path hooks` with cwd=repo_root; returns None on any git failure (report-only, never raises). Must correctly resolve the SHARED hooks directory when repo_root is itself a linked worktree (this checkout's own layout -- verify against it directly, not only a synthetic fixture), and must honor core.hooksPath when set.",
+        "Add install_git_precommit_hook(repo_root, dry_run, out) -> None: resolves the hooks dir; if None, reports and no-ops. Writes a small executable shell wrapper at <hooks-dir>/pre-commit that execs the interpreter against scripts/hooks/code_map_precommit.py resolved at RUN TIME via `git rev-parse --show-toplevel` inside the wrapper (never an absolute path baked in at install time -- this is what lets the shared hook correctly resolve each invoking worktree's own copy, per g1's pinned run-time-resolution design). Writes an idempotency marker comment; re-running with identical intended content is a byte-identical no-op. If a pre-commit file already exists and lacks the marker, REFUSE and report -- never clobber a foreign hook (mirrors this file's existing precedent for write_template_working_copies: 'never clobber a project edit'). chmod +x on write. Honors dry_run (prints the plan, writes nothing).",
+        "New keyword-only main() params: install_git_pre_commit_hook: bool = False, git_repo_root: Path | None = None -- same default-off, test-safe shape as the existing wire_repo_mcp_config/mcp_config_path pair. Wired at the same call site, guarded by install_git_pre_commit_hook and (git_repo_root is not None or is_self_install(args)) -- this feature is self-host-only (scripts/code_map cannot be bundled into an installed skill per its own __init__.py docstring: flat-copy breaks intra-package imports), so it must never fire for a target that installs a skill bundle elsewhere.",
+        "if __name__ == '__main__': block gets install_git_pre_commit_hook=True alongside the existing wire_repo_mcp_config=True.",
+        "Zero changes to wire_hooks, HOOK_SETS, report_hook_wiring, or any Claude Code PostToolUse/settings.json code path -- this is a genuinely separate mechanism sharing no machinery with it beyond living in the same file.",
+        "Required evidence, new test class GitPreCommitHookWiringTests in tests/test_install_constellation.py, same fixture idiom as the existing RepoMcpConfigWiringTests (tempfile.TemporaryDirectory(), explicit git_repo_root=, never the real repo): default (install_git_pre_commit_hook=False) is a true no-op even with a scratch git repo present; explicit wiring writes an executable pre-commit referencing scripts/hooks/code_map_precommit.py; re-running is idempotent; a pre-existing foreign pre-commit (no marker) is left untouched and the run reports the refusal; --dry-run writes nothing; WORKTREE CASE -- git worktree add a second worktree off the scratch repo, wire from inside it, assert the wrapper lands in the shared main-checkout hooks dir (matching resolve_git_hooks_dir computed independently in the test); SELF-INSTALL-ONLY CASE -- a target that is not this checkout (git_repo_root pointing elsewhere, is_self_install False) never touches .git/hooks at all.",
+        "Every existing call to main() throughout tests/test_install_constellation.py (the pre-existing suite) must remain unaffected -- new params default off; verify by running the full existing file green with zero changes to those existing tests.",
+        "File ownership: scripts/install_constellation.py, tests/test_install_constellation.py only."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/install_constellation.py -- wire_repo_mcp_config/mcp_config_path (the precedent pattern), is_self_install, write_template_working_copies (the never-clobber precedent), wire_hooks/HOOK_SETS (existing, untouched, do not confuse with this mechanism)"
+        ],
+        "capability": [
+          "install_constellation.py's self-install path (this checkout installing into itself) -- the only target this feature ever wires"
+        ],
+        "constraint": [
+          "must-be-installed-not-merely-built (hard, LAUNCH_ORDER, echoes wave 1's RegistrationLint/#345)",
+          "hook-must-be-honest-about-what-it-stages (LAUNCH_ORDER)"
+        ],
+        "decision": [
+          "self-install-only gating, mirroring the existing .mcp.json wiring guard -- @grade: settled/measured \u00b7 leans g2-implement,g2-review \u00b7 settle: this gate's self-install-only test is the settlement evidence"
+        ],
+        "evidence": [
+          "this repo's own checkout is a linked worktree sharing .git/hooks with 8+ siblings (PLAN_CRITIC.md finding 1) -- resolve_git_hooks_dir must be proven against this exact layout, not only a synthetic single-worktree fixture"
+        ],
+        "confidence_flags": [
+          "map is DEGRADED-UNPARSEABLE for this repo (MISSION_FRAME.md) -- this gate's map entry point is the path-level anchor above"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Installer wiring: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g2-implement's constraints and the returned IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer via scripts/run_crew.py. Verify independently: run the full existing tests/test_install_constellation.py file and confirm no pre-existing test's behavior changed; independently reproduce the worktree case against this actual repo's own worktree layout, not only the new test's synthetic fixture. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated for g2-implement (status complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [
+        "Reviewer must independently run the full tests/test_install_constellation.py file, not merely inspect implementer's summary"
+      ],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Installer wiring: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify claimed side-effects against the world yourself (re-run the command below; separately confirm resolve_git_hooks_dir against THIS actual checkout resolves to the real shared .git/hooks path, since that is the one fact a synthetic fixture cannot fully stand in for), then advance. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "installer wiring tests pass; full pre-existing install_constellation test file unaffected",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": "reviewer verdict APPROVE, by reference to g2-review's already-attached review-result"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "End-to-end red/green proof + regression backstop, pinned to shipped SHA",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md from the constraints and anchors below. Dispatch a subagent invoking constellation-implementer via scripts/run_crew.py. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: spine_evidence action=attach, task_id=g3-implement, evidence_type=implementer-result, fields={status: <verbatim lowercase Return status>}.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 and g2 both merged (g1-integrate and g2-integrate complete)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 and g2 both merged (g1-integrate and g2-integrate complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "No new production code in this gate -- proof only, against gates 1-2's shipped code. Every scratch setup MUST be `git worktree add` against ONE shared scratch .git (resolves PLAN_CRITIC.md finding 10) -- never `git clone`, which cannot reproduce the shared-hooks-directory topology this repo actually has and would let this gate go green without exercising the real hazard.",
+        "New test file tests/test_code_map_precommit_e2e.py, each case its own scratch repo/worktree pair, real subprocess git + pytest, per docs/agents/ORCHESTRATOR_CONTEXT.md's Dogfooding section (fresh-process runs with explicit paths, never an in-session hook-behavior claim): (1) RED PROOF -- without the hook installed, hand-edit a tracked .py source file in a scratch checkout, commit normally, run tests/test_code_map.py::MapTreeFreshnessTests against that checkout -- show it FAILS (confirms the backstop still catches an un-hooked commit exactly as today, at the shipped SHA); (2) install via the real CLI entry point (install_git_pre_commit_hook=True fires); (3) GREEN PROOF -- repeat the hand-edit-and-commit; show git log -1 --stat includes map/INDEX.md (and ids.jsonl if changed) in the SAME commit, and MapTreeFreshnessTests now passes with no manual rebuild step; (4) pathspec-restricted partial commit for real (`git commit -- <path>`), asserting map/ untouched and the unstaged sibling stays dirty; (5) hunk-restricted partial commit for real (`printf 'y\\nn\\n' | git commit -p`), asserting map/ untouched and the rejected hunk's effect never landed; (6) unrelated-dirty-file-survives-untouched -- a dirty tracked file NOT staged remains dirty and outside the commit after a stale-map commit; (7) SECOND-WORKTREE case -- a second `git worktree add` off the SAME scratch .git (not a second clone), install once from the first, commit for real from the second, assert the hook fires there too (this is the required, honest exercise of PLAN_CRITIC.md finding 1's blast-radius fact, not a synthetic stand-in for it) and touches only that worktree's own map/ tree; (8) TIMING -- time case (3)'s real end-to-end invocation including worktree materialization; record the number next to the 2.9s build-only baseline (resolves PLAN_CRITIC.md finding 6 -- report the number, do not presume it stays 2.9s).",
+        "Full-suite-green sequencing (resolves PLAN_CRITIC.md finding 5): run the full local suite check in a FRESH, clean scratch checkout (git status --porcelain empty) separate from the checkout used for cases 4-5 above -- MapTreeFreshnessTests' own well-known disk-vs-HEAD divergence on any tracked file with an unstaged remainder is a pre-existing, hook-independent property of that test, not a hook defect; do not let a leftover partial-hunk residue produce a false red that gets misread as this gate failing.",
+        "Regression: run the full local pytest suite; report the pass/skip/fail counts against the base's recorded 3622 passed / 6 skipped / 0 failed, plus this plan's new tests. `git diff` on tests/test_code_map.py across the whole plan (all three gates) must be empty -- attach that diff output as evidence verbatim.",
+        "Red-proof pinned to the shipped SHA (LAUNCH_ORDER standing pre-ruling): state the exact commit SHA this gate's proof ran against, and confirm it is the SHA this branch actually ships (re-run case 1's red proof again at final archive time if the SHA moved after this gate closed).",
+        "File ownership: tests/ only in this gate."
+      ],
+      "anchors": {
+        "structural": [
+          "this checkout's own worktree layout (git worktree list) -- the required topology for case 7",
+          "tests/test_code_map.py::MapTreeFreshnessTests -- the backstop this gate's red/green proof and regression check both exercise"
+        ],
+        "capability": [
+          "scripts/install_constellation.py's real CLI entry point -- the actual delivery path this gate proves fires"
+        ],
+        "constraint": [
+          "must-be-installed-not-merely-built (hard, proven here)",
+          "do-not-weaken-the-freshness-test (hard, proven unmodified here)",
+          "red-proof-pinned-to-shipped-revision (LAUNCH_ORDER standing pre-ruling)"
+        ],
+        "decision": [],
+        "evidence": [
+          "hook fires (claim, MISSION_FRAME.md) -- this gate is its proof",
+          "staging boundary honest (claim, MISSION_FRAME.md) -- case 6 is its proof",
+          "freshness test unchanged (claim, MISSION_FRAME.md) -- the git diff evidence above is its proof"
+        ],
+        "confidence_flags": [
+          "map is DEGRADED-UNPARSEABLE for this repo (MISSION_FRAME.md) -- this gate's map entry point is the path-level anchors above"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "End-to-end proof: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g3-implement's constraints and the returned IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer via scripts/run_crew.py. Verify independently: re-run the red proof and the second-worktree case yourself against a fresh scratch worktree, since these are the two claims that would be most costly to accept on the implementer's word alone (they are exactly what makes this gate's evidence real end-to-end proof rather than a repeat of gates 1-2's unit-level claims). Confirm no case used `git clone` where a shared-.git `git worktree add` was required. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated for g3-implement (status complete, attempt-3 after Commander's map rebuild)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [
+        "Reviewer must independently re-run the red proof and the second-worktree case against a fresh scratch worktree, not merely inspect implementer's transcripts"
+      ],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "End-to-end proof: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the full suite yourself as the command below states (foreground, polling per crew-dispatch.md's watchdog idiom -- never end your turn to wait on it), confirm the pass count, confirm tests/test_code_map.py has zero diff across the whole plan, then advance. BLOCK: return for rework or raise a blocker. Log out-of-scope finds as triage candidates. This is the last execute gate -- after it closes, drive reconcile next; do not stop here.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full local suite green at or above the base 3622 passed / 6 skipped / 0 failed baseline plus this plan's new tests; e2e test file passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": "reviewer verdict APPROVE, by reference to g3-review's already-attached review-result"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-integrate",
+      "statement": "scripts/code_map/discovery.py:tracked_python_files's git ls-files subprocess call has no timeout=. Out of g1's scope (discovery.py is read-only reference material there); flagged independently by both the implementer and reviewer. Worth a follow-up if build() is ever called somewhere a hang would matter more than inside this mechanism's own already-bounded ephemeral worktree."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-integrate",
+      "statement": "Dispatch-wiring anomaly: the g1-review reviewer crew (cli backend, real subprocess, no --spine passed) reported its SPINE_FILE/SPINE_SESSION environment appeared to resolve toward the Commander's own execute-gate binding rather than being unbound/absent as expected for a handoff+result-contract crew with no --spine argument. It self-corrected safely (drove its own survey.json via checklist_engine.py's CLI directly, never touched the Commander's spine) and its review work is sound and independently verified, but the underlying run_crew.py/door-binding behavior for a --spine-less cli dispatch deserves investigation -- worth an episode at minimum, possibly a run_crew.py/door fix."
+    },
+    {
+      "id": "tc3",
+      "from": "g2-integrate",
+      "statement": "Fowler pass flags main() in install_constellation.py growing to 9 keyword-only params (long-parameter-list), non-blocking. Worth a config-object refactor if a third wire_X/X_path-shaped pair is ever added."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/w2-reindex/execute/execute",
+    "status": "released",
+    "claimed_at": "2026-08-22T17:41:50.699070+00:00",
+    "last_heartbeat": "2026-08-22T19:40:54.347491+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T19:41:07.742142+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T17:41:59.512581+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:13:56.265312+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:23:17.488927+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Gate 1 (precommit library) approved. Index-snapshot mechanism implemented exactly per the pinned 6-step spec, timeout-covered, fail-open, unique-tempfile-guarded against concurrent-worktree collision. Reviewer independently re-verified (not trusted) the two safety-critical properties and went further, proving via a scratch-patched fixed-path variant that the unique-tempfile guard is genuinely load-bearing (it collides without it). tests/test_code_map.py untouched (0-byte diff, re-confirmed). Two triage candidates logged (untimed git ls-files in discovery.py; a dispatch-wiring anomaly in the reviewer crew's door resolution that it safely self-corrected around). Proceeding to gate 2 (installer wiring).",
+      "mechanical": false,
+      "ts": "2026-08-22T18:24:15.456853+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:33:58.671724+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T18:40:26.392336+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "Gate 2 (installer wiring) approved. resolve_git_hooks_dir/install_git_precommit_hook mirror the existing .mcp.json wiring idiom exactly, self-install-only guard verified to hold for the real CLI entry point, worktree-aware hooks-dir resolution independently confirmed against this actual checkout's real shared hooks dir. Reviewer went further than trusting claims: deleted the SCRIPT_SOURCE_SUBDIRS fix and reproduced the predicted failure before restoring it, proving that fix load-bearing rather than incidental. Full pre-existing 230-test install_constellation suite green, zero changes to existing bodies. One triage candidate logged (long-parameter-list on main(), non-blocking). Proceeding to gate 3 (end-to-end proof).",
+      "mechanical": false,
+      "ts": "2026-08-22T18:40:48.262894+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T19:20:44.159142+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T19:32:54.914999+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "Gate 3 (end-to-end proof) approved. Real-subprocess proof against a shared-.git worktree topology, covering all 8 numbered cases (fresh, stale, both partial-commit shapes, unrelated-dirty-file, second-worktree, timing) plus a red proof pinned to this branch's actual HEAD (9d5aac6d). A pre-existing map staleness from gate 2's own tracked-file edits blocked the first full-suite run -- root-caused correctly by the implementer (not a mechanism defect), fixed with a mechanical python -m scripts.code_map build --root . rebuild (explicitly authorized by this repo's own Inherited Context), re-verified green by a fresh crew pass. Reviewer independently reproduced by hand both the red proof and the second-worktree case (not trusted), and confirmed the map rebuild byte-identical to a fresh build. Full local suite: 3656 passed, 6 skipped, 0 failed -- re-confirmed myself just now. All three execute.json gates now closed with independently-verified evidence. Every file-ownership-fence path (scripts/hooks/, scripts/install_constellation.py, scripts/code_map, tests/) is covered. Ready to consolidate and return to the parent spine's execute step.",
+      "mechanical": false,
+      "ts": "2026-08-22T19:40:54.347471+00:00"
+    }
+  ]
+}

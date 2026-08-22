@@ -4,9 +4,9 @@
 conftest: 1 modules, 3 entities
 evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
-scripts: 60 modules, 1297 entities
+scripts: 63 modules, 1310 entities
 skills: 1 modules, 22 entities
-tests: 101 modules, 5559 entities
+tests: 103 modules, 5640 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -41,21 +41,24 @@ tests: 101 modules, 5559 entities
 
 - [examples.mcp-interactive-demo.make_demo_spine](examples.mcp-interactive-demo.make_demo_spine/INDEX.md) (4 entities, 2 holes): Generate this directory's throwaway demo spine.
 
-## scripts (60 modules, 1297 entities)
+## scripts (63 modules, 1310 entities)
 
-### scripts.code_map (8 modules, 130 entities)
+### scripts.code_map (10 modules, 137 entities)
 
 - [scripts.code_map](scripts.code_map/INDEX.md) (0 entities): code_map — derive a code map for this repository from its own source.
 - [scripts.code_map.__main__](scripts.code_map.__main__/INDEX.md) (0 entities): `python -m scripts.code_map` — the package's executable form.
+- [scripts.code_map.build](scripts.code_map.build/INDEX.md) (1 entities): scripts/code_map/build.py -- the plain-importable build() seam.
 - [scripts.code_map.checks](scripts.code_map.checks/INDEX.md) (34 entities, 10 holes): Checks over the built map that CAN FAIL.
 - [scripts.code_map.cli](scripts.code_map.cli/INDEX.md) (9 entities, 7 holes): The code_map command line: one entrypoint in front of the whole pipeline.
 - [scripts.code_map.discovery](scripts.code_map.discovery/INDEX.md) (3 entities): Enumerate the mappable corpus: the source files the map is derived from.
 - [scripts.code_map.extract](scripts.code_map.extract/INDEX.md) (58 entities, 33 holes): Pure-AST statement extractor with its own cross-file name resolution.
+- [scripts.code_map.precommit](scripts.code_map.precommit/INDEX.md) (6 entities, 1 holes): scripts/code_map/precommit.py -- the index-snapshot pre-commit mechanism.
 - [scripts.code_map.render](scripts.code_map.render/INDEX.md) (26 entities, 10 holes): Full-repo derived map -- one page per entity, agent-lean.
 - [scripts.code_map.thresholds](scripts.code_map.thresholds/INDEX.md) (0 entities): The numbers gate `gb` commits, and the one-line action for when each fires.
 
-### scripts.hooks (2 modules, 89 entities)
+### scripts.hooks (3 modules, 92 entities)
 
+- [scripts.hooks.code_map_precommit](scripts.hooks.code_map_precommit/INDEX.md) (3 entities, 2 holes): scripts/hooks/code_map_precommit.py -- fail-open git pre-commit hook shim.
 - [scripts.hooks.gauge_writer_hook](scripts.hooks.gauge_writer_hook/INDEX.md) (22 entities, 4 holes): gauge_writer_hook.py -- Claude Code PostToolUse hook: Context Governor gauge WRITER (Module 2, write side; issue #180).
 - [scripts.hooks.spine_rail](scripts.hooks.spine_rail/INDEX.md) (67 entities, 22 holes): spine_rail.py -- Claude Code hook suite for the Constellation spine rail.
 
@@ -77,7 +80,7 @@ tests: 101 modules, 5559 entities
 - [scripts.generate_spine](scripts.generate_spine/INDEX.md) (31 entities, 13 holes): Compile a `specs/<role>.spine.toml` spec into an engine-native spine JSON, and refuse to emit anything `scripts/validate_spine.py` would reject.
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
-- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (94 entities, 32 holes): HOLE: no docstring
+- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (97 entities, 32 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
 - [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (40 entities, 3 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
@@ -116,7 +119,7 @@ tests: 101 modules, 5559 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (101 modules, 5559 entities)
+## tests (103 modules, 5640 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -137,6 +140,8 @@ tests: 101 modules, 5559 entities
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
 - [tests.test_cli_retirement_guard](tests.test_cli_retirement_guard/INDEX.md) (38 entities, 24 holes): Regrowth guard for issue #559 -- the door is the interface, not a second path.
 - [tests.test_code_map](tests.test_code_map/INDEX.md) (348 entities, 191 holes): Tests for scripts/code_map/ — the derived code map (issue #456, gate g0).
+- [tests.test_code_map_precommit](tests.test_code_map_precommit/INDEX.md) (32 entities, 27 holes): Tests for scripts/code_map/precommit.py and scripts/hooks/code_map_precommit.py (epic #569 gate g1-implement) -- the index-snapshot pre-commit mechanism and its
+- [tests.test_code_map_precommit_e2e](tests.test_code_map_precommit_e2e/INDEX.md) (33 entities, 23 holes): tests/test_code_map_precommit_e2e.py -- gate g3-implement (epic #569): end-to-end proof that gates 1-2's shipped code (the index-snapshot pre-commit mechanism a
 - [tests.test_commander_evidence_convention](tests.test_commander_evidence_convention/INDEX.md) (8 entities, 8 holes): Pin the g1-implement evidence convention (epic-559/b-instructions-to-checks, rework).
 - [tests.test_context_declaration_lint](tests.test_context_declaration_lint/INDEX.md) (22 entities, 18 holes): Tests for `scripts/verify_context_declaration.py` -- the mechanical lint pinning every declared `context_refs` path against the step's own imperative prose.
 - [tests.test_context_determinism](tests.test_context_determinism/INDEX.md) (25 entities, 21 holes): The acceptance test for issue #300: the projection manifest's *content* is identical across environments.
@@ -170,7 +175,7 @@ tests: 101 modules, 5559 entities
 - [tests.test_in_harness_crew_isolation](tests.test_in_harness_crew_isolation/INDEX.md) (11 entities, 7 holes): #632: an in-harness subagent shares its dispatcher's harness session id, so the checklist engine's MCP door resolves to the DISPATCHER's spine. The guard is a d
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
-- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (300 entities, 170 holes): HOLE: no docstring
+- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (316 entities, 181 holes): HOLE: no docstring
 - [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (34 entities, 9 holes): HOLE: no docstring
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.

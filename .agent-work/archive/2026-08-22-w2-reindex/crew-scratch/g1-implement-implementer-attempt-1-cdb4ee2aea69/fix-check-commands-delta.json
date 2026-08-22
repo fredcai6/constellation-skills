@@ -1,0 +1,14 @@
+{
+  "ops": [
+    {"op": "retext-check", "id": "m1-build-seam", "which": "postconditions", "cond": "c2",
+     "command": "python -m pytest tests/test_code_map_precommit.py -q -k BuildSeamTests"},
+    {"op": "retext-check", "id": "m2-precommit-core", "which": "postconditions", "cond": "c2",
+     "command": "python -m pytest tests/test_code_map_precommit.py -q -k PrecommitCoreTests"},
+    {"op": "retext-check", "id": "m3-partial-commit", "which": "postconditions", "cond": "c2",
+     "command": "python -m pytest tests/test_code_map_precommit.py -q -k PartialCommitTests"},
+    {"op": "retext-check", "id": "m4-concurrency-timeout", "which": "postconditions", "cond": "c2",
+     "command": "python -m pytest tests/test_code_map_precommit.py -q -k ConcurrencyTimeoutTests"},
+    {"op": "retext-check", "id": "m5-shim-and-worktree-resolution", "which": "postconditions", "cond": "c2",
+     "command": "python -m pytest tests/test_code_map_precommit.py -q -k ShimTests"}
+  ]
+}

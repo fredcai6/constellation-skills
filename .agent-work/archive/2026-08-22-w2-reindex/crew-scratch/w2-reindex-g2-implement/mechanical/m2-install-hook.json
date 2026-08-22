@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-install-hook",
+  "mechanical": {
+    "run": "w2-reindex-g2-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m2-install-hook",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w2-reindex-g2-implement-m2-install-hook@8e7df2c30c3ccc35d91c45f1257d500d2b8bf9f0",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w2-reindex-g2-implement",
+    "generated_at": "2026-08-22T18:30:39Z"
+  }
+}
