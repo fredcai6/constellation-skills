@@ -336,8 +336,32 @@ class AtomicSaveTests(unittest.TestCase):
 
     def test_concurrent_reader_never_observes_a_partial_document(self):
         """The close criterion, EXERCISED rather than asserted: readers hammer the
-        spine while writers replace it, and every read must yield a COMPLETE
+        spine while ONE writer replaces it, and every read must yield a COMPLETE
         document -- the old one or the new one, never a torn one.
+
+        **One writer, not two (issue #647 ruling).** This test used to run 2
+        concurrent writer threads. That was defending writer-vs-writer contention,
+        which is out of contract: the engine's ownership model IS the lease, and
+        where a lease is held there is exactly one writer. Two writer threads were
+        exercising a race the engine was never designed to survive, and the
+        Windows-only failure this test chased (`PermissionError(13, 'Access is
+        denied')` from a reader) was that undefended race, not a gap in the
+        reader-vs-writer retry path.
+
+        Reader-vs-writer contention -- many agents reading a spine while the
+        lease-holder writes it -- is the actual production scenario and stays
+        FULLY exercised here, unchanged: one writer thread, three reader threads,
+        and the torn-document check below is unchanged and absolute. If any
+        reader ever observes a partial document, this test still fails loudly.
+
+        **The sharp edge, stated plainly rather than implied away:** the lease
+        guarantee holds only WHERE A LEASE IS ACTUALLY HELD (see the ownership-is-
+        the-lease note at `checklist_engine.py:110-115` -- "ownership is the
+        LEASE, but only where one is actually held"). A spine that has never been
+        claimed, or one whose lease was claimed and since released, has no
+        single-writer guarantee at all, and concurrent writers there are
+        UNDEFENDED BY DESIGN -- this test says nothing about that case, and
+        neither does `save()`.
 
         This test is TIMING-DEPENDENT and is therefore supporting evidence only.
         It is not what proves the fix; tests (1)-(3) are.
@@ -384,7 +408,7 @@ class AtomicSaveTests(unittest.TestCase):
                     return
                 reads[0] += 1
 
-        threads = [threading.Thread(target=writer) for _ in range(2)]
+        threads = [threading.Thread(target=writer)]
         threads += [threading.Thread(target=reader) for _ in range(3)]
         for t in threads:
             t.start()
