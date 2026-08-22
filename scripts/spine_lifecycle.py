@@ -458,7 +458,17 @@ def open_work(
         # 7. Inject origin, then re-run validate_spine.validate on the result.
         base_sha = _git(["rev-parse", "HEAD"], cwd=Path(worktree))
         origin = build_origin(
-            work_id, branch=branch, worktree=str(Path(worktree)), base=base_sha,
+            # `.as_posix()`, not `str(Path(...))`: `init_work_area.py`'s own
+            # origin-stamping (`instantiate_spine`) already writes `worktree`
+            # this way -- the two writers `build_origin`'s own docstring names
+            # as origin.worktree's sources agree on one format, and it is
+            # provenance only (checklist_engine.py's module header: "read by
+            # NOTHING that decides anything" since #609 g2), so nothing forces
+            # this to be OS-native. `str(Path(...))` would instead re-nativize
+            # `worktree` (itself already forward-slash, see
+            # `worktree_path_for`) back to backslash on Windows, diverging
+            # from the `result["worktree"]` this call returns below.
+            work_id, branch=branch, worktree=Path(worktree).as_posix(), base=base_sha,
             opened_at=_now_iso(), parent=parent,
         )
         compiled["origin"] = origin

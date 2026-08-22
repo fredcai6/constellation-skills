@@ -2093,18 +2093,20 @@ class OwnershipIsBindingKeyNotWorktree(unittest.TestCase):
 def _derived_form(path):
     """A directory in the normalized form `_worktree_from_spine` returns it in.
 
-    Spelled from the predicate the implementation applies -- `normcase` +
-    `normpath` -- never inherited from the platform. `str(tmp_path / ...)`
-    preserves case, while the derivation folds it; on Windows `normcase`
-    lowercases and rewrites separators, so comparing against the raw `str` would
-    fail for EVERY `tmp_path` there, starting at the drive letter. On POSIX
-    `normcase` is the identity, which is exactly why that failure is invisible
-    on this host and has to be constructed rather than observed.
+    `normpath` only -- never `normcase`. The derivation folds case ONLY to
+    decide whether a segment IS `.agent-work` (so `.AGENT-WORK` is still found
+    on Windows); the worktree path it hands back stays in the caller's
+    original case, since nothing downstream wants a Windows-lowercased path
+    and `_same_path` already exists for callers that need case-insensitive
+    comparison. `normcase`-ing the returned form here would compare
+    `_worktree_from_spine`'s real (case-preserving) answer against a
+    lowercased expectation and fail on Windows for every `tmp_path`, starting
+    at the drive letter.
 
     Same construction as `tests/test_worktree_derivation.py`'s `_expected()`,
     which is what pins these two files' expectations to one rule.
     """
-    return os.path.normcase(os.path.normpath(str(path)))
+    return os.path.normpath(str(path))
 
 
 def test_worktree_from_spine_walks_to_the_nearest_agent_work_ancestor(tmp_path):

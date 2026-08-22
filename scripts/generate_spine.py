@@ -941,7 +941,19 @@ def _probe_population(gid: str, cid: str, cond: dict, *, repo_root: Path) -> tup
     judge on its exit status -- one implementation, the thing probed is the
     thing shipped."""
     where = f"{gid}.{cid}"
-    check = _compile_population(cond, str(repo_root))
+    # `.as_posix()`, not `str(repo_root)`: `_compile_population` interpolates
+    # this token UNQUOTED into `cd {repo_root_token} && ...` -- fine for the
+    # `<repo-root>` placeholder, but this call substitutes the REAL absolute
+    # path. `init_work_area.py`'s own resolver (the ONE place `<repo-root>`
+    # is substituted for real, `text.replace("<repo-root>", Path(root)
+    # .resolve().as_posix())`) already uses `.as_posix()` for exactly this
+    # reason: an unquoted Windows path handed to bash has its backslashes
+    # eaten by bash's own unquoted-backslash escaping (`\U` -> `U`), so `cd
+    # C:\Users\...` silently becomes `cd C:Users...` -- "No such file or
+    # directory" for a directory that plainly exists. Matching that
+    # convention here, rather than inventing shell-quoting of our own, keeps
+    # this probe testing the SAME compiled form a real deployment produces.
+    check = _compile_population(cond, Path(repo_root).as_posix())
     command = check["command"]
     # `_find_posix_shell()`, never a bare "bash": on Windows, `subprocess.run`
     # given a bare program name resolves it through Win32's CreateProcess
