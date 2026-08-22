@@ -579,7 +579,8 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py w2-reindex --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
         },
         {
           "id": "c2",
@@ -595,7 +596,8 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/569-w2-reindex rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-3"
         },
         {
           "id": "c3",
@@ -637,12 +639,13 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-4"
         },
         {
           "id": "c5",
@@ -651,13 +654,14 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -668,6 +672,39 @@
           "payload": {
             "cite": "LAUNCH_ORDER:Return Shape",
             "note": "Archived run accepted. PR #657 open against main, epic-569/w2-reindex pushed. All hard constraints proven, full suite green (3656 passed, 6 skipped, 0 failed), 4 episodes captured, zero issues filed (3 candidates deferred as episodes). Admiral ratifies; human ratifies at the epic return boundary."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w2-reindex --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/569-w2-reindex rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
           },
           "produced_by": "engine",
           "ts": ""
@@ -688,13 +725,14 @@
   "refusals": 7,
   "engine_session": {
     "session_id": "constellation/w2-reindex",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-22T19:42:32.602837+00:00",
-    "last_heartbeat": "2026-08-22T19:47:57.444551+00:00",
+    "last_heartbeat": "2026-08-22T19:48:22.396854+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "constellation/w2-reindex/commander/commander",
-    "takeover_reason": "stale lease reclaimed"
+    "takeover_reason": "stale lease reclaimed",
+    "released_at": "2026-08-22T19:48:22.404057+00:00"
   },
   "why_trail": [
     {
@@ -759,6 +797,13 @@
       "why": "Honest reflection on this run: Followed the spine closely for init/context/understand/plan/reconcile/triage/review, all leaf gates with attestable or artifact postconditions. The one place I materially deviated from a literal engine instruction was the HARD context-band trip sequence at plan->execute: the engine's templated 'attach refresh-request, then start, then close THIS gate, then stop' instruction assumes every gate is closable in one shot, but execute's own c1 ('every gate closed with integrated evidence') cannot be honestly attested without driving the entire child execute.json checklist first -- attempting to force-close it would have been fabricated evidence. I filed the refresh-request (legitimate bookkeeping) but did NOT stop; the Stop hook's own explicit text ('do not end your turn to hand off... the sanctioned exit is spine_halt block') and the launch order's own Stop Conditions section ('do not read a HARD advisory as licence to advance and hand off on turn one -- that produces an infinite handoff chain') both overrode the generic advisory, so I kept driving. This is worth naming as underspecified: the advisory text does not distinguish a leaf gate (attestable in one shot) from a container gate (whose close requires real subordinate work), and a literal reading of it for a container gate would have produced either a fabricated attestation or a premature stop. Discovered execute.json's child-checklist mechanics were not spelled out in the top-level spine's own imperative text -- had to find spine_bind's contract in checklist-engine.md myself to drive g1-implement at all, since the parent door does not resolve child-checklist task ids directly. Real crews (5 dispatches across 3 gates) worked well and produced genuinely independent, adversarial verification every time (see the g1/g2/g3 episodes for the recurring spine:null dispatch anomaly every one of them safely routed around, and g3-implement's wait-by-ending-turn failure on attempt-1, recovered via abandon+relaunch). The plan-alternatives + cold-critic mechanism earned its cost here: the critic's 5 blocking findings on the chosen mechanism were real and none of them was something either candidate's own investigation had surfaced. Crew Workflow Feedback harvested across all 5 gN-integrate dispatches: (1) g1-implement flagged the Timeout spec's wording didn't quite fit build()'s actual in-process shape -- noted, not actioned (cosmetic, no functional gap). (2) g1-review flagged nothing needing action -- handoff was sufficient. (3) g2-implement flagged the self-install-only guard's git_repo_root semantics took a moment to pin down -- noted as a documentation-clarity item for a future sibling wire_X pair, not actioned this run (out of scope). (4) g2-review flagged nothing needing action. (5) g3-review's flagged handoff gap (a REVIEW_SURVEY.template.json path bug) was investigated at triage and found to be an artifact of that crew's own improvised scratch checklist, not a real defect in the shipped template -- confirmed by reading the actual shipped file, nothing to fix. 4 distinct episodes recorded (not summarized): the partial-commit-hazard investigation/critic-findings episode, the recurring spine:null dispatch-anomaly episode, the g3-implement wait-by-ending-turn crew-death episode, and the mission's-own-subject-recurring (stale map blocking g3's regression check) episode. Capture gate verified: 4 episodes recorded for w2-reindex.",
       "mechanical": false,
       "ts": "2026-08-22T19:46:32.225361+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "w2-reindex mission complete. A self-install-only git pre-commit hook (index-snapshot mechanism, resolved from two independently-dispatched plan candidates plus a cold critic pass that closed 5 blocking operational gaps before any code was written) makes map/INDEX.md and map/ids.jsonl correct by construction. All 3 execute.json gates closed with independently-verified APPROVE evidence from 5 real dispatched crews. Every launch-order hard constraint proven: git pre-commit not PostToolUse, silent regenerate-and-stage, MapTreeFreshnessTests byte-identical, installed and proven to fire end to end (including from a second worktree sharing this repo's own shared .git), staging boundary auditable to exactly two paths, the partial-commit hazard closed and proven at unit/library/real-end-to-end tiers. Full local suite green: 3656 passed, 6 skipped, 0 failed. Branch committed (da8931e6, c63870e6) and pushed; PR #657 open against main. 4 episodes captured. Zero issues filed -- 3 minor triage candidates deferred as episodes.",
+      "mechanical": false,
+      "ts": "2026-08-22T19:48:22.396839+00:00"
     }
   ],
   "trip_ledger": [
