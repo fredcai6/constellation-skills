@@ -204,8 +204,14 @@ class UnboundDoorRefusesTests(unittest.TestCase):
         self._assert_alive(run)
         self.assertTrue(run.is_error(mid), "an unusable-spine answer must be isError")
         text = run.tool_text(mid)
+        # `.resolve()`, matching `_spine_from_env`'s own `Path(named).resolve()`:
+        # on Windows, resolving a path canonicalizes any 8.3 short-name
+        # segment that names a REAL directory (`RUNNER~1` -> `runneradmin`) to
+        # its long form, which is what the door's refusal actually names.
+        # `tempfile.TemporaryDirectory` inherits its name from `%TEMP%`, which
+        # this CI's short-name form, so the unresolved `path` never matches.
         self.assertIn(
-            str(path), text,
+            str(path.resolve()), text,
             f"a door bound to an unusable path must NAME that path. Got:\n{text}")
         self.assertIn(
             REBIND_ANCHOR, text,
@@ -483,8 +489,14 @@ class BindOnOpenTests(unittest.TestCase):
         opened = json.loads(run.tool_text(3))
         new_spine = Path(opened["SPINE_FILE"])
         self.assertTrue(new_spine.is_file())
+        # `.resolve()`: `SPINE_FILE` comes back from the server already
+        # resolved, which on Windows canonicalizes any 8.3 short-name path
+        # segment in `self.repo` (inherited from `tempfile.TemporaryDirectory`,
+        # itself inherited from `%TEMP%`) to its long form -- `is_relative_to`
+        # is a lexical check, so an unresolved `self.repo` never matches a
+        # resolved `new_spine` even when both name the same real directory.
         self.assertTrue(
-            new_spine.is_relative_to(self.repo),
+            new_spine.is_relative_to(self.repo.resolve()),
             f"spine_open escaped the staged checkout: {new_spine}")
 
         # 3. THE criterion: a MUTATING verb succeeds, in the same process, with

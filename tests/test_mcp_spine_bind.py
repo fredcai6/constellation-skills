@@ -1532,7 +1532,11 @@ class DeclaredChildBindTests(_BoundInARepo):
             "(work id / gate / role), never invented and never the parent's own",
         )
         self.assertEqual(
-            {"spine": str(self.driving), "gate": "understand", "role": "interrogation"},
+            # `.resolve()`: `child_of.spine` echoes the PARENT's bound (resolved)
+            # SPINE path, which on Windows canonicalizes any 8.3 short-name path
+            # segment (`RUNNER~1`) to its long form (`runneradmin`) -- the same
+            # normalization `self.driving` itself never goes through unless asked.
+            {"spine": str(self.driving.resolve()), "gate": "understand", "role": "interrogation"},
             payload["child_of"],
             "the result must state whose child this is, so the lineage is legible "
             "to the agent and in the transcript without re-reading the parent",
