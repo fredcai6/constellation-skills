@@ -6149,6 +6149,13 @@ class TemplateOnlyFieldAllowlist(unittest.TestCase):
         # _is_bookend -- never built by _new_task/_build_amend_task, only
         # ever landed by a template author or the rescope-overwritable path.
         "bookend",
+        # Template-only prose parked beside the imperative it qualifies, for
+        # whoever EDITS the step's check -- same role as
+        # `context_headroom_note`, and read by no code at all. `render_human`
+        # emits a fixed field set, so it never reaches a run;
+        # tests/test_map_contract_wiring.py pins both that invisibility and
+        # the reasoning the note has to keep carrying.
+        "map_check_note",
     }
 
     def test_negative_self_test_catches_a_synthetic_planted_field(self):

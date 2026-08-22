@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 61 modules, 1292 entities
 skills: 1 modules, 22 entities
-tests: 98 modules, 5421 entities
+tests: 98 modules, 5430 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -117,7 +117,7 @@ tests: 98 modules, 5421 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (98 modules, 5421 entities)
+## tests (98 modules, 5430 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -174,7 +174,7 @@ tests: 98 modules, 5421 entities
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
-- [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
+- [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (36 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
 - [tests.test_map_orient](tests.test_map_orient/INDEX.md) (125 entities, 91 holes): The falsification floor for scripts/map_orient.py.
 - [tests.test_mcp_adoption](tests.test_mcp_adoption/INDEX.md) (69 entities, 29 holes): Adoption gate for the MCP door (issue #542 criterion 1, epic-418-followon g4a).
 - [tests.test_mcp_door_engine_cwd](tests.test_mcp_door_engine_cwd/INDEX.md) (24 entities, 15 holes): The door stands in the bound spine's own worktree for an engine call (issue #568, the g1b delta).

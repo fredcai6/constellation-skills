@@ -40,6 +40,20 @@ ROOT = Path(__file__).resolve().parents[1]
 SPINE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
 
 
+def map_check_note(step: str) -> str:
+    """The step's `map_check_note` -- why its check is worded and placed as it is.
+
+    The reasoning used to sit inline in the imperative, where every run paid to
+    read text only an editor of the check can act on. It moved one field over,
+    onto the same step: `render_human` emits `imperative`, the conditions,
+    `constraints`, `anchors` and `directives` and nothing else, so a sibling
+    field costs a run nothing while sitting where whoever edits the step is
+    already looking. Same role as `execute`'s `context_headroom_note`. These
+    tests moved with it, so the guard still fails if the reasoning is deleted
+    rather than relocated."""
+    return task(step)["map_check_note"]
+
+
 def spine() -> dict:
     return json.loads(SPINE.read_text(encoding="utf-8"))
 
@@ -219,18 +233,116 @@ class ContractWiring(unittest.TestCase):
         gated has to be told the exact path the gate reads."""
         self.assertIn(".agent-work/<work-id>/MISSION_FRAME.md", imperative("plan"))
 
-    def test_the_plan_imperative_records_the_asymmetry_and_the_road_not_to_take(self):
+    def test_the_plan_note_records_the_asymmetry_and_the_road_not_to_take(self):
         """Required in PROSE, not only in code: a future implementer hitting
         the contradiction ('why not just run both at both steps?') needs the
-        answer where they are already reading."""
-        prose = imperative("plan")
+        answer where they are already reading -- which is the step, not a
+        doctrine file one hop away."""
+        prose = map_check_note("plan")
         self.assertIn("verify-frame", prose)
         self.assertIn("no frame exists", prose.lower())
 
-    def test_the_plan_imperative_states_that_the_check_is_a_floor_not_the_fix(self):
+    def test_the_plan_note_states_that_the_check_is_a_floor_not_the_fix(self):
         """Do not overclaim: the plan-step check inherits the late-anchor defect
-        it was measured against."""
-        self.assertIn("floor", imperative("plan").lower())
+        it was measured against, and the measurement (sensitivity 0/4,
+        specificity 0/1) is recorded with it."""
+        prose = map_check_note("plan").lower()
+        self.assertIn("floor", prose)
+        self.assertIn("0/4", prose)
+
+    def test_the_plan_note_interprets_the_measurement_it_cites(self):
+        """The bare numbers mislead in a specific, reproducible way: a reader
+        who sees `0/4` and `still blocking` reaches for `--report-only`. What
+        makes them readable is the ratified finding -- the four defective runs
+        would have PASSED the gate, so this is zero discriminating power against
+        that population, not a floor that happened to face a clean baseline."""
+        prose = map_check_note("plan").lower()
+        self.assertIn("zero discriminating power", prose)
+        self.assertIn("not a loophole someone might find", prose)
+
+    def test_the_plan_note_records_what_the_one_firing_was(self):
+        """Specificity 0/1 reads as a defect until you know the firing was
+        #716, whose correct answer was non-engagement -- i.e. the waivable
+        trivial-change escape behaving exactly as designed."""
+        prose = map_check_note("plan").lower()
+        self.assertIn("#716", prose)
+        self.assertIn("non-engagement", prose)
+
+    def test_both_notes_point_at_the_ruling_that_settled_this(self):
+        """A measurement with no route back to its adjudication gets
+        re-litigated. Both notes name the archived log."""
+        for step in ("context", "plan"):
+            with self.subTest(step=step):
+                self.assertIn(
+                    ".agent-work/archive/2026-08-03-epic-298/ADMIRAL_LOG.md",
+                    map_check_note(step),
+                )
+
+    def test_the_ruling_the_notes_cite_is_actually_in_the_tree(self):
+        """A pointer to a file nobody kept is worse than no pointer. The log is
+        tracked, so this asserts the citation still resolves."""
+        log = ROOT / ".agent-work" / "archive" / "2026-08-03-epic-298" / "ADMIRAL_LOG.md"
+        self.assertTrue(log.is_file(), f"{log} is missing; the notes cite it")
+        text = log.read_text(encoding="utf-8")
+        self.assertIn("sensitivity 0/4 and specificity 0/1", text)
+        self.assertIn("zero discriminating power", text)
+
+    def test_the_plan_note_records_the_rescue_that_failed(self):
+        """Pre-crawl expectations in the receipt were tested and do not work.
+        Without that on the record it is the first thing a reader proposes."""
+        prose = map_check_note("plan").lower()
+        self.assertIn("only ordering evidence is the transcript", prose)
+
+    def test_the_context_note_records_why_the_anchor_is_an_act(self):
+        """The late-artifact diagnosis is what justifies `context`'s wording;
+        it belongs on `context`, not folded into the plan step's note."""
+        prose = map_check_note("context").lower()
+        self.assertIn("before you open any source file", prose)
+        self.assertIn("call 57", prose)
+
+    def test_each_note_sits_immediately_after_the_imperative_it_qualifies(self):
+        """Relocating the reasoning is only safe while an editor still finds it.
+
+        This was a prose pointer inside the imperative ("...is in this step's
+        map_check_note"). A cold read killed it: the line spends a run's context
+        telling that run NOT to read something, which is the definition of text
+        that does not earn its place. Adjacency does the same job for free --
+        an editor opening the step sees `map_check_note` as the very next key --
+        and it is a stronger guarantee than prose, because a pointer can go
+        stale while key order cannot."""
+        for step in ("context", "plan"):
+            with self.subTest(step=step):
+                keys = list(task(step).keys())
+                self.assertEqual(
+                    keys[keys.index("imperative") + 1], "map_check_note",
+                    f"{step}: map_check_note must directly follow imperative",
+                )
+                self.assertNotIn(
+                    "map_check_note", imperative(step),
+                    f"{step}: the note is adjacent; a prose pointer is dead weight",
+                )
+
+    def test_the_notes_are_not_rendered_to_a_run(self):
+        """The whole reason this text is a sibling field and not imperative
+        prose: `render_human` emits a fixed set of fields, and a note is not
+        one of them. If that ever changes, the runtime cost comes back and
+        these notes have to shrink to what a run can act on."""
+        import importlib.util
+        import sys
+
+        spec = importlib.util.spec_from_file_location(
+            "checklist_engine_under_test", ROOT / "scripts" / "checklist_engine.py"
+        )
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = module
+        spec.loader.exec_module(module)
+        cl = spine()
+        for earlier in ("init", "context", "understand"):
+            cl["tasks"][earlier]["status"] = "complete"
+        cl["tasks"]["plan"]["status"] = "in-progress"
+        rendered = module.current(cl)
+        self.assertIn(imperative("plan")[:60], rendered)
+        self.assertNotIn("sensitivity 0/4", rendered)
 
 
 # =============================================================================
