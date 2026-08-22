@@ -2121,6 +2121,45 @@ class TestReleaseChildPlans:
 # spine, and never a live lease.
 # =============================================================================
 
+#: What `checklist_engine.override_summary` reports for a spine that carries no
+#: `override_ledger`/`trip_ledger` at all -- the shape every plain `_g1_spine()`
+#: fixture (no override activity) must produce on every `finish_work` return point.
+_EMPTY_OVERRIDES = {
+    "trip": 0, "force-claim": 0, "force-release": 0,
+    "waive": 0, "waive_authority_mismatch": 0, "ids": [],
+}
+
+
+def _override_ledger_fixture() -> list[dict]:
+    """A NEW-schema `override_ledger`: one entry of each non-trip kind
+    (`force-claim`, `force-release`, two `waive`, one of them
+    `authority_mismatch`) -- deliberately none carry an `outcome` field, unlike
+    a `kind="trip"` entry. `finish_work`'s `overrides` computation must read
+    this correctly via `override_summary`/`_override_entries`, never a raw
+    `spine.get("trip_ledger")` + `e.get("outcome")` shortcut, which would see
+    an empty/absent `trip_ledger` here and silently report all-zero."""
+    return [
+        {"id": "ov-1", "kind": "force-claim", "ts": "2026-08-16T00:00:00+00:00",
+         "verb": "claim", "session_id": "s2", "previous_session_id": "s1",
+         "takeover_reason": "stale lease"},
+        {"id": "ov-2", "kind": "force-release", "ts": "2026-08-16T00:00:01+00:00",
+         "verb": "release"},
+        {"id": "ov-3", "kind": "waive", "ts": "2026-08-16T00:00:02+00:00",
+         "task": "m1", "cond": "c1", "authority_mismatch": True,
+         "expected_authority": "human"},
+        {"id": "ov-4", "kind": "waive", "ts": "2026-08-16T00:00:03+00:00",
+         "task": "m1", "cond": "c1"},
+    ]
+
+
+#: The exact `override_summary` result `_override_ledger_fixture()` must produce.
+_EXPECTED_OVERRIDES_SUMMARY = {
+    "trip": 0, "force-claim": 1, "force-release": 1,
+    "waive": 2, "waive_authority_mismatch": 1,
+    "ids": ["ov-1", "ov-2", "ov-3", "ov-4"],
+}
+
+
 def _census_active_leases(root: Path) -> int:
     """Structural active-lease census -- mirrors `_active_engine_session_spine`'s
     scan predicate (any `*.json` under `root`, any depth, whose
@@ -2163,6 +2202,7 @@ class TestFinishWorkRefusals:
             "ok": False,
             "refusal": "close refused: the working tree has uncommitted changes",
             "stage": "verify",
+            "overrides": _EMPTY_OVERRIDES,
         }
         assert spine_path.read_bytes() == before, "step 2 refusal must not mutate the spine file"
         assert not archive_root.exists(), "step 2 refusal must not create an archive"
@@ -2180,6 +2220,7 @@ class TestFinishWorkRefusals:
             "ok": False,
             "refusal": "close refused: this run captured no episode",
             "stage": "verify",
+            "overrides": _EMPTY_OVERRIDES,
         }
 
     def test_violating_unmet_postcondition_refuses_stage_advance_release_advance(self, tmp_path):
@@ -2242,6 +2283,76 @@ class TestFinishWorkRefusals:
         assert result["refusal"] == sl.done_refusal(
             _g1_spine(), tree_clean=False, episodes_captured=True,
         )
+
+
+class TestFinishWorkOverrides:
+    """#504: `overrides` must reach EVERY return point `finish_work` has --
+    one dedicated test per return point, per the handoff's own close
+    criterion (covering only the success path plus one refusal path is the
+    single most common way this ships incomplete). Every fixture spine here
+    carries `_override_ledger_fixture()`, whose entries are all non-trip
+    kinds with no `outcome` field -- the real schema g1/g2 shipped -- so a
+    raw `trip_ledger`/`outcome` shortcut would silently report
+    `_EMPTY_OVERRIDES` instead of `_EXPECTED_OVERRIDES_SUMMARY`."""
+
+    def test_verify_refusal_carries_overrides(self, tmp_path):
+        spine = _g1_spine(gate_status="in-progress", satisfied=True)
+        spine["override_ledger"] = _override_ledger_fixture()
+        spine_path = _write_json(tmp_path / ".agent-work" / "g3-ov-verify" / "spine.json", spine)
+
+        result = sl.finish_work(
+            spine_path, root=tmp_path, session_id=G1_SESSION, today="2026-08-16",
+            tree_clean=False, episodes_captured=True, push=False,
+        )
+
+        assert result["ok"] is False
+        assert result["stage"] == "verify"
+        assert result["overrides"] == _EXPECTED_OVERRIDES_SUMMARY
+
+    def test_advance_release_refusal_carries_overrides(self, tmp_path):
+        spine = _g1_spine(satisfied=False)
+        spine["override_ledger"] = _override_ledger_fixture()
+        spine_path = _write_json(tmp_path / ".agent-work" / "g3-ov-advance" / "spine.json", spine)
+
+        result = sl.finish_work(
+            spine_path, root=tmp_path, session_id=G1_SESSION, today="2026-08-16",
+            tree_clean=True, episodes_captured=True, push=False,
+        )
+
+        assert result["ok"] is False
+        assert result["stage"] == "advance-release:advance"
+        assert result["overrides"] == _EXPECTED_OVERRIDES_SUMMARY
+
+    def test_archive_refusal_carries_overrides(self, tmp_path):
+        work_id = "g3-ov-archive"
+        spine = _g1_spine(gate_status="in-progress", satisfied=True)
+        spine["override_ledger"] = _override_ledger_fixture()
+        spine_path = _write_json(tmp_path / ".agent-work" / work_id / "spine.json", spine)
+        today = "2026-08-16"
+        archive_dir = tmp_path / ".agent-work" / "archive" / f"{today}-{work_id}"
+        archive_dir.mkdir(parents=True)
+
+        result = sl.finish_work(
+            spine_path, root=tmp_path, session_id=G1_SESSION, today=today,
+            tree_clean=True, episodes_captured=True, push=False,
+        )
+
+        assert result["ok"] is False
+        assert result["stage"] == "archive"
+        assert result["overrides"] == _EXPECTED_OVERRIDES_SUMMARY
+
+    def test_success_carries_overrides(self, repo):
+        spine = _g1_spine(gate_status="in-progress", satisfied=True)
+        spine["override_ledger"] = _override_ledger_fixture()
+        spine_path = _write_json(repo / ".agent-work" / "g3-ov-success" / "spine.json", spine)
+
+        result = sl.finish_work(
+            spine_path, root=repo, session_id=G1_SESSION, today="2026-08-16",
+            tree_clean=True, episodes_captured=True, push=False,
+        )
+
+        assert result["ok"] is True, result
+        assert result["overrides"] == _EXPECTED_OVERRIDES_SUMMARY
 
 
 class TestFinishWorkCompositionOrder:

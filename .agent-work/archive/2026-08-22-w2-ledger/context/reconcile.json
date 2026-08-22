@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "files": [],
+  "repo_rev": {
+    "commit": "0427898a8b2e8b57a4c2761dc525dea4d4b6b9f8"
+  },
+  "run": {
+    "work_id": "w2-ledger",
+    "generated_at": "2026-08-22T19:38:11Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w2-ledger",
+      "repo": "/home/tommy/projects/569-w2-ledger",
+      "durable": "/home/tommy/projects/569-w2-ledger"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w2-ledger"
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "#557 wave 2 (w2-ledger)",
+      "outcome": "Unified the three genuine engine-authority-bypass paths (waive, forced claim/release, trip ledger) into one engine-written, append-only override_ledger, reachable only from dispatch() before any verb runs -- provable, not asserted.",
+      "evidence": "tests/test_checklist_engine.py::test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb; tests/test_checklist_engine.py::test_dispatch_call_records_waive_claim_release_direct_call_does_not"
+    },
+    {
+      "issue_id": "#503",
+      "outcome": "waive()'s evidence produced_by now echoes the real --authority passed (never hardcoded 'human'); override_policy.authority is compared against the passed authority, report-only, with a named promotion trigger.",
+      "evidence": ".agent-work/w2-ledger/RED_PROOF.md; tests/test_checklist_engine.py -k waive"
+    },
+    {
+      "issue_id": "#504",
+      "outcome": "Closeout renders the ledger both immediately (finish_work's return dict, all four return points) and durably (episode mechanical_fields + actual persistence into the rendered .md text).",
+      "evidence": "tests/test_spine_lifecycle.py::TestFinishWorkOverrides; tests/test_episode_store.py::OverridesPersistenceTests; tests/test_episode_store.py::EpisodeOverridesRoundTripTests"
+    },
+    {
+      "issue_id": "#259",
+      "outcome": "Closed on evidence, not deletion or fold-in: a 117-file archive census shows consolidate --override-reason in constant, sanctioned use, refuting the issue's premise. Documented in docs/CHECKLIST_SCHEMA.md; GitHub comment posted (issue itself left open -- it bundles an unrelated, still-open item 1).",
+      "evidence": "notes-w2b.md; docs/CHECKLIST_SCHEMA.md (commit 0427898a); https://github.com/fredcai6/constellation-skills/issues/259#issuecomment-5382193485"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The four override paths named by the prior wave verdict can be honestly unified into one ledger.",
+      "expected": "Launch order's Honest-Null Clause: a measured negative (genuine semantic difference) is a complete, successful deliverable if the census shows it.",
+      "observed": "Only 3 of the 4 paths unify (waive, forced claim/release, trip ledger). consolidate --override-reason is a survey-verdict annotation, structurally distinct from gated-spine authority bypasses, and stays out -- the honest-null outcome the launch order named as acceptable.",
+      "source": "notes-w2b.md; .agent-work/w2-ledger/PLAN_ALTERNATIVES.md"
+    },
+    {
+      "claim": "The unified ledger is engine-written-only, reachable only from the dispatch chokepoint.",
+      "expected": "LAUNCH_ORDER Pre-Ruling 'engine-written-only' -- hard, non-overridable, proven not asserted.",
+      "observed": "AST-based test asserts the exact caller graph of _append_override_entry/_append_trip_entry/_override_entries; a companion test drives waive/claim/release through dispatch() and confirms the ledger moves, then calls the bare functions directly and confirms it does not.",
+      "source": "tests/test_checklist_engine.py::test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb"
+    },
+    {
+      "claim": "A new refusal (the waive authority-mismatch check) ships report-only with a named promotion trigger.",
+      "expected": "LAUNCH_ORDER Pre-Ruling 'widening-live-refusal-report-only'.",
+      "observed": "waive() never raises on a mismatch (grep for new raise EngineError in the diff returns zero); authority_mismatch/expected_authority are recorded instead; the promotion trigger (two conditions) is documented verbatim in docs/CHECKLIST_SCHEMA.md.",
+      "source": "docs/CHECKLIST_SCHEMA.md (Named promotion trigger paragraph); .agent-work/w2-ledger/RED_PROOF.md"
+    },
+    {
+      "claim": "Closeout visibly distinguishes a run carrying overrides from a clean one.",
+      "expected": "LAUNCH_ORDER Pre-Ruling 'closeout-must-render-it' -- part of the deliverable, not a follow-up.",
+      "observed": "First implementer pass wired override_summary into mechanical_fields and finish_work but left the durable episode-text persistence half validated-then-dropped -- caught by the implementer's own out-of-scope observation, closed in a rework pass (Episode dataclass field, render/parse round-trip, _apply_create wiring) before this gate closed. Both render targets now genuinely work.",
+      "source": ".agent-work/w2-ledger/crew-handoffs/g3-implement-implementer-result.md (attempt 1's out-of-scope observation, attempt 2's PART E)"
+    },
+    {
+      "claim": "Full local suite stays green at every gate boundary, at or above the stated baseline.",
+      "expected": "3622 passed, 6 skipped, 0 failed (launch order's stated Base at 9d5aac6d).",
+      "observed": "3660 passed, 6 skipped, 0 failed at final close -- +38 passed from new coverage across g1-g3, no regressions, no net loss.",
+      "source": "python -m pytest -q (run at g5-closeout-gate)"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "dc1-spine-null-dispatch",
+      "signal": "Every run_crew.py cli-backend implementer/reviewer dispatch this run made (7 crews across g1-g3) inherited SPINE_FILE/SPINE_SESSION pointing at the dispatching Commander's own spine, not a fresh door for the dispatched crew -- crew-runs.json records spine: null for all 7.",
+      "affects": "The crew-dispatch mechanism (scripts/run_crew.py's cli-backend env wiring) and the implementer/reviewer skills' opening engine-drive instructions, which assume a spine is always bound for them.",
+      "evidence": ".agent-work/w2-ledger/crew-runs.json (spine: null on all 7 entries); each crew's own Workflow Feedback section in .agent-work/w2-ledger/crew-handoffs/*-result.md independently names the same gap and the same self-authored-local-plan workaround.",
+      "classification": "later_only",
+      "reason": "Not this issue's scope (a dispatch-mechanism/skill-doctrine gap, not the override-ledger surface this launch order fenced to). Every crew self-corrected -- authored and drove its own local plan/survey via the CLI, never touching or advancing the Commander's own spine -- so no run state was corrupted and this did not block or invalidate this run's exit. Recorded as evidence for whoever owns the crew-dispatch mechanism next; not filed as an issue by this run (filing is the disfavored exit, and this is not this lane's surface to fix)."
+    },
+    {
+      "id": "dc2-missing-return-status-field",
+      "signal": "Both IMPLEMENTER_RESULT attempts for g3-implement omitted the required '## Return status' line from templates/IMPLEMENTER_HANDOFF.template.md's Return Format section, despite otherwise-complete, unambiguous content.",
+      "affects": "templates/IMPLEMENTER_HANDOFF.template.md's own compliance with its own Return Format contract, and the Commander's g3-implement/g3-review evidence-integration step.",
+      "evidence": ".agent-work/w2-ledger/crew-handoffs/g3-implement-implementer-result.md (both attempts, no '## Return status' section); .agent-work/w2-ledger/crew-handoffs/g3-implement-reviewer-result.md's own Out-of-scope observations section names the same gap and agrees with the Commander's complete reading.",
+      "classification": "evidence_only",
+      "reason": "The Commander treated both as status=complete based on documented content (no stop conditions, no blockers, every close criterion evidenced), and the independently-dispatched reviewer explicitly agreed with that reading. Not run-blocking; recorded as a template-compliance observation for whoever curates the implementer handoff template."
+    }
+  ]
+}

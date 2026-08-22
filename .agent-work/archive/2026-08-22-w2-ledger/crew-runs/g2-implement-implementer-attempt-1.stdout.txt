@@ -1,0 +1,9 @@
+The plan reports DONE: no open items, and the lease is released. Implementation complete.
+
+Summary: implemented both parts of the g2-implement handoff in `scripts/checklist_engine.py`:
+- **PART A** — `waive()` now echoes the real `authority` into `produced_by` (was hardcoded `"human"`), and report-only compares `override_policy.authority` against the passed authority, stamping `authority_mismatch`/`expected_authority` on mismatch only, never refusing.
+- **PART B** — `dispatch()`'s claim/release/waive branches now write `force-claim`/`force-release`/`waive` entries into `override_ledger` via `_append_override_entry`, exclusively from the CLI chokepoint, never from `waive()`/`claim()`/`release()`'s own bodies.
+
+Also updated the g1 AST call-graph chokepoint proof and added the named promotion trigger to both a code comment and `docs/CHECKLIST_SCHEMA.md`. All 511 tests pass; full evidence and a stale-doc triage candidate are recorded in `.agent-work/w2-ledger/crew-handoffs/g2-implement-implementer-result.md`.
+
+One workflow note worth flagging to the Commander: this crew's `SPINE_SESSION`/`SPINE_FILE` env resolved to the Commander's own spine rather than a dedicated door, so per the implementer skill's documented fallback I authored and drove my own `IMPLEMENTER_PLAN.json` directly via the CLI — worth checking whether the dispatch path should be giving implementer crews their own bound door going forward.

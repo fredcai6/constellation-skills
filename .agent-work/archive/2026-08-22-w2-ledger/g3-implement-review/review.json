@@ -1,0 +1,173 @@
+{
+  "work_id": "w2-ledger",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md excerpts; handoff at g3-review-handoff.md read in full.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PART A-E all present exactly as handoff/rework-note describe. override_summary pure, dict-shape check added, mechanical_fields absence-is-meaningful via ids check, finish_work carries overrides on all 4 return points computed once via override_summary, Episode.overrides added with correct legal field ordering (verified TypeError on handoff's literal suggested position), render/parse round-trip both directions, _apply_create wires it through and persists to disk (verified via read_exact on actual file).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All touched functions confined to allowed scope: checklist_engine.py (only override_summary added), episode_capture.py (only mechanical_fields extended), spine_lifecycle.py (only finish_work's docstring/body), apply_episode_delta.py (only MECHANICAL_ALL_FIELDS, Episode dataclass, render_episode, parse_episode, _validate_create, _apply_create -- confirmed zero diff in amend-assertion/retirement/consolidation via hunk inspection). map/INDEX.md changes are entity-count deltas only (build artifact). No specific-exclusion items touched.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ran full suite myself: 'py -m pytest -q' -> 3660 passed, 6 skipped, 1274 subtests passed in 153.82s, exit code 0. Matches claimed baseline-plus-additions exactly. Load-bearing round-trip test (test_overrides_field_survives_the_create_op_validation_path in test_episode_fields.py) confirmed to drive apply_episode_delta.validate_delta directly on real mechanical_fields() output, not a mock.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints honored: (1) absence-is-meaningful -- mechanical_fields gates on overrides['ids'] non-empty, render_episode only emits the line when ep.overrides is truthy, verified by own script constructing Episode with empty overrides -> no line in text. (2) Episode dataclass field-ordering: independently confirmed via python repl that the handoff's literal suggested position (overrides between artifact_refs and agent_supplied) raises TypeError: non-default argument 'agent_supplied' follows default argument -- attempt 2's actual placement (after agent_supplied) is the only legal spot, not a corner cut. (3) map/INDEX.md freshness: py -m pytest tests/test_code_map.py -q -> 148 passed, 63 subtests passed, no stale-entity failures. (4) Independently reproduced render(parse(text))==text for both overrides-present and overrides-absent cases via a standalone script, matching the test suite's claims.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "decision:closeout-render-target-is-both (@grade: settled/human) is now fully satisfied by both finish_work's return AND the persisted episode text -- no divergence from recorded architecture requiring reconciliation. IMPLEMENTER_RESULT (attempt 2) confirmed to omit '## Return status' as the handoff noted; agree with Commander's 'complete' reading -- all close criteria independently verified met, no blockers or stop conditions stated, content is unambiguous. Not a triage candidate; a template-compliance nit only.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to .agent-work/w2-ledger/FOWLER_PASS.json (from templates/FOWLER_PASS.template.json), run scripts/verify_fowler_pass.py .agent-work/w2-ledger/FOWLER_PASS.json (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-ledger/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 12 baseline smells rendered a verdict: 10 absent, 2 overridden with logged repo-standard+reason (primitive-obsession -- overrides as a plain dict matches the file's own MECHANICAL_ALL_FIELDS dict-shaped-field convention; shotgun-surgery -- the 4-file spread is the correct shape for decision:closeout-render-target-is-both, a settled/human ruling to wire both seams). verify_fowler_pass.py .agent-work/w2-ledger/FOWLER_PASS.json exits 0. No smell flagged as a blocker.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/w2-ledger/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "PART A-E all verified against handoff and rework note. Full suite green (3660 passed, 6 skipped, run by reviewer). Load-bearing round-trip and per-return-point tests confirmed to drive real code paths, not mocks. Scope confined to allowed spots (amend/retirement/consolidation confirmed zero-diff). Episode dataclass field-ordering constraint independently reproduced as a genuine Python limitation, not a corner cut. Fowler pass: 10 absent, 2 overridden with logged reasons, none flagged."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/w2-ledger/g3-implement/reviewer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-22T19:10:37.791996+00:00",
+    "last_heartbeat": "2026-08-22T19:22:47.552504+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T19:23:24.134096+00:00"
+  }
+}

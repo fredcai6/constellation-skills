@@ -1,0 +1,362 @@
+{
+  "work_id": "w2-ledger/g2-implement/implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-waive-produced-by-and-mismatch",
+    "m2-dispatch-claim-release-wiring",
+    "m3-dispatch-waive-wiring-and-parity",
+    "m4-chokepoint-proof-and-schema-doc",
+    "m5-evidence-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the g2-implement handoff in full, the current waive()/dispatch() source (line numbers in the handoff are stale vs current file -- re-locate both by function name), and g1's landed _append_override_entry/_append_trip_entry/_override_entries plus the compliance-ledger AST proof test. Confirm the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + current waive()/dispatch() source + g1 override_ledger helpers read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff read in full; confirmed complete (task, intent, scope, exclusions, evidence, test mode, stop conditions all present). Current waive() at line 3527, dispatch() at line 3715 (line numbers shifted from handoff's stale 3475/3663 estimates, likely due to g1 landing). g1's _append_override_entry (line 2167), _append_trip_entry (2189), _override_entries (2208) read. AST chokepoint proof test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb located at test_checklist_engine.py:7625."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-waive-produced-by-and-mismatch": {
+      "id": "m1-waive-produced-by-and-mismatch",
+      "title": "PART A -- fix waive() produced_by and add report-only authority_mismatch",
+      "imperative": "In waive() (scripts/checklist_engine.py): (1) change the evidence entry's produced_by from the literal 'human' to the passed authority. (2) Read policy.get('authority') (currently never read) and compare it, case/whitespace-normalized, against the passed authority. On mismatch, set authority_mismatch: true and expected_authority on BOTH the new evidence entry's payload and c['waived']; waive() must NOT refuse or block on a mismatch -- same return string shape as before. On match or when policy.get('authority') is absent, add no new field (absence stays meaningful, not False/None). Write/extend unit tests in tests/test_checklist_engine.py covering: produced_by echoes authority; mismatch sets both fields report-only; match sets neither; absent policy.authority sets neither. Run `pytest tests/test_checklist_engine.py -k waive -q`.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete, handoff confirmed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "waive() produced_by echoes authority; authority_mismatch/expected_authority report-only per spec; waive never refuses on mismatch; -k waive passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -k waive -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-waive-produced-by-and-mismatch-1"
+        }
+      ],
+      "constraints": [
+        "do not add a refusal path for authority mismatch",
+        "absence of authority_mismatch/expected_authority is meaningful -- never write false/null explicitly"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-waive-produced-by-and-mismatch-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -k waive -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-dispatch-claim-release-wiring": {
+      "id": "m2-dispatch-claim-release-wiring",
+      "title": "PART B (claim + release branches) -- wire force-claim/force-release into override_ledger from dispatch() only",
+      "imperative": "In dispatch()'s claim arm: after claim(...) returns successfully, read the just-written cl['engine_session'] -- if force was passed AND previous_session_id is non-null (genuine takeover), call _append_override_entry(cl, 'force-claim', verb='claim', session_id=..., previous_session_id=..., takeover_reason=...). A no-op --force (nothing to take over) must NOT append. In dispatch()'s early release arm: capture the owning session_id from cl.get('engine_session') BEFORE calling release(...) (release mutates status but leaves session_id in place). Compute whether to append (force was passed AND caller's session_id differs from the captured owner) and, if so, call _append_override_entry(cl, 'force-release', ...) inline BEFORE the existing return release(...) statement -- do NOT convert the early return into a fall-through (that would newly route release's output through the shared bottom logic including the archived-path banner, an unintended behavior change). Write tests: force-claim over a genuine takeover appends; no-op --force claim does not; force-release by a non-owner appends before the early return; a force-release against an archived-path spine gets ZERO archived-banner decoration in its output (regression test for the early-return care). Both append calls must go through _append_override_entry, never write cl['override_ledger'] directly, and must NOT appear inside claim()/release()'s own function bodies.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "PART A landed and waive tests green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "PART A landed, 30/30 waive tests pass"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "force-claim/force-release append via _append_override_entry from dispatch() only; no-op force produces no entry; archived-banner regression test passes; whole-file suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py -q -k \"not compliance_ledger_write_site\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-dispatch-claim-release-wiring-1"
+        }
+      ],
+      "constraints": [
+        "_append_override_entry signature is fixed -- call it, do not change it",
+        "release's early return must stay an early return, not become a fall-through",
+        "no append call sites inside claim()/release()'s own bodies"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-dispatch-claim-release-wiring-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_checklist_engine.py -q -k \"not compliance_ledger_write_site\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-dispatch-waive-wiring-and-parity": {
+      "id": "m3-dispatch-waive-wiring-and-parity",
+      "title": "PART B (generic/waive branch) -- record every successful waive from dispatch(), plus the duplicate-lookup-parity test",
+      "imperative": "In dispatch()'s generic verb branch (the _run_verb call): when v == 'waive' and _run_verb returns successfully, read the condition's now-set c['waived'] marker (dispatch already has cl and the target ids from args) and append kind='waive' via _append_override_entry with the marker's authority/reason/forced/authority_mismatch/expected_authority fields plus task/cond/evidence. Record EVERY successful waive, not only forced/mismatched ones. The condition lookup dispatch performs for this read must use the SAME lookup path waive() itself exercises (same which-then-fallback search over preconditions/postconditions) -- write a test with a condition id that exists in BOTH preconditions and postconditions with different override_policy, proving `which` is threaded through correctly to both dispatch's re-lookup and waive()'s own lookup (a divergence test). Also write the direct-call-vs-dispatch-call chokepoint test: one test drives waive/claim --force/release --force through checklist_engine.dispatch() (the CLI path via main()/dispatch()) and asserts override_ledger entries land; a companion test calls waive()/claim()/release() directly as library functions and asserts override_ledger is UNCHANGED.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "claim/release wiring landed and suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "claim/release wiring landed, tests green minus known m4-scoped AST test"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every successful waive recorded from dispatch(); duplicate-lookup-parity test passes; direct-call-vs-dispatch-call chokepoint tests pass; whole-file suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_checklist_engine.py -q -k \"not compliance_ledger_write_site\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-dispatch-waive-wiring-and-parity-1"
+        }
+      ],
+      "constraints": [
+        "append call sites only inside dispatch(), never inside waive()'s own body"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-dispatch-waive-wiring-and-parity-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_checklist_engine.py -q -k \"not compliance_ledger_write_site\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-chokepoint-proof-and-schema-doc": {
+      "id": "m4-chokepoint-proof-and-schema-doc",
+      "title": "Update the AST call-graph chokepoint proof; add the promotion-trigger doc text and code comment",
+      "imperative": "Update test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb (the AST/call-graph proof) so callers_of('_append_override_entry') now includes 'dispatch' alongside '_append_trip_entry' (this gate adds three new direct call sites in dispatch()), while _run_verb still reaches none of the writer-side functions directly for waive/claim/release (the append call sites live in dispatch() around _run_verb, not inside it) -- verify via AST/line-range check mirroring the existing pattern, not a string count. Add a code comment near the mismatch-detection code recording the named promotion trigger verbatim from the handoff (waive-authority-mismatch/authority_mismatch stays report-only until both a corpus census across a full epic-wave shows zero legitimate cross-role cases, AND docs/CHECKLIST_SCHEMA.md's override_policy.authority field is explicitly upgraded from advisory to an enforceable contract in the same change that promotes the check). Add the same trigger text to docs/CHECKLIST_SCHEMA.md near where g1 documented override_policy/the waive kind.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "waive wiring and parity tests landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "waive wiring and parity tests landed, 510/511 pass"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "chokepoint AST proof updated and passing; promotion-trigger text lands verbatim in code comment and docs/CHECKLIST_SCHEMA.md; grep shows _append_override_entry call sites only in dispatch() plus g1's _append_trip_entry",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -k compliance_ledger_write_site -q && grep -n '_append_override_entry(' scripts/checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-chokepoint-proof-and-schema-doc-1"
+        }
+      ],
+      "constraints": [
+        "do not implement enforcement of the promotion trigger -- report-only only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-chokepoint-proof-and-schema-doc-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -k compliance_ledger_write_site -q && grep -n '_append_override_entry(' scripts/checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-evidence-close": {
+      "id": "m5-evidence-close",
+      "title": "Full regression, required evidence, IMPLEMENTER_RESULT",
+      "imperative": "Run the full required-evidence command set (pytest -k waive; pytest whole file; grep _append_override_entry; the individual chokepoint/archived-banner/parity test pass/fail). Confirm deliverable paths are not gitignored. Write IMPLEMENTER_RESULT to .agent-work/w2-ledger/crew-handoffs/g2-implement-implementer-result.md per the handoff's Return Format. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all PART A/PART B slices landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all PART A/B slices landed and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all required evidence captured; IMPLEMENTER_RESULT written to the named path",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-evidence-close-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-evidence-close-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/569-w2-ledger && python -m pytest tests/test_checklist_engine.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/w2-ledger/g2-implement/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-22T18:21:09.029596+00:00",
+    "last_heartbeat": "2026-08-22T18:27:56.217439+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T18:27:59.056865+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "context loaded; handoff complete; proceeding to PART A",
+      "mechanical": false,
+      "ts": "2026-08-22T18:21:15.745958+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-waive-produced-by-and-mismatch",
+      "why": "PART A landed: produced_by echoes authority; authority_mismatch/expected_authority report-only, case/whitespace-normalized comparison, absence stays meaningful. 30/30 -k waive tests pass.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:22:01.900533+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-dispatch-claim-release-wiring",
+      "why": "PART B claim/release branches wired: force-claim/force-release append via _append_override_entry from dispatch() only, no-op force appends nothing, owner release appends nothing, archived-banner regression proven zero-decoration since release's early return never reaches the banner code. 506/507 pass, 1 deselected (the AST chokepoint proof, m4's explicit job).",
+      "mechanical": false,
+      "ts": "2026-08-22T18:24:07.382428+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-dispatch-waive-wiring-and-parity",
+      "why": "PART B waive branch wired: every successful waive recorded from dispatch() via the same which-only lookup waive() itself uses (divergence test proves no fallback-related mismatch); direct-call-vs-dispatch-call chokepoint test proves override_ledger only moves through dispatch(). 510/511 pass, 1 deselected (m4's AST test).",
+      "mechanical": false,
+      "ts": "2026-08-22T18:25:44.597610+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-chokepoint-proof-and-schema-doc",
+      "why": "AST chokepoint proof updated: callers_of('_append_override_entry') now ['_append_trip_entry','dispatch']; _run_verb and waive/claim/release bodies proven to reach none of the writer-side functions. Promotion-trigger text added as a code comment near the mismatch-detection code and verbatim in docs/CHECKLIST_SCHEMA.md. grep shows 4 call sites total (1 in _append_trip_entry, 3 in dispatch's release/claim/waive branches).",
+      "mechanical": false,
+      "ts": "2026-08-22T18:26:42.155249+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-evidence-close",
+      "why": "All required evidence produced and pasted verbatim into IMPLEMENTER_RESULT.md, written to the handoff-named path. All 511 tests pass (whole file, no exclusions needed at close). PART A+B complete, deliverables committed-path-verified not gitignored.",
+      "mechanical": false,
+      "ts": "2026-08-22T18:27:56.217416+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-22T18:23:50.190857+00:00",
+      "reason": "own plan mis-scoped m2's postcondition to require whole-suite green; the AST chokepoint-proof test (test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb) is explicitly m4's job to update since dispatch() now legitimately calls _append_override_entry directly -- narrowing m2's check to exclude that one known/expected/in-scope-for-m4 failure",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m2-dispatch-claim-release-wiring.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-22T18:25:35.548587+00:00",
+      "reason": "same known/expected m4-scoped AST test exclusion as m2",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m3-dispatch-waive-wiring-and-parity.c1"
+      ]
+    }
+  ]
+}

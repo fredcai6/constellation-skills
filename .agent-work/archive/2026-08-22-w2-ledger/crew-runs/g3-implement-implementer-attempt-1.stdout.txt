@@ -1,0 +1,10 @@
+All four parts of the g3-implement handoff for #504 are landed and verified:
+
+- **PART A**: `override_summary()` added to `checklist_engine.py`, pure, reads only `_override_entries`.
+- **PART B**: `"overrides"` added to `MECHANICAL_ALL_FIELDS` in `apply_episode_delta.py` with a dict shape check in `_validate_create`.
+- **PART C**: `mechanical_fields()` in `episode_capture.py` now emits `overrides` when non-empty, absent otherwise.
+- **PART D**: `finish_work()` in `spine_lifecycle.py` attaches `overrides` (computed once via `override_summary`) to all four return points — verify refusal, advance-release refusal, archive refusal, and success.
+
+Full repo test suite is green (3656 passed, 6 skipped), including the load-bearing round-trip test and one dedicated test per `finish_work` return point. I also had to regenerate `map/INDEX.md` (a repo-wide convention gate) since the new function/test entities made it stale.
+
+One thing worth flagging: `apply_episode_delta.py`'s actual episode-persistence path (`_apply_create`/`Episode`/render/parse) doesn't read the `"overrides"` key at all — it validates cleanly but is silently dropped before reaching the durable `.md` file. That was out of this gate's Allowed Scope, but it means the "durable episode record" half of the Protected Intent only reaches validation, not persistence — noted as a likely follow-on gate in the result file at `.agent-work/w2-ledger/crew-handoffs/g3-implement-implementer-result.md`.
