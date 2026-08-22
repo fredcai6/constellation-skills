@@ -52,10 +52,13 @@ def _resolved_interpreter(skill: str, skills_root: Path) -> str:
 
     install_constellation.py's `resolve_interpreter()` PROBES the host (real
     `<candidate> --version` subprocess calls, in order `py`, `python3`, `python`)
-    and only falls back to the os.name guess (`_platform_interpreter`) when every
-    candidate fails to invoke. The probed result is recorded per-skill in
-    `interpreter.json` (a sidecar `rewrite_installed_skill_paths` writes next to
-    the installed skill). Re-deriving the interpreter via the os.name guess alone
+    and RAISES if every candidate fails to invoke -- it has carried no os.name
+    fallback since owner ruling #539: a guess drawn from the very candidate set
+    the probe in that same run just disproved is guaranteed wrong, so refusing
+    beats stamping an unlaunchable name into every installed skill body. The
+    probed result is recorded per-skill in `interpreter.json` (a sidecar
+    `rewrite_installed_skill_paths` writes next to the installed skill).
+    Re-deriving the interpreter via the os.name guess alone
     -- instead of reading what was actually probed -- is wrong whenever the two
     diverge: e.g. a POSIX host where `py` genuinely resolves (a venv shim, an
     alias) probes to `py`, but the guess hardcodes `python3`, so a freshly seeded,
