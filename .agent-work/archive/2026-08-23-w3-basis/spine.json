@@ -676,7 +676,8 @@
             "kind": "command",
             "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py w3-basis --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-3"
         },
         {
           "id": "c2",
@@ -692,7 +693,8 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/569-w3-basis rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-4"
         },
         {
           "id": "c3",
@@ -734,12 +736,13 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-5"
         },
         {
           "id": "c5",
@@ -748,13 +751,14 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -778,6 +782,39 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py w3-basis --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/569-w3-basis rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-5",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0,
@@ -790,13 +827,14 @@
   "refusals": 10,
   "engine_session": {
     "session_id": "constellation/w3-basis/commander/commander",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-22T23:30:21.654995+00:00",
-    "last_heartbeat": "2026-08-23T00:03:05.514687+00:00",
+    "last_heartbeat": "2026-08-23T00:03:35.926224+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-23T00:03:35.939318+00:00"
   },
   "why_trail": [
     {
@@ -861,6 +899,13 @@
       "why": "Workflow reflection: followed the skills/handoffs/checklists closely throughout -- design-it-twice (2 candidates + cold critic) caught 4 real issues before code was written, and the converged plan matched the shipped diff exactly. Improvised in 3 places, each captured as its own episode: (1) the MCP door for execute.json's child gates is unreachable via mcp__spine__* (bound only to spine.json) -- used scripts/checklist_engine.py CLI directly instead, a genuine workflow gap this run had to discover rather than being told; (2) run_crew.py --verify-result refused both crew results with 'no spine evidence' since the external-backend handoff-based dispatch binds no door -- resolved via --accept-mtime-only-risk backed by this Commander's own independent diff/test re-verification; (3) the context HARD band refused start at execute/reconcile/triage/review 4 times, each turn-one-or-near-turn-one, resolved exactly per the launch order's pre-declared attach-then-start sequence with zero actual relaunches. Crew Workflow Feedback harvested: implementer noted the handoff didn't say explicitly whether to commit before running clone-based mutation battery tests (resolved by precedent from #657's ruling); reviewer noted the handoff didn't explicitly call out checking .agent-work/ for side effects (verified anyway, no gap in practice). Nothing was ambiguous enough to block. 3 episodes created and captured (w3-basis-001/002/003); verify_episode_captured.py passes.",
       "mechanical": false,
       "ts": "2026-08-23T00:01:37.469110+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Mission delivered per LAUNCH_ORDER-w3-basis.md: CommanderSpineBasisFields pins to the template's blob OID (git rev-parse HEAD:<path>) instead of repo HEAD, and FAILs (never skips) on drift with the re-verify command printed in the failure message. Both directions proven via an isolated-clone mutation battery, independently reproduced by both this Commander and the dispatched reviewer. All spine steps closed: init, context (DEGRADED map discharged), understand, plan (design-it-twice + cold critic), execute (1 gate, tests green, committed 8691a40e), reconcile (no-op, no packet map), triage (2 candidates deferred), review, feedback (3 episodes captured). Branch pushed, PR #659 opened (server-side merge, Admiral to merge), not merged by this Commander.",
+      "mechanical": false,
+      "ts": "2026-08-23T00:03:35.926206+00:00"
     }
   ],
   "override_ledger": [
