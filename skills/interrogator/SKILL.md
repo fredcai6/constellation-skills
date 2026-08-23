@@ -53,7 +53,7 @@ The rail (`scripts/verify_interrogation.py`) refuses a resolved `decision` with 
 
 ## Finish gate — joint understanding, not a terminated loop
 
-The loop running out of questions is **not** the end; **joint understanding** is. Before you consolidate, capture an explicit **sign-off** from your counterpart that questioning is complete and the understanding is shared — not a token you stamp yourself. Record the run to `templates/INTERROGATION_RECORD.template.json`, run `scripts/verify_interrogation.py <record>` (it refuses consolidation without the sign-off), and `consolidate` only once it exits 0. An async counterpart's exception needs an **independent reviewer's** co-sign + log, never your own.
+The loop running out of questions is **not** the end; **joint understanding** is. Before you consolidate, capture an explicit **sign-off** from your counterpart that questioning is complete and the understanding is shared — not a token you stamp yourself. Instantiate the run record FROM `templates/INTERROGATION_RECORD.template.json` INTO your survey directory (`.agent-work/<work-id>/INTERROGATION_RECORD.json`), run `scripts/verify_interrogation.py <record>` against that instance (it refuses consolidation without the sign-off), and `consolidate` only once it exits 0. An async counterpart's exception needs an **independent reviewer's** co-sign + log, never your own.
 
 Keep going until joint understanding is signed off or your counterpart says enough, then consolidate the result for the invoker.
 
