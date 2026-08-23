@@ -38,7 +38,8 @@
 - kind: impact-cost
 - strength: medium
 - lifecycle-standing: active
-- statement: One failed MCP call plus a documentation/reference read (crew-dispatch.md, commander-core.md's Checklists you own table) to locate the CLI form. No mission-scope impact once found; would have cost more on a first-time run without commander-core.md's explicit table naming checklist_engine.py as the execute.json driver.
+- statement: One failed MCP call plus a documentation read (crew-dispatch.md, and commander-core.md's checklist-ownership table) located the CLI form needed to drive execute.json directly. No mission-scope impact once found; would have cost more on a first-time run without commander-core.md's explicit table naming checklist_engine.py as the execute.json driver.
+- history: restated — Reworded to remove the second-person pronoun 'you' (originally quoting commander-core.md's 'Checklists you own' section title verbatim inside a parenthetical, which tests/test_episode_observations.py's second-person detector still scans even inside brackets); meaning unchanged. — original statement was: One failed MCP call plus a documentation/reference read (crew-dispatch.md, commander-core.md's Checklists you own table) to locate the CLI form. No mission-scope impact once found; would have cost more on a first-time run without commander-core.md's explicit table naming checklist_engine.py as the execute.json driver.
 
 ### assertion:w3-basis-003.a5
 - kind: workaround

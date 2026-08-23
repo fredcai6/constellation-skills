@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: attach <step> --type refresh-request --field seam=<step> --field why_ref=<latest-why-id>, then start <step>, then continue the step's actual work in the same turn -- repeated identically at execute, reconcile, triage, and review.
+- statement: The sequence actually applied at each of these refusals was a refresh-request attachment (fields seam=<step>, why_ref=<latest-why-id>) against the step, followed by that step's start call, followed by continuing the step's real work in the same turn; the sequence recurred identically at the execute step, the reconcile step, the triage step, and the review step.
+- history: restated — Reworded from an imperative-mood instruction ('attach ..., then start ..., then continue ...') to a past-tense description of what was actually done, and named each spine step as '<name> step' rather than a bare comma list, since the original's clause-leading 'start' and clause-leading 'review' (after the list's 'and') both matched tests/test_episode_observations.py's imperative-verb detector; meaning unchanged -- this is a record of what happened, not an instruction, per EPISODE_STORE.md's own doctrine that an episode is never a rule for a future agent to follow. — original statement was: attach <step> --type refresh-request --field seam=<step> --field why_ref=<latest-why-id>, then start <step>, then continue the step's actual work in the same turn -- repeated identically at execute, reconcile, triage, and review.
 
 ## Diagnosis (optional)
 

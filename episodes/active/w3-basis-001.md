@@ -47,7 +47,8 @@
 - kind: workaround
 - strength: medium
 - lifecycle-standing: active
-- statement: None needed for the mission itself — the plan's assumptions held. The one workaround was procedural: run_crew.py --verify-result refused both crew dispatches ('no spine evidence') because the external backend binds no MCP door for a plain handoff-based crew; resolved with --accept-mtime-only-risk, citing the Commander's own independent diff/test re-verification as the accepted-risk reason, per #432.
+- statement: None needed for the mission itself -- the plan's assumptions held. The one workaround was procedural: the run_crew.py --verify-result mode refused both crew dispatches ('no spine evidence') because the external backend binds no MCP door for a plain handoff-based crew; resolution used the --accept-mtime-only-risk flag, citing the Commander's own independent diff and test re-verification as the accepted-risk reason, per issue #432.
+- history: restated — Reworded to move 'run_crew.py' off a clause-opening position (tests/test_episode_observations.py's imperative detector reads a clause-leading 'run' token as a bare imperative regardless of the surrounding '_crew.py' suffix); meaning unchanged. — original statement was: None needed for the mission itself — the plan's assumptions held. The one workaround was procedural: run_crew.py --verify-result refused both crew dispatches ('no spine evidence') because the external backend binds no MCP door for a plain handoff-based crew; resolved with --accept-mtime-only-risk, citing the Commander's own independent diff/test re-verification as the accepted-risk reason, per #432.
 
 ## Retirement
 - status: active
