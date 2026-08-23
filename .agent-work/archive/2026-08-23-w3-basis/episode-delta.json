@@ -1,0 +1,134 @@
+{
+  "work_id": "w3-basis",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-basis",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-w3-basis-feedback@4e9829e3ad7dfa78bb9743e0eaec40a7daa64186",
+        "refusals": 10,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          "tests/test_checklist_engine.py",
+          ".agent-work/w3-basis/PLAN_ALTERNATIVES.md",
+          ".agent-work/w3-basis/PLAN_CRITIC.md",
+          ".agent-work/w3-basis/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Pin CommanderSpineBasisFields to the BLOB OID of skills/commander/templates/COMMANDER_SPINE.template.json instead of whole-repo git HEAD, and make drift FAIL rather than skip, per LAUNCH_ORDER-w3-basis.md's pre-rulings decision:blob-oid-not-head and decision:drift-fails."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The smallest-diff candidate plan (a class-local rename plus an isolated-clone mutation battery) would need adjustment once the implementer met the real file, since design-it-twice candidates are authored from a description of the class, not a from a live edit against it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The shipped diff matched the converged plan exactly, including all 4 fix-in-plan critic findings (recompute-pin-last, isolated-clone mutation battery, docstring rewrite, g1-not-g2 comment). Independently reproduced by both this Commander and the dispatched reviewer: 5 tests passed, 0 skipped, at commit 8691a40e; the RED direction (planted template edit) failed with the exact stale-proof message; the GREEN direction (unrelated commit) passed."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One gate (g1), one implementer dispatch, one reviewer dispatch, one commit. No rework, no reopen, no BLOCK verdict. The design-it-twice step (2 candidates + cold critic) found and fixed 4 real issues before any code was written, at the cost of 3 subagent dispatches ahead of the implementer."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "None needed for the mission itself — the plan's assumptions held. The one workaround was procedural: run_crew.py --verify-result refused both crew dispatches ('no spine evidence') because the external backend binds no MCP door for a plain handoff-based crew; resolved with --accept-mtime-only-risk, citing the Commander's own independent diff/test re-verification as the accepted-risk reason, per #432."
+        }
+      },
+      "diagnosis": []
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-basis",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-w3-basis-feedback@4e9829e3ad7dfa78bb9743e0eaec40a7daa64186",
+        "refusals": 8,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w3-basis/spine.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive the top-level commander spine through execute, reconcile, triage, and review, per LAUNCH_ORDER-w3-basis.md's Stop Conditions section on the context HARD band."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Per the launch order, arriving over the context HARD band on turn one at a gate is not itself a stop condition; the legal sequence is attach a refresh-request against the current why-record, then start, then continue the actual work rather than treating the advisory as an instruction to hand off immediately."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The engine's mcp__spine__spine_start call was REFUSED on context-HARD grounds at every one of execute, reconcile, triage, and review -- 4 separate refusals across a single run, each occurring before any real work at that step had happened. Each time, attaching the refresh-request per the launch order's pre-declared sequence unblocked start immediately, and none of the 4 refresh-requests actually triggered an Admiral relaunch -- this same Commander instance completed the entire run start-to-finish."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "4 refresh-request attach calls plus 4 extra start retries, no relaunch. Zero time cost to the mission itself since the launch order had already pre-declared the exact resolution sequence; the cost was entirely the launch order author's foresight, not this run's own improvisation."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "attach <step> --type refresh-request --field seam=<step> --field why_ref=<latest-why-id>, then start <step>, then continue the step's actual work in the same turn -- repeated identically at execute, reconcile, triage, and review."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The HARD band appears to trigger on a per-gate-BEGIN check comparing accumulated session context against a threshold that does not reset between gates within the same spine run, so a long single-session commander run (one instance driving init through review without ever handing off) crosses the HARD line early and then stays over it for every subsequent gate-begin check, independent of how much real work happened at each individual gate."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-basis",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "feedback",
+        "context-manifest-ref": "ctx-w3-basis-feedback@4e9829e3ad7dfa78bb9743e0eaec40a7daa64186",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w3-basis/execute.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "medium",
+          "statement": "Drive execute.json's child gates (e0-context, g1-implement, g1-review, g1-integrate) through the engine after authoring the plan, per the spine's execute step imperative."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Expected the same mcp__spine__* MCP tools bound to the top-level commander spine (spine.json) to also address execute.json's own gates by task_id, since both are engine-driven checklists in the same run."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "mcp__spine__spine_evidence with task_id='g1-implement' returned REFUSED: no such item 'g1-implement' -- the MCP door only resolves against SPINE_FILE (spine.json), never a child_checklist file. Driving execute.json required the separate scripts/checklist_engine.py CLI directly, invoked as `python3 checklist_engine.py --file .agent-work/w3-basis/execute.json <verb> ...`, which uses the same verb vocabulary (start/attest/attach/advance) but takes a --cond flag before the condition id rather than the MCP tool's condition_id parameter."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One failed MCP call plus a documentation/reference read (crew-dispatch.md, commander-core.md's Checklists you own table) to locate the CLI form. No mission-scope impact once found; would have cost more on a first-time run without commander-core.md's explicit table naming checklist_engine.py as the execute.json driver."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Used `python3 /home/.../checklist_engine.py --file .agent-work/w3-basis/execute.json <verb>` for every execute.json gate transition (start/attest/attach/advance), reserving the mcp__spine__* MCP tools for the top-level spine.json only."
+        }
+      },
+      "diagnosis": []
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "files": [],
+  "repo_rev": {
+    "commit": "8691a40e6dd6eaf06c55ff317dbee00c60842e27"
+  },
+  "run": {
+    "work_id": "w3-basis",
+    "generated_at": "2026-08-22T23:56:15Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/569-w3-basis",
+      "durable": "/home/tommy/projects/569-w3-basis"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w3-basis"
+    }
+  }
+}
