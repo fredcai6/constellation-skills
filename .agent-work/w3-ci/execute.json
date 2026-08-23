@@ -1,0 +1,274 @@
+{
+  "work_id": "w3-ci",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read this skill's references/global-orchestrator.md and references/global-everyone.md, then docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md (already read at the commander context step -- confirm, do not re-derive). Confirm the frozen plan's intent and scope: add one ubuntu-latest job to .github/workflows/ci.yml, per LAUNCH_ORDER pre-rulings decision:add-one-job-only, decision:windows-stays-red, decision:ci-changes-beyond-this-are-surfaced, decision:prove-it-can-go-red. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary loaded; plan intent and scope confirmed (single job add to ci.yml, red-proof required)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doctrine already loaded at the commander's own context gate this run. Plan intent/scope confirmed: add one ubuntu-latest job to .github/workflows/ci.yml per launch-order pre-rulings; red-proof required (local same-OS method, per settle clause)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Add ubuntu-latest CI job and prove it can go red: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: add exactly one ubuntu-latest job to .github/workflows/ci.yml, mirroring the existing windows-latest job's steps (checkout, setup-python 3.12, install pytest+coverage, run the same test suite / skip-guard / coverage-floor commands the Windows job runs) with no defaults.run.shell override needed (bash is ubuntu's default shell). Do not touch triggers, do not restructure the workflow, do not add a matrix, do not touch the windows-latest job. Then demonstrate decision:prove-it-can-go-red locally (never by pushing a broken commit -- pushing a deliberately-broken commit to the PR branch risks landing it in main's history on a non-squash merge, and this environment is itself linux so it can run the exact job commands directly): with the new job's commands run locally against a deliberately-broken, uncommitted, then-reverted test mutation, capture the pytest command failing on the SPECIFIC named assertion (never a bare non-zero exit, never a crash), then revert the mutation (git diff --quiet -- tests/ confirms clean) and re-run green. Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: spine_evidence action=attach, task_id=g1-implement, evidence_type=implementer-result, fields={status: <verbatim lowercase Return status>}.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Execution context loaded and confirmed at e0-context."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "File ownership: .github/workflows/ci.yml only -- no other tracked file may be left changed.",
+        "decision:add-one-job-only -- single ubuntu-latest job, no matrix, no trigger changes, no workflow restructuring.",
+        "decision:windows-stays-red -- do not fix, delete, or disable the windows-latest job.",
+        "decision:ci-changes-beyond-this-are-surfaced -- any other ci.yml change is a decision to float, not make.",
+        "decision:prove-it-can-go-red -- red-proof required; use the local same-OS command-parity method (this worktree is linux), never a pushed broken commit.",
+        "The red-proof mutation must never be committed -- git diff --quiet -- tests/ (never git status --porcelain, per repo's autocrlf false-negative) must confirm a clean revert before the gate closes."
+      ],
+      "anchors": {
+        "structural": [],
+        "capability": [],
+        "constraint": [
+          "assumption:ci-tests-merge-ref -- .github/workflows/ci.yml's pull_request trigger already checks out refs/pull/N/merge (pasted launch-order measurement, not map-derived)"
+        ],
+        "decision": [
+          "decision:add-one-job-only -- add a single ubuntu-latest job only @grade: settled/human \u00b7 leans g1-implement",
+          "decision:windows-stays-red -- do not touch the windows-latest job @grade: settled/human \u00b7 leans g1-implement",
+          "decision:ci-changes-beyond-this-are-surfaced -- any other ci.yml change is surfaced, not decided @grade: settled/human \u00b7 leans g1-implement",
+          "decision:prove-it-can-go-red -- demonstrate the new job can fail, then remove the break @grade: guess/admiral \u00b7 leans g1-implement \u00b7 settle: local same-OS command-parity red-proof is the cheapest honest alternative to a pushed/triggered Actions run; float the substitution in RESULT.md"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Add ubuntu-latest CI job and prove it can go red: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented (diff of .github/workflows/ci.yml), how to inspect it, the red-proof evidence (the specific failing assertion captured, and the clean revert), task statement, close criteria (single job, no trigger/matrix/windows changes, tests/ tree clean), constraints from g1-implement, and IMPLEMENTER_RESULT evidence. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated at g1-implement (e-g1-implement-1)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same constraint/decision anchors, plus confirms the red-proof evidence is genuine (specific assertion, clean revert) and tests/ carries no leftover diff"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Add ubuntu-latest CI job and prove it can go red: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself (re-read the ci.yml diff, confirm git diff --quiet -- tests/, confirm the red-proof evidence reproduces as described), then advance -- the command postcondition (full local suite) is satisfied by advance re-running it, never by attest. BLOCK: return the implementer for rework or raise a blocker if unresolvable. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received at g1-review (e-g1-review-1), verdict APPROVE."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full local suite green after the change; tests/ tree carries no leftover red-proof diff",
+          "check": {
+            "kind": "command",
+            "command": "git diff --quiet -- tests/ && python3 -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --quiet -- tests/ && python3 -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation/w3-ci/execute/execute",
+    "status": "released",
+    "claimed_at": "2026-08-22T23:39:20.505286+00:00",
+    "last_heartbeat": "2026-08-23T00:01:43.575606+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-23T00:02:53.869907+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T23:39:27.868062+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer added exactly one ubuntu-latest job (test-linux) mirroring the windows-latest job's steps, no trigger/matrix/windows-job changes. Independently verified: git diff --stat shows only .github/workflows/ci.yml changed (30 insertions), git diff --quiet -- tests/ confirms clean revert, and the reverted test file matches its original assertion. Red-proof captured a specific named AssertionError (not a bare non-zero exit), then reverted and re-ran green. Result artifact verified fresh via run_crew.py --verify-result.",
+      "mechanical": false,
+      "ts": "2026-08-22T23:44:41.203913+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer independently reproduced the diff, the red-proof, and the full local suite (3729 passed, 9 skipped -- matches launch order baseline), and verdict is APPROVE. Reviewer flagged a real, pre-existing, out-of-scope defect: scripts/verify_skip_guard.py's allow-tuple refuses 8 skips pinned to a stale HEAD (9d5aac6d vs current 135c34eb) -- confirmed myself by running verify_skip_guard.py against a fresh full-suite junit report (exit 1). This means the mirrored skip-guard step in the new job would go red on first real CI run for a reason unrelated to this diff. Not fixing it here (out of file ownership and decision:ci-changes-beyond-this-are-surfaced); recording as an elevated triage candidate and floating it in RESULT.md.",
+      "mechanical": false,
+      "ts": "2026-08-22T23:58:00.362310+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Reviewer verdict APPROVE integrated. Running the c1 command postcondition (tests/ clean + full local suite) now.",
+      "mechanical": false,
+      "ts": "2026-08-23T00:01:43.575582+00:00"
+    }
+  ]
+}

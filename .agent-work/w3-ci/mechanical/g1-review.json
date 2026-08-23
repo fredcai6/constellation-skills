@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-review",
+  "mechanical": {
+    "run": "w3-ci",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 2,
+    "spine-step": "g1-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-ci-g1-review@680e5e6a40deca2942f72f10ccc83c86b6acff1e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-ci",
+    "generated_at": "2026-08-22T23:44:46Z"
+  }
+}
