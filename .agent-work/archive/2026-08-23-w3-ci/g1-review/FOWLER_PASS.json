@@ -1,0 +1,20 @@
+{
+  "work_id": "w3-ci",
+  "diff_ref": "git diff -- .github/workflows/ci.yml (uncommitted working tree, 30 insertions, 0 deletions)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, g1-implement-handoff.md (decision:add-one-job-only, @grade: settled/human)",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "No function/method changed; this is a declarative YAML job block.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No class touched.", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "The new test-linux job's 7 steps are a near-verbatim copy of the existing test job's 7 steps (same uses/with/run content, verified programmatically step-by-step).", "override": {"repo_standard": "g1-implement-handoff.md decision:add-one-job-only (@grade: settled/human): 'single ubuntu-latest job, no matrix, no trigger changes, no workflow restructuring' -- the launch order explicitly excludes a matrix strategy (the mechanism that would de-duplicate this), and the same handoff's close criteria explicitly require 'the new job's steps mirror the existing job's'.", "reason": "The duplication is the mandated shape, not an implementer shortcut -- a human-graded decision already weighed and rejected the matrix/YAML-anchor alternatives that would remove it, in favor of two legible, independently-editable job blocks (e.g. so windows-only fixes do not require touching the linux job). Flagging it as an uncontrolled defect would relitigate a settled decision outside this gate's authority."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "N/A -- no code with object/data ownership boundaries.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "N/A -- no parameter groups.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "N/A -- YAML config, not typed code.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "N/A -- no function signatures changed.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "Change is fully contained to one file, one added job block; no scattered edits.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "The new job has one reason to change (Linux CI parity); it does not mix concerns.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "N/A -- no call chains.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "No abstraction, hook, or parameterization was added beyond what is used today; the job is concrete, not speculative.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The new job carries no comments explaining away a design smell; it deliberately omits re-copying the existing job's Windows-specific historical commentary block, which is correct since that commentary does not apply to Linux.", "override": null}
+  ],
+  "rail_exception": null
+}

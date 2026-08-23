@@ -1,0 +1,186 @@
+{
+  "work_id": "w3-ci",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-add-job",
+    "m2-red-proof",
+    "m3-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), the project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md if present), and the handoff at .agent-work/w3-ci/crew-handoffs/g1-implement-handoff.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff read in full and confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, checklist-engine.md, CREW_CONTEXT.md, and the g1-implement-handoff.md handoff in full. Handoff is complete: task, protected intent, test mode, close criteria, allowed scope, exclusions, constraints w/ @grade tags, map anchors, required evidence, verification commands, authority, stop conditions, return format all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-add-job": {
+      "id": "m1-add-job",
+      "title": "Add ubuntu-latest job mirroring windows-latest job",
+      "imperative": "Add exactly one new job `ubuntu-latest` to .github/workflows/ci.yml, alongside the existing `test` job, mirroring its steps (checkout, setup-python 3.12, install pytest+coverage, MCP-door smoke test, full pytest run, skip guard, coverage floor) without the defaults.run.shell:bash override. Do not touch on:, env:, matrix, or the windows-latest job. Attest c1 by inspection diff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded (m0-context complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "git diff -- .github/workflows/ci.yml shows exactly one new ubuntu-latest job that mirrors the windows-latest job's steps; windows-latest job and on:/env: unchanged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git diff -- .github/workflows/ci.yml shows exactly one new job (test-linux, runs-on ubuntu-latest) added; windows-latest job, on:, and env: unchanged; YAML validated parseable with yaml.safe_load; jobs are ['test','test-linux']"
+        }
+      ],
+      "constraints": [
+        "decision:add-one-job-only",
+        "decision:windows-stays-red",
+        "decision:ci-changes-beyond-this-are-surfaced"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-red-proof": {
+      "id": "m2-red-proof",
+      "title": "Local red-proof: mutate, fail with named assertion, revert, re-green",
+      "imperative": "Make an uncommitted, deliberately-broken mutation to one test in tests/ not reused from an existing documented fault-injection example. Run the exact command the new job's step runs and capture the SPECIFIC failing assertion text (not a bare non-zero exit or crash). Revert the mutation and confirm `git diff --quiet -- tests/; echo $?` prints 0. Re-run the same command and confirm it is green. Attest c1 by inspection of the transcript.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ubuntu-latest job added",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ubuntu-latest job (test-linux) added, m1-add-job complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "red transcript with named failing assertion captured; revert verified via git diff --quiet -- tests/ == 0; green re-run captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Mutation: tests/test_agent_work_root.py::DurableRootEpicLeaseTests::test_no_lease_resolves_to_main changed assertEqual(_norm(resolved), _norm(self.main)) to _norm(self.linked). Ran python3 -m pytest tests/ -q --junitxml=junit-report.xml -k test_no_lease_resolves_to_main -> FAILED with AssertionError: '/tmp/tmpv1n1h5ll/main' != '/tmp/tmpv1n1h5ll/linked' (specific named assertion, not bare exit/crash). Reverted via git checkout -- tests/test_agent_work_root.py; git diff --quiet -- tests/; echo $? printed 0. Re-ran same command -> 1 passed, 3737 deselected."
+        }
+      ],
+      "constraints": [
+        "decision:prove-it-can-go-red",
+        "never commit the mutation",
+        "never use git status --porcelain to verify revert (autocrlf false-negative)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Final verification and result write",
+      "imperative": "Run the handoff's Verification Commands (git diff -- .github/workflows/ci.yml; git diff --quiet -- tests/ && echo clean; git diff --stat) and confirm exactly one file changed overall. Write IMPLEMENTER_RESULT to .agent-work/w3-ci/crew-handoffs/g1-implement-result.md. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "red-proof performed and reverted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "red-proof performed and reverted, m2-red-proof complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "git diff --stat shows exactly one file changed (.github/workflows/ci.yml); IMPLEMENTER_RESULT written to the delivery path",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git diff --stat shows exactly one file changed (.github/workflows/ci.yml, 30 insertions); IMPLEMENTER_RESULT written to .agent-work/w3-ci/crew-handoffs/g1-implement-result.md"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/w3-ci/g1-implement/implementer",
+    "status": "released",
+    "claimed_at": "2026-08-22T23:41:35.405207+00:00",
+    "last_heartbeat": "2026-08-22T23:44:05.250444+00:00",
+    "claimed_by": "g1-implement-crew",
+    "worktree": "/home/tommy/projects/569-w3-ci",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-22T23:44:09.673072+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T23:41:57.819800+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-add-job",
+      "why": "Added test-linux job mirroring test job's steps minus the defaults.run.shell:bash override (unneeded on ubuntu default bash); diff inspection confirms scope boundary held.",
+      "mechanical": false,
+      "ts": "2026-08-22T23:42:17.302005+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-red-proof",
+      "why": "Red-proof used a fresh mutation (assertEqual target swap) not previously demonstrated in this repo's fault-injection examples (ci.yml comment cites issue #229's proofs, different mechanism); revert verified via git diff --quiet per the autocrlf caveat, not git status --porcelain.",
+      "mechanical": false,
+      "ts": "2026-08-22T23:43:06.856014+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T23:44:05.250437+00:00"
+    }
+  ]
+}

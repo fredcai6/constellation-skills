@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "files": [],
+  "repo_rev": {
+    "commit": "135c34eb0b0a10bc5cebb0e6e3869b124e63735e"
+  },
+  "run": {
+    "work_id": "w3-ci",
+    "generated_at": "2026-08-22T23:32:03Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w3-ci",
+      "repo": "/home/tommy/projects/569-w3-ci",
+      "durable": "/home/tommy/projects/569-w3-ci"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w3-ci"
+    }
+  }
+}

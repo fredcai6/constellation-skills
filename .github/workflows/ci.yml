@@ -70,3 +70,33 @@ jobs:
         run: |
           python -m coverage run --include="*/checklist_engine.py" -m pytest tests/test_checklist_engine.py -q && python -m coverage report
           python -m coverage report --fail-under=90
+
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest coverage
+
+      - name: MCP door launches and answers a real tool call
+        run: python -m pytest tests/test_mcp_spine_server.py tests/test_wire_mcp_interpreter.py -v -k "McpJsonVarExpansionLaunch or McpJsonTests or GitTrackedRefusal or ExpandMcpVar"
+
+      - name: Run full test suite
+        run: python -m pytest tests/ -q --junitxml=junit-report.xml
+
+      - name: Skip guard -- no undocumented skips
+        run: python scripts/verify_skip_guard.py junit-report.xml
+
+      - name: Coverage floor -- scripts/checklist_engine.py
+        run: |
+          python -m coverage run --include="*/checklist_engine.py" -m pytest tests/test_checklist_engine.py -q && python -m coverage report
+          python -m coverage report --fail-under=90

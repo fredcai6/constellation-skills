@@ -1,0 +1,33 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "w3-ci",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 5,
+    "overrides": {
+      "trip": 3,
+      "force-claim": 0,
+      "force-release": 0,
+      "waive": 0,
+      "waive_authority_mismatch": 0,
+      "ids": [
+        "ov-1",
+        "ov-2",
+        "ov-3"
+      ]
+    },
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-ci-reconcile@2c607430e42207169c64463fb105df65a3800e05",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-ci",
+    "generated_at": "2026-08-23T00:03:13Z"
+  }
+}
