@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-red-proof",
+  "mechanical": {
+    "run": "w3-ci",
+    "project": "constellation-skills",
+    "role": "g1-implement-crew",
+    "refusals": 1,
+    "spine-step": "m2-red-proof",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-ci-m2-red-proof@dd02b4d125c90f009f6940843ec928efa64da3f7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-ci",
+    "generated_at": "2026-08-22T23:42:21Z"
+  }
+}
