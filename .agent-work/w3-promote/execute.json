@@ -1312,7 +1312,8 @@
           "id": "p1",
           "statement": "g8 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -1323,30 +1324,45 @@
             "kind": "command",
             "command": "python3 -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g9-integrate-1"
         },
         {
           "id": "c2",
           "statement": "PR opened (server-side-merge), not merged",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "PR #662 opened server-side-merge, not merged: https://github.com/fredcai6/constellation-skills/pull/662"
         },
         {
           "id": "c3",
           "statement": "RESULT.md written at .agent-work/w3-promote/RESULT.md per the launch order's Return Shape (all 7 numbered items)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "RESULT.md written at .agent-work/w3-promote/RESULT.md, all 7 numbered Return Shape items covered, committed at 4d92dc45"
         }
       ],
       "constraints": [],
       "anchors": null,
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g9-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -1486,6 +1502,13 @@
       "why": "Fresh post-promotion sweep: 13 falsifiable-all-null + 2 falsifiable-unresolved-placeholder, matches shipped floor exactly (no drift). Floor was kept current gate-by-gate through g1/g4/g5/g7's FLOOR_UPDATE discipline -- this gate is a confirmation, not a new wiring decision. Declined additional zero-tolerance tightening this wave: cannot land clean without resolving 2 out-of-scope placeholder faults (EXECUTE_PLAN g1-integrate.c1, IMPLEMENTER_PLAN m1.c2, a template-authoring-bug defect class different from check:null); floated as a triage candidate per the settle clause rather than fixed or absorbed into scope. docs/CHECK_SCRIPT_CENSUS.md's 17 live/8 unwired/1 dead tallies confirmed unchanged -- no script's wiring classification flipped this wave (grep for both named unwired scripts across all shipped templates: zero matches).",
       "mechanical": false,
       "ts": "2026-08-23T16:43:11.445641+00:00"
+    },
+    {
+      "id": "w-20",
+      "gate": "g9-integrate",
+      "why": "Committed final batch (e70f2df6 gate-progression closeout, f6367f1f map/INDEX.md rebuild, 476d4cc6 RESULT.md, 4d92dc45 final-commit suite pin). python3 -m pytest -q green at true final commit 4d92dc45: 3729 passed, 44 skipped, 1275 subtests, 0 failed. PR #662 opened server-side-merge (not merged) with full corpus survey table and per-template assessed-vs-promoted counts in the description. RESULT.md written covering all 7 Return Shape items: verdict (16/65 promoted), evidence, suite result, map impact (rebuild needed, no active pre-commit hook installed), triage candidates, workflow feedback, refresh comparison (2 refresh-requests both answered via relaunch, attempt-3, total_rework 0, 5/5 reviewer gates APPROVE first-pass).",
+      "mechanical": false,
+      "ts": "2026-08-23T17:03:14.710034+00:00"
     }
   ]
 }
