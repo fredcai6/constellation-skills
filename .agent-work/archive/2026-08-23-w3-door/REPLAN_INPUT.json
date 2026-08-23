@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "w3-door",
+      "outcome": "`_crew_door_env` in scripts/run_crew.py now actively clears both SPINE_FILE and SPINE_SESSION together when spine=None, instead of leaving the dispatching process's ambient pair inherited; a spine-less crew gets no door instead of the dispatcher's. Both `_crew_door_env`'s and `crew_env`'s docstrings were corrected to stop asserting inheritance is the safe/documented behaviour.",
+      "evidence": "scripts/run_crew.py:_crew_door_env (spine=None branch); tests/test_crew_launcher.py::DispatchDoorBindingTests::test_dispatch_without_spine_gets_no_door and its new resume() counterpart; commit e1180197"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A crew dispatched without --spine no longer inherits its dispatcher's SPINE_FILE/SPINE_SESSION.",
+      "expected": "LAUNCH_ORDER Mission: _crew_door_env clears the pair rather than leaving it inherited when spine is None.",
+      "observed": "tests/test_crew_launcher.py::DispatchDoorBindingTests::test_dispatch_without_spine_gets_no_door and the new resume()-path test both assert SPINE_FILE/SPINE_SESSION are absent from the child env under a door-bound parent with real non-empty ambient values. Reviewer independently reproduced this against a genuinely spawned subprocess (not a mocked env dict), per decision:verify-against-a-real-child.",
+      "source": "tests/test_crew_launcher.py::DispatchDoorBindingTests (262/262 passed); .agent-work/w3-door/crew-handoffs/g1-reviewer-result.md"
+    },
+    {
+      "claim": "Full suite is green at the shipped revision.",
+      "expected": "Return Shape #3: python3 -m pytest -q run after the final commit, pasted verbatim.",
+      "observed": "3730 passed, 9 skipped, 1277 subtests passed in 212.30s (0:03:32) at commit 16d6f631 (base 135c34eb + e1180197 implementation + 16d6f631 map rebuild).",
+      "source": "python3 -m pytest -q, run in worktree /home/tommy/projects/569-w3-door after commit 16d6f631"
+    },
+    {
+      "claim": "The ParentLeaseHeartbeatTests 'shared spine, skip redundant heartbeat' scenario is only reachable through the exact defect being removed.",
+      "expected": "Pre-Rulings did not name this interaction; the plan step's cold critic surfaced it as a gap to fold into g1-implement.",
+      "observed": "test_dispatch_skips_parent_heartbeat_in_shared_spine_case and test_resume_skips_parent_heartbeat_in_shared_spine_case were rewritten: a spine=None child can no longer coincidentally share the parent's pair (its env is now cleared, not copied), so the parent must always heartbeat its own lease in that case. Both rewritten tests pass.",
+      "source": "tests/test_crew_launcher.py::ParentLeaseHeartbeatTests; g1-implementer-handoff.md step 6; g1-reviewer-result.md"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "map/INDEX.md was stale at the implementer/reviewer's shipped revision (e1180197): tests/test_crew_launcher.py's entity count grew by 1 for the new resume()-path test, but map/INDEX.md was not regenerated before that commit, and no pre-commit hook fired in this worktree (.git/hooks/pre-commit absent) despite the launch order describing one as mechanized.",
+      "classification": "evidence_only",
+      "affects": "This run's own suite-green evidence, not the shipped implementation scope.",
+      "evidence": "python3 -m pytest -q at e1180197 failed tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build; rebuilt via `python3 -m scripts.code_map build --root .` and committed separately at 16d6f631; full suite green after (3730 passed, 9 skipped).",
+      "reason": "Mechanical map rebuild, not a design or scope question; recorded as evidence per Return Shape #4, no issue warranted."
+    }
+  ]
+}

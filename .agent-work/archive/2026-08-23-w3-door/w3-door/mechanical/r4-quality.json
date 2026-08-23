@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "w3-door",
+    "project": "constellation-skills",
+    "role": "g1-reviewer-subagent",
+    "refusals": 1,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-door-r4-quality@41b5f04d83af631f7617656718cad821aa3dcd02",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-door",
+    "generated_at": "2026-08-23T00:20:40Z"
+  }
+}

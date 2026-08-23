@@ -1,0 +1,33 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "w3-door",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 11,
+    "overrides": {
+      "trip": 2,
+      "force-claim": 1,
+      "force-release": 0,
+      "waive": 0,
+      "waive_authority_mismatch": 0,
+      "ids": [
+        "ov-1",
+        "ov-2",
+        "ov-3"
+      ]
+    },
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-door-reconcile@32c1069679cadf4ed27aff118a4563ed01ef15d0",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-door",
+    "generated_at": "2026-08-23T14:29:06Z"
+  }
+}

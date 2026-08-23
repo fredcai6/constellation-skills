@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "w3-door",
+    "project": "constellation-skills",
+    "role": "g1-reviewer-subagent",
+    "refusals": 1,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-door-r3-evidence@110f54765e5f7beeb5f43add9c51ebba3009e951",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-door",
+    "generated_at": "2026-08-23T00:14:36Z"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "review",
+  "files": [],
+  "repo_rev": {
+    "commit": "16d6f631bb2da2da970c53e5f813cc9078d643c3"
+  },
+  "run": {
+    "work_id": "w3-door",
+    "generated_at": "2026-08-23T14:31:09Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w3-door",
+      "repo": "/home/tommy/projects/569-w3-door",
+      "durable": "/home/tommy/projects/569-w3-door"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w3-door"
+    }
+  }
+}
