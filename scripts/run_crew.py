@@ -1081,6 +1081,7 @@ ROLE_MODEL_TIERS: dict[str, dict[str, dict[str, object]]] = {
         "reviewer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
         "critic": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
         "cartographer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
+        "explorer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
     },
     "codex": {},
     "local": {},
