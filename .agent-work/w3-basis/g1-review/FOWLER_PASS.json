@@ -1,0 +1,20 @@
+{
+  "work_id": "w3-basis",
+  "diff_ref": "commit 8691a40e on epic-569/w3-basis -- tests/test_checklist_engine.py, class CommanderSpineBasisFields",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "test_mutation_battery_template_edit_fails_not_skips and test_mutation_battery_unrelated_commit_stays_green share near-identical scaffolding (mkdtemp+rmdir, git clone --local, subprocess pytest invocation, try/finally shutil.rmtree) -- roughly 15-20 lines duplicated between the two methods. The node-id list was already extracted to BASIS_TEST_NODE_IDS, but the clone/commit/run boilerplate was not. A shared _isolated_clone() helper could remove the remaining duplication. Non-blocking: no documented repo standard exempts it, but it is a minor, contained duplication inside two small, individually-readable test methods, and de-duplicating was not asked for by the handoff's close criteria -- flagged as an out-of-scope observation / triage candidate, not a blocker for this gate.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}
