@@ -272,7 +272,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py 569 --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-2"
         },
         {
           "id": "c3",
@@ -285,7 +286,8 @@
           "id": "c4",
           "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c5",
@@ -294,17 +296,40 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-closeout-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "Tommy (fredcai6), 2026-08-23: 'accept'",
+            "summary": "Epic 569 summary accepted. 3 waves, 13 PRs merged, main e76913dc at 3777 passed / 6 skipped / 0 failed, test-linux green in CI, 14 episodes, 21 open epic issues reduced to 5 deficiency-named ones. Accepted including the stated honest nulls (16 of 65 promoted rather than the ~31 extrapolated; 5 of 7 non-baseline templates outside the predicted band) and the stated deliberate gap (family C receives no mechanism beyond w3-ci and is deferred to #668)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-admiral/scripts/verify_episode_captured.py 569 --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "bookend": true
     }
@@ -322,7 +347,7 @@
     "session_id": "constellation/569",
     "status": "active",
     "claimed_at": "2026-08-22T12:25:34.730592+00:00",
-    "last_heartbeat": "2026-08-23T20:00:39.799811+00:00",
+    "last_heartbeat": "2026-08-23T20:12:32.341920+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
@@ -349,6 +374,13 @@
       "why": "Three waves, twelve merged PRs, and the epic's most durable output turned out to be a taxonomy rather than a mechanism. It was filed against one defect family -- the check that cannot fail -- and repeatedly hit two others: evidence true when taken and false when relied on, and an instrument that fails loudly against the wrong quantity. Family B was already filed seven times in this epic's own member list and never recognised as a family; #221 bullet 1 pre-described the Admiral's own wave-1 baseline error verbatim, drill attached, never launched. The mechanism that shipped is real but bounded: 16 of 65 conditions promoted, validate_spine faults 19 to 5, proofs pinned to blob OIDs failing on drift, the crew door no longer inheriting its dispatcher's spine, and CI restored to a signal that means something. The measurements that CANCELLED work matter as much as the work: 2 of 19 conditions gain from the basis field, so the backfill died; three independently converging designs discharged the evaluate-the-65 mission without running it; #558's premise was false. Every one of those saved building something. The through-line for closeout is that this epic kept demonstrating its own thesis on itself -- an uninformative red CI hiding three real defects, a guard against family B that was itself a family A, a completion artifact reporting a tree that no longer existed, and an Admiral twice claiming work with none behind it.",
       "mechanical": false,
       "ts": "2026-08-23T19:55:57.729276+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "closeout",
+      "why": "Closeout complete: 14 episodes capturing what happened across the epic rather than per wave, two of them caught by the store's own guard as rules and restated; map reconciled over 67 files and +8720/-1057 with no new engine subsystem and no new check kind; dogfood sweep run read-only; five worktree-local RESULTs collected before nine worktrees were swept; all branches merged; the run archived. The human accepted the summary including its honest nulls and the deliberate family-C gap.",
+      "mechanical": false,
+      "ts": "2026-08-23T20:12:32.341900+00:00"
     }
   ]
 }
