@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "w3-basis",
+      "outcome": "CommanderSpineBasisFields now pins to the BLOB OID of skills/commander/templates/COMMANDER_SPINE.template.json (not repo HEAD), and FAILs (never skips) on drift, with the re-verify command printed inline in the failure message. Both directions of the granularity fix proven with an isolated-clone mutation battery: a planted template edit fails all 3 protected tests, an unrelated commit leaves them green.",
+      "evidence": "commit 8691a40e on epic-569/w3-basis; tests/test_checklist_engine.py::CommanderSpineBasisFields, ::test_mutation_battery_template_edit_fails_not_skips, ::test_mutation_battery_unrelated_commit_stays_green"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "decision:blob-oid-not-head — pin the blob OID of the template file, not repo HEAD.",
+      "expected": "An unrelated commit elsewhere in the repo must leave the tests GREEN; a template edit must turn them RED.",
+      "observed": "Confirmed both directions live in an isolated /tmp clone: unrelated-file commit -> 3 passed; template-byte edit -> 3 failed with the stale-proof message.",
+      "source": "tests/test_checklist_engine.py::CommanderSpineBasisFields::test_mutation_battery_unrelated_commit_stays_green, ::test_mutation_battery_template_edit_fails_not_skips; reviewer's independent manual re-clone reproduction in g1-review-reviewer-result.md"
+    },
+    {
+      "claim": "decision:drift-fails — divergence FAILs with a message naming the stale proof and re-run path, never skips.",
+      "expected": "self.fail(...) only; message names 'stale', both blob OIDs, the exact git rev-parse command, and the paste target.",
+      "observed": "Confirmed: zero self.skipTest in the class (grep), fail message contains all four required elements, reproduced live by both implementer and reviewer.",
+      "source": "tests/test_checklist_engine.py:8543 CommanderSpineBasisFields._fail_if_template_drifted; git show 8691a40e"
+    },
+    {
+      "claim": "decision:ship-the-re-verify-path — re-establishing the pin must be cheap and documented.",
+      "expected": "A single, already-standard command a future editor can copy-paste from the failure message.",
+      "observed": "The re-verify path is exactly `git rev-parse HEAD:skills/commander/templates/COMMANDER_SPINE.template.json`, printed verbatim in the fail message; no new script or tooling introduced.",
+      "source": "tests/test_checklist_engine.py:8543 CommanderSpineBasisFields._fail_if_template_drifted fail message"
+    },
+    {
+      "claim": "The repo map (map/INDEX.md, docs/architecture/) would be usable for map-first planning on this run.",
+      "expected": "map_orient.py orient would return RESOLVED or a cleanly dischargeable DEGRADED state pointing at real per-package packets.",
+      "observed": "DEGRADED-UNPARSEABLE: map/INDEX.md references per-package packets (e.g. tests.test_checklist_engine/INDEX.md) that do not exist on disk, and map/ids.jsonl is empty. Discharged via hash-pinned substitutes (tests/test_checklist_engine.py, the template, docs/CHECKLIST_SCHEMA.md) rather than blocking the run.",
+      "source": ".agent-work/w3-basis/map-orientation.json; map/INDEX.md; map/ids.jsonl"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The plan-critic's finding 1 (concurrent-lane race: w3-promote owns edits to the exact file this pin keys off) said to recompute PINNED_BLOB as the LAST implementation step, immediately before g1-integrate. The implementer instead set a real value early (needed for the mutation-battery clones to have a correct pin to test against) and re-verified it unchanged immediately before returning, rather than deferring the write itself to the very end.",
+      "classification": "evidence_only",
+      "affects": "Handoff wording precision for future clone-based mutation-battery gates",
+      "evidence": "g1-implement-implementer-result.md Assumptions section; PLAN_CRITIC.md finding 1",
+      "reason": "The intent (ship a pin that reflects the template's actual current content, not a stale dispatch-time snapshot) was satisfied either way — re-verification confirmed no drift occurred between the two checks, and this Commander independently re-confirmed PINNED_BLOB against a fresh git rev-parse before accepting g1-implement. Not a defect in this run's outcome, but a precision gap in the plan's own wording ('computed last' vs. 'recomputed and reconfirmed last') worth tightening in a future handoff for a similarly clone-based proof."
+    },
+    {
+      "id": "D1",
+      "signal": "The reviewer's Fowler pass flagged minor duplicated-code: the two new mutation-battery test methods share ~15-20 lines of near-identical clone/commit/run scaffolding that a shared _isolated_clone() helper could remove.",
+      "classification": "later_only",
+      "affects": "tests/test_checklist_engine.py::CommanderSpineBasisFields, if a second content-pinned test class is ever added",
+      "evidence": ".agent-work/w3-basis/g1-review/FOWLER_PASS.json; g1-review-reviewer-result.md Out-of-scope observations",
+      "reason": "Non-blocking per the reviewer's own verdict (APPROVE); the duplication does not obscure either method's readability and de-duplicating it was not asked for by this gate's close criteria. Filed as a triage candidate for whoever next touches this class, consistent with the plan-alternatives convergence (PLAN_ALTERNATIVES.md) that deferred module-level extraction until a second real caller exists."
+    },
+    {
+      "id": "D2",
+      "signal": "The engine's HARD context-band trip refused `start execute` on the first attempt (context at 19%, execute's own +30000-token headroom reserve pushed it over the gate-specific hard line), before any of the gate's real work had happened.",
+      "classification": "evidence_only",
+      "affects": "The launch order's own pre-declared refresh comparison for this wave",
+      "evidence": "spine_status trip ledger/history at the execute step; LAUNCH_ORDER.md Stop Conditions section",
+      "reason": "Resolved per the launch order's own pre-declared sequence (attach refresh-request, then start, then continue the work rather than reading the HARD advisory as a hand-off instruction on turn one) and per this repo's crew-dispatch.md doctrine (the gate's own unmet postconditions override a non-binding advisory). No relaunch actually occurred — this Commander instance completed the full execute step itself. Recorded as evidence for the launch order's own pre-declared refresh comparison (see RESULT.md)."
+    }
+  ]
+}

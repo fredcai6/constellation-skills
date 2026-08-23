@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "work_id": "w3-basis",
+  "root": "/home/tommy/projects/569-w3-basis",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "parses but carries no nodes[].id"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "0 packet(s), none non-empty"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "tests/test_checklist_engine.py",
+      "content_hash": "48f30f3735402236886423f5ff04c566d1083b1345fc783e17b03060cbbf6487",
+      "source": "agent-declared"
+    },
+    {
+      "path": "skills/commander/templates/COMMANDER_SPINE.template.json",
+      "content_hash": "c3e7f8b5f607b911682f1b36b7c83a804d057d23c641b3cfff802ac92f967cc8",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "6e38c1bb32e9d4c99d236e7439f9c90eac1adaba601e76174e6abbc920a1fc10",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "ccc03657424cdec7ccaf98e88eea6770c23a1fbc73f2f08f6707328b4f9c5d89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "content_hash": "30e401e6ac3888dfa936d6aecdee99719fc778b4d64b9a1a77ea969fb12c757a"
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": true,
+      "content_hash": "3be528d65d4a3a982c19dd4acc9440316a69e834f7a1c6b99f87dd348ff63ebf"
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "map/tests.test_checklist_engine/INDEX.md and other per-package packets are referenced by map/INDEX.md but do not exist on disk (map/ids.jsonl is empty) -- the generated map is a stale/unfilled artifact repo-wide, not specific to this lane's scope"
+  ],
+  "escalation": "w3-basis is a single-file (tests/test_checklist_engine.py), single-class (CommanderSpineBasisFields) mechanical fix scoped exactly by the launch order; escalating the stale-map defect itself to the Admiral as a triage candidate for w3-promote/cartographer rather than blocking this lane on it",
+  "emitted_at": "2026-08-22T23:31:16.378349+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

@@ -1,0 +1,272 @@
+{
+  "work_id": "w3-basis",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Context already loaded at the commander spine's context/plan steps (references/global-orchestrator.md, references/global-everyone.md, docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, MISSION_FRAME.md, PLAN_ALTERNATIVES.md, PLAN_CRITIC.md). Confirm the frozen plan's intent and scope (converged smallest-diff candidate, critic findings 1-4 folded in as gate steps below) and attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + converged plan (with critic fixes folded in) confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context reloaded, plan confirmed"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Blob-OID pin + fail-on-drift: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate: in tests/test_checklist_engine.py, class CommanderSpineBasisFields (~line 8543) ONLY. (1) Replace PINNED_HEAD (whole-repo git rev-parse HEAD) with PINNED_BLOB, the blob OID of skills/commander/templates/COMMANDER_SPINE.template.json via `git rev-parse HEAD:skills/commander/templates/COMMANDER_SPINE.template.json` -- compute this value as the LAST step before this gate's own g1-integrate (never at dispatch time), because a sibling wave-3 lane (w3-promote) owns edits to that exact template file and may land first; pinning early risks shipping an already-stale PINNED_BLOB (critic finding 1). (2) Replace _skip_if_head_moved with _fail_if_template_drifted: on mismatch, call self.fail(...) (never self.skipTest), with a message that names the proof as 'stale', states both the pinned and current blob OIDs, and gives the exact re-run command `git rev-parse HEAD:skills/commander/templates/COMMANDER_SPINE.template.json` as the re-verify path, plus what to do with its output (paste into PINNED_BLOB). Keep the pre-existing self.assertEqual(out.returncode, 0, out.stderr) guard so a git-command failure stays distinct from a genuine drift failure (critic finding 6). (3) Update all 3 test methods' first line from self._skip_if_head_moved() to self._fail_if_template_drifted(); EXPECTED_BASIS and _load_spine are untouched. (4) Rewrite the class docstring's second paragraph (currently 'Pinned to this gate's shipped git HEAD ... If HEAD has moved past the pinned commit, skip rather than assert...') to describe blob-OID pinning to the template file and fail-on-drift, not the retired whole-repo-HEAD + skip design (critic finding 3). (5) Any inline comment on PINNED_BLOB must say 'g1 dispatch', matching this actual gate structure, never 'g2' (critic finding 4). (6) Add a two-direction mutation-battery proof as new test methods on the class (or a sibling test in the same file): (a) template-edit -> RED: in an ISOLATED clone (e.g. `git clone --local . /tmp/<scratch>`, never the shared worktree at /home/tommy/projects/569-w3-basis), mutate one byte of skills/commander/templates/COMMANDER_SPINE.template.json and commit, then run CommanderSpineBasisFields against that clone and assert all 3 tests FAIL (not skip, not error) with messages containing the substring 'proof is stale' and the literal command string 'git rev-parse HEAD:skills/commander/templates/COMMANDER_SPINE.template.json'; (b) unrelated-commit -> GREEN: same isolated clone, commit a change to a file outside skills/commander/templates/, run CommanderSpineBasisFields, assert all 3 tests PASS. Tear down the scratch clone afterward (critic finding 2). Dispatch a subagent invoking constellation-implementer with the completed handoff. Wait for and integrate the returned IMPLEMENTER_RESULT as evidence: `spine_evidence` with `action=attach`, `task_id=g1-implement`, `evidence_type=implementer-result`, `fields={status: <value>}`, `<value>` copied verbatim from the returned IMPLEMENTER_RESULT's Return status field, lowercase.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved (smallest-diff candidate converged, critic findings triaged)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan approved with critic findings triaged, see PLAN_CRITIC.md"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "tests/test_checklist_engine.py is the ONLY file this gate may edit -- skills/commander/templates/COMMANDER_SPINE.template.json is read-mostly, owned by w3-promote this wave",
+        "no self.skipTest anywhere in the drift path -- fail-on-drift only",
+        "PINNED_BLOB computed last, immediately before g1-integrate, not at dispatch",
+        "mutation battery runs against an isolated clone, never the shared worktree in place",
+        "do not touch scripts/checklist_engine.py or any qualitative-condition population (decision:do-not-generalise-to-qualitative-conditions)"
+      ],
+      "anchors": {
+        "structural": [
+          "tests/test_checklist_engine.py::CommanderSpineBasisFields (test class, ~line 8543)"
+        ],
+        "capability": [
+          "red-proof pinning for the commander spine template's basis-field shape"
+        ],
+        "constraint": [
+          "constraint:file-ownership",
+          "constraint:no-skip-on-drift",
+          "constraint:blob-oid-granularity",
+          "constraint:cheap-re-verify",
+          "constraint:prove-both-directions"
+        ],
+        "decision": [
+          "decision:blob-oid-not-head \u2014 pin the blob OID of the template file, not repo HEAD @grade: settled/human \u00b7 leans g1-implement",
+          "decision:drift-fails \u2014 divergence FAILs with a message naming the stale proof and re-run path @grade: settled/human \u00b7 leans g1-implement",
+          "decision:ship-the-re-verify-path \u2014 the re-verify path must be cheap and documented @grade: settled/human \u00b7 leans g1-implement",
+          "decision:prove-both-directions \u2014 both directions of the granularity fix must be demonstrated @grade: settled/admiral \u00b7 leans g1-implement"
+        ],
+        "evidence": [
+          "claim:pin-tracks-file-not-repo",
+          "claim:drift-fails-not-skips",
+          "claim:re-verify-is-cheap"
+        ],
+        "confidence_flags": [
+          "repo map DEGRADED-UNPARSEABLE (map/INDEX.md, map/ids.jsonl) \u2014 frame cut from direct file reads instead, see MISSION_FRAME.md"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Blob-OID pin + fail-on-drift: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope (tests/test_checklist_engine.py only), specific exclusions (no template edits, no scripts/checklist_engine.py edits), constraints, the inbound anchors from g1-implement's anchors block, and the evidence from IMPLEMENTER_RESULT. The reviewer independently re-derives the current blob OID via `git rev-parse HEAD:skills/commander/templates/COMMANDER_SPINE.template.json` and confirms it matches PINNED_BLOB; confirms the fail message contains all four required elements (stale, both OIDs, the exact re-run command, the paste-target instruction); confirms the class docstring no longer describes the retired whole-repo-HEAD + skip design; confirms the mutation battery runs against an isolated clone (not the shared worktree) and both directions (RED on template edit, GREEN on unrelated commit) actually pass when run; confirms the rev-parse-failure path and the drift-fail path remain distinct (critic finding 6); confirms no file outside tests/test_checklist_engine.py changed. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated (g1-implement complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Blob-OID pin + fail-on-drift: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself (diff review, re-derive the blob OID, re-run the pasted evidence) before advancing -- a command-kind postcondition (this gate's test command) is satisfied by `advance`, which re-runs the check, NOT by `attest`. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates for the triage step. After this gate closes, commit the change on this branch.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT APPROVE received and integrated (g1-review complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "CommanderSpineBasisFields' 3 tests pass at current HEAD (no skip)",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_checklist_engine.py::CommanderSpineBasisFields -q -rs"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": "REVIEW_RESULT APPROVE, same evidence attached at g1-review"
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py::CommanderSpineBasisFields -q -rs",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    "Repo map (map/INDEX.md, map/ids.jsonl, docs/architecture/) is DEGRADED-UNPARSEABLE repo-wide (unfilled template, absent per-package packets) -- not this lane's scope to fix, but blocks map-first planning for every future run until rebuilt. Recommend a triage candidate for whoever owns map/cartographer maintenance."
+  ],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-22T23:51:53.600991+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "IMPLEMENTER_RESULT complete, independently verified: diff matches plan exactly (blob-OID pin, fail-not-skip, docstring rewrite, isolated-clone mutation battery, all 4 critic fixes present), re-ran tests myself: 5 passed, 0 skipped.",
+      "mechanical": false,
+      "ts": "2026-08-22T23:52:02.350450+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "REVIEW_RESULT APPROVE, independently spot-checked: skipTest at line 1544 confirmed unrelated class, exactly 1 file changed in commit, PINNED_BLOB matches fresh git rev-parse. Fowler pass: 1 minor non-blocking duplicated-code finding routed as out-of-scope/triage.",
+      "mechanical": false,
+      "ts": "2026-08-22T23:56:12.283026+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "REVIEW_RESULT APPROVE integrated by reference; side-effects independently re-verified (diff, skipTest absence, PINNED_BLOB freshness). Committing 8691a40e is already on the branch. No rework needed.",
+      "mechanical": false,
+      "ts": "2026-08-22T23:56:30.436769+00:00"
+    }
+  ]
+}
