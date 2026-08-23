@@ -9232,3 +9232,291 @@ class AdmiralSpineW3PromotePromotions(unittest.TestCase):
 
             with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
                 E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+
+class ExplorerSpineW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g4: 3 named `check: null` conditions in the shipped
+    EXPLORER_SPINE.template.json promoted to real, mechanically-checked
+    conditions using only the engine's existing check kinds (`command`) per
+    `decision:no-new-check-kinds` -- init.c2, context.c1, spec.c1. Every
+    other condition in the file is untouched, including route.c1
+    ("confirmed spec routed (handed off / shaped-design issue filed /
+    shelved with UNCONFIRMED header); work area archived; engine lease
+    released"), left `check: null` on purpose: the handoff asked for a FULL
+    promotion via an artifact enum-match on the 3 named routing outcomes
+    ONLY IF each outcome has its own real, independently-checkable artifact.
+    No routing tooling exists for any of the three (no `verify_*.py --phase
+    route` script the way `verify_spec_confirmed.py` has a `review` phase,
+    no persisted per-outcome record distinguishing "handed off" from "issue
+    filed" from "shelved" -- SHAPED_BRIEF.json exists identically across all
+    three outcomes, created upstream at `confirm`, so its presence cannot
+    discriminate which routing path was taken). Per the handoff's own stated
+    fallback ("leave the whole condition check: null and say so"), route.c1
+    stays null.
+
+    init.c2's promotion mirrors g1's already-landed COMMANDER_SPINE.template.json
+    init.c1 and g3's already-landed ADMIRAL_SPINE.template.json init.c2
+    EXACTLY (same seam: every role's own spine.json lives at the same
+    `.agent-work/<work-id>/spine.json` path) -- `command` is independently
+    justified against THIS template's own pre-existing checks too: init.c1
+    (same gate), explore.c2, review.c1, and confirm.c2/c3 are all already
+    `command`-kind here, so this is not this template's first use of the
+    kind.
+
+    context.c1 and spec.c1 are SPLIT promotions (mirroring COMMANDER_SPINE's
+    own plan.c2): each condition's prose names two things -- a judgment
+    half (whether doctrine/deltas/map were genuinely read; whether
+    per-section approval and designed-it-twice fidelity were genuinely
+    obtained) and a locatable-artifact half (IDEAS_BOARD.md / DESIGN_SPEC.md
+    existing and nonempty, both real fixed paths named in each task's own
+    imperative text). Only the artifact half is promoted; the `statement`
+    text is left untouched (it still names both halves), and NO `basis`
+    field is added -- `decision:no-basis-backfill` reserves that mechanism
+    for w3-basis's own population; this gate's job is promotion only, and
+    the check's honest existence-only scope is documented here, in this
+    test class, rather than in a new `basis` object on the shipped
+    condition. `command` (`test -s`) is the kind chosen for both, not
+    `artifact`: `artifact` appears in this template
+    only three times (explore.c1, confirm.c1, route.c2) and only ever for
+    `evidence_type: user-decision`, a human-confirmation event genuinely
+    populated by a real interaction -- introducing a NEW `artifact`
+    evidence_type for a raw file-existence claim would rely on trusting a
+    hand-typed attest payload (`attest()`'s artifact path never touches the
+    filesystem; only `basis`, which is report-only, does that), so `command`
+    is the more genuinely mechanical, less decorative choice here -- the
+    same reasoning ADMIRAL_SPINE's own docstring gives for latitude.c1 and
+    execute.c2, and the same check text shape (`test -s "<path>"`) as that
+    template's own latitude.c1.
+
+    Both context and spec each carry exactly ONE postcondition, so promoting
+    either clears an all-null gate per `scripts/validate_spine.py`'s
+    `falsifiable-all-null` fault (postcondition-only, ignores preconditions):
+    the corpus-wide count drops from 17 (measured after g1+g3) to 15;
+    `tests/test_validate_spine.py`'s floor is updated in the same edit as g1's
+    own discipline (message text only -- the `>= 15` threshold itself still
+    holds at exactly 15, so it is left as a live floor rather than lowered
+    with slack, per the same "never move it silently" doctrine that pin
+    already states).
+
+    Modeled directly on CommanderSpineW3PromotePromotions /
+    AdmiralSpineW3PromotePromotions above: pin PINNED_HEAD via `git rev-parse
+    HEAD` captured at implementation time, `skipTest` (never fail) if HEAD
+    has since moved past it -- this repo's edits are still uncommitted at
+    authoring time, so HEAD is the base commit (g3's own merged promotion)
+    this gate's edit sits on top of, not a future commit.
+
+    Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    never a restatement of the check's own match text -- to prove the check
+    can genuinely discriminate the healthy world from the defective one, per
+    this epic's own thesis: a check with zero discriminating power is worse
+    than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "explorer" / "templates" / "EXPLORER_SPINE.template.json"
+
+    # Captured via `git rev-parse HEAD` at implementation time (g4 dispatch,
+    # sitting on top of g3's already-merged ADMIRAL_SPINE promotion).
+    PINNED_HEAD = "44180fe09c0357a7c2ffcefcaeea378b6e9ccecd"
+
+    EXPECTED_CHECKS = {
+        ("init", "c2"): {
+            "kind": "command",
+            "command": (
+                "python3 -c \"import json,sys; "
+                "d=json.load(open('<repo-root>/.agent-work/<work-id>/spine.json', "
+                "encoding='utf-8')); "
+                "sys.exit(0 if d.get('engine_session',{}).get('status')=='active' else 1)\""
+            ),
+        },
+        ("context", "c1"): {
+            "kind": "command",
+            "command": 'test -s "<repo-root>/.agent-work/<work-id>/IDEAS_BOARD.md"',
+        },
+        ("spec", "c1"): {
+            "kind": "command",
+            "command": 'test -s "<repo-root>/.agent-work/<work-id>/DESIGN_SPEC.md"',
+        },
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose.
+    PRE_EXISTING_NONNULL = {
+        ("init", "c1"), ("explore", "c1"), ("explore", "c2"), ("review", "c1"),
+        ("confirm", "c1"), ("confirm", "c2"), ("confirm", "c3"), ("route", "c2"),
+    }
+
+    def _skip_if_head_moved(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        head = out.stdout.strip()
+        if head != self.PINNED_HEAD:
+            self.skipTest(
+                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
+                f"{head} -- this test's assumptions about the template's "
+                "shape need re-verifying against the current HEAD before "
+                "they can be trusted, not silently re-run against drift"
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_checks_match_shipped_shape(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_route_c1_stays_null(self):
+        """route.c1 ('confirmed spec routed ...; work area archived; engine
+        lease released') is the one condition this gate's own handoff named
+        as a candidate FULL promotion and then explicitly declined for lack
+        of a real per-outcome artifact -- pin that it stays `check: null`
+        rather than silently drifting either way."""
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        by_id = {c["id"]: c for c in cl["tasks"]["route"]["postconditions"]}
+        self.assertIsNone(by_id["c1"]["check"])
+
+    def test_context_c1_and_spec_c1_keep_their_unsplit_statement_and_no_basis(self):
+        """The SPLIT promotions must not let the `statement` text imply the
+        check covers more than the file-existence half it actually checks,
+        and must NOT gain a `basis` field either --
+        `decision:no-basis-backfill` reserves that mechanism for w3-basis's
+        own population, not this gate's promotions. Pin both: statement
+        stays byte-identical, and no `basis` key was introduced."""
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        context_c1 = cl["tasks"]["context"]["postconditions"][0]
+        spec_c1 = cl["tasks"]["spec"]["postconditions"][0]
+        self.assertEqual(
+            context_c1["statement"],
+            "doctrine + project deltas + map read where they exist; "
+            "IDEAS_BOARD.md seeded from template",
+        )
+        self.assertNotIn("basis", context_c1)
+        self.assertEqual(
+            spec_c1["statement"],
+            "DESIGN_SPEC.md crystallized from the board with per-section "
+            "approval; load-bearing interfaces designed-it-twice or skipped "
+            "with a stated reason",
+        )
+        self.assertNotIn("basis", spec_c1)
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly the 8 pre-existing non-null checks plus these 3 "
+            "promotions -- and no other condition anywhere in the template, "
+            "including route.c1 -- may carry a check; a mismatch means "
+            "either a missed target or drift onto a condition this gate "
+            "must not touch",
+        )
+
+    # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
+
+    def test_init_c2_command_check_discriminates_lease_status(self):
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("init", "c2")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            (root / ".agent-work" / work_id).mkdir(parents=True)
+            spine_path = root / ".agent-work" / work_id / "spine.json"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real claim() write -- status == "active".
+            spine_path.write_text(json.dumps({"engine_session": {"status": "active"}}), encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): a status value the lease machinery
+            # itself never legitimately writes -- claim() only ever writes
+            # "active", release() only ever writes "released" -- this is
+            # neither, so it attacks "the check ran and saw a BAD value", not
+            # merely "the key/file was absent" (a different, easier defect).
+            spine_path.write_text(
+                json.dumps({"engine_session": {"status": "stale-explorer-lease"}}),
+                encoding="utf-8",
+            )
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            # command checks are satisfied by `advance`, never `attest`.
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_context_c1_command_check_discriminates_empty_board(self):
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("context", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            work_dir = root / ".agent-work" / work_id
+            work_dir.mkdir(parents=True)
+            board_path = work_dir / "IDEAS_BOARD.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real board seeded from the template.
+            board_path.write_text("# Ideas Board\n\nthe point: ...\n", encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): the file EXISTS (a bare `test -f`
+            # or `.exists()` claim would pass) but is EMPTY -- attacks the
+            # nonempty boundary `-s` adds over plain existence, not the
+            # easier "file missing entirely" defect.
+            board_path.write_text("", encoding="utf-8")
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_spec_c1_command_check_discriminates_empty_spec(self):
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("spec", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            work_dir = root / ".agent-work" / work_id
+            work_dir.mkdir(parents=True)
+            spec_path = work_dir / "DESIGN_SPEC.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real spec crystallized from the board.
+            spec_path.write_text(
+                "# Design Spec\n\nUNCONFIRMED -- DO NOT CUT\n", encoding="utf-8",
+            )
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): the file EXISTS but is EMPTY --
+            # same nonempty boundary as context.c1 above, not the easier
+            # "file missing entirely" defect.
+            spec_path.write_text("", encoding="utf-8")
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
