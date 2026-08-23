@@ -8669,6 +8669,113 @@ def _gate_with_check(iid, check, status="in-progress"):
         {"id": "c1", "statement": "s", "check": check, "satisfied": False}
     ]
     return t
+    # Node ids of the 3 protected-intent tests above, reused by both
+    # mutation-battery probes below so "all 3 tests" is one list, not
+    # three hand-typed strings duplicated across two methods.
+    BASIS_TEST_NODE_IDS = (
+        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
+        "test_plan_c2_c4_c5_each_carry_the_ratified_basis_shape",
+        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
+        "test_no_condition_outside_plan_c2_c4_c5_carries_a_basis_key",
+        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
+        "test_live_checklist_from_the_template_renders_basis_lines_at_plan",
+    )
+
+    def test_mutation_battery_template_edit_fails_not_skips(self):
+        """g1 dispatch, decision:prove-both-directions (direction 1): in an
+        isolated clone (never the shared worktree), mutate one byte of the
+        pinned template and commit. All 3 basis tests must FAIL -- never
+        skip, never error -- with a message naming the proof as stale and
+        giving the exact re-verify command."""
+        import shutil
+        import subprocess
+        import tempfile
+
+        scratch = Path(tempfile.mkdtemp(prefix="commander-spine-basis-red-"))
+        scratch.rmdir()
+        try:
+            clone = subprocess.run(
+                ["git", "clone", "--local", str(ROOT), str(scratch)],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+            self.assertEqual(clone.returncode, 0, clone.stderr)
+
+            template = scratch / self.SPINE_REL
+            template.write_text(
+                template.read_text(encoding="utf-8") + " ", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", self.SPINE_REL], cwd=str(scratch),
+                check=True, capture_output=True, text=True,
+            )
+            subprocess.run(
+                ["git", "-c", "user.email=scratch@test.local",
+                 "-c", "user.name=scratch", "commit", "-m",
+                 "mutate template (RED probe)"],
+                cwd=str(scratch), check=True, capture_output=True, text=True,
+            )
+
+            result = subprocess.run(
+                [sys.executable, "-m", "pytest", "-q", *self.BASIS_TEST_NODE_IDS],
+                cwd=str(scratch), capture_output=True, text=True, encoding="utf-8",
+            )
+            combined = result.stdout + result.stderr
+            self.assertNotEqual(result.returncode, 0, combined)
+            self.assertIn("proof is stale", combined, combined)
+            self.assertIn(
+                "git rev-parse HEAD:"
+                "skills/commander/templates/COMMANDER_SPINE.template.json",
+                combined, combined,
+            )
+            self.assertNotIn("skipped", combined, combined)
+            self.assertNotIn("SKIPPED", combined, combined)
+            self.assertIn("3 failed", combined, combined)
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
+
+    def test_mutation_battery_unrelated_commit_stays_green(self):
+        """g1 dispatch, decision:prove-both-directions (direction 2): in an
+        isolated clone, commit a change to a file OUTSIDE
+        skills/commander/templates/ -- HEAD moves but the template's blob
+        does not. All 3 basis tests must still PASS: exactly the case the
+        retired whole-repo-HEAD pin got wrong."""
+        import shutil
+        import subprocess
+        import tempfile
+
+        scratch = Path(tempfile.mkdtemp(prefix="commander-spine-basis-green-"))
+        scratch.rmdir()
+        try:
+            clone = subprocess.run(
+                ["git", "clone", "--local", str(ROOT), str(scratch)],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+            self.assertEqual(clone.returncode, 0, clone.stderr)
+
+            marker = scratch / "UNRELATED_MUTATION_MARKER.tmp"
+            marker.write_text("unrelated commit probe\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "UNRELATED_MUTATION_MARKER.tmp"], cwd=str(scratch),
+                check=True, capture_output=True, text=True,
+            )
+            subprocess.run(
+                ["git", "-c", "user.email=scratch@test.local",
+                 "-c", "user.name=scratch", "commit", "-m",
+                 "unrelated change (GREEN probe)"],
+                cwd=str(scratch), check=True, capture_output=True, text=True,
+            )
+
+            result = subprocess.run(
+                [sys.executable, "-m", "pytest", "-q", *self.BASIS_TEST_NODE_IDS],
+                cwd=str(scratch), capture_output=True, text=True, encoding="utf-8",
+            )
+            combined = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, combined)
+            self.assertNotIn("proof is stale", combined, combined)
+            self.assertIn("3 passed", combined, combined)
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
+
+
 
 
 class CommanderSpineW3PromotePromotions(unittest.TestCase):
@@ -10099,108 +10206,3 @@ class CartographerW3PromoteDeclined(unittest.TestCase):
             "this gate -- any non-null check here means either an "
             "unrecorded edit or drift onto a condition this gate declined",
         )
-    # Node ids of the 3 protected-intent tests above, reused by both
-    # mutation-battery probes below so "all 3 tests" is one list, not
-    # three hand-typed strings duplicated across two methods.
-    BASIS_TEST_NODE_IDS = (
-        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
-        "test_plan_c2_c4_c5_each_carry_the_ratified_basis_shape",
-        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
-        "test_no_condition_outside_plan_c2_c4_c5_carries_a_basis_key",
-        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
-        "test_live_checklist_from_the_template_renders_basis_lines_at_plan",
-    )
-
-    def test_mutation_battery_template_edit_fails_not_skips(self):
-        """g1 dispatch, decision:prove-both-directions (direction 1): in an
-        isolated clone (never the shared worktree), mutate one byte of the
-        pinned template and commit. All 3 basis tests must FAIL -- never
-        skip, never error -- with a message naming the proof as stale and
-        giving the exact re-verify command."""
-        import shutil
-        import subprocess
-        import tempfile
-
-        scratch = Path(tempfile.mkdtemp(prefix="commander-spine-basis-red-"))
-        scratch.rmdir()
-        try:
-            clone = subprocess.run(
-                ["git", "clone", "--local", str(ROOT), str(scratch)],
-                capture_output=True, text=True, encoding="utf-8",
-            )
-            self.assertEqual(clone.returncode, 0, clone.stderr)
-
-            template = scratch / self.SPINE_REL
-            template.write_text(
-                template.read_text(encoding="utf-8") + " ", encoding="utf-8")
-            subprocess.run(
-                ["git", "add", self.SPINE_REL], cwd=str(scratch),
-                check=True, capture_output=True, text=True,
-            )
-            subprocess.run(
-                ["git", "-c", "user.email=scratch@test.local",
-                 "-c", "user.name=scratch", "commit", "-m",
-                 "mutate template (RED probe)"],
-                cwd=str(scratch), check=True, capture_output=True, text=True,
-            )
-
-            result = subprocess.run(
-                [sys.executable, "-m", "pytest", "-q", *self.BASIS_TEST_NODE_IDS],
-                cwd=str(scratch), capture_output=True, text=True, encoding="utf-8",
-            )
-            combined = result.stdout + result.stderr
-            self.assertNotEqual(result.returncode, 0, combined)
-            self.assertIn("proof is stale", combined, combined)
-            self.assertIn(
-                "git rev-parse HEAD:"
-                "skills/commander/templates/COMMANDER_SPINE.template.json",
-                combined, combined,
-            )
-            self.assertNotIn("skipped", combined, combined)
-            self.assertNotIn("SKIPPED", combined, combined)
-            self.assertIn("3 failed", combined, combined)
-        finally:
-            shutil.rmtree(scratch, ignore_errors=True)
-
-    def test_mutation_battery_unrelated_commit_stays_green(self):
-        """g1 dispatch, decision:prove-both-directions (direction 2): in an
-        isolated clone, commit a change to a file OUTSIDE
-        skills/commander/templates/ -- HEAD moves but the template's blob
-        does not. All 3 basis tests must still PASS: exactly the case the
-        retired whole-repo-HEAD pin got wrong."""
-        import shutil
-        import subprocess
-        import tempfile
-
-        scratch = Path(tempfile.mkdtemp(prefix="commander-spine-basis-green-"))
-        scratch.rmdir()
-        try:
-            clone = subprocess.run(
-                ["git", "clone", "--local", str(ROOT), str(scratch)],
-                capture_output=True, text=True, encoding="utf-8",
-            )
-            self.assertEqual(clone.returncode, 0, clone.stderr)
-
-            marker = scratch / "UNRELATED_MUTATION_MARKER.tmp"
-            marker.write_text("unrelated commit probe\n", encoding="utf-8")
-            subprocess.run(
-                ["git", "add", "UNRELATED_MUTATION_MARKER.tmp"], cwd=str(scratch),
-                check=True, capture_output=True, text=True,
-            )
-            subprocess.run(
-                ["git", "-c", "user.email=scratch@test.local",
-                 "-c", "user.name=scratch", "commit", "-m",
-                 "unrelated change (GREEN probe)"],
-                cwd=str(scratch), check=True, capture_output=True, text=True,
-            )
-
-            result = subprocess.run(
-                [sys.executable, "-m", "pytest", "-q", *self.BASIS_TEST_NODE_IDS],
-                cwd=str(scratch), capture_output=True, text=True, encoding="utf-8",
-            )
-            combined = result.stdout + result.stderr
-            self.assertEqual(result.returncode, 0, combined)
-            self.assertNotIn("proof is stale", combined, combined)
-            self.assertIn("3 passed", combined, combined)
-        finally:
-            shutil.rmtree(scratch, ignore_errors=True)
