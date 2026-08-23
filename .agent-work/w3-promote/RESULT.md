@@ -138,6 +138,9 @@ first post-g9-commit run (at `e70f2df6`) failed
 drift, `tests.test_checklist_engine` 778→790 entities from the new `CharterW3PromotePromotions` /
 `ScoutW3PromotePromotions` / `CartographerW3PromoteDeclined` test classes this wave added).
 Rebuilt with `python3 -m scripts.code_map build --root .`, committed (`f6367f1f`), re-ran — green.
+Re-confirmed once more after this file's own commit (`476d4cc6`, doc-only, no code touched):
+`python3 -m pytest -q` → `3729 passed, 44 skipped, 1275 subtests passed in 217.90s`, exit 0 — the
+true final commit on this branch is `476d4cc6`.
 
 ## 4. Map impact
 
