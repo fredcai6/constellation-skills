@@ -27,6 +27,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          # Full history, not actions/checkout's default depth-1 shallow clone.
+          # tests/test_code_map_precommit_e2e.py builds scratch repos with
+          # `git clone --bare -- .git`, which fails rc=128 against a shallow
+          # clone -- identically on windows-latest and ubuntu-latest.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -76,6 +82,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          # Full history, not actions/checkout's default depth-1 shallow clone.
+          # tests/test_code_map_precommit_e2e.py builds scratch repos with
+          # `git clone --bare -- .git`, which fails rc=128 against a shallow
+          # clone -- identically on windows-latest and ubuntu-latest.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5

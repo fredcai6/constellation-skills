@@ -76,7 +76,17 @@ def _actual_repo_common_git_dir():
     Cloning from here (never the working copy) means the clone reflects
     committed history only, independent of whatever uncommitted edits sit in
     THIS worktree right now."""
-    return Path(_git(["rev-parse", "--git-common-dir"], ROOT).stdout.strip())
+    # `--path-format=absolute` is load-bearing, not tidiness: bare
+    # `--git-common-dir` returns the RELATIVE string ".git" in a plain
+    # checkout and an absolute path only in a LINKED WORKTREE. Every
+    # developer here runs from a worktree, so the relative form never
+    # surfaced locally -- but CI's `actions/checkout` makes a plain clone,
+    # where ".git" then resolves against the scratch tmpdir this is cloned
+    # INTO and git reports `fatal: repository '.git' does not exist`.
+    # Same idiom `_resolve_hooks_dir` below already uses.
+    return Path(_git(
+        ["rev-parse", "--path-format=absolute", "--git-common-dir"], ROOT,
+    ).stdout.strip())
 
 
 def _make_shared_scratch_git(tmp: Path) -> Path:
