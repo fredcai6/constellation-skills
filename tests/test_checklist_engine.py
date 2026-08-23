@@ -8989,3 +8989,246 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
 
             with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
                 E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+
+class AdmiralSpineW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g3: 3 named `check: null` conditions in the shipped
+    ADMIRAL_SPINE.template.json promoted to real, mechanically-checked
+    conditions using only the engine's existing check kinds (`command`) per
+    `decision:no-new-check-kinds` -- init.c2, latitude.c1, execute.c2. Every
+    other condition in the file is untouched, including closeout.c4
+    ("...ADMIRAL_LOG archived"), left `check: null` on purpose: its archive
+    destination (`scripts/spine_lifecycle.py::archive_name_for`) is
+    `f"{today}-{work_id.replace('/', '-')}"`, keyed on the wall-clock date at
+    CLOSE time (unknown at spine-authoring time, so no fixed path exists to
+    write into a check) AND on a `/` -> `-` transform of `work_id` that the
+    resolver's own `<work-id>` substitution (`resolve_spine`, a blind
+    `str.replace`) never performs -- so even a glob-based check baked in at
+    authoring time would silently mismatch for any work_id containing `/`, a
+    shape the resolver's own docstring treats as legal. Neither half is a
+    "real, stable path convention" a hand-authored check text can pin; per
+    the handoff's own stated fallback this condition stays `check: null`.
+
+    init.c2's promotion mirrors g1's already-landed COMMANDER_SPINE.template.json
+    init.c1 EXACTLY (same seam: both roles' own spine.json lives at the same
+    `.agent-work/<work-id>/spine.json` path) -- `command` is independently
+    justified against THIS template's own pre-existing checks too: init.c1
+    (same gate), execute.p2, execute.c3, and closeout.c2 are all already
+    `command`-kind here, so this is not this template's first use of the
+    kind. latitude.c1 and execute.c2 are new `command` text (not copied from
+    a sibling template) but the same reasoning applies: `command` is this
+    template's dominant pre-existing kind (4 uses spanning lease status,
+    state-note verification, wave-transition verification, and episode
+    capture) versus `artifact`, used here only twice and only ever for
+    `user-decision` (a human-confirmation event genuinely populated by a real
+    interaction) -- introducing a NEW `artifact` evidence_type for a raw file-
+    existence claim would rely on trusting a hand-typed attest payload
+    (`attest()`'s artifact path never touches the filesystem; only `basis`,
+    which is report-only and inert once `check` is non-null, does that), so
+    `command` is the more genuinely mechanical, less decorative choice here.
+
+    Modeled directly on CommanderSpineW3PromotePromotions above: pin
+    PINNED_HEAD via `git rev-parse HEAD` captured at implementation time,
+    `skipTest` (never fail) if HEAD has since moved past it -- this repo's
+    edits are still uncommitted at authoring time, so HEAD is the base
+    commit (g1's own merged promotion) this gate's edit sits on top of, not
+    a future commit.
+
+    Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    never a restatement of the check's own match text -- to prove the check
+    can genuinely discriminate the healthy world from the defective one, per
+    this epic's own thesis: a check with zero discriminating power is worse
+    than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "admiral" / "templates" / "ADMIRAL_SPINE.template.json"
+
+    # Captured via `git rev-parse HEAD` at implementation time (g3 dispatch,
+    # sitting on top of g1's already-merged COMMANDER_SPINE promotion).
+    PINNED_HEAD = "ff8e96402a6a76cc6e7f5c1bd92e91b36c830156"
+
+    EXPECTED_CHECKS = {
+        ("init", "c2"): {
+            "kind": "command",
+            "command": (
+                "python3 -c \"import json,sys; "
+                "d=json.load(open('<repo-root>/.agent-work/<work-id>/spine.json', "
+                "encoding='utf-8')); "
+                "sys.exit(0 if d.get('engine_session',{}).get('status')=='active' else 1)\""
+            ),
+        },
+        ("latitude", "c1"): {
+            "kind": "command",
+            "command": 'test -s "<repo-root>/.agent-work/<work-id>/LATITUDE_CONTRACT.md"',
+        },
+        ("execute", "c2"): {
+            "kind": "command",
+            "command": (
+                'test -s "<repo-root>/.agent-work/<work-id>/ADMIRAL_LOG.md" '
+                '&& grep -qE "^- TRANSITION" "<repo-root>/.agent-work/<work-id>/ADMIRAL_LOG.md"'
+            ),
+        },
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose.
+    PRE_EXISTING_NONNULL = {
+        ("init", "c1"), ("latitude", "c2"), ("execute", "p2"), ("execute", "c3"),
+        ("closeout", "c2"), ("closeout", "c5"),
+    }
+
+    def _skip_if_head_moved(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        head = out.stdout.strip()
+        if head != self.PINNED_HEAD:
+            self.skipTest(
+                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
+                f"{head} -- this test's assumptions about the template's "
+                "shape need re-verifying against the current HEAD before "
+                "they can be trusted, not silently re-run against drift"
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_checks_match_shipped_shape(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_closeout_c4_stays_null(self):
+        """closeout.c4 ('branches dispositioned, worktrees swept, ADMIRAL_LOG
+        archived') is the one condition this gate's own handoff named as a
+        candidate and then explicitly declined -- pin that it stays `check:
+        null` rather than silently drifting either way."""
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        by_id = {c["id"]: c for c in cl["tasks"]["closeout"]["postconditions"]}
+        self.assertIsNone(by_id["c4"]["check"])
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly the 6 pre-existing non-null checks plus these 3 "
+            "promotions -- and no other condition anywhere in the template, "
+            "including closeout.c4 -- may carry a check; a mismatch means "
+            "either a missed target or drift onto a condition this gate "
+            "must not touch",
+        )
+
+    # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
+
+    def test_init_c2_command_check_discriminates_lease_status(self):
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("init", "c2")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            (root / ".agent-work" / work_id).mkdir(parents=True)
+            spine_path = root / ".agent-work" / work_id / "spine.json"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real claim() write -- status == "active".
+            spine_path.write_text(json.dumps({"engine_session": {"status": "active"}}), encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): a status value the lease machinery
+            # itself never legitimately writes -- claim() only ever writes
+            # "active", release() only ever writes "released" -- this is
+            # neither, so it attacks "the check ran and saw a BAD value", not
+            # merely "the key/file was absent" (a different, easier defect).
+            spine_path.write_text(
+                json.dumps({"engine_session": {"status": "half-claimed"}}),
+                encoding="utf-8",
+            )
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            # command checks are satisfied by `advance`, never `attest`.
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_latitude_c1_command_check_discriminates_empty_file(self):
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("latitude", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            work_dir = root / ".agent-work" / work_id
+            work_dir.mkdir(parents=True)
+            contract_path = work_dir / "LATITUDE_CONTRACT.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real, filled-in contract.
+            contract_path.write_text("# Latitude Contract\n\ndecision classes: ...\n", encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): the file EXISTS (a bare `test -f`
+            # or `.exists()` claim would pass) but is EMPTY -- attacks the
+            # nonempty boundary `-s` adds over plain existence, not the
+            # easier "file missing entirely" defect.
+            contract_path.write_text("", encoding="utf-8")
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_execute_c2_command_check_discriminates_case_sensitive_grammar(self):
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("execute", "c2")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            work_dir = root / ".agent-work" / work_id
+            work_dir.mkdir(parents=True)
+            log_path = work_dir / "ADMIRAL_LOG.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real TRANSITION line in the documented grammar.
+            log_path.write_text(
+                "# ADMIRAL_LOG\n\n- TRANSITION | boundary=b1 | decision=advance | verified\n",
+                encoding="utf-8",
+            )
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): the file is genuinely nonempty and
+            # even mentions a transition, but NOT in the documented `^- TRANSITION`
+            # grammar (lower-cased) -- attacks the pattern-match boundary
+            # specifically, not the easier "file empty/missing" defect a
+            # different assertion already covers.
+            log_path.write_text(
+                "# ADMIRAL_LOG\n\n- transition | boundary=b1 | decision=advance | verified\n",
+                encoding="utf-8",
+            )
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)

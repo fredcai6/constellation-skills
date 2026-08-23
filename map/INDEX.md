@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 63 modules, 1316 entities
 skills: 1 modules, 22 entities
-tests: 103 modules, 5739 entities
+tests: 103 modules, 5748 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -119,7 +119,7 @@ tests: 103 modules, 5739 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (103 modules, 5739 entities)
+## tests (103 modules, 5748 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -135,7 +135,7 @@ tests: 103 modules, 5739 entities
 - [tests.test_check_script_registration](tests.test_check_script_registration/INDEX.md) (13 entities, 8 holes): Registration lint + vocabulary rule for issue #345 ("built but not wired").
 - [tests.test_check_skill_freshness](tests.test_check_skill_freshness/INDEX.md) (13 entities, 7 holes): Coverage for `_resolved_interpreter()`'s sidecar-missing/malformed fallback (issue #532).
 - [tests.test_check_template_overlay_freshness](tests.test_check_template_overlay_freshness/INDEX.md) (14 entities, 3 holes): The overlay-freshness guard `scripts/check_template_overlay_freshness.py` was written to catch exactly what `tests/test_cli_retirement_guard.py`'s own docstring
-- [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (751 entities, 574 holes): HOLE: no docstring
+- [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (760 entities, 581 holes): HOLE: no docstring
 - [tests.test_checklist_engine_atomic_save](tests.test_checklist_engine_atomic_save/INDEX.md) (39 entities, 22 holes): #613 (atomicity half): `checklist_engine.save()` must install the new document by ATOMIC RENAME, never by writing over the live target in place.
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
 - [tests.test_cli_retirement_guard](tests.test_cli_retirement_guard/INDEX.md) (38 entities, 24 holes): Regrowth guard for issue #559 -- the door is the interface, not a second path.
