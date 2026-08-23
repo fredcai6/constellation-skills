@@ -1081,6 +1081,7 @@ ROLE_MODEL_TIERS: dict[str, dict[str, dict[str, object]]] = {
         "reviewer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
         "critic": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
         "cartographer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
+        "explorer": {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
     },
     "codex": {},
     "local": {},
@@ -1276,8 +1277,11 @@ def crew_env(
     tail). Both are optional so a caller with no spine to bind (e.g. a legacy
     registry entry recorded before this field existed) still gets a valid
     environment — when omitted (`None`), the inherited-environment route is left
-    exactly as it is (this is what lets the Admiral's own bootstrap, which passes
-    `base_env` but no `--spine`, keep working).
+    exactly as it is. This generic "leave inherited when omitted" contract is
+    unchanged here; `_crew_door_env` (the crew-dispatch door specifically) no
+    longer relies on it for its `spine=None` branch -- it actively clears
+    `SPINE_FILE`/`SPINE_SESSION` from the env this function returns in that
+    case, so a crew dispatched without `--spine` gets no door at all.
 
     When a binding IS given, it is ASSIGNED, not `setdefault`-ed: an explicit
     `spine_file`/`spine_session` is more specific than whatever the DISPATCHING
@@ -1332,11 +1336,14 @@ def _crew_door_env(
     `spine_file` and `spine_session` are bound as a PAIR, and ONLY when `spine`
     was given. Deriving `spine_session` unconditionally (even with `spine=None`)
     used to hand a no-`--spine` child a mismatched pair: whatever SPINE_FILE the
-    DISPATCHING process happened to have ambient (left untouched, correctly) next
-    to a freshly-derived SPINE_SESSION belonging to a different spine entirely —
-    a file/identity pair that never matched each other. No `spine` means the
-    inherited-environment route is genuinely untouched, both variables together,
-    exactly as `crew_env()`'s own contract already promises.
+    DISPATCHING process happened to have ambient next to a freshly-derived
+    SPINE_SESSION belonging to a different spine entirely — a file/identity pair
+    that never matched each other. No `spine` means NO door at all: SPINE_FILE
+    and SPINE_SESSION are actively CLEARED from the child's env, together,
+    never left to whatever the DISPATCHING process's own ambient environment
+    happens to carry -- a crew dispatched without `--spine` must never be able
+    to silently drive a spine it does not own, its dispatcher's
+    (`decision:clear-both-or-neither`).
 
     `SPINE_PARENT`, unlike the spine pair, is bound UNCONDITIONALLY -- every
     crew this launches gets a definitive answer, `parent` if given else
@@ -1352,7 +1359,10 @@ def _crew_door_env(
     benefit, since there is exactly one caller-known path either way."""
     resolved_parent = _normalize_parent(parent) or UNKNOWN_PARENT
     if spine is None:
-        return crew_env(parent=resolved_parent, scratch_dir=scratch_dir)
+        env = crew_env(parent=resolved_parent, scratch_dir=scratch_dir)
+        env.pop("SPINE_FILE", None)
+        env.pop("SPINE_SESSION", None)
+        return env
     return crew_env(
         spine_file=_resolve_optional_path(spine, root),
         spine_session=assignment_session_name(work_id, gate, role),

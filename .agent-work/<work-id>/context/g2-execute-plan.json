@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-execute-plan",
+  "files": [],
+  "repo_rev": {
+    "commit": "ff8e96402a6a76cc6e7f5c1bd92e91b36c830156"
+  },
+  "run": {
+    "work_id": "<work-id>",
+    "generated_at": "2026-08-23T00:30:41Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w3-promote",
+      "repo": "/home/tommy/projects/569-w3-promote",
+      "durable": "/home/tommy/projects/569-w3-promote"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w3-promote"
+    }
+  }
+}

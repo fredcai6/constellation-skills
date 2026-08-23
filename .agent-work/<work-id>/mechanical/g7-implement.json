@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g7-implement",
+  "mechanical": {
+    "run": "<work-id>",
+    "project": "constellation-skills",
+    "spine-step": "g7-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-<work-id>-g7-implement@66fa280fecb605256c417377d19e7ee56396738b",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "<work-id>",
+    "generated_at": "2026-08-23T16:35:05Z"
+  }
+}

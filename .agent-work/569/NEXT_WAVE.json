@@ -1,5 +1,5 @@
 {
-  "boundary_id": "w1-to-w2",
-  "launch_id": "w2",
+  "boundary_id": "w2-to-w3",
+  "launch_id": "w3",
   "trigger": "wave_boundary"
 }

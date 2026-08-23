@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "files": [],
+  "repo_rev": {
+    "commit": "8691a40e6dd6eaf06c55ff317dbee00c60842e27"
+  },
+  "run": {
+    "work_id": "w3-basis",
+    "generated_at": "2026-08-23T00:01:55Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w3-basis",
+      "repo": "/home/tommy/projects/569-w3-basis",
+      "durable": "/home/tommy/projects/569-w3-basis"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w3-basis"
+    }
+  }
+}

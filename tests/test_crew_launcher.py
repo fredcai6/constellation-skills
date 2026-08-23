@@ -1460,6 +1460,7 @@ class ResolveModelTests(unittest.TestCase):
 
     CLAUDE_ROLES = (
         "commander", "commander-delegated", "implementer", "reviewer", "critic", "cartographer",
+        "explorer",
     )
 
     def test_every_populated_claude_role_resolves_to_its_own_default(self):
@@ -1563,6 +1564,22 @@ class ResolveModelTests(unittest.TestCase):
         with self.assertRaises(RC.CrewLaunchError) as ctx:
             RC.resolve_model("commander", "claude", "haiku", None)
         self.assertIn("haiku", str(ctx.exception))
+
+    def test_explorer_tier_is_sonnet_or_haiku_default_sonnet(self):
+        """Human ruling: the explorer role had no row at all, so every
+        excursion dispatch it makes was refused by branch 1 ('no model tier
+        declared for role') rather than resolving. Its work is bounded,
+        one-question exploration -- the same cheap-crew shape as implementer
+        and reviewer -- so: sonnet or haiku allowed, sonnet the default."""
+        self.assertEqual(
+            {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
+            RC.ROLE_MODEL_TIERS["claude"]["explorer"],
+        )
+        resolved = RC.resolve_model("explorer", "claude", "haiku", "cheap excursion")
+        self.assertEqual("haiku", resolved.model)
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("explorer", "claude", "opus", None)
+        self.assertIn("opus", str(ctx.exception))
 
 
 class EntryLivenessTests(unittest.TestCase):
@@ -1925,7 +1942,7 @@ class DispatchDoorBindingTests(unittest.TestCase):
         # bound only as a PAIR: deriving the assignment identity without the file
         # it belongs to hands the child a lease with nothing telling it which
         # spine to claim it against (the bootstrap-mismatch the Admiral ruled
-        # against) — see `test_dispatch_without_spine_leaves_ambient_pair_untouched`.
+        # against) — see `test_dispatch_without_spine_gets_no_door`.
         with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             handoff = write_handoff(root, "issue-1", "g1", "implementer")
@@ -1984,16 +2001,17 @@ class DispatchDoorBindingTests(unittest.TestCase):
                     else:
                         os.environ[k] = v
 
-    def test_dispatch_without_spine_leaves_ambient_pair_untouched(self):
-        # CONTROL: a dispatcher that is ITSELF door-bound (ambient SPINE_FILE +
+    def test_dispatch_without_spine_gets_no_door(self):
+        # A dispatcher that is ITSELF door-bound (ambient SPINE_FILE +
         # SPINE_SESSION already in this process's environment, e.g. a live
-        # Admiral/Commander crew) launches a child with NO --spine. "No --spine
-        # means the inherited environment route is genuinely untouched" requires
-        # BOTH values to pass through unmodified as a PAIR — binding only
-        # SPINE_SESSION (deriving the child's own assignment identity) while
-        # SPINE_FILE still points at the dispatcher's spine hands the child a
-        # mismatched pair: the dispatcher's checklist file with the child's own
-        # identity, which claims a lease on a spine nothing prepared it to drive.
+        # Admiral/Commander crew) launches a child with NO --spine. #569 g1:
+        # "no --spine" no longer means "leave the inherited pair alone" -- it
+        # means the child gets NO door at all. Leaving the pair inherited let
+        # a spine=None child silently appear to share the DISPATCHER's own
+        # lease (whatever it happened to have ambient), which is exactly the
+        # hazard `decision:clear-both-or-neither` forecloses: a crew
+        # dispatched without --spine must never be able to drive a spine it
+        # does not own. Both vars are cleared TOGETHER, never one alone.
         with tempfile.TemporaryDirectory() as tmp:
             saved = {k: os.environ.pop(k, None) for k in ("SPINE_FILE", "SPINE_SESSION")}
             try:
@@ -2011,8 +2029,8 @@ class DispatchDoorBindingTests(unittest.TestCase):
                         parent="test-parent",
                     )
                 env = calls[0]["env"]
-                self.assertEqual("/admiral/EPIC_SPINE.json", env["SPINE_FILE"])
-                self.assertEqual("constellation/epic/admiral", env["SPINE_SESSION"])
+                self.assertNotIn("SPINE_FILE", env)
+                self.assertNotIn("SPINE_SESSION", env)
             finally:
                 for k, v in saved.items():
                     if v is None:
@@ -2066,6 +2084,42 @@ class DispatchDoorBindingTests(unittest.TestCase):
             env = calls[0]["env"]
             self.assertNotIn("SPINE_FILE", env)
             self.assertNotIn("SPINE_SESSION", env)
+
+    def test_resume_via_cli_backend_with_no_stored_spine_gets_no_door(self):
+        # `CliBackend().resume()` directly (not the module-level `resume_crew`
+        # wrapper): a registry entry recorded with no spine (`build_entry`'s
+        # default) must resume with NEITHER SPINE_FILE nor SPINE_SESSION in
+        # the resumed child's env, even when THIS process's own ambient
+        # environment carries a REAL non-empty pair (as a door-bound
+        # Commander/Admiral resuming a legacy/no-spine crew would). Does NOT
+        # use `no_ambient_spine_env()` to strip the ambient pair first --
+        # stripping-then-asserting-absent would be true both before and after
+        # this fix and prove nothing about active clearing.
+        with tempfile.TemporaryDirectory() as tmp:
+            saved = {k: os.environ.pop(k, None) for k in ("SPINE_FILE", "SPINE_SESSION")}
+            try:
+                os.environ["SPINE_FILE"] = "/admiral/EPIC_SPINE.json"
+                os.environ["SPINE_SESSION"] = "constellation/epic/admiral"
+                root = Path(tmp)
+                handoff = write_handoff(root, "issue-1", "g1", "implementer")
+                result = result_rel("issue-1", "g1", "implementer")
+                entry = RC.build_entry(
+                    work_id="issue-1", gate="g1", role="implementer", attempt=1,
+                    worktree=".", handoff=handoff, result=result, root=root,
+                    started=RC._now(), backend="cli", pid=1,
+                )
+                entries = [entry]
+                with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                    RC.CliBackend().resume(entry["session_name"], root=root, entries=entries)
+                env = calls[0]["env"]
+                self.assertNotIn("SPINE_FILE", env)
+                self.assertNotIn("SPINE_SESSION", env)
+            finally:
+                for k, v in saved.items():
+                    if v is None:
+                        os.environ.pop(k, None)
+                    else:
+                        os.environ[k] = v
 
 
 class ParentEnvBindingTests(unittest.TestCase):
@@ -4520,29 +4574,37 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
                     os.environ.pop("SPINE_SESSION", None)
             # reaching here at all is the assertion: no exception propagated
 
-    # -- (e) shared-spine dispatch: child inherits the SAME ambient pair,
-    #        so the parent must not become a second writer ------------------ #
-    def test_dispatch_skips_parent_heartbeat_in_shared_spine_case(self):
+    # -- (e) spine=None dispatch: the child gets NO door at all (neither
+    #        SPINE_FILE nor SPINE_SESSION), so the parent must ALWAYS start
+    #        its own heartbeat -- it can never "share" and skip as
+    #        redundant, because a doorless child cannot maintain the
+    #        parent's lease itself ------------------------------------------ #
+    def test_dispatch_heartbeats_parent_lease_when_spine_is_none(self):
+        # #569 g1: `spine=None` used to copy the ambient SPINE_FILE/
+        # SPINE_SESSION verbatim onto the child, which could coincidentally
+        # equal the parent's own pair and made the "shared spine, skip
+        # redundant heartbeat" branch reachable. `_crew_door_env` now clears
+        # both vars instead: a spine=None child gets NO door at all, so that
+        # branch is structurally unreachable from a real --spine-less
+        # dispatch, and the parent must always heartbeat its own lease here.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             session = "constellation/w/commander"
             spine = self._claimed_spine(root, session)
             before = self._last_heartbeat(spine)
-
             handoff = write_handoff(root, "w", "g1", "implementer")
             result = result_rel("w", "g1", "implementer")
-            observed = {}
 
             def slow_launch(argv, *, stdin, env, stdout_path, stderr_path, cwd=None):
-                # the child's env carries the SAME SPINE_FILE/SPINE_SESSION as
-                # the parent -- exactly the no-self-collision-guard case.
-                observed["env"] = env
+                # the child gets NO door at all: neither var is present
+                self.assertNotIn("SPINE_FILE", env)
+                self.assertNotIn("SPINE_SESSION", env)
                 Path(stdout_path).parent.mkdir(parents=True, exist_ok=True)
                 Path(stdout_path).write_text("out\n", encoding="utf-8")
                 Path(stderr_path).write_text("err\n", encoding="utf-8")
                 Path(root / result).parent.mkdir(parents=True, exist_ok=True)
                 Path(root / result).write_text("RESULT\n", encoding="utf-8")
-                self.assertFalse(self._heartbeat_thread_alive())
+                self.assertTrue(self._wait_until(lambda: self._last_heartbeat(spine) != before))
                 return 0
 
             with no_ambient_spine_env():
@@ -4565,17 +4627,14 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
 
             self.assertEqual(0, code)
             self.assertEqual("completed", entry["status"])
-            # the child inherited the parent's OWN ambient pair unchanged
-            self.assertEqual(str(spine), observed["env"]["SPINE_FILE"])
-            self.assertEqual(session, observed["env"]["SPINE_SESSION"])
-            # The child owns the shared pair for this call; the parent starts
-            # no second writer against the same lease.
-            self.assertEqual(self._last_heartbeat(spine), before)
-            # the heartbeat thread does not outlive the (now-returned) dispatch
+            self.assertGreater(self._last_heartbeat(spine), before)
             self.assertFalse(self._heartbeat_thread_alive())
 
     # -- resume() is wired the same way as dispatch() ----------------------- #
-    def test_resume_skips_parent_heartbeat_in_shared_spine_case(self):
+    def test_resume_heartbeats_parent_lease_when_spine_is_none(self):
+        # Same rewrite as `test_dispatch_heartbeats_parent_lease_when_spine_is_none`,
+        # for the resume path: a resumed entry with no stored spine now gets
+        # no door either, so the parent must always heartbeat its own lease.
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             session = "constellation/w/commander"
@@ -4596,12 +4655,14 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
             }]
 
             def slow_launch(argv, *, stdin, env, stdout_path, stderr_path, cwd=None):
+                self.assertNotIn("SPINE_FILE", env)
+                self.assertNotIn("SPINE_SESSION", env)
                 Path(stdout_path).parent.mkdir(parents=True, exist_ok=True)
                 Path(stdout_path).write_text("out\n", encoding="utf-8")
                 Path(stderr_path).write_text("err\n", encoding="utf-8")
                 Path(root / result).parent.mkdir(parents=True, exist_ok=True)
                 Path(root / result).write_text("RESULT\n", encoding="utf-8")
-                self.assertFalse(self._heartbeat_thread_alive())
+                self.assertTrue(self._wait_until(lambda: self._last_heartbeat(spine) != before))
                 return 0
 
             with no_ambient_spine_env():
@@ -4620,7 +4681,7 @@ class ParentLeaseHeartbeatTests(unittest.TestCase):
 
             self.assertEqual(0, code)
             self.assertEqual("completed", entry["status"])
-            self.assertEqual(self._last_heartbeat(spine), before)
+            self.assertGreater(self._last_heartbeat(spine), before)
             self.assertFalse(self._heartbeat_thread_alive())
 
     def test_dispatch_heartbeats_parent_lease_when_child_pair_differs(self):

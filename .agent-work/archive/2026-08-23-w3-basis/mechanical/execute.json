@@ -1,0 +1,32 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "w3-basis",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 1,
+    "overrides": {
+      "trip": 2,
+      "force-claim": 0,
+      "force-release": 0,
+      "waive": 0,
+      "waive_authority_mismatch": 0,
+      "ids": [
+        "ov-1",
+        "ov-2"
+      ]
+    },
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-basis-execute@effb5625efeb0da20ca957acb8fec838c5f4c92a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-basis",
+    "generated_at": "2026-08-22T23:43:32Z"
+  }
+}

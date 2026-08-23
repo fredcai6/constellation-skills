@@ -45,11 +45,14 @@ These three are unioned into one scanned set, then asserted to be a SUBSET of
 never asserted to cover every skill in the corpus (see below).
 
 WHY SUBSET, NOT EQUALITY. `ROLE_MODEL_TIERS["claude"]` may legitimately
-declare more than this scan finds -- `admiral`, `cartographer` and `critic`
-are declared today and none of the three signals above reaches them (a
-Commander dispatches Cartographer as a bare "subagent" table row with no
-per-role handoff artifact; Admiral is a human-invoked top tier; Critic's own
-`CRITIC_HANDOFF.template.md` carries no model-tier field). That is not a gap
+declare more than this scan finds -- `admiral`, `cartographer`, `critic` and
+`explorer` are declared today and none of the three signals above reaches
+them (a Commander dispatches Cartographer as a bare "subagent" table row with
+no per-role handoff artifact; Admiral is a human-invoked top tier; Critic's
+own `CRITIC_HANDOFF.template.md` carries no model-tier field; Explorer
+dispatches excursions through `run_crew.py` but hands them an
+`EXCURSION_BRIEF`, which carries no model-tier field either -- its row is a
+human ruling, not a scanned one). That is not a gap
 in this guard -- declaring a role ahead of doctrine naming one for it is
 harmless. What the guard cannot tolerate is the reverse: a role doctrine
 DOES hand a tier-bearing artifact to, silently missing from the table. Subset
@@ -72,7 +75,7 @@ TWO HAZARDS THIS FILE IS BUILT TO SURVIVE (LAUNCH_ORDER.md, "Your task"):
 WHAT THIS DOES NOT ENFORCE, STATED RATHER THAN GLOSSED (mirrors
 `test_cli_retirement_guard.py`'s own section of the same name):
 
-  * `scout`, `interrogator`, `curator`, `docent`, `explorer`, `charter`,
+  * `scout`, `interrogator`, `curator`, `docent`, `charter`,
     `diagnose`, `replan`, `to-initial-issues`, `triage`, `workbench`,
     `write-a-skill`, `how-to-talk` -- every one of these is a real skill
     (`skills/*/SKILL.md` self-registers all of them), and several are

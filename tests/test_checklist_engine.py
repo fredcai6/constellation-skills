@@ -8554,13 +8554,20 @@ class CommanderSpineBasisFields(unittest.TestCase):
     `ruling-red-proof-pinned-to-shipped-revision`: written and run BEFORE the
     template carried any `basis` key and observed to fail (RED -- see the g2
     IMPLEMENTER_RESULT for the transcript), then made to pass by the surgical
-    text edit (GREEN). If HEAD has moved past the pinned commit, skip rather
-    than assert against a template shape this test was never written against."""
+    text edit (GREEN). Pinned to the **blob OID** of
+    COMMANDER_SPINE.template.json (not repo HEAD), so unrelated commits
+    elsewhere never perturb it; if the template's content has drifted from
+    the pinned blob, this test class FAILS loudly rather than silently
+    skipping -- a template shape this test was never written against must
+    be re-verified, not silently trusted."""
 
     SPINE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
+    SPINE_REL = "skills/commander/templates/COMMANDER_SPINE.template.json"
 
-    # Captured via `git rev-parse HEAD` at implementation time (g2 dispatch).
-    PINNED_HEAD = "9d5aac6daa58a72fc6a665cb39879ee5705f7f71"
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g1 dispatch).
+    # Pins the TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere
+    # must not perturb this.
+    PINNED_BLOB = "6953ac90f2568890fddbe187ad5fc8dd095041dd"
 
     EXPECTED_BASIS = {
         "c2": {
@@ -8581,27 +8588,31 @@ class CommanderSpineBasisFields(unittest.TestCase):
         },
     }
 
-    def _skip_if_head_moved(self):
+    def _fail_if_template_drifted(self):
         import subprocess
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
             capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(out.returncode, 0, out.stderr)
-        head = out.stdout.strip()
-        if head != self.PINNED_HEAD:
-            self.skipTest(
-                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
-                f"{head} -- this test's assumptions about the template's "
-                "shape need re-verifying against the current HEAD before "
-                "they can be trusted, not silently re-run against drift"
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"CommanderSpineBasisFields' proof is stale: pinned to blob "
+                f"{self.PINNED_BLOB} of {self.SPINE_REL}, current blob is "
+                f"{blob} -- the template changed since this test's shape "
+                "assumptions were verified (g1 dispatch). Re-verify "
+                "EXPECTED_BASIS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
             )
 
     def _load_spine(self):
         return json.loads(self.SPINE.read_text(encoding="utf-8"))
 
     def test_plan_c2_c4_c5_each_carry_the_ratified_basis_shape(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         by_id = {c["id"]: c for c in cl["tasks"]["plan"]["postconditions"]}
         for cond_id, expected in self.EXPECTED_BASIS.items():
@@ -8617,7 +8628,7 @@ class CommanderSpineBasisFields(unittest.TestCase):
                 self.assertTrue(basis["because"].strip())
 
     def test_no_condition_outside_plan_c2_c4_c5_carries_a_basis_key(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         carrying = []
         for task_id, t in cl["tasks"].items():
@@ -8634,7 +8645,7 @@ class CommanderSpineBasisFields(unittest.TestCase):
         )
 
     def test_live_checklist_from_the_template_renders_basis_lines_at_plan(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         for iid in cl["items"]:
             if iid == "plan":
@@ -10088,3 +10099,108 @@ class CartographerW3PromoteDeclined(unittest.TestCase):
             "this gate -- any non-null check here means either an "
             "unrecorded edit or drift onto a condition this gate declined",
         )
+    # Node ids of the 3 protected-intent tests above, reused by both
+    # mutation-battery probes below so "all 3 tests" is one list, not
+    # three hand-typed strings duplicated across two methods.
+    BASIS_TEST_NODE_IDS = (
+        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
+        "test_plan_c2_c4_c5_each_carry_the_ratified_basis_shape",
+        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
+        "test_no_condition_outside_plan_c2_c4_c5_carries_a_basis_key",
+        "tests/test_checklist_engine.py::CommanderSpineBasisFields::"
+        "test_live_checklist_from_the_template_renders_basis_lines_at_plan",
+    )
+
+    def test_mutation_battery_template_edit_fails_not_skips(self):
+        """g1 dispatch, decision:prove-both-directions (direction 1): in an
+        isolated clone (never the shared worktree), mutate one byte of the
+        pinned template and commit. All 3 basis tests must FAIL -- never
+        skip, never error -- with a message naming the proof as stale and
+        giving the exact re-verify command."""
+        import shutil
+        import subprocess
+        import tempfile
+
+        scratch = Path(tempfile.mkdtemp(prefix="commander-spine-basis-red-"))
+        scratch.rmdir()
+        try:
+            clone = subprocess.run(
+                ["git", "clone", "--local", str(ROOT), str(scratch)],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+            self.assertEqual(clone.returncode, 0, clone.stderr)
+
+            template = scratch / self.SPINE_REL
+            template.write_text(
+                template.read_text(encoding="utf-8") + " ", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", self.SPINE_REL], cwd=str(scratch),
+                check=True, capture_output=True, text=True,
+            )
+            subprocess.run(
+                ["git", "-c", "user.email=scratch@test.local",
+                 "-c", "user.name=scratch", "commit", "-m",
+                 "mutate template (RED probe)"],
+                cwd=str(scratch), check=True, capture_output=True, text=True,
+            )
+
+            result = subprocess.run(
+                [sys.executable, "-m", "pytest", "-q", *self.BASIS_TEST_NODE_IDS],
+                cwd=str(scratch), capture_output=True, text=True, encoding="utf-8",
+            )
+            combined = result.stdout + result.stderr
+            self.assertNotEqual(result.returncode, 0, combined)
+            self.assertIn("proof is stale", combined, combined)
+            self.assertIn(
+                "git rev-parse HEAD:"
+                "skills/commander/templates/COMMANDER_SPINE.template.json",
+                combined, combined,
+            )
+            self.assertNotIn("skipped", combined, combined)
+            self.assertNotIn("SKIPPED", combined, combined)
+            self.assertIn("3 failed", combined, combined)
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
+
+    def test_mutation_battery_unrelated_commit_stays_green(self):
+        """g1 dispatch, decision:prove-both-directions (direction 2): in an
+        isolated clone, commit a change to a file OUTSIDE
+        skills/commander/templates/ -- HEAD moves but the template's blob
+        does not. All 3 basis tests must still PASS: exactly the case the
+        retired whole-repo-HEAD pin got wrong."""
+        import shutil
+        import subprocess
+        import tempfile
+
+        scratch = Path(tempfile.mkdtemp(prefix="commander-spine-basis-green-"))
+        scratch.rmdir()
+        try:
+            clone = subprocess.run(
+                ["git", "clone", "--local", str(ROOT), str(scratch)],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+            self.assertEqual(clone.returncode, 0, clone.stderr)
+
+            marker = scratch / "UNRELATED_MUTATION_MARKER.tmp"
+            marker.write_text("unrelated commit probe\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "add", "UNRELATED_MUTATION_MARKER.tmp"], cwd=str(scratch),
+                check=True, capture_output=True, text=True,
+            )
+            subprocess.run(
+                ["git", "-c", "user.email=scratch@test.local",
+                 "-c", "user.name=scratch", "commit", "-m",
+                 "unrelated change (GREEN probe)"],
+                cwd=str(scratch), check=True, capture_output=True, text=True,
+            )
+
+            result = subprocess.run(
+                [sys.executable, "-m", "pytest", "-q", *self.BASIS_TEST_NODE_IDS],
+                cwd=str(scratch), capture_output=True, text=True, encoding="utf-8",
+            )
+            combined = result.stdout + result.stderr
+            self.assertEqual(result.returncode, 0, combined)
+            self.assertNotIn("proof is stale", combined, combined)
+            self.assertIn("3 passed", combined, combined)
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
