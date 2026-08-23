@@ -8660,15 +8660,6 @@ class CommanderSpineBasisFields(unittest.TestCase):
         self.assertIn(
             "    basis: file .agent-work/<work-id>/PLAN_CRITIC.md", out)
 
-
-def _gate_with_check(iid, check, status="in-progress"):
-    """A gate whose single postcondition IS `check` -- the shipped shape
-    copied verbatim from the template, never re-typed by hand."""
-    t = gate(iid, status)
-    t["postconditions"] = [
-        {"id": "c1", "statement": "s", "check": check, "satisfied": False}
-    ]
-    return t
     # Node ids of the 3 protected-intent tests above, reused by both
     # mutation-battery probes below so "all 3 tests" is one list, not
     # three hand-typed strings duplicated across two methods.
@@ -8774,6 +8765,16 @@ def _gate_with_check(iid, check, status="in-progress"):
             self.assertIn("3 passed", combined, combined)
         finally:
             shutil.rmtree(scratch, ignore_errors=True)
+
+
+def _gate_with_check(iid, check, status="in-progress"):
+    """A gate whose single postcondition IS `check` -- the shipped shape
+    copied verbatim from the template, never re-typed by hand."""
+    t = gate(iid, status)
+    t["postconditions"] = [
+        {"id": "c1", "statement": "s", "check": check, "satisfied": False}
+    ]
+    return t
 
 
 
