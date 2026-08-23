@@ -113,127 +113,62 @@ def find_py_launcher_violations(text: str, rel_path: str) -> list[tuple[str, str
 # `python <skill-dir>/...` is a valid, install-rewritten convention),
 # `resolve_interpreter()`'s probe-once-per-run/pin-once model has no analogue
 # for a value baked into a file committed once and read on every platform
-# forever -- `python3` is exactly as wrong on stock Windows (which ships
-# `python`/`py`, not `python3` -- python.org's installer doesn't add
+# forever -- a BARE `python3` is exactly as wrong on stock Windows (which
+# ships `python`/`py`, not `python3` -- python.org's installer doesn't add
 # `python3.exe`, and Windows' own `python3.exe` App Execution Alias just opens
-# the Store) as `py` was wrong on Linux/macOS. No single static interpreter
-# name is safe here; the fix is to name NONE at all (see .claude/settings.json,
-# which invokes the hook scripts directly by their `#!/usr/bin/env python3`
-# shebang, with `"shell": "bash"` pinned on every entry so Claude Code never
-# falls back to PowerShell -- which parses a bare `"<path>"` as a string
-# literal and silently exits 0 without running anything).
+# the Store) as a bare `py` was wrong on Linux/macOS.
+#
+# #651 answered this by naming NONE at all -- invoking the hook scripts
+# directly by their `#!/usr/bin/env python3` shebang. The owner's #539/#560
+# ruling ("I don't buy that anti-tamper for the python executable is
+# necessary at all ... is there a simplification we can make?") replaced that
+# design: the tracked file now names an interpreter EXPLICITLY, but always
+# wrapped as `${CONSTELLATION_PYTHON:-python3}` (see
+# `install_constellation.MCP_INTERPRETER_ENV_VAR`, `.mcp.json`'s identical
+# convention) rather than a bare literal. A real POSIX shell (pinned via
+# `"shell": "bash"`, Part 4 below) resolves that to `python3` when
+# `CONSTELLATION_PYTHON` is unset and to the override otherwise -- so it is
+# safe on every contributor's OS the same way the shebang-only form was, but
+# without depending on the file's execute bit or a clean LF shebang surviving
+# checkout (the two things Part 3 used to guard, retired below). What this
+# Part still guards is narrower than before: not "no interpreter", but "no
+# BARE, unwrapped interpreter" -- the one shape that is NOT safe to commit,
+# because it pins ONE platform's spelling into a file every platform reads.
 # --------------------------------------------------------------------------- #
 
-# Matches a JSON `"command"` field whose value NAMES an interpreter as its
+# Matches a JSON `"command"` field whose value NAMES a BARE interpreter as its
 # first token -- shell-form ("python3 \"...\" args") or exec-form's bare
 # ("command": "py") -- covering every member of
 # install_constellation.py's own INTERPRETER_CANDIDATES plus bare `python`.
+# Deliberately anchored to the START of the value: `${CONSTELLATION_PYTHON:-
+# python3}` also contains the substring "python3", but not as the value's
+# first token, so it is the safe wrapped form this regex must NOT flag (see
+# the self-test below).
 _TRACKED_SETTINGS_INTERPRETER_RE = re.compile(
     r'"command"\s*:\s*"\s*(?:py|python3|python)(?![\w./-])'
 )
 
 
 def find_named_interpreter_violations(text: str, rel_path: str) -> list[tuple[str, str]]:
-    """Every JSON hook `"command"` field in `text` that names ANY
+    """Every JSON hook `"command"` field in `text` that names a BARE,
     platform-specific interpreter (`py`, `python3`, or `python`) as its
-    executable, as (rel_path, offending snippet) pairs. Scanned as raw text
-    (not JSON-parsed) so a malformed file still gets checked."""
+    executable -- i.e. as the value's own first token, not wrapped in
+    `${CONSTELLATION_PYTHON:-...}` -- as (rel_path, offending snippet) pairs.
+    Scanned as raw text (not JSON-parsed) so a malformed file still gets
+    checked."""
     return [(rel_path, m.group(0)) for m in _TRACKED_SETTINGS_INTERPRETER_RE.finditer(text)]
-
-
-class PyLauncherLiteralTests(unittest.TestCase):
-    """Guards the CLASS, not today's instance list: no shipped skill text may
-    hard-code the Windows-only `py` launcher as an executable command (see
-    `installed_path_replacements()` in install_constellation.py)."""
-
-    def test_no_py_launcher_literal_in_shipped_skill_text(self):
-        suffixes = _rewritable_suffixes()
-        violations: list[tuple[str, str]] = []
-        for path in sorted(SKILLS_ROOT.rglob("*")):
-            if not path.is_file() or path.suffix.lower() not in suffixes:
-                continue
-            rel_path = path.relative_to(ROOT).as_posix()
-            text = path.read_text(encoding="utf-8")
-            violations.extend(find_py_launcher_violations(text, rel_path))
-        self.assertEqual(
-            violations, [],
-            f"Windows-only `py` launcher hard-coded as a command in shipped skill "
-            f"text (never rewritten at install time -- see installed_path_replacements "
-            f"in install_constellation.py): {violations}",
-        )
-
-    def test_detector_actually_fires_on_a_constructed_violation(self):
-        """A check that cannot fail is worthless. This is not a demonstration
-        run by hand -- it is a permanent, deterministic proof in the suite
-        that the regex above is live: fed synthetic text shaped like each way
-        the real defect has actually shipped, it must flag every one, every
-        time this suite runs."""
-        # Inline backtick.
-        self.assertEqual(
-            find_py_launcher_violations(
-                "Run `py scripts/verify_thing.py <args>` before you finish.", "skills/fake/SKILL.md"
-            ),
-            [("skills/fake/SKILL.md", "py scripts/verify_thing.py <args>")],
-        )
-
-        # Fenced code block (17+ real skill files use this form for examples).
-        fenced = "Example:\n\n```bash\ncd skills/fake\npy scripts/verify_thing.py --flag\n```\n"
-        self.assertEqual(
-            find_py_launcher_violations(fenced, "skills/fake/SKILL.md"),
-            [("skills/fake/SKILL.md", "py scripts/verify_thing.py --flag")],
-        )
-
-        # Chained command -- `py` is not the first word of the backtick span,
-        # but it IS the first word of the second command in the chain.
-        self.assertEqual(
-            find_py_launcher_violations(
-                "`cd skills/fake && py scripts/verify_thing.py`", "skills/fake/SKILL.md"
-            ),
-            [("skills/fake/SKILL.md", "py scripts/verify_thing.py")],
-        )
-
-        # `py.exe` -- the extensioned spelling, equally Windows-only.
-        self.assertEqual(
-            find_py_launcher_violations("Run `py.exe scripts/verify_thing.py`.", "skills/fake/SKILL.md"),
-            [("skills/fake/SKILL.md", "py.exe scripts/verify_thing.py")],
-        )
-
-        # Raw JSON "command" field (spine/check postconditions never use
-        # backticks at all).
-        json_violation = '{"check": {"command": "py scripts/verify_thing.py <args>"}}'
-        self.assertEqual(
-            find_py_launcher_violations(json_violation, "skills/fake/templates/SPINE.template.json"),
-            [("skills/fake/templates/SPINE.template.json", '"command": "py')],
-        )
-
-        # And confirms bare mentions of the launcher name (no argument) are
-        # never flagged -- only an actual command invocation is.
-        self.assertEqual(
-            find_py_launcher_violations("Use the `py` launcher.", "skills/fake/SKILL.md"),
-            [],
-        )
-
-        # And confirms the skills/-corpus check never flags the CORRECT,
-        # install-rewritten convention, in any of the same shapes.
-        self.assertEqual(
-            find_py_launcher_violations(
-                "Run `python <skill-dir>/scripts/verify_thing.py <args>`.\n\n"
-                "```bash\npython <skill-dir>/scripts/verify_thing.py\n```\n"
-                '{"check": {"command": "python <skill-dir>/scripts/verify_thing.py"}}',
-                "skills/fake/SKILL.md",
-            ),
-            [],
-        )
 
 
 class TrackedSettingsInterpreterTests(unittest.TestCase):
     """Guards the CLASS: a git-tracked settings file is read, unmodified, on
-    every contributor's platform, so it may never name ANY specific
-    interpreter (`py`, `python`, or `python3`) as a hook command -- not just
-    `py`. There is no install-time rewrite for this file at all, and no
-    single static name is safe on both Windows and POSIX."""
+    every contributor's platform, so it may never name a BARE, platform-
+    specific interpreter (`py`, `python`, or `python3`) as a hook command --
+    not just `py`. There is no install-time rewrite for this file at all, and
+    no single static bare name is safe on both Windows and POSIX. Naming an
+    interpreter at all is fine -- expected, since #539/#560 -- as long as it
+    is wrapped in the portable `${CONSTELLATION_PYTHON:-<default>}` override."""
 
-    def test_no_interpreter_named_in_tracked_claude_settings(self):
+    def test_no_bare_interpreter_named_in_tracked_claude_settings(self):
         files = _tracked_claude_settings_files()
         # Guards against the check going vacuously green: an empty file list
         # makes `assertEqual(violations, [])` pass trivially without ever
@@ -252,14 +187,14 @@ class TrackedSettingsInterpreterTests(unittest.TestCase):
             violations.extend(find_named_interpreter_violations(text, rel_path))
         self.assertEqual(
             violations, [],
-            f"A tracked .claude/ settings file names a platform-specific interpreter "
-            f"(py/python/python3) as a hook command. This file ships unmodified to "
-            f"every contributor's OS with no install-time rewrite -- no single "
-            f"interpreter name is safe here (python.org's Windows installer provides "
-            f"`python`/`py`, not `python3`; POSIX commonly provides only `python3`, "
-            f"not bare `python`). Invoke the script directly by its own shebang "
-            f"instead (chmod +x + `.gitattributes` eol=lf, as scripts/hooks/*.py "
-            f"already are): {violations}",
+            f"A tracked .claude/ settings file names a BARE platform-specific "
+            f"interpreter (py/python/python3) as a hook command. This file ships "
+            f"unmodified to every contributor's OS with no install-time rewrite -- no "
+            f"single bare interpreter name is safe here (python.org's Windows "
+            f"installer provides `python`/`py`, not `python3`; POSIX commonly "
+            f"provides only `python3`, not bare `python`). Name it through the "
+            f"portable ${{CONSTELLATION_PYTHON:-<default>}} override instead (see "
+            f"install_constellation.build_hook_command): {{violations}}",
         )
 
     def test_detector_actually_fires_on_a_constructed_violation(self):
@@ -283,8 +218,21 @@ class TrackedSettingsInterpreterTests(unittest.TestCase):
             [(".claude/settings.json", '"command": "py')],
         )
 
-        # And confirms the actually-shipped form -- a bare quoted script path,
-        # naming no interpreter at all -- never trips it.
+        # And confirms the ACTUALLY-SHIPPED form -- the portable
+        # `${CONSTELLATION_PYTHON:-python3}` wrapper -- never trips it, even
+        # though "python3" appears in the string: it is not the value's first
+        # token.
+        wrapped_form_json = (
+            '{"command": "${CONSTELLATION_PYTHON:-python3} '
+            '\\"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\\" Stop"}'
+        )
+        self.assertEqual(
+            find_named_interpreter_violations(wrapped_form_json, ".claude/settings.json"),
+            [],
+        )
+
+        # A bare quoted script path with no interpreter at all (the retired
+        # #651 shebang-only form) is also still safe, though no longer shipped.
         shebang_form_json = (
             '{"command": "\\"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\\" Stop"}'
         )
@@ -313,207 +261,51 @@ class TrackedSettingsInterpreterTests(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------- #
-# Part 3: the shebang-only design in .claude/settings.json depends on three
-# OS-checkable facts holding for every script it invokes bare (no interpreter
-# named): the execute bit is set, the file's first two bytes are `#!`, and the
-# shebang line carries no `\r`. A Windows checkout with core.autocrlf=true
-# would otherwise silently corrupt the shebang -- the hook then fails exactly
-# the way a missing interpreter does, with nothing anywhere catching it.
+# Part 3 (RETIRED by the #539/#560 ruling): this used to guard the three
+# single points of silent failure the #651 shebang-only design depended on --
+# the execute bit set, a clean two-byte `#!` shebang, and no CRLF corrupting
+# it -- because a hook whose `command` invoked its script bare relied on all
+# three holding for that script. The tracked .claude/settings.json no longer
+# invokes any hook script bare: `build_hook_command` always leads with
+# `${CONSTELLATION_PYTHON:-python3}` now (Part 2), so the interpreter comes
+# from the command string, not from the OS executing the file directly, and
+# none of the three facts this Part checked are load-bearing anymore. Removed
+# rather than left green-by-vacuity: `_shebang_invoked_scripts()` would find
+# zero bare-invoked entries in the real tracked file today, which is a
+# retirement to record, not a check to keep running against nothing.
 # --------------------------------------------------------------------------- #
-
-_LEADING_QUOTED_PATH_RE = re.compile(r'^"([^"]+)"')
-
-
-def _shebang_invoked_scripts() -> list[Path]:
-    """Every script a tracked .claude/ hook `command` invokes directly by its
-    own shebang -- i.e. shell-form entries whose `command` starts with a bare
-    quoted path, not an interpreter name (exec-form entries, which carry
-    `args`, are a different invocation shape and are skipped here). Extracted
-    from the real tracked settings rather than hard-coded, so a newly wired
-    hook is covered automatically."""
-    scripts: list[Path] = []
-    for path in _tracked_claude_settings_files():
-        try:
-            settings = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        for entries in settings.get("hooks", {}).values():
-            if not isinstance(entries, list):
-                continue
-            for entry in entries:
-                if not isinstance(entry, dict):
-                    continue
-                for hook in entry.get("hooks") or []:
-                    if not isinstance(hook, dict) or "args" in hook:
-                        continue
-                    command = hook.get("command")
-                    if not isinstance(command, str):
-                        continue
-                    match = _LEADING_QUOTED_PATH_RE.match(command)
-                    if not match:
-                        continue
-                    raw = match.group(1).replace("${CLAUDE_PROJECT_DIR}", str(ROOT))
-                    scripts.append(Path(raw))
-    return scripts
-
-
-def _git_index_mode(path: Path) -> str | None:
-    """The mode git's index records for `path` (e.g. "100755"), or None if
-    `path` is not tracked. Read from git's own data model, not the
-    filesystem: `os.access(path, os.X_OK)` returns True for every EXISTING
-    file on Windows -- there is no real POSIX execute bit there -- so it
-    silently never fires the "not executable" branch on the exact platform
-    this whole PR protects. Caught in Windows CI by this file's own
-    anti-vacuity self-test refusing to pass on an inert detector. Git's
-    recorded mode is what a POSIX checkout actually receives (git chmods to
-    match it on checkout) and is what a reviewer/CI diffs -- durable and
-    platform-independent, unlike asking the local filesystem."""
-    result = subprocess.run(
-        ["git", "ls-files", "-s", str(path)],
-        cwd=str(ROOT), capture_output=True, text=True, timeout=10,
-    )
-    line = result.stdout.strip()
-    if not line:
-        return None
-    return line.split()[0]
-
-
-def _mode_violation(mode: str | None) -> str | None:
-    """Pure: given a git index mode (or None for untracked), the violation
-    reason if it isn't the executable 100755, else None. Split out from any
-    file/git access so it is unit-testable with synthetic values --
-    deterministic on every OS the suite runs on, unlike a chmod()+os.access()
-    round-trip against a real file."""
-    if mode is None:
-        return "is not tracked by git -- cannot verify its committed mode"
-    if mode != "100755":
-        return f"is tracked with git mode {mode}, not 100755 (chmod +x)"
-    return None
-
-
-def _shebang_byte_violations(path: Path) -> list[str]:
-    """The shebang as `path`'s first two bytes, and no `\r` corrupting it --
-    read from `path`'s actual byte content, so this is platform-independent
-    by construction: it never asks the OS anything, unlike the git-tracked-
-    mode check above."""
-    raw = path.read_bytes()
-    reasons: list[str] = []
-    if not raw.startswith(b"#!"):
-        reasons.append(f"{path} does not start with a shebang (`#!`) as its first two bytes")
-    else:
-        shebang_line = raw.split(b"\n", 1)[0]
-        if b"\r" in shebang_line:
-            reasons.append(
-                f"{path}'s shebang line contains a carriage return (CRLF checkout -- "
-                f"`env` cannot resolve an interpreter name with a trailing \\r)"
-            )
-    return reasons
-
-
-def _shebang_violations(path: Path) -> list[str]:
-    """Every way `path` could fail to run when invoked bare, relying only on
-    its own shebang line. Returns human-readable reasons; empty means clean."""
-    if not path.is_file():
-        return [f"{path} does not exist"]
-    reasons: list[str] = []
-    mode_problem = _mode_violation(_git_index_mode(path))
-    if mode_problem:
-        reasons.append(f"{path} {mode_problem}")
-    reasons.extend(_shebang_byte_violations(path))
-    return reasons
-
-
-class ShebangInvariantTests(unittest.TestCase):
-    """Guards the three new single points of silent failure the shebang-only
-    design in .claude/settings.json depends on. None of this was guarded
-    before this design existed -- nothing in the repo asserted a file mode
-    anywhere."""
-
-    def test_shebang_invoked_scripts_are_executable_with_a_clean_lf_shebang(self):
-        scripts = _shebang_invoked_scripts()
-        self.assertTrue(
-            scripts,
-            "no shebang-invoked scripts discovered in tracked .claude/ settings -- "
-            "discovery is broken, which makes this check impossible to fail",
-        )
-        all_violations: list[str] = []
-        for script in scripts:
-            all_violations.extend(_shebang_violations(script))
-        self.assertEqual(all_violations, [])
-
-    def test_mode_violation_detector_fires_on_constructed_values(self):
-        """Pure unit test of the executable-bit check, decoupled from the
-        filesystem entirely: the original self-test here used
-        `chmod(0o644)` + `os.access(path, os.X_OK)` against a real temp
-        file, which is inert on Windows -- there is no real POSIX execute
-        bit there, so `os.access(..., os.X_OK)` returns True for every
-        existing file regardless of chmod, the constructed violation
-        produced no violations, and the detector went quietly inert on
-        exactly the platform this PR protects. Caught by this very
-        self-test refusing to pass in Windows CI (`False is not true: []`)
-        -- the anti-vacuity discipline working as intended. Tested here
-        against synthetic git-index mode strings instead, so the assertion
-        is deterministic on every OS the suite runs on."""
-        self.assertIsNotNone(_mode_violation("100644"))
-        self.assertIsNotNone(_mode_violation(None))
-        self.assertIsNone(_mode_violation("100755"))
-
-    def test_byte_violation_detector_fires_on_constructed_violations(self):
-        """Self-test against synthetic temp files -- never touches the real
-        repo scripts -- proving the shebang-presence and CRLF checks can
-        independently fail. These two, unlike the mode check above, read
-        `path`'s actual byte content rather than asking the OS about it, so
-        they are genuinely platform-independent and a real tempfile
-        round-trip is the right test shape."""
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-
-            no_shebang = tmp_path / "no_shebang.py"
-            no_shebang.write_bytes(b"print('hi')\n")
-            violations = _shebang_byte_violations(no_shebang)
-            self.assertTrue(
-                any("does not start with a shebang" in v for v in violations), violations,
-            )
-
-            crlf_shebang = tmp_path / "crlf_shebang.py"
-            crlf_shebang.write_bytes(b"#!/usr/bin/env python3\r\nprint('hi')\r\n")
-            violations = _shebang_byte_violations(crlf_shebang)
-            self.assertTrue(
-                any("carriage return" in v for v in violations), violations,
-            )
-
-            clean = tmp_path / "clean.py"
-            clean.write_bytes(b"#!/usr/bin/env python3\nprint('hi')\n")
-            self.assertEqual(_shebang_byte_violations(clean), [])
-
-    def test_shebang_violations_reports_a_missing_file(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            missing = Path(tmp) / "does_not_exist.py"
-            violations = _shebang_violations(missing)
-            self.assertTrue(any("does not exist" in v for v in violations), violations)
 
 
 # --------------------------------------------------------------------------- #
-# Part 4: a shell-form hook whose `command` invokes a script bare (relying on
-# its own shebang, no interpreter named) depends on a REAL shell running it.
+# Part 4: a shell-form hook `command` depends on a REAL shell running it.
 # Claude Code's shell-form default is `sh -c` on POSIX, Git Bash on Windows,
-# or PowerShell when Git Bash isn't installed -- and PowerShell parses a bare
-# `"<path>"` as a string-literal EXPRESSION, not a command: it echoes the path
-# and exits 0 without running anything. That is a silent no-op -- the exact
-# failure shape this whole file exists to eliminate, and worse than the `py`
-# launcher literal it replaced, which at least failed loudly. Pinning
-# `"shell": "bash"` on every such entry turns an unavailable Windows shell
-# into a loud failure instead of a silent one -- it does not make Windows
-# work, but it stops it from succeeding at nothing.
+# or PowerShell when Git Bash isn't installed. Two shapes both silently no-op
+# there: the retired #651 bare-quoted-path form (`"<path>"` parses as a
+# string-literal EXPRESSION under PowerShell -- it echoes the path and exits 0
+# without running anything) and the current `${CONSTELLATION_PYTHON:-...}`
+# form (PowerShell/cmd.exe do not perform POSIX `${VAR:-default}` expansion at
+# all, so the token is not resolved the way a real shell resolves it -- #651
+# shipped this exact gap once already, caught by the three
+# `test_*_actually_executes` live-execution tests in test_install_constellation.py
+# failing on Windows CI). Pinning `"shell": "bash"` on EVERY shell-form entry
+# -- not just bare-quoted-path ones -- turns an unavailable Windows shell into
+# a loud failure instead of a silent one; it does not make Windows work, but
+# it stops it from succeeding at nothing.
 # --------------------------------------------------------------------------- #
 
 
 def find_missing_shell_pin_violations(text: str, rel_path: str) -> list[tuple[str, str]]:
-    """Every shell-form hook in `text` whose `command` invokes a script bare
-    (matches the same leading-quoted-path shape `_shebang_invoked_scripts`
-    looks for) but does not carry `"shell": "bash"`. Pure function over JSON
-    text, like Part 1/2 above, so it can be self-tested against synthetic
-    content without touching real git state."""
+    """Every shell-form hook in `text` (any `command` with no sibling `args`
+    key -- exec-form entries ignore `shell` entirely per Claude Code's own
+    docs and are skipped) that does not carry `"shell": "bash"`. Broadened
+    from "only a bare-quoted-path command" (the #651-era shape) to EVERY
+    shell-form command: the current shape (`${CONSTELLATION_PYTHON:-...} "..."`)
+    depends on POSIX expansion just as much as the old bare-quoted-path shape
+    depended on PowerShell parsing a leading word as a command, and a check
+    that only recognised the retired shape would go vacuously green against
+    the current one. Pure function over JSON text, like Part 1/2 above, so it
+    can be self-tested against synthetic content without touching real git
+    state."""
     try:
         settings = json.loads(text)
     except (OSError, ValueError):
@@ -529,7 +321,7 @@ def find_missing_shell_pin_violations(text: str, rel_path: str) -> list[tuple[st
                 if not isinstance(hook, dict) or "args" in hook:
                     continue
                 command = hook.get("command")
-                if not isinstance(command, str) or not _LEADING_QUOTED_PATH_RE.match(command):
+                if not isinstance(command, str):
                     continue
                 if hook.get("shell") != "bash":
                     violations.append((rel_path, f"{event}: {command}"))
@@ -537,11 +329,11 @@ def find_missing_shell_pin_violations(text: str, rel_path: str) -> list[tuple[st
 
 
 class ShellPinTests(unittest.TestCase):
-    """Guards the fix for the BLOCKING finding: a bare-quoted-path hook
-    command with no `"shell": "bash"` pin silently no-ops under PowerShell
-    (Claude Code's fallback shell when Git Bash isn't installed on Windows)."""
+    """Guards the fix for the BLOCKING finding: a shell-form hook command
+    with no `"shell": "bash"` pin silently no-ops under PowerShell (Claude
+    Code's fallback shell when Git Bash isn't installed on Windows)."""
 
-    def test_every_bare_path_hook_pins_shell_bash(self):
+    def test_every_shell_form_hook_pins_shell_bash(self):
         files = _tracked_claude_settings_files()
         self.assertTrue(
             files,
@@ -555,23 +347,26 @@ class ShellPinTests(unittest.TestCase):
             violations.extend(find_missing_shell_pin_violations(text, rel_path))
         self.assertEqual(
             violations, [],
-            f"A tracked .claude/ hook invokes a script bare (relying on its shebang) "
-            f"without pinning \"shell\": \"bash\" -- without the pin, a Windows host "
-            f"missing Git Bash silently no-ops this hook under PowerShell instead of "
-            f"failing loudly: {violations}",
+            f"A tracked .claude/ shell-form hook command has no \"shell\": \"bash\" pin -- "
+            f"without it, a Windows host missing Git Bash silently no-ops this hook under "
+            f"PowerShell instead of failing loudly (or, for the current "
+            f"${{CONSTELLATION_PYTHON:-...}} form, the token is never expanded at all): "
+            f"{violations}",
         )
 
     def test_detector_actually_fires_on_a_constructed_violation(self):
         missing_pin = (
             '{"hooks": {"Stop": [{"hooks": [{"type": "command", '
-            '"command": "\\"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\\" Stop", '
+            '"command": "${CONSTELLATION_PYTHON:-python3} '
+            '\\"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\\" Stop", '
             '"timeout": 20}]}]}}'
         )
         self.assertEqual(
             find_missing_shell_pin_violations(missing_pin, ".claude/settings.json"),
             [(
                 ".claude/settings.json",
-                'Stop: "${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py" Stop',
+                'Stop: ${CONSTELLATION_PYTHON:-python3} '
+                '"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py" Stop',
             )],
         )
 
@@ -581,7 +376,8 @@ class ShellPinTests(unittest.TestCase):
             find_missing_shell_pin_violations(wrong_pin, ".claude/settings.json"),
             [(
                 ".claude/settings.json",
-                'Stop: "${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py" Stop',
+                'Stop: ${CONSTELLATION_PYTHON:-python3} '
+                '"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py" Stop',
             )],
         )
 
@@ -591,6 +387,21 @@ class ShellPinTests(unittest.TestCase):
         self.assertEqual(
             find_missing_shell_pin_violations(correctly_pinned, ".claude/settings.json"),
             [],
+        )
+
+        # The retired #651 bare-quoted-path shape must still be caught too --
+        # broadening the check must not have narrowed it.
+        bare_path_missing_pin = (
+            '{"hooks": {"Stop": [{"hooks": [{"type": "command", '
+            '"command": "\\"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\\" Stop", '
+            '"timeout": 20}]}]}}'
+        )
+        self.assertEqual(
+            find_missing_shell_pin_violations(bare_path_missing_pin, ".claude/settings.json"),
+            [(
+                ".claude/settings.json",
+                'Stop: "${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py" Stop',
+            )],
         )
 
         # An exec-form entry (carries "args") ignores "shell" entirely per
@@ -606,8 +417,8 @@ class ShellPinTests(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------- #
-# Part 5 (#539): the tracked settings.json cannot name an interpreter, so the
-# per-machine wiring must -- and the installer can only wire what it has a
+# Part 5 (#539/#560): the per-machine OVERRIDE still lives in
+# MCP_INTERPRETER_ENV_VAR, and the installer can only wire what it has a
 # HookSpec for. Two independent failure modes are guarded here.
 #
 # (a) DRIFT. `install_constellation.HOOK_SPECS` is hand-written from the four
@@ -617,13 +428,21 @@ class ShellPinTests(unittest.TestCase):
 #     old four, so nothing anywhere says the new one is unwired. Held here by
 #     comparing the table against the real file.
 #
-# (b) THE LEADING QUOTE. Every command the installer can emit must start with
-#     a command word. A command starting with `"` is the silent-no-op shape
-#     from Part 4, and this asserts the EMIT side of what Part 4 asserts on
-#     the tracked-file side.
+# (b) THE LEADING WORD. Every command the installer can emit must start with
+#     a command word, never a quote. A command starting with `"` is the
+#     silent-no-op shape from Part 4, and this asserts the EMIT side of what
+#     Part 4 asserts on the tracked-file side.
 # --------------------------------------------------------------------------- #
 
 TRACKED_SETTINGS = ROOT / ".claude" / "settings.json"
+
+# The first quoted span in a hook `command` -- the script path -- wherever it
+# falls. Not anchored to the start: the tracked shape now leads with
+# `${CONSTELLATION_PYTHON:-python3} "<path>" <args>` (Part 2), so the quoted
+# path is the SECOND token, not the first. A retired #651 bare-quoted-path
+# command (`"<path>" <args>`, no interpreter prefix) still matches too, since
+# `.search` finds the first quote wherever it is.
+_QUOTED_SCRIPT_PATH_RE = re.compile(r'"([^"]+)"')
 
 
 def _tracked_hook_entries() -> list[tuple[str, str | None, str, tuple[str, ...], int]]:
@@ -645,7 +464,7 @@ def _tracked_hook_entries() -> list[tuple[str, str | None, str, tuple[str, ...],
                 command = hook.get("command")
                 if not isinstance(command, str):
                     continue
-                match = _LEADING_QUOTED_PATH_RE.match(command)
+                match = _QUOTED_SCRIPT_PATH_RE.search(command)
                 if not match:
                     continue
                 script = Path(match.group(1)).name

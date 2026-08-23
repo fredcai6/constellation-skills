@@ -6,6 +6,7 @@ import os
 import re
 import io
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -2368,6 +2369,91 @@ class _HookWiringFixture(unittest.TestCase):
         return {"matcher": matcher,
                 "hooks": [{"type": "command", "command": command, "timeout": 10}]}
 
+    @staticmethod
+    def _resolve_bash_executable() -> str:
+        """The real Git Bash executable to run a `"shell": "bash"` entry
+        under -- NEVER the bare string `"bash"` handed straight to
+        `subprocess.run`'s argv. On Windows, `subprocess.run(["bash", ...])`
+        resolves that bare name through Win32's `CreateProcess` search order,
+        which checks `%SystemRoot%\\System32` BEFORE the `PATH` directories
+        -- so a bare `"bash"` silently runs the built-in WSL launcher stub
+        instead of Git for Windows' real bash, even when Git's own `bin/` is
+        earlier in `PATH`. Confirmed on Windows CI by this exact class: rc=1,
+        `stdout="Windows Subsystem for Linux has no installed
+        distributions."` (UTF-16, the WSL stub's own console output),
+        `stderr=""` -- indistinguishable from "the command did not run" by
+        return code alone, but for the WRONG reason: bash itself never
+        launched the real command.
+
+        `shutil.which("bash")` does a plain left-to-right `PATH` scan and is
+        NOT subject to that search-order quirk -- the identical fix already
+        established in this repo for the identical hazard
+        (`scripts/checklist_engine.py` / `scripts/generate_spine.py`'s
+        `_find_posix_shell()`, not reused here directly since it resolves
+        ANY POSIX shell with a git-derived backstop, a broader question than
+        this helper -- which only ever needs to honour a literal `"bash"`
+        pin -- needs to ask). Falls back to the bare literal only when
+        `which` finds nothing at all, so a caller here still gets the same
+        honest `FileNotFoundError` it would have gotten before, rather than a
+        new, more confusing failure mode when no bash exists anywhere."""
+        return shutil.which("bash") or "bash"
+
+    def _run_hook_command(
+        self, command: str, shell: str | None, stdin_payload: object = None,
+        *, env: dict | None = None,
+    ) -> subprocess.CompletedProcess:
+        """Execute `command` through the shell the ENTRY ITSELF declares --
+        never through `subprocess.run(command, shell=True, ...)`'s platform
+        default. `shell=True` means `sh -c` on POSIX but **cmd.exe** on
+        Windows, which does not perform POSIX `${VAR:-default}` expansion --
+        so a command that genuinely depends on it (every command this
+        installer emits, since `build_hook_command`) silently fails to run,
+        not because the command is wrong but because the test executed it a
+        different way than Claude Code does. That is exactly what broke on
+        Windows CI: the entry declared `"shell": "bash"` (`build_hook_entry`
+        pins it unconditionally) but three `test_*_actually_executes` tests
+        ran the command with `shell=True` anyway, ignoring the very field the
+        entry declares.
+
+        `shell` is a PARAMETER, read by the caller from the real emitted
+        entry (`hook.get("shell")` / `_all_commands`'s third tuple element),
+        never assumed here -- so this helper cannot silently diverge from
+        production again if the pin this installer writes ever changes: a
+        caller that stops passing the entry's own value is passing a lie, not
+        this helper inventing one.
+
+        This is a CORRECTION to match what actually runs, not a relaxation:
+        the assertion "the wired command actually executes" is exactly as
+        strong as before, and MUST still fail when the command genuinely does
+        not run (proved by
+        `test_wired_command_uses_the_probed_interpreter_and_documented_timeout`,
+        which overrides the interpreter to a bogus path and requires a
+        nonzero exit through this same helper).
+
+        Only `"bash"` is implemented, because that is the only value
+        `build_hook_entry` ever emits. A `shell` this helper does not
+        recognise is a REAL gap in test coverage, not something to paper over
+        by falling back to `shell=True` -- so it raises rather than
+        guessing. The bash EXECUTABLE it runs under is resolved by
+        `_resolve_bash_executable`, never a bare `"bash"` -- see that
+        method's docstring for the Windows CI failure this fixes (a second,
+        independent bug found underneath the first: bash resolving to the
+        WSL launcher stub instead of Git Bash)."""
+        stdin_text = "{}" if stdin_payload is None else json.dumps(stdin_payload)
+        run_env = {**os.environ, "PYTHONIOENCODING": "utf-8", **(env or {})}
+        if shell == "bash":
+            return subprocess.run(
+                [self._resolve_bash_executable(), "-c", command], input=stdin_text,
+                capture_output=True, text=True, env=run_env,
+            )
+        raise NotImplementedError(
+            f"_run_hook_command does not know how to honour shell={shell!r} for "
+            f"command {command!r} -- add support here rather than falling back to "
+            f"subprocess.run(shell=True), which uses the platform default shell "
+            f"(cmd.exe on Windows) and is exactly the defect this helper exists "
+            f"to prevent."
+        )
+
 
 class HookWiringDetectionTests(_HookWiringFixture):
     """Always-on, no-flag detection (#262). Three states -- wired / stale /
@@ -2639,10 +2725,14 @@ class HookWiringOptInTests(_HookWiringFixture):
             )
             # ...and the same env var actually overrides it at run time (real
             # shell expansion, not a string match) -- the whole point of wrapping.
-            result = subprocess.run(
-                hook["command"], shell=True, input="{}", capture_output=True, text=True,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8",
-                     installer.MCP_INTERPRETER_ENV_VAR: "/no/such/interpreter"},
+            # Run through the entry's OWN declared shell (_run_hook_command),
+            # not subprocess.run(shell=True)'s platform default: this is the
+            # positive-control proof that honouring the entry's shell does not
+            # WEAKEN this assertion -- a genuinely broken interpreter override
+            # must still fail through it, exactly as strongly as before.
+            result = self._run_hook_command(
+                hook["command"], hook.get("shell"),
+                env={installer.MCP_INTERPRETER_ENV_VAR: "/no/such/interpreter"},
             )
             self.assertNotEqual(
                 0, result.returncode,
@@ -2650,6 +2740,54 @@ class HookWiringOptInTests(_HookWiringFixture):
                 f"did not change the outcome -- the var is not actually wired into the "
                 f"command: {hook['command']!r}",
             )
+
+    def test_wired_entry_pins_shell_bash(self):
+        """Ruling 2 (#539/#560, coordinator finding): the interpreter half is
+        `${MCP_INTERPRETER_ENV_VAR:-<default>}`, a POSIX parameter expansion
+        that only a real POSIX shell performs -- PowerShell/cmd.exe pass it
+        through unresolved. Before this pin, #651 shipped exactly that gap:
+        the command depended on POSIX expansion but nothing told Claude Code
+        to use a POSIX shell, and three live-execution tests failed on
+        Windows CI as a result (`AssertionError: 0 != 1`, command never ran).
+        `assert_shell_safe_command`'s contract now states this dependency
+        explicitly; this test is the positive control proving the pin this
+        installer writes actually satisfies it, matching every entry in this
+        repo's own tracked .claude/settings.json."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire(tmp)
+            hook = self._entries(tmp)[0]["hooks"][0]
+            self.assertEqual("bash", hook.get("shell"))
+
+    def test_run_hook_command_resolves_bash_via_which_not_a_bare_literal(self):
+        """The SECOND Windows CI bug found underneath the first: even with
+        `"shell": "bash"` honoured, `subprocess.run(["bash", "-c", ...])`
+        resolved to the WSL launcher stub on the Windows runner --
+        `subprocess.run` given a bare program name goes through Win32's
+        `CreateProcess` search order, which checks `%SystemRoot%\\System32`
+        (where Windows ships a `bash.exe` shim for WSL) BEFORE `PATH`, even
+        when Git Bash's own `bin/` is earlier in `PATH`. Measured on that CI
+        run: rc=1, `stdout` was the WSL stub's own message ("Windows
+        Subsystem for Linux has no installed distributions."), `stderr`
+        empty -- indistinguishable from "the command did not run" by return
+        code alone, but for the wrong reason.
+
+        `shutil.which("bash")` does a plain left-to-right PATH scan and is
+        not subject to that quirk (the same fix already established in this
+        repo for the identical hazard -- `scripts/checklist_engine.py` /
+        `scripts/generate_spine.py`'s `_find_posix_shell()`). This proves
+        `_run_hook_command` actually calls it and uses ITS answer, not the
+        bare literal, by patching both `shutil.which` and `subprocess.run`
+        and inspecting the argv `subprocess.run` was actually called with."""
+        fake_bash = "/opt/git-for-windows/bin/bash.exe"
+        with mock.patch.object(shutil, "which", return_value=fake_bash) as which:
+            with mock.patch.object(
+                subprocess, "run",
+                return_value=subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr=""),
+            ) as run:
+                self._run_hook_command("true", "bash")
+        which.assert_called_once_with("bash")
+        self.assertEqual([fake_bash, "-c", "true"], run.call_args.args[0])
 
     def test_the_wired_command_string_actually_executes(self):
         """Run the generated command EXACTLY as Claude Code would -- same string,
@@ -2662,11 +2800,14 @@ class HookWiringOptInTests(_HookWiringFixture):
         every other assertion in this class."""
         with tempfile.TemporaryDirectory() as tmp:
             self._wire(tmp)
-            command = self._entries(tmp)[0]["hooks"][0]["command"]
-            result = subprocess.run(
-                command, shell=True, input="{}", capture_output=True, text=True,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-            )
+            hook = self._entries(tmp)[0]["hooks"][0]
+            command = hook["command"]
+            # Through the entry's OWN declared shell, not shell=True's
+            # platform default (cmd.exe on Windows, which never expands
+            # ${VAR:-default} -- the exact reason three of these
+            # actually-executes tests failed on Windows CI despite the
+            # command being correct).
+            result = self._run_hook_command(command, hook.get("shell"))
             self.assertEqual(
                 0, result.returncode,
                 f"the wired command did not run: {command!r}\n"
@@ -2856,42 +2997,52 @@ class HookWiringOptInTests(_HookWiringFixture):
                     )
             self.assertNotEqual(0, raised.exception.code)
 
-    # -- the committability cost, surfaced ----------------------------------
+    # -- the committability win, surfaced (#539/#560 ruling) -----------------
 
-    def test_wire_hooks_at_project_scope_warns_the_file_is_committable(self):
-        """An absolute path embeds the user's home directory AND username, and a
-        project-scope settings.json is committable. Wiring must not make
-        committing it the path of least resistance."""
+    def test_wire_hooks_at_project_scope_writes_a_project_relative_portable_command(self):
+        """Pre-ruling this warned that the entry embedded an absolute path
+        containing the user's home directory and username. The owner's
+        ruling (#539/#560, recorded on `build_hook_command`) withdraws the
+        #269 constraint that kept the path absolute: at project scope it is
+        now `${CLAUDE_PROJECT_DIR}`-relative, and the interpreter default was
+        already portable (`${CONSTELLATION_PYTHON:-...}`). Nothing
+        machine-specific is left to warn about before committing it."""
         installer = load_installer()
-        lines = []
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "proj"
             project.mkdir()
             code = installer.main(
                 ["--agent", "claude", "--scope", "project", "--project", str(project),
                  "--skills", self.ANY_SKILL, "--wire-hooks"],
-                env={}, cwd=project, out=lines.append,
+                env={}, cwd=project, out=lambda _: None,
             )
             self.assertEqual(0, code)
             settings = project / ".claude" / "settings.json"
             self.assertTrue(settings.is_file())
-            output = "\n".join(lines).lower()
-            self.assertIn("commit", output)
-            self.assertIn("absolute path", output)
-            self.assertIn("user name", output)
+            written = json.loads(settings.read_text(encoding="utf-8"))
+            command = written["hooks"]["PostToolUse"][0]["hooks"][0]["command"]
+            self.assertIn(
+                "${CLAUDE_PROJECT_DIR}/.claude/skills/constellation-engine/scripts/", command)
+            self.assertNotIn(str(project), command)
+            self.assertNotIn(str(Path.home()), command)
 
-    # -- the gap this class exists to close: the INSTALLED path had no --------
-    # -- is_git_tracked guard at all (#539 residual) ---------------------------
+    # -- the gap #651 closed (is_git_tracked with no exception for hooks_from) --
+    # -- narrowed again by the #539/#560 ruling: the emitted command is now ----
+    # -- portable at project scope, so the ORIGINAL reason to refuse is gone ---
 
-    def test_wire_hooks_at_project_scope_refuses_an_already_tracked_settings_json(self):
-        """`--wire-hooks --scope project` (the default, INSTALLED path -- no
-        `--hooks-from source`) had no `is_git_tracked` guard at all: only
-        `--hooks-from source` refused. Re-wiring an already-committed
-        settings.json would stamp THIS machine's absolute installed path (and,
-        before the interpreter fix above, this machine's probed interpreter)
-        into a file that ships to every other checkout. Mirrors
-        `test_source_wiring_refuses_a_git_tracked_local_settings_file`, for the
-        installed path instead of `--hooks-from source`."""
+    def test_wire_hooks_at_project_scope_now_writes_an_already_tracked_settings_json(self):
+        """Before the #539/#560 ruling this refused (`is_git_tracked`, #651):
+        the emitted command carried an absolute installed path, so writing it
+        into an already-committed settings.json would ship a path that does
+        not exist on any other contributor's machine. The ruling makes the
+        project-scope command `${CLAUDE_PROJECT_DIR}`-relative (path) and
+        `${CONSTELLATION_PYTHON:-...}` (interpreter) -- both portable -- so
+        that original reason no longer applies, and writing into a tracked
+        file is exactly item 3 of #539/#560 ("converge .claude/settings.json
+        onto the form the installer emits"). `--scope user` keeps refusing
+        (see `test_source_wiring_refuses_a_git_tracked_local_settings_file`),
+        because a user-scope command is still absolute -- there is no single
+        project a user-scope settings.json belongs to."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "proj"
@@ -2906,19 +3057,16 @@ class HookWiringOptInTests(_HookWiringFixture):
             subprocess.run(["git", "add", ".claude/settings.json"],
                             cwd=str(project), capture_output=True)
             subprocess.run(["git", "commit", "-qm", "x"], cwd=str(project), capture_output=True)
-            before = settings.read_bytes()
 
-            stderr = io.StringIO()
-            with contextlib.redirect_stderr(stderr):
-                with self.assertRaises(SystemExit) as raised:
-                    installer.main(
-                        ["--agent", "claude", "--scope", "project", "--project", str(project),
-                         "--skills", self.ANY_SKILL, "--wire-hooks"],
-                        env={}, cwd=project, out=lambda _: None,
-                    )
-            self.assertNotEqual(0, raised.exception.code)
-            self.assertIn("git-tracked", stderr.getvalue())
-            self.assertEqual(before, settings.read_bytes(), "the tracked file was written anyway")
+            code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", self.ANY_SKILL, "--wire-hooks"],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            written = json.loads(settings.read_text(encoding="utf-8"))
+            command = written["hooks"]["PostToolUse"][0]["hooks"][0]["command"]
+            self.assertIn("${CLAUDE_PROJECT_DIR}", command)
 
     def test_wire_hooks_at_project_scope_succeeds_when_settings_json_is_not_yet_tracked(self):
         """Anti-vacuity for the refusal above: it must be about TRACKEDNESS, not
@@ -2951,14 +3099,18 @@ class _MultiHookFixture(_HookWiringFixture):
         return json.loads((Path(tmp) / name).read_text(encoding="utf-8"))
 
     def _all_commands(self, settings: dict) -> dict:
-        """{(event, matcher, script): (command, timeout)} for every hook."""
+        """{(event, matcher, script): (command, timeout, shell)} for every
+        hook. `shell` is carried alongside `command`/`timeout` (not dropped)
+        so a caller that executes the command can honour the entry's own
+        declared shell via `_run_hook_command` rather than guessing."""
         found = {}
         for event, entries in settings.get("hooks", {}).items():
             for entry in entries:
                 for hook in entry["hooks"]:
                     command = hook["command"]
                     script = Path(command.split('"')[1]).name
-                    found[(event, entry.get("matcher"), script)] = (command, hook.get("timeout"))
+                    found[(event, entry.get("matcher"), script)] = (
+                        command, hook.get("timeout"), hook.get("shell"))
         return found
 
 
@@ -2993,7 +3145,7 @@ class AllFourHookWiringTests(_MultiHookFixture):
             for spec in installer.HOOK_SPECS:
                 key = (spec.event, spec.matcher, spec.script)
                 self.assertIn(key, written, f"{spec.name} was not wired")
-                command, timeout = written[key]
+                command, timeout, _shell = written[key]
                 self.assertEqual(spec.timeout, timeout, spec.name)
                 # The event argument distinguishes the three rail entries from
                 # each other; without it all three would invoke the same
@@ -3063,15 +3215,14 @@ class AllFourHookWiringTests(_MultiHookFixture):
 
             env = {**os.environ, "PYTHONIOENCODING": "utf-8", "CLAUDE_PROJECT_DIR": str(project_dir)}
 
-            def run(command, stdin_payload):
-                return subprocess.run(
-                    command, shell=True, input=json.dumps(stdin_payload),
-                    capture_output=True, text=True, env=env,
-                )
+            def run(command, shell, stdin_payload):
+                # Through the entry's OWN declared shell, not shell=True's
+                # platform default -- see _run_hook_command's docstring.
+                return self._run_hook_command(command, shell, stdin_payload, env=env)
 
-            for (event, matcher, script), (command, _timeout) in written.items():
+            for (event, matcher, script), (command, _timeout, shell) in written.items():
                 if script == installer.SPINE_RAIL_HOOK_SCRIPT and event == "Stop":
-                    result = run(command, {"session_id": "resume-sid"})
+                    result = run(command, shell, {"session_id": "resume-sid"})
                     self.assertEqual(0, result.returncode, result.stderr)
                     self.assertIn(
                         "SPINE MID-FLIGHT", result.stdout,
@@ -3080,7 +3231,7 @@ class AllFourHookWiringTests(_MultiHookFixture):
                         f"stdout={result.stdout!r} stderr={result.stderr!r}",
                     )
                 elif script == installer.SPINE_RAIL_HOOK_SCRIPT and event == "SessionStart":
-                    result = run(command, {"session_id": "resume-sid"})
+                    result = run(command, shell, {"session_id": "resume-sid"})
                     self.assertEqual(0, result.returncode, result.stderr)
                     self.assertIn(
                         "RESUMING", result.stdout,
@@ -3093,7 +3244,7 @@ class AllFourHookWiringTests(_MultiHookFixture):
                         f'python checklist_engine.py --file "{spine_path}" '
                         f'claim --session-id eng-9'
                     )
-                    result = run(command, {
+                    result = run(command, shell, {
                         "session_id": "claim-sid",
                         "tool_input": {"command": claim_cmd},
                     })
@@ -3111,7 +3262,7 @@ class AllFourHookWiringTests(_MultiHookFixture):
                         "PostToolUse recorded the wrong spine path for the claim",
                     )
                 else:
-                    result = run(command, {})
+                    result = run(command, shell, {})
                     self.assertEqual(
                         0, result.returncode,
                         f"the wired command did not run: {command!r}\n"
@@ -3179,9 +3330,17 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
     scripts/hooks/ instead.
 
     It writes settings.local.json, not settings.json, and that is not a
-    preference: a source command carries this checkout's absolute path AND an
-    interpreter probed on this host, so it is wrong for every other machine by
-    construction."""
+    preference: a developer's own source-tree override should not land in the
+    file every contributor shares, regardless of whether the command it
+    carries happens to be portable.
+
+    `--scope user` (this fixture's `_run`, throughout this class) has no
+    single project to be relative to, so the command stays absolute -- an
+    interpreter probed on this host AND this checkout's absolute path, wrong
+    for every other machine by construction. At `--scope project` the path
+    half becomes `${CLAUDE_PROJECT_DIR}`-relative instead (#539/#560 ruling;
+    see `test_source_wiring_at_project_scope_is_project_relative` below),
+    which is what this repo's own tracked .claude/settings.json ships."""
 
     def test_source_wiring_points_at_this_checkouts_own_hook_scripts(self):
         installer = load_installer()
@@ -3189,12 +3348,38 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
             self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
             written = self._all_commands(self._settings_json(tmp, "settings.local.json"))
             self.assertEqual(len(installer.HOOK_SPECS), len(written))
-            for (_event, _matcher, script), (command, _timeout) in written.items():
+            for (_event, _matcher, script), (command, _timeout, _shell) in written.items():
                 expected = installer.source_hook_path(script)
                 self.assertTrue(
                     expected.is_file(), f"wired a path with no file behind it: {expected}")
                 self.assertIn(expected.as_posix(), command)
                 self.assertNotIn("${CLAUDE_PROJECT_DIR}", command)
+
+    def test_source_wiring_at_project_scope_is_project_relative(self):
+        """At `--scope project` the source path becomes
+        `${CLAUDE_PROJECT_DIR}/scripts/hooks/<script>` -- REPO_ROOT-relative,
+        which is always exactly `scripts/hooks/<script>` since
+        `source_hook_path` is defined in terms of REPO_ROOT regardless of
+        `target_root`. Still written to settings.local.json (unchanged
+        routing -- see class docstring), not the shared file."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            project.mkdir()
+            code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", self.ANY_SKILL, "--wire-hooks", "--hooks", "all",
+                 "--hooks-from", "source"],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            local = project / ".claude" / "settings.local.json"
+            self.assertTrue(local.is_file())
+            written = self._all_commands(json.loads(local.read_text(encoding="utf-8")))
+            self.assertEqual(len(installer.HOOK_SPECS), len(written))
+            for (_event, _matcher, script), (command, _timeout, _shell) in written.items():
+                self.assertIn(f"${{CLAUDE_PROJECT_DIR}}/scripts/hooks/{script}", command)
+                self.assertNotIn(str(installer.REPO_ROOT), command)
 
     def test_source_wiring_writes_the_local_file_and_never_the_shared_one(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -3219,17 +3404,16 @@ class SourceTreeHookWiringTests(_MultiHookFixture):
         with tempfile.TemporaryDirectory() as tmp:
             self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
             commands = [
-                c for c, _ in
+                (c, shell) for c, _timeout, shell in
                 self._all_commands(self._settings_json(tmp, "settings.local.json")).values()
             ]
             self.assertEqual(
                 len(installer.HOOK_SPECS), len(commands), "nothing was wired, so nothing was run"
             )
-            for command in commands:
-                result = subprocess.run(
-                    command, shell=True, input="{}", capture_output=True, text=True,
-                    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-                )
+            # Through each entry's OWN declared shell, not shell=True's
+            # platform default -- see _run_hook_command's docstring.
+            for command, shell in commands:
+                result = self._run_hook_command(command, shell)
                 self.assertEqual(
                     0, result.returncode,
                     f"the source-wired command did not run: {command!r}\n"
@@ -3753,11 +3937,23 @@ class ReadinessTriStateTests(_MultiHookFixture):
     from WIRED WRONG, and must not launder an honest "I cannot tell" into
     either a pass or a fail.
 
-    The pre-existing CANNOT EVALUATE behaviour is RIGHT and is preserved: the
-    detector refuses to expand `${CLAUDE_PROJECT_DIR}` because it would be
-    expanded in the installer's process, not the future hook's. What was wrong
-    was the ROLL-UP -- a two-state report had nowhere to put that answer, so a
-    correctly wired repo read as defective."""
+    `check_hooks_shippable`/`detect_hook_wiring`, called directly with
+    whatever `env` a caller hands them (as every test in this class below
+    does), still correctly refuse to expand `${CLAUDE_PROJECT_DIR}` when it is
+    not actually known -- that would be resolving a future hook's variable in
+    the WRONG process. What #539/#560 item 4 changes is one level up, in
+    `build_readiness_report` (see `ReadinessDeterminismTests` below): at
+    `--scope project`, readiness's own `--project`/cwd argument already NAMES
+    the one value `${CLAUDE_PROJECT_DIR}` is guaranteed (#269) to hold for a
+    real future hook in that project, so `build_readiness_report` supplies it
+    itself rather than deferring to whatever the CALLING process's `os.environ`
+    happened to carry (often nothing, if run from a plain terminal). That
+    turns a correctly-wired project-scope repo from CANNOT DETERMINE into a
+    real READY, without ever guessing in the wrong process -- the tests in
+    THIS class (`check_hooks_shippable`/`check_hooks_shippable`-under-empty-
+    env only) still see the honest "cannot tell" the pre-existing roll-up
+    fix was for, and that is correct: they are testing the lower layer, which
+    genuinely has no project context of its own."""
 
     def _wire_by_hand(self, tmp, command):
         return self._write_settings(tmp, {"hooks": {"PostToolUse": [self._entry(command)]}})
@@ -3846,9 +4042,21 @@ class ReadinessTriStateTests(_MultiHookFixture):
         self.assertEqual(installer.READINESS_READY, report.verdict)
         self.assertEqual(0, report.exit_code)
 
-    def test_cli_exits_three_when_only_undeterminable_items_remain(self):
+    def test_cli_exits_zero_for_a_project_wired_the_way_this_repo_ships(self):
         """End to end through the real CLI, on a project whose hooks are wired
-        exactly the way this repo's own tracked settings.json wires them."""
+        exactly the way this repo's own tracked settings.json wires them.
+
+        Before #539/#560 item 4 this asserted `READINESS_EXIT_UNDETERMINABLE`:
+        `env={}` here means the CLI sees NO `CLAUDE_PROJECT_DIR` at all (`main`
+        only falls back to `os.environ` when `env is None`), so the detector
+        could not expand the tracked entries' `${CLAUDE_PROJECT_DIR}` token and
+        reported CANNOT EVALUATE for a repo that was actually wired correctly
+        -- the load-bearing example of the defect item 4 exists to fix.
+        `build_readiness_report` now supplies `CLAUDE_PROJECT_DIR` itself, from
+        this same CLI invocation's own `--project` (#269 guarantees a real
+        future hook sees the same value), so this is a real, determinable
+        READY now -- not a guess in the wrong process, the one fact this
+        invocation was already told."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp) / "project"
@@ -3857,6 +4065,11 @@ class ReadinessTriStateTests(_MultiHookFixture):
             (project / ".claude" / "settings.json").write_text(
                 (ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"),
                 encoding="utf-8")
+            # The tracked settings.json wires `${CLAUDE_PROJECT_DIR}/scripts/hooks/...`
+            # (hooks_from=source form -- correct for a checkout that owns these
+            # hooks, which this synthetic project must therefore also be, or
+            # the entries would correctly read STALE rather than READY).
+            shutil.copytree(ROOT / "scripts" / "hooks", project / "scripts" / "hooks")
             subprocess.run(["git", "add", "-A"], cwd=str(project), capture_output=True)
             subprocess.run(
                 ["git", "-c", "user.email=t@e.com", "-c", "user.name=T",
@@ -3872,11 +4085,42 @@ class ReadinessTriStateTests(_MultiHookFixture):
             )
         output = "\n".join(lines)
         self.assertEqual(
-            installer.READINESS_EXIT_UNDETERMINABLE, code,
-            f"a correctly wired project did not read as CANNOT DETERMINE:\n{output}",
+            0, code,
+            f"a correctly wired project (this repo's own tracked settings.json) did not "
+            f"read as READY:\n{output}",
         )
-        self.assertIn("hooks: CANNOT DETERMINE", output)
+        self.assertIn("hooks: READY", output)
+        self.assertNotIn("CANNOT DETERMINE", output)
         self.assertIn("skills: READY", output)
+
+    def test_cli_still_reports_cannot_determine_for_a_genuinely_undecidable_case(self):
+        """Anti-vacuity for the fix above: item 4 must not have laundered EVERY
+        `${CLAUDE_PROJECT_DIR}` entry into READY -- only the ones a project-
+        scope invocation can actually vouch for. `--scope user` has no single
+        project `${CLAUDE_PROJECT_DIR}` could stand for (a user-scope
+        settings.json is read for every project a session opens), so
+        `build_readiness_report` never substitutes it there, and a hand-wired
+        `${CLAUDE_PROJECT_DIR}` entry at that scope stays honestly unknown."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry('py "${CLAUDE_PROJECT_DIR}/' + hook.name + '"')]}})
+            lines = []
+            # skills is deliberately left NOT READY here (no --skills install
+            # was run against this --dest) -- a determinable failure on a
+            # DIFFERENT item outranks an undeterminable one in the overall
+            # roll-up (`run_readiness_check`'s own documented ordering), so
+            # this asserts the "hooks" ITEM's own verdict line, not the
+            # overall exit code, to isolate exactly what item 4 governs.
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+                 "--check-readiness"],
+                env={}, out=lines.append,
+            )
+        output = "\n".join(lines)
+        self.assertNotEqual(0, code, output)
+        self.assertIn("hooks: CANNOT DETERMINE", output)
 
 
 class NoInterpreterOnHostTests(unittest.TestCase):

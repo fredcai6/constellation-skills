@@ -1690,11 +1690,28 @@ def assert_shell_safe_command(command: str) -> None:
     does nothing is indistinguishable from a hook with nothing to say, which is
     worse than one that errors.
 
-    Naming the interpreter first is what removes that hazard, and it removes it
-    under EVERY shell -- `sh`, Git Bash, PowerShell and `cmd` all parse a
-    leading bare word as a command to run. So this invariant does not depend on
-    the PowerShell parse claim being true; it is simply the form that is
-    correct whether or not it is."""
+    Naming the interpreter first is what removes THAT hazard, and it removes
+    it under EVERY shell -- `sh`, Git Bash, PowerShell and `cmd` all parse a
+    leading bare word as a command to run. So the leading-word invariant does
+    not depend on the PowerShell parse claim being true; it is simply the
+    form that is correct whether or not it is.
+
+    CONTRACT, NARROWED (#539/#560): passing this check is NECESSARY but no
+    longer SUFFICIENT for the command to actually run everywhere. Every
+    command `build_hook_command` builds now leads with
+    `${MCP_INTERPRETER_ENV_VAR:-<interpreter>}`, a POSIX parameter expansion
+    -- and that expansion is only real under a shell that performs it. Before
+    the interpreter became a `${VAR:-default}` reference, a bare interpreter
+    name needed no expansion at all, so shell-independence held BY ACCIDENT;
+    #651 shipped the `${VAR:-default}` form without pinning a shell, which is
+    exactly how a command that passes THIS guard still no-ops on Windows
+    (PowerShell does not do `${VAR:-default}` expansion; #651's own tests
+    caught it). So: a command this function accepts is only valid alongside
+    an entry that also pins `"shell": "bash"` (see `build_hook_entry`, which
+    pins it on every entry it writes) -- this function checks the command's
+    own shape and cannot see or enforce that sibling key, so callers that
+    build a hook entry by hand remain responsible for both halves of the
+    contract, not just this one."""
     # Leading WHITESPACE is the same defect wearing a hat: a shell strips it,
     # so ` "path"` is the leading-quote command again. Requiring a bare word
     # character first is the invariant, not "does not literally begin with a
@@ -1710,18 +1727,48 @@ def assert_shell_safe_command(command: str) -> None:
         )
 
 
-def build_hook_command(script_path: Path, interpreter: str, args: Sequence[str] = ()) -> str:
+def build_hook_command(
+    script_path: Path,
+    interpreter: str,
+    args: Sequence[str] = (),
+    *,
+    project_root: Path | None = None,
+) -> str:
     """The literal `command` string an entry carries.
 
-    ABSOLUTE, and never `${CLAUDE_PROJECT_DIR}`. That variable delivers its
-    anti-tamper property only as an accident of undocumented harness behaviour
-    (#269 established it is fixed at session launch, so it HAPPENS to point at
-    the main checkout for an agent working in a worktree) -- unowned by us and
-    one release from changing. An absolute installed path is pinned BY
-    CONSTRUCTION and asks the harness to guarantee nothing, which is what
-    actually protects the ruling that an agent's own branch cannot edit the code
-    that judges it. That reasoning governs the PATH ONLY. The interpreter is a
-    separate half of this string, addressed below, with a different fix.
+    HUMAN RULING (owner, 2026-08-22, #539/#560), superseding the #269 paragraph
+    this docstring used to carry verbatim: "I'm not worried about rogue agents
+    or bad actors. just trying to make execution easier. is there a
+    simplification we can make? I don't buy that anti-tamper for the python
+    executable is necessary at all." That withdraws the constraint this
+    function used to enforce -- PATH always absolute, never
+    `${CLAUDE_PROJECT_DIR}` -- which #269 leaned on to argue that an absolute,
+    installed path was pinned BY CONSTRUCTION and so protected the rule that an
+    agent's own branch cannot edit the code that judges it. The old reasoning
+    was real and is kept here rather than deleted: `${CLAUDE_PROJECT_DIR}` is
+    fixed at session launch (#269), so it happens to point at the main
+    checkout for an agent working in a worktree, and an absolute path does not
+    depend on that harness behaviour holding. What changes is the WEIGHT given
+    to that property: the owner has ruled it is not worth the cost of the
+    absolute form (a machine-specific, username-bearing path that a project-
+    scope settings.json could never honestly commit). This function no longer
+    tries to defend against a tampering agent; it only needs to be correct and
+    portable.
+
+    So the PATH is now `${CLAUDE_PROJECT_DIR}`-relative whenever `project_root`
+    is given (project scope: `${CLAUDE_PROJECT_DIR}/scripts/hooks/<script>` for
+    `HOOKS_FROM_SOURCE`, `${CLAUDE_PROJECT_DIR}/.claude/skills/constellation-engine/
+    scripts/<script>` for an installed copy -- both project-relative now, and
+    the source/installed distinction is preserved because it names two
+    genuinely different files). `project_root=None` keeps the path ABSOLUTE,
+    which callers must still use at `--scope user`: a user-scope
+    `~/.claude/settings.json` is read for EVERY project a session opens, not
+    just one, so it has no single project root `${CLAUDE_PROJECT_DIR}` could
+    correctly stand for -- `${CLAUDE_PROJECT_DIR}` would resolve to whatever
+    project happens to be open, which is not necessarily where the installed
+    skill actually lives (`~/.claude/skills/...`). The PATH form is therefore
+    SCOPE-appropriate, decided by the caller (`wire_hooks`), not a property of
+    this function alone.
 
     The INTERPRETER is written as `${MCP_INTERPRETER_ENV_VAR}:-<interpreter>}`
     (e.g. `${CONSTELLATION_PYTHON:-py}`), not the bare `interpreter` name --
@@ -1735,16 +1782,16 @@ def build_hook_command(script_path: Path, interpreter: str, args: Sequence[str] 
     Claude Code's own expander handles with non-POSIX `:-` semantics (#575).
     So the same env var the MCP door already uses (`MCP_INTERPRETER_ENV_VAR` --
     one knob, not two) also overrides a hook's interpreter, with no new
-    mechanism and no new failure mode to document.
+    mechanism and no new failure mode to document. This is the ONE knob for
+    BOTH halves now: the interpreter is unified everywhere (this function never
+    had a second knob for it), and the ruling above is what lets the PATH join
+    it as something callers can also choose to unify, instead of staying
+    absolute by a rule that no longer applies.
 
     `interpreter` -- the DEFAULT inside that expansion -- still comes from the
     run's single `resolve_interpreter()` probe, never re-probed here, never
     hardcoded, so behaviour is UNCHANGED when the env var is unset: this only
-    ADDS an override path. It does NOT by itself make the whole command safe to
-    write into a git-tracked settings.json -- the default is still a fact about
-    THIS machine, and the path half stays absolute regardless of the
-    interpreter -- so `wire_hooks` refuses a git-tracked target outright (see
-    `is_git_tracked` there) rather than relying on this wrapping alone.
+    ADDS an override path.
 
     A side effect worth naming: `${MCP_INTERPRETER_ENV_VAR}...}` always starts
     with `$`, never a quote, so the leading-quote hazard `assert_shell_safe_command`
@@ -1752,7 +1799,20 @@ def build_hook_command(script_path: Path, interpreter: str, args: Sequence[str] 
     `interpreter` no longer produces one) -- the call stays, as defense in depth
     on a public function, not because this site can still trip it."""
     portable_interpreter = f"${{{MCP_INTERPRETER_ENV_VAR}:-{interpreter}}}"
-    command = f'{portable_interpreter} "{script_path.as_posix()}"'
+    if project_root is None:
+        path_text = script_path.as_posix()
+    else:
+        try:
+            relative = script_path.resolve().relative_to(project_root.resolve())
+        except ValueError:
+            raise InstallError(
+                f"build_hook_command: {script_path} is not inside project_root "
+                f"{project_root} -- no ${{CLAUDE_PROJECT_DIR}}-relative form exists for it. "
+                f"This is an installer bug (a caller passed a project_root that does not "
+                f"actually contain the script it is wiring), not a per-host condition."
+            )
+        path_text = f"${{CLAUDE_PROJECT_DIR}}/{relative.as_posix()}"
+    command = f'{portable_interpreter} "{path_text}"'
     if args:
         command = " ".join([command, *args])
     assert_shell_safe_command(command)
@@ -1760,7 +1820,15 @@ def build_hook_command(script_path: Path, interpreter: str, args: Sequence[str] 
 
 
 def build_hook_entry(command: str, spec: HookSpec = GAUGE_WRITER_SPEC) -> dict:
-    hooks = [{"type": "command", "command": command, "timeout": spec.timeout}]
+    # "shell": "bash" is not decorative: `command` now leads with
+    # `${MCP_INTERPRETER_ENV_VAR:-<interpreter>}`, which needs a REAL POSIX
+    # shell to expand (measured: bash does true `${VAR:-default}` expansion on
+    # a hook `command`; PowerShell/cmd.exe do not). Without this pin Claude
+    # Code can fall back to PowerShell on a Windows host with no Git Bash, the
+    # `${...}` token is passed through unexpanded, and the hook never runs --
+    # silently, the exact #539 failure shape. Matches every entry this repo's
+    # own tracked .claude/settings.json ships.
+    hooks = [{"type": "command", "command": command, "shell": "bash", "timeout": spec.timeout}]
     if spec.matcher is None:
         # Stop takes no matcher. Emitting `"matcher": null` or a bogus "*"
         # would be inventing config this repo's own settings.json does not use.
@@ -1853,45 +1921,57 @@ def wire_hooks(
 
     settings_path = settings_path_for_wiring(target_root, hooks_from)
 
-    # RAISES on ANY git-tracked target, regardless of `hooks_from` (#539
-    # residual: this guard used to fire only for `hooks_from ==
-    # HOOKS_FROM_SOURCE`, leaving the DEFAULT installed path -- what
-    # `--wire-hooks --scope project` uses against the #180-required tracked
-    # settings.json -- free to write into an already-committed file). Mirrors
-    # f315d7bf's unconditional refusal for a git-tracked `.mcp.json`.
-    #
-    # The interpreter fix in `build_hook_command` above does NOT retire this
-    # guard: it makes the INTERPRETER half portable, but every command this
-    # function builds still carries an ABSOLUTE, per-machine PATH (#269,
-    # deliberately never `${CLAUDE_PROJECT_DIR}` -- see `build_hook_command`'s
-    # docstring). A tracked settings.json ships that path to every other
-    # checkout, where it does not exist, no matter how the interpreter is
-    # spelled -- so this refusal stands on the path half alone.
-    if is_git_tracked(settings_path):
+    # The base `${CLAUDE_PROJECT_DIR}` stands for, or None for an absolute
+    # path (#539/#560 ruling -- see `build_hook_command`'s docstring for the
+    # human ruling this reverses #269's constraint on). `--scope user` has no
+    # single governing project (one settings.json is read for every project a
+    # session opens), so it stays absolute regardless of `hooks_from`.
+    # `--scope project` IS one project, so both forms are expressible
+    # relative to it: source hooks are always REPO_ROOT-relative (their
+    # location is a fixed fact about the checkout, not about `target_root`),
+    # and installed hooks are relative to the project two levels above
+    # `target_root` -- the `<project>/<agent.project_config_dir>/skills`
+    # layout `resolve_target_root` actually produces (`.claude` is one path
+    # segment for every HOOK_CAPABLE agent, i.e. just `claude`).
+    if scope != "project":
+        relative_base: Path | None = None
+    elif hooks_from == HOOKS_FROM_SOURCE:
+        relative_base = REPO_ROOT
+    else:
+        relative_base = target_root.parent.parent
+
+    # RAISES on a git-tracked target ONLY when the command this function is
+    # about to build would still be absolute (`relative_base is None`, i.e.
+    # `--scope user`). Reverts #651's broadening (`if is_git_tracked(...)`,
+    # unconditional on `hooks_from`) back toward something narrower, but not
+    # to its pre-#651 shape either (`hooks_from == HOOKS_FROM_SOURCE`) --
+    # that shape refused only source wiring and left the installed path free
+    # to write into an already-committed settings.json, which was #651's own
+    # bug fix. The guard's REASON was always "the emitted command cannot be
+    # committed"; #651 was right that this covered every `hooks_from` value
+    # at the time, because every path was absolute regardless. The #539/#560
+    # ruling changes that fact at `--scope project`: BOTH halves of the
+    # command -- interpreter (`${MCP_INTERPRETER_ENV_VAR:-...}`) and now path
+    # (`${CLAUDE_PROJECT_DIR}/...`) -- are portable there, so the command IS
+    # safe to commit and this guard would only be blocking the very
+    # convergence item 3 of #539/#560 asks for (`.claude/settings.json`
+    # matching what `--wire-hooks` itself would emit). At `--scope user` the
+    # path stays absolute (see `relative_base` above), so the original
+    # reason still holds there and the guard still fires -- unconditionally
+    # on `hooks_from`, same as #651, since `hooks_from` no longer changes
+    # whether the PATH is portable, only which file gets absolute path.
+    if relative_base is None and is_git_tracked(settings_path):
         portable_interpreter = f"${{{MCP_INTERPRETER_ENV_VAR}:-{interpreter.interpreter}}}"
-        if hooks_from == HOOKS_FROM_SOURCE:
-            raise InstallError(
-                f"--wire-hooks --hooks-from source: refusing to write {settings_path} -- it is "
-                f"git-tracked. Source-tree wiring carries this checkout's absolute path and an "
-                f"interpreter probed on this host, so committing it hands every teammate a "
-                f"path that does not exist on their machine. The interpreter half is portable "
-                f"({portable_interpreter!r}, the same {MCP_INTERPRETER_ENV_VAR} knob `.mcp.json` "
-                f"uses) but the path half is not (#269 keeps it absolute by design), so this "
-                f"refusal stands either way. Untrack it (it belongs in .gitignore) and re-run."
-            )
         raise InstallError(
-            f"--wire-hooks: refusing to write {settings_path} -- it is git-tracked. Every "
-            f"command this function builds carries an ABSOLUTE path to a hook script on THIS "
-            f"machine (#269: kept absolute by design, never ${{CLAUDE_PROJECT_DIR}}, so an "
-            f"agent's own branch cannot edit the code that judges it), and a tracked "
-            f"settings.json ships that path to every other checkout, where it does not exist. "
-            f"The interpreter half is portable ({portable_interpreter!r}, the same "
-            f"{MCP_INTERPRETER_ENV_VAR} knob `.mcp.json` uses via `rewrite_mcp_config_interpreter`), "
-            f"but that alone does not make the whole command safe to commit, so wiring a "
-            f"git-tracked settings file is refused either way -- see #539's open checklist item "
-            f"on whether tracked config should carry wiring at all. Wire at --scope user instead "
-            f"(writes an untracked ~/.claude/settings.json), or keep {settings_path} out of "
-            f"version control until that question is settled."
+            f"--wire-hooks --scope user: refusing to write {settings_path} -- it is "
+            f"git-tracked. A user-scope settings.json has no single project to be relative "
+            f"to (it is read for every project a session opens), so its command keeps an "
+            f"ABSOLUTE, per-machine path even though {SETTINGS_FILENAME}'s project-scope "
+            f"form is now portable (#539/#560 ruling). The interpreter half is portable "
+            f"({portable_interpreter!r}, the same {MCP_INTERPRETER_ENV_VAR} knob `.mcp.json` "
+            f"uses) but that alone does not make an absolute path safe to commit. Wire at "
+            f"--scope project instead (writes a ${{CLAUDE_PROJECT_DIR}}-relative, "
+            f"committable command), or keep {settings_path} out of version control."
         )
 
     commands: list[tuple[HookSpec, str]] = []
@@ -1902,7 +1982,11 @@ def wire_hooks(
                 f"--wire-hooks: no {spec.script} at {script}. Refusing to wire a "
                 f"path with no file behind it, and refusing to point at another skill's copy."
             )
-        commands.append((spec, build_hook_command(script, interpreter.interpreter, spec.args)))
+        commands.append((
+            spec,
+            build_hook_command(
+                script, interpreter.interpreter, spec.args, project_root=relative_base),
+        ))
 
     settings: dict = {}
     if settings_path.is_file():
@@ -1948,23 +2032,45 @@ def wire_hooks(
         out(f"- {spec.name} {spec.event} hook already present in {settings_path}; unchanged")
 
     if hooks_from == HOOKS_FROM_SOURCE:
-        out(
-            f"- NOTE: this wiring points at this checkout's own scripts/hooks/ and names "
-            f"the interpreter probed here ({interpreter.interpreter}). It is correct on "
-            f"THIS machine only. It was written to {settings_path.name}, which is "
-            f"per-machine and must never be committed; Claude Code merges its hooks with "
-            f"whatever {SETTINGS_FILENAME} already carries rather than replacing them."
-        )
+        # Still routed to the per-machine sibling regardless of portability
+        # (`settings_path_for_wiring` above) -- that routing is about keeping
+        # a developer's own source-tree override out of the file every
+        # contributor shares, not about whether the command COULD be
+        # committed. At `--scope user` it also carries an absolute path
+        # (relative_base is None there), so say so; at `--scope project` the
+        # path is portable but the file is still per-machine, so say that
+        # instead of repeating a claim ("correct on THIS machine only") that
+        # is no longer true of the path half.
+        if relative_base is None:
+            out(
+                f"- NOTE: this wiring points at this checkout's own scripts/hooks/ by an "
+                f"ABSOLUTE path and names the interpreter probed here "
+                f"({interpreter.interpreter}) as its default. It is correct on THIS "
+                f"machine only. It was written to {settings_path.name}, which is "
+                f"per-machine and must never be committed; Claude Code merges its hooks "
+                f"with whatever {SETTINGS_FILENAME} already carries rather than "
+                f"replacing them."
+            )
+        else:
+            out(
+                f"- NOTE: this wiring points at this checkout's own scripts/hooks/ by a "
+                f"${{CLAUDE_PROJECT_DIR}}-relative path (portable -- #539/#560 ruling) and "
+                f"names the interpreter probed here ({interpreter.interpreter}) as its "
+                f"DEFAULT, overridable via {MCP_INTERPRETER_ENV_VAR}. It was still written "
+                f"to {settings_path.name}, which is per-machine by convention -- that "
+                f"routing is deliberate (a source-tree override should not land in the "
+                f"file every contributor shares), not a portability limit of the command "
+                f"itself; Claude Code merges its hooks with whatever {SETTINGS_FILENAME} "
+                f"already carries rather than replacing them."
+            )
     elif scope == "project":
-        # The absolute path is the accepted cost of rejecting a project-relative
-        # form, and it embeds the user's home directory AND user name. A
-        # project-scope settings.json is committable, so say so out loud rather
-        # than letting committing it be the path of least resistance.
-        out(
-            f"- NOTE: this entry embeds an absolute path containing your user name, and it "
-            f"is machine-specific. A project-scope {SETTINGS_FILENAME} is committable -- "
-            f"prefer --scope user, or keep {settings_path} out of version control."
-        )
+        # Pre-ruling this warned that the entry embedded an absolute,
+        # username-bearing path. It no longer does (both the path and the
+        # interpreter default are portable), so there is nothing left to
+        # warn about -- a project-scope settings.json this wiring wrote is
+        # exactly what item 3 of #539/#560 wants it to be: committable as
+        # written, the same form the tracked .claude/settings.json now ships.
+        pass
 
 
 # --------------------------------------------------------------------------- #
@@ -2351,7 +2457,28 @@ def build_readiness_report(
     reason rather than silently skipped -- a check the reader cannot tell was
     never run is the exact defect this readiness mode exists to catch."""
     if agent.name in HOOK_CAPABLE_AGENT_NAMES:
-        hooks = check_hooks_shippable(target_root, scope=scope, env=env, specs=specs)
+        hook_env = env
+        if scope == "project":
+            # #539/#560 item 4: at project scope, a tracked entry now reads
+            # `${CLAUDE_PROJECT_DIR}/...` as committed (item 3's convergence),
+            # and `detect_hook_wiring` already special-cases that ONE token as
+            # expandable (`_EXPANDABLE_ENV_TOKENS`) -- but it used to be handed
+            # whatever `env` (the CALLING process's os.environ) happened to
+            # carry, which is often nothing: a readiness check run from a
+            # plain terminal has no CLAUDE_PROJECT_DIR at all, so a correctly
+            # wired repo reported CANNOT DETERMINE for a fact this CLI
+            # invocation already knows. `project_root` is that fact -- the
+            # same directory `check_work_area_present` below checks, and #269
+            # is what guarantees a real future hook process sees
+            # CLAUDE_PROJECT_DIR set to exactly this directory. Overriding it
+            # here is not a guess about the wrong process; it is telling the
+            # detector the one thing this readiness run was already told,
+            # authoritatively, by its own `--project`/cwd. `--scope user` is
+            # untouched: a user-scope settings.json has no single project for
+            # `${CLAUDE_PROJECT_DIR}` to stand for (see `build_hook_command`'s
+            # docstring), so its commands stay absolute and need no expansion.
+            hook_env = {**env, "CLAUDE_PROJECT_DIR": str(project_root)}
+        hooks = check_hooks_shippable(target_root, scope=scope, env=hook_env, specs=specs)
     else:
         hooks = ReadinessCheck(
             True, f"not applicable: {agent.name} has no hook mechanism to check")

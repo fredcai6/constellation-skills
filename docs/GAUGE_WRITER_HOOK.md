@@ -192,64 +192,77 @@ runs **cannot report that it never ran** — see "Skip-on-uncertainty" below. Th
 report is the only thing in the system that can surface an unwired or dead hook.
 
 The entry it writes is added **alongside** whatever `PostToolUse` matchers you
-already have — never nested inside one, never reordering the others:
+already have -- never nested inside one, never reordering the others:
 
 ```json
 {"matcher": "*", "hooks": [{"type": "command",
-  "command": "py \"C:/Users/<you>/.claude/skills/constellation-workbench/scripts/gauge_writer_hook.py\"",
-  "timeout": 10}]}
+  "command": "${CONSTELLATION_PYTHON:-py} \"C:/Users/<you>/.claude/skills/constellation-workbench/scripts/gauge_writer_hook.py\"",
+  "shell": "bash", "timeout": 10}]}
 ```
 
 **Which hooks.** By default `--wire-hooks` writes exactly the one entry above.
-`--hooks all` writes all four Constellation hooks — the gauge writer plus
-`spine_rail.py` on `Stop`, `SessionStart` and `PostToolUse` — and `--hooks rail`
+`--hooks all` writes all four Constellation hooks -- the gauge writer plus
+`spine_rail.py` on `Stop`, `SessionStart` and `PostToolUse` -- and `--hooks rail`
 writes only those three. `--hooks` also selects which hooks are *reported* on,
 including under `--check-readiness`. The default is `governor` because the rail
 can block a `Stop`; that is not something to acquire as a side effect of an
 install command you already knew how to run.
 
-**Why the interpreter is named, and why that is only safe here.** The command
-above starts with `py` because `py` is what the installer's probe actually found
-on the host that wrote it (`resolve_interpreter()`, one probe per run). That name
-is correct for that machine and no other, which is exactly why the git-tracked
-`.claude/settings.json` in this repo names **no** interpreter at all — no single
-name works on both POSIX and Windows (#539). Naming it *first* also matters: a
-command that starts with a quote is parsed by PowerShell as a string literal, so
-the hook echoes its own path and exits 0 without running.
+**Why the interpreter is named, and why it is written as an override, not a
+literal.** The command above starts with `${CONSTELLATION_PYTHON:-py}`, not a
+bare `py` -- `py` is only the *default* inside that expansion, the name the
+installer's probe actually found on the host that wrote it
+(`resolve_interpreter()`, one probe per run). A real POSIX shell (`sh`, Git
+Bash, or the `bash` this repo pins via `"shell": "bash"` on every entry it
+writes) resolves `${CONSTELLATION_PYTHON:-py}` to `py` when
+`CONSTELLATION_PYTHON` is unset, and to the override otherwise -- one knob,
+`CONSTELLATION_PYTHON`, shared with `.mcp.json`. Naming the interpreter
+*first* also matters on its own: a command that starts with a quote is parsed
+by PowerShell as a string literal, so the hook echoes its own path and exits 0
+without running -- `assert_shell_safe_command` refuses to emit that shape. The
+`${VAR:-default}` form itself, though, needs the shell that actually performs
+POSIX expansion (measured: `sh`/Git Bash do; PowerShell/cmd.exe do not) --
+which is the whole reason `"shell": "bash"` is pinned on every entry, not a
+decoration.
 
-If **no** candidate answers on your host, the whole install hard-stops — there is
+If **no** candidate answers on your host, the whole install hard-stops -- there is
 no os-name fallback, because any such guess is drawn from the candidate set the
 probe just disproved and so cannot be right anywhere. `--check-readiness` reports
 that same condition as a `NOT READY` **interpreter** item instead of aborting.
 
-**Which scope is safe to commit.** Note the absolute path above: it embeds your
-home directory and therefore your **username**.
+**Which scope, and what the path looks like.** The owner's ruling (#539/#560:
+"I don't buy that anti-tamper for the python executable is necessary at all ...
+is there a simplification we can make?") settled this: the PATH is
+`${CLAUDE_PROJECT_DIR}`-relative at `--scope project` and ABSOLUTE at
+`--scope user` -- not a compromise, but the fact that the two scopes point at
+genuinely different trees.
 
-- **`--scope user`** writes `~/.claude/settings.json`, which is yours alone and
-  never committed. **This is the safe default and the recommended one.**
-- **`--scope project`** writes `<project>/.claude/settings.json`, which **is
-  committable** — so committing it publishes your username in the path and gives
-  your teammates a path that does not exist on their machines. If you wire at
-  project scope, either keep that file out of version control or expect each
-  teammate to re-run `--wire-hooks` for themselves. There is no portable form:
-  no `$HOME`/`%USERPROFILE%` token is confirmed to expand in a hook `command`.
+- **`--scope user`** writes `~/.claude/settings.json`, which applies across
+  **every** project a session opens -- there is no single project
+  `${CLAUDE_PROJECT_DIR}` could stand for there, so the path stays absolute
+  (and, as before, embeds your home directory and username). This file is
+  yours alone and never committed.
+- **`--scope project`** writes `<project>/.claude/settings.json` with a
+  `${CLAUDE_PROJECT_DIR}`-relative path -- no username, no per-machine
+  anything, in either half of the command. **This is now committable as
+  written**, which is what this repo's own tracked `.claude/settings.json`
+  does (see (a2) below): the file every contributor reads is exactly the form
+  `--wire-hooks` itself would emit.
 
-**Why an absolute path and not `${CLAUDE_PROJECT_DIR}`.** The variable form does
-resolve correctly inside this repo — but only as an *accident of undocumented
-harness behaviour*: `CLAUDE_PROJECT_DIR` is fixed at session launch (#269), so it
-*happens* to point at the main checkout even for an agent working in a worktree.
-That is a property we are borrowing, not one we hold, and it is one release from
-changing. An absolute installed path is pinned **by construction** and asks the
-harness to guarantee nothing — which is what actually protects the rule that an
-agent's own branch cannot edit the code that judges it.
-
-The installer therefore **never emits** a variable form. It will still *detect* a
-hand-written `${CLAUDE_PROJECT_DIR}` entry (refusing to recognise the form this
-document itself recommends below would be incoherent), but it expands **only**
-that one variable. Any other variable leaves the entry `CANNOT EVALUATE`, because
-expansion would happen in the installer's environment while the entry runs in a
-future hook's — a different process with different variables — and a confident
-wrong answer there is worse than an honest "I cannot tell".
+Pre-ruling, the project-scope path stayed absolute on the reasoning that
+`${CLAUDE_PROJECT_DIR}` delivered its anti-tamper property only as an
+*accident of undocumented harness behaviour* (`CLAUDE_PROJECT_DIR` is fixed at
+session launch, #269, so it *happens* to point at the main checkout even for
+an agent working in a worktree) and an absolute installed path was pinned **by
+construction** instead. That reasoning was real, not wrong -- it is recorded
+verbatim on `install_constellation.build_hook_command`'s docstring -- but the
+owner has ruled the cost (a machine-specific, username-bearing path that a
+project-scope settings.json could never honestly commit) is not worth paying
+for a property nobody asked this file to hold. The installer's detector still
+recognizes a hand-written `${CLAUDE_PROJECT_DIR}` entry (and expands **only**
+that one variable -- any other variable leaves the entry `CANNOT EVALUATE`,
+because expansion would happen in the installer's environment while the entry
+runs in a future hook's).
 
 ### (a2) In this repo, working on the hooks themselves
 
@@ -262,36 +275,43 @@ python scripts/install_constellation.py --agent claude --scope project --wire-ho
 
 `--hooks-from source` points the commands at this checkout's own
 `scripts/hooks/` rather than at an installed skill copy, and writes
-`.claude/settings.local.json` rather than `.claude/settings.json`. That split is
-structural, not a preference: a source command carries this checkout's absolute
-path **and** the interpreter name probed on this host, so it is wrong for every
-other machine by construction. `settings.local.json` is gitignored, and the
-installer refuses outright to write it if it is ever git-tracked. Claude Code
-merges the hooks from both files rather than letting one replace the other, so
-the tracked `settings.json` keeps whatever it already carries.
+`.claude/settings.local.json` rather than `.claude/settings.json` -- that
+routing is unchanged by the ruling above: a developer's own source-tree
+override should not land in the file every contributor shares, regardless of
+whether the command it carries happens to be portable. `settings.local.json`
+is gitignored, and the installer refuses outright to write it if it is ever
+git-tracked. Claude Code merges the hooks from both files rather than letting
+one replace the other, so the tracked `settings.json` keeps whatever it
+already carries.
 
-What this repo's tracked `.claude/settings.json` carries instead is the
-`${CLAUDE_PROJECT_DIR}` form with **no interpreter named** and `"shell": "bash"`
-pinned on every entry — the only form that can be committed at all, since no
-single interpreter name is right on both POSIX and Windows. Note the two
-matchers: unlike `spine_rail.py`'s `PostToolUse` entry (matcher `"Bash"` only,
-because it only cares about `checklist_engine.py` commands), the gauge writer
-needs to see **every** tool call to track fill continuously, so its matcher is
-`"*"`:
+What this repo's tracked `.claude/settings.json` carries instead is exactly
+what `--wire-hooks --scope project --hooks-from source` would emit into the
+SHARED file (it does not, by itself -- see the routing note above; this file
+is maintained to match that form by hand): the
+`${CLAUDE_PROJECT_DIR}` path form, `${CONSTELLATION_PYTHON:-python3}` as the
+interpreter (the committed default -- `python3` because that is what every
+POSIX contributor has; `CONSTELLATION_PYTHON` overrides it on a host where it
+is wrong, same knob `.mcp.json` uses), and `"shell": "bash"` pinned on every
+entry, since no single interpreter name is right on both POSIX and Windows and
+the `${VAR:-default}` expansion needs a real POSIX shell either way. Note the
+two matchers: unlike `spine_rail.py`'s `PostToolUse` entry (matcher `"Bash"`
+only, because it only cares about `checklist_engine.py` commands), the gauge
+writer needs to see **every** tool call to track fill continuously, so its
+matcher is `"*"`:
 
 ```json
 {
   "hooks": {
     "PostToolUse": [
-      {"matcher": "Bash", "hooks": [{"type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\" PostToolUse", "shell": "bash", "timeout": 10}]},
-      {"matcher": "*", "hooks": [{"type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/scripts/hooks/gauge_writer_hook.py\"", "shell": "bash", "timeout": 10}]}
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "${CONSTELLATION_PYTHON:-python3} \"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\" PostToolUse", "shell": "bash", "timeout": 10}]},
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${CONSTELLATION_PYTHON:-python3} \"${CLAUDE_PROJECT_DIR}/scripts/hooks/gauge_writer_hook.py\"", "shell": "bash", "timeout": 10}]}
     ]
   }
 }
 ```
 
 If your real `settings.json` already has other `PostToolUse` matchers
-(unrelated hooks), add this as one more entry in that same array — don't
+(unrelated hooks), add this as one more entry in that same array -- don't
 nest it inside an existing matcher block.
 
 ## The human action (HITL seam)
