@@ -9520,3 +9520,243 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
 
             with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
                 E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+
+class CharterW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g5: 1 named `check: null` condition in the shipped
+    CHARTER.template.json promoted to a real, mechanically-checked condition
+    using only the engine's existing check kinds (`artifact`) per
+    `decision:no-new-check-kinds` -- project-templates.c1. Every other
+    condition in the file is untouched.
+
+    Two of this gate's three candidates, fresh-verified against the real
+    shipped JSON, were declined rather than forced:
+
+    `closeout.c1` ("durable outputs complete; work area archived") was NOT
+    split-promoted. Unlike COMMANDER_SPINE/ADMIRAL_SPINE/EXPLORER_SPINE,
+    CHARTER.template.json carries no `init` task at all -- there is no
+    task-level scaffolding step for a dedicated work area, so "the work
+    area" this condition names can only be the generic `.agent-work/<work-id>/`
+    directory the engine itself stood up at spine-instantiation time. The
+    only archive mechanism this repo has for that directory is the generic
+    `scripts/spine_lifecycle.py::close_work` / `archive_name_for`, and that
+    function's own destination path is `f"{today}-{work_id.replace('/', '-')}"`
+    -- keyed on a wall-clock value read at close time, with no
+    placeholder-family member (`<work-id>`, `<repo-root>`, `<*-skill-dir>`,
+    `<*-session-id>`) able to pin it, plus the same `/`-strip transform
+    `resolve_spine`'s own substitution never performs. This is the EXACT
+    defect g3's own docstring (`AdmiralSpineW3PromotePromotions`) already
+    named for ADMIRAL_SPINE's `closeout.c4` -- no stable locator exists here
+    either, so `closeout.c1` stays `check: null` rather than inventing one.
+
+    `interrogate.c1` ("doctrine resolved to role-operable decisions") was
+    NOT promoted either, despite a real, reusable, already-shipped verifier
+    existing for `interrogation.json`'s companion terminal-state artifact:
+    `scripts/verify_interrogation.py`, invoked today by
+    `INTERROGATION.template.json`'s own `zc-consolidate.c1` against
+    `.agent-work/<work-id>/INTERROGATION_RECORD.json` (a path
+    `tests/test_shipped_check_commands_resolve.py` already pins as
+    resolving from `<work-id>` alone). Wiring that SAME script into
+    CHARTER's own spine turns out not to be a genuine reuse for two
+    independent reasons, either one sufficient alone to decline:
+
+      (1) `scripts/init_work_area.py::resolve_spine` treats every
+          `<ROLE-skill-dir>` token it finds in a template's text as
+          resolving to the SAME single `--skill-dir` value passed for
+          THAT template's own instantiation, regardless of which role name
+          `ROLE` spells (`_resolve_skill_dir_token` is not a per-role
+          lookup). Every shipped template today only ever references its
+          OWN role's `-skill-dir` token (`<commander-skill-dir>` only in
+          COMMANDER_SPINE, `<admiral-skill-dir>` only in ADMIRAL_SPINE,
+          `<reviewer-skill-dir>` only in REVIEW_SURVEY) -- a
+          `<interrogator-skill-dir>` token embedded in CHARTER's OWN spine
+          would be the first cross-skill reference of this shape anywhere
+          in the corpus, and it would resolve WRONG in an installed repo:
+          `scripts/install_constellation.py`'s per-skill bundle list ships
+          `verify_interrogation.py` only with `"interrogator"`
+          (`("checklist_engine.py", "verify_interrogation.py")`), never
+          with `"charter"` (`("checklist_engine.py",)` only) -- so the
+          token would substitute CHARTER's own installed skill directory,
+          which does not carry the script, not interrogator's. It only
+          happens to work by coincidence in this source repo, where an
+          omitted `--skill-dir` falls back to the top-level `scripts/`
+          directory that happens to hold every skill's scripts today.
+          Fixing this for real would mean adding the script to CHARTER's
+          own install manifest -- editing `scripts/install_constellation.py`,
+          outside this gate's Allowed Scope.
+      (2) Even setting (1) aside, CHARTER.template.json carries ZERO
+          `command`-kind checks today (`intent.c1`, `orchestrator-context.c1`,
+          `crew-context.c1`, `glossary.c1`, `agent-guide.c1`, and
+          `engine-config.c1` are its only pre-existing non-null checks, and
+          all six are `artifact`/`user-decision`) -- a `command`-kind
+          promotion here would be this template's FIRST use of that kind,
+          which `decision:blocking-where-adjudicated` says ships blocking
+          only after explicit Commander consultation, not implementer
+          say-so.
+
+    Per this gate's own Close Criteria fallback ("If none exists, leave
+    check: null and say so -- do not invent a new verifier"), `interrogate.c1`
+    stays `check: null`.
+
+    `project-templates.c1` ("project-specific templates seeded") IS promoted,
+    mirroring COMMANDER_SPINE's own already-landed `plan.c1` shape EXACTLY
+    (`artifact`, enum-match on a `status` field): both conditions name a
+    task whose imperative offers the SAME two-way disposition in prose
+    ("Seed or update ... where the project needs them ... Skip with reason
+    if none needed" here; "produced ... or explicitly skipped as trivial"
+    for `plan.c1`), and `artifact` is not a new kind for this file --
+    `intent.c1` / `orchestrator-context.c1` / `crew-context.c1` /
+    `glossary.c1` / `agent-guide.c1` / `engine-config.c1` are all already
+    `artifact`-kind here (each `evidence_type: "user-decision"`), so this
+    is not this template's first use of the KIND, only of a fresh
+    `evidence_type` (`"project-templates"`) -- `decision:no-new-check-kinds`
+    bars a new check KIND, never a new `evidence_type` string, and
+    `decision:blocking-where-adjudicated` only requires consultation on a
+    first-of-KIND use. No `basis` field is added -- `decision:no-basis-backfill`
+    -- and the `statement` text is left byte-identical; this is a full,
+    direct promotion (like `plan.c1` itself, which also carries no `basis`),
+    not a split one, so there is no uncovered judgment half to document.
+
+    Modeled directly on CommanderSpineW3PromotePromotions /
+    AdmiralSpineW3PromotePromotions / ExplorerSpineW3PromotePromotions
+    above: pin PINNED_HEAD via `git rev-parse HEAD` captured at
+    implementation time, `skipTest` (never fail) if HEAD has since moved
+    past it -- this repo's edits are still uncommitted at authoring time,
+    so HEAD is the base commit (g4's own merged promotion) this gate's
+    edit sits on top of, not a future commit.
+
+    The promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    never a restatement of the check's own match text -- to prove the check
+    can genuinely discriminate the healthy world from the defective one, per
+    this epic's own thesis: a check with zero discriminating power is worse
+    than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "charter" / "templates" / "CHARTER.template.json"
+
+    # Captured via `git rev-parse HEAD` at implementation time (g5 dispatch,
+    # sitting on top of g4's already-merged EXPLORER_SPINE promotion).
+    PINNED_HEAD = "442a5826e23f3259bdfd3f92d301188c693b1b5e"
+
+    EXPECTED_CHECKS = {
+        ("project-templates", "c1"): {
+            "kind": "artifact", "evidence_type": "project-templates",
+            "match": {"status": ["seeded", "skipped-no-need"]},
+        },
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose.
+    PRE_EXISTING_NONNULL = {
+        ("intent", "c1"), ("orchestrator-context", "c1"), ("crew-context", "c1"),
+        ("glossary", "c1"), ("agent-guide", "c1"), ("engine-config", "c1"),
+    }
+
+    def _skip_if_head_moved(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        head = out.stdout.strip()
+        if head != self.PINNED_HEAD:
+            self.skipTest(
+                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
+                f"{head} -- this test's assumptions about the template's "
+                "shape need re-verifying against the current HEAD before "
+                "they can be trusted, not silently re-run against drift"
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_checks_match_shipped_shape(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_interrogate_c1_and_closeout_c1_stay_null(self):
+        """The two candidates this gate's own handoff named and then
+        explicitly declined -- `interrogate.c1` for lack of a genuinely
+        reusable, reliably-wired verifier, `closeout.c1` for lack of a
+        stable archive-path convention -- pin that both stay `check: null`
+        rather than silently drifting either way."""
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        interrogate_c1 = {c["id"]: c for c in cl["tasks"]["interrogate"]["postconditions"]}["c1"]
+        closeout_c1 = {c["id"]: c for c in cl["tasks"]["closeout"]["postconditions"]}["c1"]
+        self.assertIsNone(interrogate_c1["check"])
+        self.assertIsNone(closeout_c1["check"])
+
+    def test_project_templates_c1_keeps_its_statement_and_no_basis(self):
+        """A full (non-split) promotion: the `statement` text must stay
+        byte-identical and must NOT gain a `basis` field --
+        `decision:no-basis-backfill` reserves that mechanism for w3-basis's
+        own population, not this gate's promotions."""
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        c1 = cl["tasks"]["project-templates"]["postconditions"][0]
+        self.assertEqual(c1["statement"], "project-specific templates seeded")
+        self.assertNotIn("basis", c1)
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly the 6 pre-existing non-null checks plus this 1 "
+            "promotion -- and no other condition anywhere in the template, "
+            "including interrogate.c1 and closeout.c1 -- may carry a check; "
+            "a mismatch means either a missed target or drift onto a "
+            "condition this gate must not touch",
+        )
+
+    # ---- artifact-kind promotion: attest() cross-task reference, exactly ----
+    # the mechanism `docs/CHECKLIST_SCHEMA.md`'s "attest" row documents (verify
+    # exists + evidence_type + match; never asserts an artifact from thin air).
+
+    def test_project_templates_c1_status_membership_discriminates(self):
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("project-templates", "c1")]
+        src = gate("src", "in-progress")
+        target = _gate_with_check("target", check)
+        cl = gated(src=src, target=target)
+
+        # (1) wrong evidence_type -- attacks the TYPE boundary, not the match
+        # (this file's own dominant pre-existing evidence_type is
+        # "user-decision", so that is the realistic wrong-type case here).
+        E.attach(cl, "src", "user-decision", {})
+        with self.assertRaisesRegex(
+            E.EngineError,
+            re.escape("is type 'user-decision', not the required 'project-templates'"),
+        ):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-1")
+
+        # (2) right type, adversary-chosen non-matching payload -- a
+        # differently-CASED status string, attacking the case-sensitivity
+        # boundary the match list does not spell out (mirrors the
+        # already-landed `plan.c1` test's own adversary choice), not a
+        # restatement of "seeded"/"skipped-no-need" themselves.
+        E.attach(cl, "src", "project-templates", {"status": "Seeded"})
+        with self.assertRaisesRegex(E.EngineError, "does not match required"):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-2")
+
+        # (3) positive control: the OTHER enum member (not the first) also
+        # satisfies it -- proves genuine list-membership, not merely a
+        # hardcoded match against "seeded" alone.
+        E.attach(cl, "src", "project-templates", {"status": "skipped-no-need"})
+        self.assertEqual(
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-3"),
+            "attested target.c1 via e-src-3",
+        )
