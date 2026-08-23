@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "files": [],
+  "repo_rev": {
+    "commit": "e11801972c63c969be88f904afe0fa9bbb6d8fad"
+  },
+  "run": {
+    "work_id": "w3-door",
+    "generated_at": "2026-08-23T00:21:36Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-reviewer",
+      "repo": "/home/tommy/projects/569-w3-door",
+      "durable": "/home/tommy/projects/569-w3-door"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w3-door"
+    }
+  }
+}

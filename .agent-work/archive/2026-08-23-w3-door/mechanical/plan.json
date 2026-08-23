@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "mechanical": {
+    "run": "w3-door",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "plan",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-door-plan@25de3c75b5b2c8619e662ffa21d664e29d71b11b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-door",
+    "generated_at": "2026-08-22T23:33:45Z"
+  }
+}
