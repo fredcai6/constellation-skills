@@ -8567,7 +8567,7 @@ class CommanderSpineBasisFields(unittest.TestCase):
     # Captured via `git rev-parse HEAD:<path>` at implementation time (g1 dispatch).
     # Pins the TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere
     # must not perturb this.
-    PINNED_BLOB = "6953ac90f2568890fddbe187ad5fc8dd095041dd"
+    PINNED_BLOB = "50eef2e75712931497515c89af749afbee8f5e10"
 
     EXPECTED_BASIS = {
         "c2": {
