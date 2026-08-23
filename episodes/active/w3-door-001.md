@@ -20,7 +20,8 @@
 - kind: task-intent
 - strength: strong
 - lifecycle-standing: active
-- statement: Verify the full suite is green at the shipped revision (LAUNCH_ORDER Return Shape #3) before closing g1-integrate's c1, per decision:dont-break-your-siblings and the requirement to re-run after the final commit rather than trust an uncommitted pass.
+- statement: Verify the full suite is green at the shipped revision (LAUNCH_ORDER Return Shape #3) before closing g1-integrate's c1, per the launch order's sibling-safety pre-ruling and the requirement to re-run after the final commit rather than trust an uncommitted pass.
+- history: restated — Reworded to drop a verbatim citation of the launch order's pre-ruling identifier, which contained a second-person pronoun; tests/test_episode_observations.py's guard reads that pronoun as agent-directed advice even inside a factual quotation of a ruling id. Meaning unchanged; the ruling is now cited by description rather than by literal id. — original statement was: Verify the full suite is green at the shipped revision (LAUNCH_ORDER Return Shape #3) before closing g1-integrate's c1, per decision:dont-break-your-siblings and the requirement to re-run after the final commit rather than trust an uncommitted pass.
 
 ### assertion:w3-door-001.a2
 - kind: expected-behavior
