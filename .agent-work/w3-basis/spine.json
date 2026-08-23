@@ -682,7 +682,8 @@
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "branch committed and pushed: commits ded71631, 7b34b096 pushed to origin/epic-569/w3-basis."
         },
         {
           "id": "c2b",
@@ -697,7 +698,8 @@
           "id": "c3",
           "statement": "spine_close is authorized as the sole final advance-and-release transition for this run",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "spine_close authorized as the sole final advance-and-release transition; will be called once with push=false, open_pr=false since publication (push + PR #659) already happened manually per this step's imperative."
         },
         {
           "id": "c4",
@@ -767,6 +769,15 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0,
@@ -776,12 +787,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 9,
+  "refusals": 10,
   "engine_session": {
     "session_id": "constellation/w3-basis/commander/commander",
     "status": "active",
     "claimed_at": "2026-08-22T23:30:21.654995+00:00",
-    "last_heartbeat": "2026-08-23T00:01:55.942745+00:00",
+    "last_heartbeat": "2026-08-23T00:03:05.514687+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
