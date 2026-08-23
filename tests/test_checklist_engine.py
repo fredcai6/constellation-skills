@@ -8669,12 +8669,12 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
     every `basis` object already present on plan.c2/c4/c5 (CommanderSpine
     BasisFields above), is untouched.
 
-    Modeled directly on CommanderSpineBasisFields above: pin PINNED_HEAD via
-    `git rev-parse HEAD` captured at implementation time, `skipTest` (never
-    fail) if HEAD has since moved past it -- this repo's edits are still
-    uncommitted at authoring time, so HEAD is the base commit this gate's
-    edit sits on top of, not a future commit; see that class's own docstring
-    for why a moved HEAD skips rather than asserts against drift.
+    Modeled directly on CommanderSpineBasisFields above: pin the **blob OID**
+    of COMMANDER_SPINE.template.json (not repo HEAD), so unrelated commits
+    elsewhere never perturb it; if the template's content has drifted from
+    the pinned blob, this test class FAILS loudly rather than silently
+    skipping -- a template shape this test was never written against must be
+    re-verified, not silently trusted.
 
     Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
     never a restatement of the check's own match text -- to prove the check
@@ -8683,9 +8683,13 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
     than the honest `check: null` it replaces."""
 
     SPINE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
+    SPINE_REL = "skills/commander/templates/COMMANDER_SPINE.template.json"
 
-    # Captured via `git rev-parse HEAD` at implementation time (g1 dispatch).
-    PINNED_HEAD = "135c34eb0b0a10bc5cebb0e6e3869b124e63735e"
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g1
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "50eef2e75712931497515c89af749afbee8f5e10"
 
     EXPECTED_CHECKS = {
         ("init", "c1"): {
@@ -8739,27 +8743,31 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
         ("archive", "c5"),
     }
 
-    def _skip_if_head_moved(self):
+    def _fail_if_template_drifted(self):
         import subprocess
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
             capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(out.returncode, 0, out.stderr)
-        head = out.stdout.strip()
-        if head != self.PINNED_HEAD:
-            self.skipTest(
-                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
-                f"{head} -- this test's assumptions about the template's "
-                "shape need re-verifying against the current HEAD before "
-                "they can be trusted, not silently re-run against drift"
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"CommanderSpineW3PromotePromotions' proof is stale: pinned "
+                f"to blob {self.PINNED_BLOB} of {self.SPINE_REL}, current "
+                f"blob is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g1 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
             )
 
     def _load_spine(self):
         return json.loads(self.SPINE.read_text(encoding="utf-8"))
 
     def test_promoted_checks_match_shipped_shape(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         for (tid, cid), expected in self.EXPECTED_CHECKS.items():
             with self.subTest(cond=f"{tid}.{cid}"):
@@ -8767,7 +8775,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
                 self.assertEqual(by_id[cid]["check"], expected)
 
     def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         nonnull = set()
         for tid, t in cl["tasks"].items():
@@ -8824,7 +8832,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
         )
 
     def test_plan_c1_mission_frame_status_membership_discriminates(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         # adversary: a differently-CASED status string -- attacks the
         # case-sensitivity boundary the match list does not spell out, not a
         # restatement of "produced" / "skipped-as-trivial" themselves.
@@ -8836,7 +8844,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
         )
 
     def test_plan_c2_execute_plan_existence_only_discriminates(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         # adversary: an EXPLICIT `exists: false` -- a real "checked for it and
         # it is NOT there" claim, distinct from simply attaching no evidence
         # at all (which a different assertion already covers via wrong-type).
@@ -8848,7 +8856,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
         )
 
     def test_plan_c4_plan_alternatives_converged_discriminates(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         # adversary: the STRING "true" rather than the boolean True -- attacks
         # exact-type equality (`_artifact_match_satisfied` uses `==`, so a
         # truthy-looking string is not a truthy-looking bool), never a
@@ -8861,7 +8869,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
         )
 
     def test_plan_c5_plan_critic_triaged_discriminates(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         # adversary: an explicit `triaged: false` -- the actual defect this
         # check exists to catch (critic ran, findings never triaged), not a
         # restatement of the match's own "triaged" key.
@@ -8873,7 +8881,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
         )
 
     def test_reconcile_c1_file_diff_nonempty_discriminates(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         # adversary: an explicit `nonempty: false` -- "the diff came back
         # empty", the actual defect (map never touched), not a restatement of
         # "nonempty" itself.
@@ -8885,7 +8893,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
         )
 
     def test_archive_c3_user_decision_type_only_discriminates(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         # This check carries NO `match` at all (reuses the archive.c5 /
         # review.c1 / triage.c2 shape exactly), so `match={}` is vacuously
         # true for ANY payload of the right type -- the ONLY boundary this
@@ -8911,7 +8919,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
     # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
 
     def test_init_c1_command_check_discriminates_lease_status(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("init", "c1")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -8944,7 +8952,7 @@ class CommanderSpineW3PromotePromotions(unittest.TestCase):
                 E.attest(cl_bad, "g1", "c1", "postconditions", None)
 
     def test_archive_c2_command_check_discriminates_unpushed_commits(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         import shutil
         import subprocess
         if shutil.which("git") is None:
@@ -9027,12 +9035,12 @@ class AdmiralSpineW3PromotePromotions(unittest.TestCase):
     which is report-only and inert once `check` is non-null, does that), so
     `command` is the more genuinely mechanical, less decorative choice here.
 
-    Modeled directly on CommanderSpineW3PromotePromotions above: pin
-    PINNED_HEAD via `git rev-parse HEAD` captured at implementation time,
-    `skipTest` (never fail) if HEAD has since moved past it -- this repo's
-    edits are still uncommitted at authoring time, so HEAD is the base
-    commit (g1's own merged promotion) this gate's edit sits on top of, not
-    a future commit.
+    Modeled directly on CommanderSpineW3PromotePromotions above: pin the
+    **blob OID** of ADMIRAL_SPINE.template.json (not repo HEAD), so
+    unrelated commits elsewhere never perturb it; if the template's content
+    has drifted from the pinned blob, this test class FAILS loudly rather
+    than silently skipping -- a template shape this test was never written
+    against must be re-verified, not silently trusted.
 
     Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
     never a restatement of the check's own match text -- to prove the check
@@ -9041,10 +9049,13 @@ class AdmiralSpineW3PromotePromotions(unittest.TestCase):
     than the honest `check: null` it replaces."""
 
     SPINE = ROOT / "skills" / "admiral" / "templates" / "ADMIRAL_SPINE.template.json"
+    SPINE_REL = "skills/admiral/templates/ADMIRAL_SPINE.template.json"
 
-    # Captured via `git rev-parse HEAD` at implementation time (g3 dispatch,
-    # sitting on top of g1's already-merged COMMANDER_SPINE promotion).
-    PINNED_HEAD = "ff8e96402a6a76cc6e7f5c1bd92e91b36c830156"
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g3
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "9b3ae2b3a0140492fd98e996862f9caf7aa9a8b4"
 
     EXPECTED_CHECKS = {
         ("init", "c2"): {
@@ -9077,27 +9088,31 @@ class AdmiralSpineW3PromotePromotions(unittest.TestCase):
         ("closeout", "c2"), ("closeout", "c5"),
     }
 
-    def _skip_if_head_moved(self):
+    def _fail_if_template_drifted(self):
         import subprocess
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
             capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(out.returncode, 0, out.stderr)
-        head = out.stdout.strip()
-        if head != self.PINNED_HEAD:
-            self.skipTest(
-                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
-                f"{head} -- this test's assumptions about the template's "
-                "shape need re-verifying against the current HEAD before "
-                "they can be trusted, not silently re-run against drift"
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"AdmiralSpineW3PromotePromotions' proof is stale: pinned "
+                f"to blob {self.PINNED_BLOB} of {self.SPINE_REL}, current "
+                f"blob is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g3 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
             )
 
     def _load_spine(self):
         return json.loads(self.SPINE.read_text(encoding="utf-8"))
 
     def test_promoted_checks_match_shipped_shape(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         for (tid, cid), expected in self.EXPECTED_CHECKS.items():
             with self.subTest(cond=f"{tid}.{cid}"):
@@ -9109,13 +9124,13 @@ class AdmiralSpineW3PromotePromotions(unittest.TestCase):
         archived') is the one condition this gate's own handoff named as a
         candidate and then explicitly declined -- pin that it stays `check:
         null` rather than silently drifting either way."""
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         by_id = {c["id"]: c for c in cl["tasks"]["closeout"]["postconditions"]}
         self.assertIsNone(by_id["c4"]["check"])
 
     def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         nonnull = set()
         for tid, t in cl["tasks"].items():
@@ -9136,7 +9151,7 @@ class AdmiralSpineW3PromotePromotions(unittest.TestCase):
     # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
 
     def test_init_c2_command_check_discriminates_lease_status(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("init", "c2")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -9169,7 +9184,7 @@ class AdmiralSpineW3PromotePromotions(unittest.TestCase):
                 E.attest(cl_bad, "g1", "c1", "postconditions", None)
 
     def test_latitude_c1_command_check_discriminates_empty_file(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("latitude", "c1")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -9198,7 +9213,7 @@ class AdmiralSpineW3PromotePromotions(unittest.TestCase):
                 E.attest(cl_bad, "g1", "c1", "postconditions", None)
 
     def test_execute_c2_command_check_discriminates_case_sensitive_grammar(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("execute", "c2")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -9299,11 +9314,12 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
     already states).
 
     Modeled directly on CommanderSpineW3PromotePromotions /
-    AdmiralSpineW3PromotePromotions above: pin PINNED_HEAD via `git rev-parse
-    HEAD` captured at implementation time, `skipTest` (never fail) if HEAD
-    has since moved past it -- this repo's edits are still uncommitted at
-    authoring time, so HEAD is the base commit (g3's own merged promotion)
-    this gate's edit sits on top of, not a future commit.
+    AdmiralSpineW3PromotePromotions above: pin the **blob OID** of
+    EXPLORER_SPINE.template.json (not repo HEAD), so unrelated commits
+    elsewhere never perturb it; if the template's content has drifted from
+    the pinned blob, this test class FAILS loudly rather than silently
+    skipping -- a template shape this test was never written against must
+    be re-verified, not silently trusted.
 
     Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
     never a restatement of the check's own match text -- to prove the check
@@ -9312,10 +9328,13 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
     than the honest `check: null` it replaces."""
 
     SPINE = ROOT / "skills" / "explorer" / "templates" / "EXPLORER_SPINE.template.json"
+    SPINE_REL = "skills/explorer/templates/EXPLORER_SPINE.template.json"
 
-    # Captured via `git rev-parse HEAD` at implementation time (g4 dispatch,
-    # sitting on top of g3's already-merged ADMIRAL_SPINE promotion).
-    PINNED_HEAD = "44180fe09c0357a7c2ffcefcaeea378b6e9ccecd"
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g4
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "8a7a0e72c2e12af746807423b290ad24bc626dd2"
 
     EXPECTED_CHECKS = {
         ("init", "c2"): {
@@ -9345,27 +9364,31 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
         ("confirm", "c1"), ("confirm", "c2"), ("confirm", "c3"), ("route", "c2"),
     }
 
-    def _skip_if_head_moved(self):
+    def _fail_if_template_drifted(self):
         import subprocess
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
             capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(out.returncode, 0, out.stderr)
-        head = out.stdout.strip()
-        if head != self.PINNED_HEAD:
-            self.skipTest(
-                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
-                f"{head} -- this test's assumptions about the template's "
-                "shape need re-verifying against the current HEAD before "
-                "they can be trusted, not silently re-run against drift"
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"ExplorerSpineW3PromotePromotions' proof is stale: pinned "
+                f"to blob {self.PINNED_BLOB} of {self.SPINE_REL}, current "
+                f"blob is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g4 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
             )
 
     def _load_spine(self):
         return json.loads(self.SPINE.read_text(encoding="utf-8"))
 
     def test_promoted_checks_match_shipped_shape(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         for (tid, cid), expected in self.EXPECTED_CHECKS.items():
             with self.subTest(cond=f"{tid}.{cid}"):
@@ -9378,7 +9401,7 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
         as a candidate FULL promotion and then explicitly declined for lack
         of a real per-outcome artifact -- pin that it stays `check: null`
         rather than silently drifting either way."""
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         by_id = {c["id"]: c for c in cl["tasks"]["route"]["postconditions"]}
         self.assertIsNone(by_id["c1"]["check"])
@@ -9390,7 +9413,7 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
         `decision:no-basis-backfill` reserves that mechanism for w3-basis's
         own population, not this gate's promotions. Pin both: statement
         stays byte-identical, and no `basis` key was introduced."""
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         context_c1 = cl["tasks"]["context"]["postconditions"][0]
         spec_c1 = cl["tasks"]["spec"]["postconditions"][0]
@@ -9409,7 +9432,7 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
         self.assertNotIn("basis", spec_c1)
 
     def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         nonnull = set()
         for tid, t in cl["tasks"].items():
@@ -9430,7 +9453,7 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
     # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
 
     def test_init_c2_command_check_discriminates_lease_status(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("init", "c2")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -9463,7 +9486,7 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
                 E.attest(cl_bad, "g1", "c1", "postconditions", None)
 
     def test_context_c1_command_check_discriminates_empty_board(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("context", "c1")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -9492,7 +9515,7 @@ class ExplorerSpineW3PromotePromotions(unittest.TestCase):
                 E.attest(cl_bad, "g1", "c1", "postconditions", None)
 
     def test_spec_c1_command_check_discriminates_empty_spec(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("spec", "c1")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -9619,11 +9642,11 @@ class CharterW3PromotePromotions(unittest.TestCase):
 
     Modeled directly on CommanderSpineW3PromotePromotions /
     AdmiralSpineW3PromotePromotions / ExplorerSpineW3PromotePromotions
-    above: pin PINNED_HEAD via `git rev-parse HEAD` captured at
-    implementation time, `skipTest` (never fail) if HEAD has since moved
-    past it -- this repo's edits are still uncommitted at authoring time,
-    so HEAD is the base commit (g4's own merged promotion) this gate's
-    edit sits on top of, not a future commit.
+    above: pin the **blob OID** of CHARTER.template.json (not repo HEAD),
+    so unrelated commits elsewhere never perturb it; if the template's
+    content has drifted from the pinned blob, this test class FAILS loudly
+    rather than silently skipping -- a template shape this test was never
+    written against must be re-verified, not silently trusted.
 
     The promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
     never a restatement of the check's own match text -- to prove the check
@@ -9632,10 +9655,13 @@ class CharterW3PromotePromotions(unittest.TestCase):
     than the honest `check: null` it replaces."""
 
     SPINE = ROOT / "skills" / "charter" / "templates" / "CHARTER.template.json"
+    SPINE_REL = "skills/charter/templates/CHARTER.template.json"
 
-    # Captured via `git rev-parse HEAD` at implementation time (g5 dispatch,
-    # sitting on top of g4's already-merged EXPLORER_SPINE promotion).
-    PINNED_HEAD = "442a5826e23f3259bdfd3f92d301188c693b1b5e"
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g5
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "9df4777a9329e4eaf880fc68a9ff63b0ad9513c1"
 
     EXPECTED_CHECKS = {
         ("project-templates", "c1"): {
@@ -9652,27 +9678,31 @@ class CharterW3PromotePromotions(unittest.TestCase):
         ("glossary", "c1"), ("agent-guide", "c1"), ("engine-config", "c1"),
     }
 
-    def _skip_if_head_moved(self):
+    def _fail_if_template_drifted(self):
         import subprocess
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
             capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(out.returncode, 0, out.stderr)
-        head = out.stdout.strip()
-        if head != self.PINNED_HEAD:
-            self.skipTest(
-                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
-                f"{head} -- this test's assumptions about the template's "
-                "shape need re-verifying against the current HEAD before "
-                "they can be trusted, not silently re-run against drift"
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"CharterW3PromotePromotions' proof is stale: pinned to "
+                f"blob {self.PINNED_BLOB} of {self.SPINE_REL}, current "
+                f"blob is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g5 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
             )
 
     def _load_spine(self):
         return json.loads(self.SPINE.read_text(encoding="utf-8"))
 
     def test_promoted_checks_match_shipped_shape(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         for (tid, cid), expected in self.EXPECTED_CHECKS.items():
             with self.subTest(cond=f"{tid}.{cid}"):
@@ -9685,7 +9715,7 @@ class CharterW3PromotePromotions(unittest.TestCase):
         reusable, reliably-wired verifier, `closeout.c1` for lack of a
         stable archive-path convention -- pin that both stay `check: null`
         rather than silently drifting either way."""
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         interrogate_c1 = {c["id"]: c for c in cl["tasks"]["interrogate"]["postconditions"]}["c1"]
         closeout_c1 = {c["id"]: c for c in cl["tasks"]["closeout"]["postconditions"]}["c1"]
@@ -9697,14 +9727,14 @@ class CharterW3PromotePromotions(unittest.TestCase):
         byte-identical and must NOT gain a `basis` field --
         `decision:no-basis-backfill` reserves that mechanism for w3-basis's
         own population, not this gate's promotions."""
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         c1 = cl["tasks"]["project-templates"]["postconditions"][0]
         self.assertEqual(c1["statement"], "project-specific templates seeded")
         self.assertNotIn("basis", c1)
 
     def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         nonnull = set()
         for tid, t in cl["tasks"].items():
@@ -9727,7 +9757,7 @@ class CharterW3PromotePromotions(unittest.TestCase):
     # exists + evidence_type + match; never asserts an artifact from thin air).
 
     def test_project_templates_c1_status_membership_discriminates(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("project-templates", "c1")]
         src = gate("src", "in-progress")
         target = _gate_with_check("target", check)
@@ -9792,11 +9822,11 @@ class ScoutW3PromotePromotions(unittest.TestCase):
     as every prior gate's own split promotions (e.g. g1's COMMANDER_SPINE
     `plan.c2`).
 
-    Pin PINNED_HEAD via `git rev-parse HEAD` captured at implementation
-    time, `skipTest` (never fail) if HEAD has since moved past it -- this
-    repo's edits are still uncommitted at authoring time, so HEAD is the
-    base commit (g5's own merged promotion) this gate's edit sits on top
-    of, not a future commit.
+    Pin the **blob OID** of SCOUT.template.json (not repo HEAD), so
+    unrelated commits elsewhere never perturb it; if the template's content
+    has drifted from the pinned blob, this test class FAILS loudly rather
+    than silently skipping -- a template shape this test was never written
+    against must be re-verified, not silently trusted.
 
     The promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
     an EMPTY file, not merely a MISSING one, attacking the `-s` nonempty
@@ -9807,10 +9837,13 @@ class ScoutW3PromotePromotions(unittest.TestCase):
     worse than the honest `check: null` it replaces."""
 
     SPINE = ROOT / "skills" / "scout" / "templates" / "SCOUT.template.json"
+    SPINE_REL = "skills/scout/templates/SCOUT.template.json"
 
-    # Captured via `git rev-parse HEAD` at implementation time (g7 dispatch,
-    # sitting on top of g5's already-merged CHARTER promotion).
-    PINNED_HEAD = "d73c6b9ac42c47140187efc075ac68a4af68b2cf"
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g7
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "6e07b4df967364e486f110f78a2d7a2af859504e"
 
     EXPECTED_CHECKS = {
         ("report", "c1"): {
@@ -9831,27 +9864,31 @@ class ScoutW3PromotePromotions(unittest.TestCase):
     # anywhere prior to this gate.
     PRE_EXISTING_NONNULL = set()
 
-    def _skip_if_head_moved(self):
+    def _fail_if_template_drifted(self):
         import subprocess
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
             capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(out.returncode, 0, out.stderr)
-        head = out.stdout.strip()
-        if head != self.PINNED_HEAD:
-            self.skipTest(
-                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
-                f"{head} -- this test's assumptions about the template's "
-                "shape need re-verifying against the current HEAD before "
-                "they can be trusted, not silently re-run against drift"
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"ScoutW3PromotePromotions' proof is stale: pinned to blob "
+                f"{self.PINNED_BLOB} of {self.SPINE_REL}, current blob is "
+                f"{blob} -- the template changed since this test's shape "
+                "assumptions were verified (g7 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
             )
 
     def _load_spine(self):
         return json.loads(self.SPINE.read_text(encoding="utf-8"))
 
     def test_promoted_check_matches_shipped_shape(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         for (tid, cid), expected in self.EXPECTED_CHECKS.items():
             with self.subTest(cond=f"{tid}.{cid}"):
@@ -9859,7 +9896,7 @@ class ScoutW3PromotePromotions(unittest.TestCase):
                 self.assertEqual(by_id[cid]["check"], expected)
 
     def test_report_c1_statement_unchanged_and_no_basis(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         c1 = cl["tasks"]["report"]["postconditions"][0]
         self.assertEqual(c1["statement"], "SCOUT_REPORT written; candidates routed")
@@ -9869,7 +9906,7 @@ class ScoutW3PromotePromotions(unittest.TestCase):
         """The other two candidates this gate's own handoff named and
         declined (pure judgment, no locator) -- pin that both stay
         `check: null` rather than silently drifting either way."""
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         context_c1 = {c["id"]: c for c in cl["tasks"]["context"]["postconditions"]}["c1"]
         audit_c1 = {c["id"]: c for c in cl["tasks"]["audit"]["postconditions"]}["c1"]
@@ -9877,7 +9914,7 @@ class ScoutW3PromotePromotions(unittest.TestCase):
         self.assertIsNone(audit_c1["check"])
 
     def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = self._load_spine()
         nonnull = set()
         for tid, t in cl["tasks"].items():
@@ -9902,7 +9939,7 @@ class ScoutW3PromotePromotions(unittest.TestCase):
         succeeds unconditionally, whether the real world is healthy or
         defective -- proving the promotion cannot regress into a silent
         blocking gate."""
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("report", "c1")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -9945,7 +9982,7 @@ class ScoutW3PromotePromotions(unittest.TestCase):
         through the engine's own `_run_check_command` shell runner directly
         (the same one `_check_condition` calls), rather than re-implementing
         shell invocation by hand."""
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         check = self.EXPECTED_CHECKS[("report", "c1")]
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -10001,31 +10038,43 @@ class CartographerW3PromoteDeclined(unittest.TestCase):
     NOT touched either, per this gate's own Close Criteria ('only sync the
     ones you actually edit').
 
-    Pin PINNED_HEAD via `git rev-parse HEAD` captured at implementation
-    time, `skipTest` (never fail) if HEAD has since moved past it."""
+    Pin the **blob OID** of CARTOGRAPHER.template.json (not repo HEAD), so
+    unrelated commits elsewhere never perturb it; if the template's content
+    has drifted from the pinned blob, this test class FAILS loudly rather
+    than silently skipping -- a template shape this test was never written
+    against must be re-verified, not silently trusted."""
 
     SPINE = ROOT / "skills" / "cartographer" / "templates" / "CARTOGRAPHER.template.json"
+    SPINE_REL = "skills/cartographer/templates/CARTOGRAPHER.template.json"
 
-    PINNED_HEAD = "d73c6b9ac42c47140187efc075ac68a4af68b2cf"
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g7
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "800d0cd3ecf8c3fe82bf7beabb29cc65af9c0797"
 
-    def _skip_if_head_moved(self):
+    def _fail_if_template_drifted(self):
         import subprocess
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
             capture_output=True, text=True, encoding="utf-8",
         )
         self.assertEqual(out.returncode, 0, out.stderr)
-        head = out.stdout.strip()
-        if head != self.PINNED_HEAD:
-            self.skipTest(
-                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
-                f"{head} -- this test's assumptions about the template's "
-                "shape need re-verifying against the current HEAD before "
-                "they can be trusted, not silently re-run against drift"
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"CartographerW3PromoteDeclined's proof is stale: pinned to "
+                f"blob {self.PINNED_BLOB} of {self.SPINE_REL}, current blob "
+                f"is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g7 dispatch). Re-verify "
+                "the zero-promotion decision against the new template "
+                "content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
             )
 
     def test_every_condition_stays_null(self):
-        self._skip_if_head_moved()
+        self._fail_if_template_drifted()
         cl = json.loads(self.SPINE.read_text(encoding="utf-8"))
         nonnull = []
         for tid, t in cl["tasks"].items():
