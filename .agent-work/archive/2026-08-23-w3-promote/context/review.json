@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "review",
+  "files": [],
+  "repo_rev": {
+    "commit": "dd6f6271deee00af34993e9b1c23382e46c851da"
+  },
+  "run": {
+    "work_id": "w3-promote",
+    "generated_at": "2026-08-23T17:07:30Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w3-promote",
+      "repo": "/home/tommy/projects/569-w3-promote",
+      "durable": "/home/tommy/projects/569-w3-promote"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w3-promote"
+    }
+  }
+}

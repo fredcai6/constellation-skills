@@ -1,0 +1,49 @@
+{
+  "work_id": "w3-promote",
+  "type": "survey",
+  "note": "Hand-tracked, not engine-driven: this crew is a Task-tool subagent sharing its dispatcher Commander's process/session; it has no mcp__spine__* tools on its surface and was explicitly instructed by the dispatch not to look for one. This file records the same r0-r6 checks the REVIEW_SURVEY.template.json shape names, worked to completion, but was not claimed/advanced through the checklist engine.",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["r0-context", "r1-handoff", "r2-scope", "r3-evidence", "r4-quality", "r5-reconciliation", "r6-fowler"],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context", "title": "Load baseline context",
+      "status": "complete", "result": "pass",
+      "finding": "Read g5-reviewer-handoff.md, g5-implementer-handoff.md, g5-implementer-result.md, and notes-1.md's CHARTER section before starting verification. Cross-checked g1's already-landed COMMANDER_SPINE plan.c1 (cited as the shape g5's promotion mirrors) and g3/g4's already-committed sibling test classes (AdmiralSpineW3PromotePromotions, ExplorerSpineW3PromotePromotions) for convention consistency."
+    },
+    "r1-handoff": {
+      "id": "r1-handoff", "title": "Handoff compliance",
+      "status": "complete", "result": "pass",
+      "finding": "Exactly 1 condition changed (project-templates.c1), independently reproduced against `git show HEAD:skills/charter/templates/CHARTER.template.json` (dumped every condition's check both pre- and post-edit; only project-templates.c1 differs). closeout.c1, interrogate.c1, orchestrator-context.c1, agent-guide.c1, and every other condition confirmed byte-identical. project-templates.c1's shape (kind=artifact, evidence_type=project-templates, match.status=[seeded, skipped-no-need], statement text unchanged) matches the handoff exactly and mirrors COMMANDER_SPINE plan.c1 (independently read: kind=artifact, evidence_type=mission-frame, match.status=[produced, skipped-as-trivial], no basis field) in shape, confirming the mirroring claim is real, not asserted."
+    },
+    "r2-scope": {
+      "id": "r2-scope", "title": "Scope drift",
+      "status": "complete", "result": "pass",
+      "finding": "git diff --stat confirms 1 insertion/1 deletion (a single-line replacement, compact-format hand-edit discipline honored) in each of the shipped template and its overlay, byte-identical to each other (`diff` empty, and `check_template_overlay_freshness.py` reports all 56 overlays including CHARTER clean). tests/test_checklist_engine.py diff is a pure append at EOF (new class CharterW3PromotePromotions only); no pre-existing test touched. tests/test_validate_spine.py diff touches only the floor assertion's message string and the numeric threshold (15 -> 14), which is the correct direction for a genuine gate-clearing edit. COMMANDER_SPINE.template.json, ADMIRAL_SPINE.template.json, EXPLORER_SPINE.template.json, and checklist_engine.py do not appear anywhere in `git diff --name-only` -- exclusions honored."
+    },
+    "r3-evidence": {
+      "id": "r3-evidence", "title": "Required evidence",
+      "status": "complete", "result": "pass",
+      "finding": "Independently reproduced every claimed command: JSON parses OK; overlay freshness script reports CHARTER clean; `python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q` -> 641 passed, 26 skipped, 148 subtests, matching the result doc exactly. Independently re-ran the corpus-wide falsifiable-all-null sweep both at current worktree state (14) and at the pre-edit commit via `git stash push/pop` on just the two template files (15) -- confirmed the 15->14 drop is real, attributed to project-templates clearing its single (only) postcondition, and the stash/pop round-trip left the working tree exactly as found. Ran the new class in isolation (`-k Charter`) -- 5 passed. Deliberately mutated the shipped file's match list (dropped 'skipped-no-need') and re-ran: test_promoted_checks_match_shipped_shape and test_no_condition_outside_pre_existing_and_promoted_carries_a_check both genuinely failed, proving the shape pin has real discriminating power, then restored the file via a manual re-application of the exact single-line edit (my own earlier `git checkout --` mistakenly reverted the file all the way to pre-g5 HEAD; caught immediately via `git diff` showing the wrong direction, corrected by re-applying the implementer's own line, and confirmed byte-identical to the original diff via matching git blob hashes before proceeding). grep for 'basis' in the shipped CHARTER.template.json returns zero hits."
+    },
+    "r4-quality": {
+      "id": "r4-quality", "title": "Quality vs inherited rules",
+      "status": "complete", "result": "pass",
+      "finding": "decision:no-new-check-kinds honored (only `artifact` used, already 6x live in this template before this edit -- intent.c1, orchestrator-context.c1, crew-context.c1, glossary.c1, agent-guide.c1, engine-config.c1 -- independently confirmed via `git show HEAD:...`; only the evidence_type string 'project-templates' is fresh, which the decision does not gate). decision:blocking-where-adjudicated honored -- the promotion reuses a kind already live in this file (no first-of-kind consult needed) and both declines are independently sound: closeout.c1's wall-clock-path defect independently re-verified by reading scripts/spine_lifecycle.py directly (archive_name_for is f'{today}-{work_id...}', keyed on a caller-supplied wall-clock value; no member of the resolver's own placeholder family in scripts/init_work_area.py -- <work-id>, <repo-root>, <role-skill-dir>, <role-session-id> -- can pin a date), the exact same defect g3's own AdmiralSpineW3PromotePromotions docstring already named for closeout.c4, confirmed by reading that docstring; interrogate.c1's two-part decline independently re-verified against source: scripts/verify_interrogation.py exists, but scripts/init_work_area.py's resolve_spine (line 142) resolves every <role-skill-dir> token found in a template's text to the SAME single --skill-dir value passed for that template's OWN instantiation regardless of the role name spelled in the token -- confirmed by reading _resolve_skill_dir_token and its caller directly -- and scripts/install_constellation.py's SKILL_SCRIPTS manifest (read directly) ships verify_interrogation.py only with 'interrogator' (line 234) and lists 'charter' as ('checklist_engine.py',) only (line 224), so a <interrogator-skill-dir> token embedded in CHARTER's own spine would genuinely resolve wrong in an installed repo. Both left-null claims hold up under independent source reading, not pattern-matched on faith. decision:no-basis-backfill honored -- grep confirms no basis field anywhere in the diff. Compact-format JSON hand-edit discipline honored (diff is exactly 1 single-line replacement per file, no reflow)."
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation", "title": "Reconciliation check",
+      "status": "complete", "result": "pass",
+      "finding": "No architecture-significant structural change beyond reusing the engine's existing artifact-check machinery, read-only. map/INDEX.md is untouched by this gate's diff (only the earlier, already-committed g1 change touched it). The implementer's own out-of-scope observation (install_constellation.py's manifest gap for verify_interrogation.py/'charter') is a genuine, independently-confirmed triage candidate, correctly left out of this gate's scope rather than fixed inline."
+    },
+    "r6-fowler": {
+      "id": "r6-fowler", "title": "Refactoring pass (Fowler code smells)",
+      "status": "complete", "result": "pass",
+      "finding": "Recorded to g5-review/FOWLER_PASS.json, scripts/verify_fowler_pass.py exits 0. 10 smells absent, 2 (large-class, duplicated-code) overridden citing the already-landed sibling classes' (CommanderSpineW3PromotePromotions, AdmiralSpineW3PromotePromotions, ExplorerSpineW3PromotePromotions) own identical per-gate class shape, verified directly by reading those classes in the same file."
+    }
+  },
+  "consolidation": {"verdict": "APPROVE", "consolidated_at": "2026-08-23"},
+  "triage_candidates": [
+    "install_constellation.py's per-skill script manifest does not bundle verify_interrogation.py with 'charter', even though CHARTER's own interrogate task drives constellation-interrogator in-context. Independently confirmed real (manifest read directly). Not a blocker for this gate; already flagged by the implementer as an out-of-scope observation."
+  ],
+  "blockers": []
+}

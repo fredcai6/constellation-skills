@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "work_id": "w3-promote",
+  "root": "/home/tommy/projects/569-w3-promote",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "parses but carries no nodes[].id"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "0 packet(s), none non-empty"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/AGENT_GUIDE.md",
+      "content_hash": "976966584f9b35e3b244116f20e108fed6fbc0195072289e92274b6f89919a94",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECK_SCRIPT_CENSUS.md",
+      "content_hash": "83ff9f4328aa2965bddadbb78fa87de731b6ae3a3efd08a4cdb9f449d0718f74",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "ccc03657424cdec7ccaf98e88eea6770c23a1fbc73f2f08f6707328b4f9c5d89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": true,
+      "content_hash": "30e401e6ac3888dfa936d6aecdee99719fc778b4d64b9a1a77ea969fb12c757a"
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": true,
+      "content_hash": "3be528d65d4a3a982c19dd4acc9440316a69e834f7a1c6b99f87dd348ff63ebf"
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "skills/*/templates/*.json spine templates and their per-condition check-kind wiring are data files with no code-map nodes; scripts/validate_spine.py's own call graph is unmapped because map/INDEX.md carries no citable anchor ids this run (unparseable: no nodes[].id) and ids.jsonl is empty"
+  ],
+  "escalation": "none needed this run -- code map appears stale/broken repo-wide (unparseable INDEX.md, empty ids.jsonl) independent of this lane's narrow scope; recorded as a triage candidate for the map owner rather than blocking w3-promote",
+  "emitted_at": "2026-08-22T23:30:54.593000+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

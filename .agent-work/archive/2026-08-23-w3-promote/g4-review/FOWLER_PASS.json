@@ -1,0 +1,20 @@
+{
+  "work_id": "w3-promote",
+  "diff_ref": "g4-implement: skills/explorer/templates/EXPLORER_SPINE.template.json (3 hunks), .agent-work/templates/EXPLORER_SPINE.template.json (mirror), tests/test_checklist_engine.py (new class ExplorerSpineW3PromotePromotions, lines 9236-9523), tests/test_validate_spine.py (floor message only)",
+  "repo_standards_ref": "docs/agents/AGENT_GUIDE.md, docs/agents/ORCHESTRATOR_CONTEXT.md, skills/reviewer/SKILL.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "Each test method is a single, linear HEALTHY/DEFECTIVE probe; longest (test_init_c2_command_check_discriminates_lease_status) is ~20 lines of tempdir setup plus two assertions, consistent with the sibling classes' own method lengths.", "override": null},
+    {"smell": "large-class", "verdict": "overridden", "finding": "ExplorerSpineW3PromotePromotions is ~290 lines / 7 test methods, the largest class this diff touches.", "override": {"repo_standard": "Sibling classes CommanderSpineW3PromotePromotions (tests/test_checklist_engine.py:8663) and AdmiralSpineW3PromotePromotions (tests/test_checklist_engine.py:8994), already landed on this branch by g1 and g3 of this same wave, establish one test class per promoted-template gate, with one dedicated tempdir-based test method per promoted condition plus shared shape/route/no-other-condition pins -- this class mirrors that exact convention rather than inventing a new shape.", "reason": "Matching the already-ratified sibling shape (verified directly against AdmiralSpineW3PromotePromotions's own per-condition tempdir test methods) keeps the three sibling review artifacts comparable gate-to-gate; splitting this one class differently from its two siblings would be inconsistency for its own sake, not a real size problem."}},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "The three per-condition discrimination tests (init.c2, context.c1, spec.c1) repeat the same tempfile.TemporaryDirectory / write-healthy / advance / write-defective / assertRaises / attest-refusal skeleton.", "override": {"repo_standard": "AdmiralSpineW3PromotePromotions's own three per-condition tests (init_c2, latitude_c1, execute_c2) repeat the identical skeleton with no shared helper extracted -- verified directly by reading that class in this same file.", "reason": "Each method's HEALTHY/DEFECTIVE payload is condition-specific (different file, different adversary-chosen mutation) and the explicit repetition keeps each test independently readable and independently deletable without touching a shared fixture that could hide which condition broke; the established sibling pattern already made this same call."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "EXPECTED_CHECKS and PRE_EXISTING_NONNULL are plain class-level data tables, matching the sibling classes' own shape.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The diff touches exactly the files the handoff named; no ripple into unrelated call sites.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "No new abstraction, hook, or parameter was introduced for a hypothetical future use; command checks reuse the engine's existing kind exactly.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The class docstring and the adversary-mutation inline comments explain WHY a mutation is adversarial (e.g. a status value the lease machinery itself never writes), not a patch over unclear code.", "override": null}
+  ],
+  "rail_exception": null
+}

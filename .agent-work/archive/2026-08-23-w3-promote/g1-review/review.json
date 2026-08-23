@@ -1,0 +1,50 @@
+{
+  "work_id": "w3-promote",
+  "type": "survey",
+  "note": "Hand-tracked, not engine-driven: this crew is a Task-tool subagent sharing its dispatcher Commander's process/session; it has no mcp__spine__* tools on its surface and was explicitly instructed by the dispatch not to look for one (calling one would drive the Commander's own bound spine, not a survey this crew owns -- see g1-reviewer-handoff.md preamble and skills/constellation-reviewer/references/checklist-engine.md's 'Task-tool subagent' section). This file records the same r0-r6 checks the REVIEW_SURVEY.template.json shape names, worked to completion, but was not claimed/advanced through the checklist engine. Flagged verbatim in REVIEW_RESULT.md's Workflow Feedback.",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["r0-context", "r1-handoff", "r2-scope", "r3-evidence", "r4-quality", "r5-reconciliation", "r6-fowler"],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context", "title": "Load baseline context",
+      "status": "complete", "result": "pass",
+      "finding": "Read references/global-everyone.md, references/checklist-engine.md, g1-reviewer-handoff.md, g1-implementer-handoff.md, g1-implementer-result.md in full before starting verification."
+    },
+    "r1-handoff": {
+      "id": "r1-handoff", "title": "Handoff compliance",
+      "status": "complete", "result": "pass",
+      "finding": "All 8 named conditions promoted exactly as specified (kinds, evidence_type, match, existence-only plan.c2 statement text untouched). Overlay synced and independently confirmed fresh. Red-proof test class present, independently run, 10/10 pass. Floor count in test_validate_spine.py independently re-measured at 17, matching the corrected comment. All 3 collateral fixes correctly assert the NEW shape rather than deleting pins."
+    },
+    "r2-scope": {
+      "id": "r2-scope", "title": "Scope drift",
+      "status": "complete", "result": "pass",
+      "finding": "git diff --stat confirms exactly 8 insertions/8 deletions in the spine template, total line count unchanged (142/142) -- no reflow. basis objects on plan.c2/c4/c5 byte-identical (diff shows only the check field changed on those lines). bookend:true intact on init and archive. plan.c6, context.*, execute.*, triage.* untouched (grep confirms). checklist_engine.py diff is empty. New test class appended at EOF only; no existing test class touched. map/INDEX.md diff is a legitimate freshness rebuild (5723->5739 entities, matches the new test class's added Python entities)."
+    },
+    "r3-evidence": {
+      "id": "r3-evidence", "title": "Required evidence",
+      "status": "complete", "result": "pass",
+      "finding": "Independently reproduced every claimed command: parse-check OK, overlay freshness OK (56/56), targeted pytest green, full corpus sweep re-measured at 17/2, full suite `python3 -m pytest -q` green (3739 passed, 9 skipped, 1282 subtests, exit 0). Verified engine message strings ('is type ... not the required ...', 'does not match required', 'engine-checked; cannot attest') match scripts/checklist_engine.py verbatim. Verified claim()/release() only ever write status active/released (init.c1's adversary value 'quantum-entangled-lease' is genuinely never written by the legitimate lease machinery)."
+    },
+    "r4-quality": {
+      "id": "r4-quality", "title": "Quality vs inherited rules",
+      "status": "complete", "result": "pass",
+      "finding": "decision:no-new-check-kinds honored (only command/artifact used). decision:blocking-where-adjudicated honored (no report_only/override_policy on any of the 8; each check kind independently confirmed already live elsewhere in this same file). Compact-format JSON discipline honored (verified via line-count/diff-stat, no reflow)."
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation", "title": "Reconciliation check",
+      "status": "complete", "result": "pass",
+      "finding": "map/INDEX.md rebuild is the correct, narrowly-scoped reconciliation for this gate's own diff (new test entities only); no architecture-significant structural change beyond the code-map's own entity count. No decision candidate needed beyond what the implementer already surfaced (plan.c4/c5 statement text still says 'NOT machine-verified' despite now carrying a check -- flagged as a genuine, correctly out-of-scope follow-up, not a defect in this gate)."
+    },
+    "r6-fowler": {
+      "id": "r6-fowler", "title": "Refactoring pass (Fowler code smells)",
+      "status": "complete", "result": "pass",
+      "finding": "Recorded to FOWLER_PASS.json, scripts/verify_fowler_pass.py exits 0. 11 smells absent, 1 (large-class) overridden citing the handoff's own explicit instruction to model on the sibling CommanderSpineBasisFields class, which already establishes this size/shape as the repo's convention for this test category."
+    }
+  },
+  "consolidation": {"verdict": "APPROVE", "consolidated_at": "2026-08-22"},
+  "triage_candidates": [
+    "plan.c4/plan.c5 statement text still literally says 'NOT machine-verified' even though both now carry a real artifact check -- a wording follow-up, not a defect in this gate (Close Criteria named only the check field in scope).",
+    "map/INDEX.md freshness maintenance is a recurring collateral cost of any pytest-authoring gate; consider whether a later wave should fold a code-map rebuild step into the standard implementer/Commander checklist rather than leaving it to be discovered per-gate."
+  ],
+  "blockers": []
+}
