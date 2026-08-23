@@ -1,0 +1,307 @@
+{
+  "work_id": "w3-promote",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-promote",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g4-implement",
+        "context-manifest-ref": "ctx-w3-promote-g4",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": ["skills/explorer/templates/EXPLORER_SPINE.template.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Promote check:null conditions in EXPLORER_SPINE.template.json per the g4 handoff, honoring decision:no-basis-backfill (the basis field is reserved for the sibling w3-basis lane, a different population)."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A handoff whose Constraints section explicitly names decision:no-basis-backfill would be sufficient for an implementer not to add a basis field."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The implementer's first pass added a basis object to two split conditions (context.c1, spec.c1), citing an out-of-wave precedent (COMMANDER_SPINE's own pre-existing plan.c2/c4/c5, authored before this wave's own pre-rulings existed). Caught and corrected by the Commander before review; the reviewer then independently re-derived the correction's soundness from the actual pre-ruling text (MISSION_FRAME.md's Out of Scope section) rather than trusting the Commander's read."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Caught same-gate, before review, at zero cost to schedule or rework_count. Would have shipped a decision-boundary violation to review if not caught."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Commander stripped the basis field before dispatching to review; g5's implementer was warned explicitly and did not repeat the mistake."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Naming a constraint in a handoff's Constraints list is necessary but was not sufficient here -- the implementer needed to actively check an out-of-wave precedent against this wave's own pre-rulings rather than pattern-match on file-family similarity to a plausible-looking sibling condition."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-promote",
+        "project": "constellation-skills",
+        "role": "reviewer",
+        "spine-step": "g5-review",
+        "context-manifest-ref": "ctx-w3-promote-g5",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": ["skills/charter/templates/CHARTER.template.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Independently red-proof the g5 CHARTER.template.json promotion by hand-mutating the shipped JSON and confirming the new test class genuinely fails, then restoring the original."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Running `git checkout -- <path>` after a self-authored mutation would undo only that mutation, returning the file to the state it carried immediately before the reviewer's own edit."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "`git checkout --` reverted the file all the way to pre-g5 HEAD instead, because the implementer's own promotion edit was itself still uncommitted -- there was no intermediate commit to return to. Caught immediately via `git diff` (the diff pointed the wrong direction), corrected by re-applying the implementer's exact line, and confirmed the restoration was byte-identical to the original diff before proceeding."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Self-caught within the same review pass, zero cost to schedule; the Commander independently re-verified the restored diff byte-identical and the suite still green before accepting the review result."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Restore via a saved copy or `git stash`/`git apply` instead of a bare `git checkout --` when mutation-testing an uncommitted diff, since the bare form resets to the last COMMIT, not to \"the state before my last edit,\" whenever the target file already carries uncommitted changes."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-promote",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g7-implement",
+        "context-manifest-ref": "ctx-w3-promote-g7",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "skills/scout/templates/SCOUT.template.json",
+          "skills/cartographer/templates/CARTOGRAPHER.template.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Author the g7 handoff reversing decision:blocking-where-adjudicated's default to report-only, since both SCOUT.template.json and CARTOGRAPHER.template.json measured zero live check kinds before this gate -- the first report-only-biased handoff this wave, after four straight blocking-biased ones."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A default-reversal handoff, being a genuine departure from the pattern the crew had followed four times already, might need a round-trip question from the implementer or reviewer to confirm the reversal was intentional and not a handoff-authoring mistake."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Neither the implementer nor the reviewer needed a round-trip. The handoff's CRITICAL section pre-answered the hardest judgment call (report-only-by-default for a first-use file) precisely enough, including a concrete worked model (map_orient.py's own --report-only flag) and an explicit worked example of what a report-only command check must look like, that both crews executed and independently verified the reversal without escalating."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Zero round-trips, zero rework, APPROVE on first pass -- the gate closed in the same shape as every prior gate despite carrying a genuine default reversal."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "none."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "proposed-remedy",
+          "strength": "weak",
+          "statement": "When a wave needs to flip a default mid-run, name the flip explicitly in its own CRITICAL/bolded section with a concrete worked model to copy, rather than relying on the crew to infer the reversal from the per-template measurement alone."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-promote",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g0-corpus-survey",
+        "context-manifest-ref": "ctx-w3-promote-g0",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/w3-promote/notes-1.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Assess bucket-2 (locator-expressible, no-new-mechanism) density across all 8 owned templates, citing the launch order's ~31/65 corpus-wide extrapolation from COMMANDER_SPINE's own 9/19 (47%) measurement rather than re-deriving it."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The 9/19 rate measured on COMMANDER_SPINE.template.json by the wave-2 N=3 panel would generalize roughly uniformly across the other 7 templates in the corpus, since the launch order applied one ratio (~31/65) corpus-wide."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "5 of the 7 non-COMMANDER_SPINE templates measured fresh, per-condition, land outside the [30%,65%] band the launch order applied -- all on the low side, including two clean structural zeros (EXECUTE_PLAN, IMPLEMENTER_PLAN). The final corpus total landed at 16/65 (~25%), materially below the ~31 extrapolated. Bucket-2 density correlates with template SHAPE (rich top-level orchestrator spine vs. thin gate-order/child-plan/bootstrap-once scaffolding), not with corpus membership alone."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "No rework or reopen -- the launch order's own Honest-Null Clause and decision:record-the-partition-per-condition explicitly pre-sanctioned this exact shape of result (a smaller-than-predicted number, honestly measured, recorded per-template with reasons). The gap was absorbed as a float-note rather than a stop-and-float."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "None needed for this run -- the pre-rulings already named the correct escape hatch (float, don't force). Recorded as evidence for how the NEXT wave should weight a single-template extrapolation."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A corpus-wide density estimate built from ONE template's measurement carries the shape of that one template. COMMANDER_SPINE and ADMIRAL_SPINE/EXPLORER_SPINE (the three that landed in-band) share a \"rich top-level orchestrator spine with many artifact-producing gates\" shape; the five that landed low-side (CHARTER, EXECUTE_PLAN, IMPLEMENTER_PLAN, SCOUT, CARTOGRAPHER) are thinner, gate-order-heavy, bootstrap-once, or report-focused."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "weak",
+          "statement": "A future wave scoping itself off a single-template panel measurement should either explicitly name which OTHER templates it expects to share that template's shape, or weight the corpus-wide extrapolation down rather than applying one ratio uniformly across structurally different files."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-promote",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "plan",
+        "context-manifest-ref": "ctx-w3-promote-plan",
+        "refusals": 1,
+        "reopens": 2,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/w3-promote/execute.json"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Complete this bounded issue across a long-running session, handing off cleanly at REFRESH REQUESTED boundaries rather than pushing through context pressure."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The launch order stated this wave the Admiral IS watching for REFRESH REQUESTED: markers and will relaunch, contrasted explicitly against wave 2, which raised 8 refresh-requests and had 0 answered."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "2 refresh-requests were raised this run (plan gate why_ref w-3, execute gate why_ref w-4), and 2 relaunches actually occurred -- this session is attempt-3. Both refresh-requests were answered, matching the launch order's stated fix exactly."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "total_rework stayed 0 across both the top-level commander spine and execute.json's own 20 gates despite 2 mid-run relaunches -- each relaunched attempt picked up cleanly from the prior attempt's own DIGEST/STATE_NOTE.md without re-deriving or redoing any closed gate's work."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "none needed -- the mechanism worked as designed this wave."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-promote",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g9-integrate",
+        "context-manifest-ref": "ctx-w3-promote-g9",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": ["map/INDEX.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run the full suite after the final commit per g9's own imperative, which assumed a pre-commit hook mechanizes map/INDEX.md freshness."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "map/INDEX.md would already be current at commit time, since g9's own gate imperative states \"a pre-commit hook now mechanizes this.\""
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "python3 -m pytest -q failed one test after the g9 gate-progression-closeout commit: MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build, entity count drifted 778->790 in tests.test_checklist_engine from this wave's own new red-proof test classes. Checked the actual git hooks directory (`git rev-parse --git-common-dir`/hooks/pre-commit): only a `.sample` file exists, no active hook is installed in this worktree. The staleness was caught by the pytest suite's own freshness assertion, not by any hook."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "One extra rebuild-and-commit cycle (python3 -m scripts.code_map build --root ., then commit) before the suite could be confirmed green. No rework_count increment since this was within the same gate, before advance."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Ran the full suite explicitly after every commit rather than trusting the hook claim; would recommend a future Commander in this worktree do the same rather than assume the hook fires."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Either the hook was never installed in this specific worktree (worktrees do not automatically inherit hooks installed via a setup step run only in the primary checkout), or the gate imperative's claim was written aspirationally/for a different environment and never actually reconciled against this repo's real hook state."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w3-promote",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "g7-review",
+        "context-manifest-ref": "ctx-w3-promote-g7-review",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": []
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Dispatch an independent reviewer crew (constellation-crew subagent) to verify each implementer gate's work, expecting it to drive the engine (claim a lease, use spine_status/spine_advance) per the constellation-reviewer skill's primary instructions."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A dispatched reviewer crew would either drive its own bound spine through the MCP door, or hit a clearly-documented no-spine-bound fallback rarely enough not to be worth separate attention."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Every in-harness crew dispatched this wave (g5's and g7's reviewer, at minimum) reported it could not reach the checklist engine's MCP door -- its own SPINE_SESSION env resolves to the dispatching Commander's own bound spine, not a spine of the crew's own. Each crew correctly fell back to a hand-tracked survey per the constellation-reviewer skill's own documented fallback for \"no spine bound,\" and this never blocked a gate."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Zero blocking impact this run -- every fallback worked and produced a real, independently-verified REVIEW_RESULT. But it fired identically at every crew dispatch this wave, suggesting it is the STANDARD path for this dispatch shape, not an edge case."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "None needed -- the skill's own documented fallback handled it cleanly every time."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "weak",
+          "statement": "An in-harness subagent dispatched from a live Commander session shares its dispatcher's harness session id by design (to prevent it from driving a spine it does not own), which structurally means it can never resolve to its own bound spine under the current dispatch shape -- this may be the intended, permanent shape rather than a gap, but nobody has confirmed that explicitly."
+        }
+      ]
+    }
+  ]
+}
