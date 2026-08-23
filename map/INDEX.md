@@ -6,7 +6,7 @@ evals: 12 modules, 54 entities
 examples: 1 modules, 4 entities
 scripts: 63 modules, 1316 entities
 skills: 1 modules, 22 entities
-tests: 104 modules, 5787 entities
+tests: 105 modules, 5792 entities
 
 ## conftest (1 modules, 3 entities)
 
@@ -119,7 +119,7 @@ tests: 104 modules, 5787 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (22 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (104 modules, 5787 entities)
+## tests (105 modules, 5792 entities)
 
 ### tests.fixtures (3 modules, 6 entities)
 
@@ -196,6 +196,7 @@ tests: 104 modules, 5787 entities
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
 - [tests.test_next_verbs_record_gate_comment](tests.test_next_verbs_record_gate_comment/INDEX.md) (16 entities, 12 holes): Issue #437: `_next_verbs()`'s comments must not restate a premise #422/#328 killed.
+- [tests.test_no_imperative_writes_into_a_template](tests.test_no_imperative_writes_into_a_template/INDEX.md) (5 entities, 3 holes): No shipped instruction may direct an agent to WRITE into `templates/`.
 - [tests.test_plan_step_contract](tests.test_plan_step_contract/INDEX.md) (30 entities, 15 holes): The `plan` step's ordering and coverage rules, as SERVED to a Commander run.
 - [tests.test_prose_deletions](tests.test_prose_deletions/INDEX.md) (16 entities, 12 holes): Pin the issue-#304 prose deletions in BOTH directions.
 - [tests.test_prototyper_templates](tests.test_prototyper_templates/INDEX.md) (13 entities, 11 holes): Verifier<->template cross-check for the PROTOTYPE_RESULT.template.md gate.
