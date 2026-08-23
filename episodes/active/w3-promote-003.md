@@ -53,7 +53,8 @@
 - kind: proposed-remedy
 - strength: weak
 - lifecycle-standing: active
-- statement: When a wave needs to flip a default mid-run, name the flip explicitly in its own CRITICAL/bolded section with a concrete worked model to copy, rather than relying on the crew to infer the reversal from the per-template measurement alone.
+- statement: The default reversal was carried in its own bolded CRITICAL section of the handoff, with a concrete worked model to copy (map_orient.py's own --report-only flag) and an explicit worked example of the resulting report-only command check. Both crews executed and independently verified the reversal with zero round-trips and zero rework, per a3 and a4. The alternative shape -- leaving the crew to infer the reversal from the per-template measurement alone -- was not attempted on this run, so no comparison exists.
+- history: restated — Restated from a proposed-remedy phrased as a rule for future agents into a record of what this run actually did and what it did not test. tests/test_episode_observations.py's imperative detector flagged the original on a clause-leading 'name'; that flag was correct rather than a false positive. An episode is a record, not a rule -- a rule for a future agent to follow belongs in docs/agents/* and is a human's call, per the Admiral closeout doctrine. The last sentence is added deliberately: the original implied the counterfactual was worse, and nothing on this run measured that. — original statement was: When a wave needs to flip a default mid-run, name the flip explicitly in its own CRITICAL/bolded section with a concrete worked model to copy, rather than relying on the crew to infer the reversal from the per-template measurement alone.
 
 ## Retirement
 - status: active
