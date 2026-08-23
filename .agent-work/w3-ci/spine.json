@@ -543,7 +543,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Triage complete: single candidate routed recommend-and-defer."
         }
       ],
       "postconditions": [
@@ -554,17 +555,28 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -576,7 +588,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Run summary accepted at review (e-review-1, LAUNCH_ORDER:Return Shape)."
         }
       ],
       "postconditions": [
@@ -587,17 +600,30 @@
             "kind": "command",
             "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py w3-ci --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py w3-ci --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -609,7 +635,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Workflow feedback recorded at feedback step (3 episodes applied and verified)."
         }
       ],
       "postconditions": [
@@ -696,7 +723,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -708,12 +735,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 6,
+  "refusals": 7,
   "engine_session": {
     "session_id": "constellation/w3-ci",
     "status": "active",
     "claimed_at": "2026-08-23T00:02:58.415016+00:00",
-    "last_heartbeat": "2026-08-23T00:04:09.092788+00:00",
+    "last_heartbeat": "2026-08-23T00:11:48.142962+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -768,6 +795,20 @@
       "why": "Single triage candidate (stale skip-guard pin) routed recommend-and-defer -- outside file ownership and inherited latitude, not filed as a GitHub issue since issue-filing authority was not delegated to this Commander.",
       "mechanical": false,
       "ts": "2026-08-23T00:04:09.092779+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary written to RESULT.md: ubuntu-latest job shipped, local red-proof genuine, full suite green at the final commit, reconcile no-op recorded, single triage candidate recommend-and-defer'd. Accepted per launch order Return Shape.",
+      "mechanical": false,
+      "ts": "2026-08-23T00:10:05.472957+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Reflected honestly on the run and recorded three distinct episodes (w3-ci-001/002/003): the plan.c6 self-waive engine refusal and its workaround, the stale skip-guard-pin finding this run surfaced, and the context-hard-band trip at only 17-18% fill. Applied via apply_episode_delta.py --store-root episodes and verified via verify_episode_captured.py, phase feedback: 3 episodes recorded.",
+      "mechanical": false,
+      "ts": "2026-08-23T00:11:36.844604+00:00"
     }
   ],
   "override_ledger": [

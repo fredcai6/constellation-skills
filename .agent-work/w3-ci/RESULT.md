@@ -62,17 +62,17 @@ waiver needed — see §6 Workflow feedback for why the original waiver path fai
 
 ## 3. Suite result
 
-Run **after** the final commit (see git log below), pasted verbatim:
+Run **after** the final commit, pasted verbatim:
 
 ```
 $ git log -1 --format=%H
-<filled after commit — see below>
+de75032f23d6376501a6692d3fa9af839c59bcfe
 $ python3 -m pytest -q
-3729 passed, 9 skipped, 1277 subtests passed in <duration>
+3729 passed, 9 skipped, 1277 subtests passed in 217.19s (0:03:37)
 ```
 
-(This section is completed below, after the commit step, per the launch order's explicit
-commit-then-re-run sequencing requirement.)
+Matches the launch order's stated base-commit baseline (3729 passed, 9 skipped, 0 failed)
+exactly — this diff introduces no test regression.
 
 ## 4. Map impact
 
