@@ -179,8 +179,13 @@ class TestWorktreePathForRealWorktree:
         primary = Path(vwi.primary_checkout())
         default_wt_root = sl._default_wt_root(primary)
         if ROOT.parent.resolve() != Path(default_wt_root).resolve():
+            # Message must be STABLE across checkouts: scripts/verify_skip_guard.py
+            # allow-lists on the exact (classname, name, message) triple, so a
+            # message embedding this checkout's own absolute path can never be
+            # documented and keeps CI red forever. The paths stay available in
+            # the failure output below, just not in the skip reason.
             pytest.skip(
-                f"this checkout ({ROOT}) is not directly inside {default_wt_root}; "
+                "this checkout is not directly inside the default worktree root; "
                 "only applies to a worktree following the <wt_root>/<work-slug> convention"
             )
         got = sl.worktree_path_for(ROOT.name, wt_root=default_wt_root)
