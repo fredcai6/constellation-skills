@@ -1,0 +1,33 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "w3-ci",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "overrides": {
+      "trip": 3,
+      "force-claim": 0,
+      "force-release": 0,
+      "waive": 0,
+      "waive_authority_mismatch": 0,
+      "ids": [
+        "ov-1",
+        "ov-2",
+        "ov-3"
+      ]
+    },
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-ci-triage@59f8fb99dcde2b3d529174cea088ef543603c204",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-ci",
+    "generated_at": "2026-08-23T00:03:43Z"
+  }
+}

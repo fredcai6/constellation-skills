@@ -1460,6 +1460,7 @@ class ResolveModelTests(unittest.TestCase):
 
     CLAUDE_ROLES = (
         "commander", "commander-delegated", "implementer", "reviewer", "critic", "cartographer",
+        "explorer",
     )
 
     def test_every_populated_claude_role_resolves_to_its_own_default(self):
@@ -1563,6 +1564,22 @@ class ResolveModelTests(unittest.TestCase):
         with self.assertRaises(RC.CrewLaunchError) as ctx:
             RC.resolve_model("commander", "claude", "haiku", None)
         self.assertIn("haiku", str(ctx.exception))
+
+    def test_explorer_tier_is_sonnet_or_haiku_default_sonnet(self):
+        """Human ruling: the explorer role had no row at all, so every
+        excursion dispatch it makes was refused by branch 1 ('no model tier
+        declared for role') rather than resolving. Its work is bounded,
+        one-question exploration -- the same cheap-crew shape as implementer
+        and reviewer -- so: sonnet or haiku allowed, sonnet the default."""
+        self.assertEqual(
+            {"default": "sonnet", "allowed": frozenset({"sonnet", "haiku"})},
+            RC.ROLE_MODEL_TIERS["claude"]["explorer"],
+        )
+        resolved = RC.resolve_model("explorer", "claude", "haiku", "cheap excursion")
+        self.assertEqual("haiku", resolved.model)
+        with self.assertRaises(RC.CrewLaunchError) as ctx:
+            RC.resolve_model("explorer", "claude", "opus", None)
+        self.assertIn("opus", str(ctx.exception))
 
 
 class EntryLivenessTests(unittest.TestCase):
