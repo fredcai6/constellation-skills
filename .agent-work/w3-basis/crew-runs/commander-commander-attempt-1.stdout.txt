@@ -1,0 +1,9 @@
+The run is complete. Summary:
+
+**Mission delivered.** `CommanderSpineBasisFields` now pins to the blob OID of `skills/commander/templates/COMMANDER_SPINE.template.json` instead of whole-repo `HEAD`, and FAILs (never skips) on drift, with the re-verify command printed inline in the failure message. Both directions proven via an isolated-clone mutation battery.
+
+**Path taken:** claimed the spine, drove init → context (map DEGRADED-UNPARSEABLE, discharged via hash-pinned substitutes) → understand → plan (2 design-it-twice candidates + a cold critic that caught 4 real issues, all folded in) → execute (implementer + reviewer dispatched and independently verified, APPROVE) → reconcile (no-op, no packet map) → triage (2 candidates deferred) → review → feedback (3 episodes captured) → archive (committed, pushed, PR [#659](https://github.com/fredcai6/constellation-skills/pull/659) opened, `spine_close` called).
+
+After archive-close, the full suite surfaced 2 self-caused regressions (stale `map/INDEX.md`, and 3 of this run's own episode statements tripping the imperative/second-person guard) — both fixed and the suite re-run clean: **3734 passed, 6 skipped, 0 failed** at the final commit `a284bf6b`.
+
+`RESULT.md` is written at `.agent-work/w3-basis/RESULT.md` with full evidence, the two suite runs, triage candidates, workflow feedback, and the launch order's requested refresh comparison (6 refresh-requests, no relaunch, attempt-1, zero rework, reviewer APPROVE in 1 round). PR is open, not merged — the Admiral owns integration.

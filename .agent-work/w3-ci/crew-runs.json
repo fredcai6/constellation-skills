@@ -1,0 +1,32 @@
+[
+  {
+    "crew_id": "constellation/w3-ci/commander/commander/attempt-1",
+    "work_id": "w3-ci",
+    "gate": "commander",
+    "role": "commander",
+    "attempt": 1,
+    "status": "failed",
+    "session_name": "constellation/w3-ci/commander/commander/attempt-1",
+    "backend": "cli",
+    "door_bound": true,
+    "pid": 1519691,
+    "worktree": "/home/tommy/projects/569-w3-ci",
+    "handoff": ".agent-work/569/crew-handoffs/LAUNCH_ORDER-w3-ci.md",
+    "result": ".agent-work/w3-ci/RESULT.md",
+    "spine": ".agent-work/w3-ci/spine.json",
+    "parent": "constellation/569",
+    "stdout": ".agent-work/w3-ci/crew-runs/commander-commander-attempt-1.stdout.txt",
+    "stderr": ".agent-work/w3-ci/crew-runs/commander-commander-attempt-1.stderr.txt",
+    "started_at": "2026-08-22T23:30:00.663367+00:00",
+    "last_heartbeat": "2026-08-23T00:13:38.369948+00:00",
+    "completed_at": "2026-08-23T00:13:38.369948+00:00",
+    "abandoned": false,
+    "model": "sonnet",
+    "reason": "epic 569 wave 3 lane ci",
+    "scratch_dir": ".agent-work/w3-ci/crew-scratch/commander-commander-attempt-1-64277ce3a999",
+    "exit_code": 0,
+    "result_present": false,
+    "result_fresh": false,
+    "verdict_source": "result"
+  }
+]

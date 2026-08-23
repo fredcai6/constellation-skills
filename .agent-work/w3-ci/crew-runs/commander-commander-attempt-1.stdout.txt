@@ -1,0 +1,14 @@
+The work area has been correctly archived to `.agent-work/archive/2026-08-23-w3-ci/`. The run is complete.
+
+## Summary
+
+Delivered PR [#660](https://github.com/fredcai6/constellation-skills/pull/660): added one `ubuntu-latest` job (`test-linux`) to `.github/workflows/ci.yml`, mirroring the existing `windows-latest` job, per the frozen launch order's pre-rulings. Drove the full Commander spine end-to-end (init → context → understand → plan → execute → reconcile → triage → review → feedback → archive) through the engine, with a real implementer/reviewer crew pair for the code change.
+
+Key points:
+- **Red-proof**: demonstrated locally (this worktree is Linux) rather than via a pushed broken commit — a specific `AssertionError` captured, reverted, re-verified green, independently reproduced by the reviewer.
+- **Full suite green** at the final commit: 3729 passed, 9 skipped, 0 failed — matches the launch order's baseline exactly.
+- **Important finding for the Admiral**: `scripts/verify_skip_guard.py` refuses on a fresh full-suite run at this repo's base commit, unrelated to this diff — 3 tests are pinned to a stale revision. This means the new job's mirrored skip-guard step will likely go red on its first real CI run for a reason that isn't a regression. Recorded as an elevated `recommend-and-defer` triage candidate (not fixed — out of file ownership and inherited latitude) in `RESULT.md` §5 and the PR description.
+- Recorded 3 episodes about friction hit this run (a plan-gate self-waive engine refusal that had to be worked around, the stale-pin discovery, and a context-hard-band trip at low fill).
+- 1 refresh-request filed (at `execute`, no relaunch needed — had ample budget), 0 reworks, reviewer verdict APPROVE on the first round.
+
+The Admiral should read the stale skip-guard-pin finding before merging.

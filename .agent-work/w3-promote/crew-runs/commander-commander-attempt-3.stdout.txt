@@ -1,0 +1,11 @@
+## Run complete — epic-569/w3-promote
+
+**PR #662** (open, not merged — Admiral owns integration): https://github.com/fredcai6/constellation-skills/pull/662
+
+**Result:** promoted **16 of 65** corpus-wide `check: null` conditions into real, engine-enforced checks across 6 templates (COMMANDER_SPINE 8/19, ADMIRAL_SPINE 3/10, EXPLORER_SPINE 3/10, CHARTER 1/10, SCOUT 1/3, IMPLEMENTER_PLAN/CARTOGRAPHER/EXECUTE_PLAN honest 0). Materially below the ~31 the wave-2 panel extrapolated — the launch order's own Honest-Null Clause pre-sanctions this. `falsifiable-all-null` fault count dropped 19→13, tracked gate-by-gate. All 5 reviewer gates (g1/g3/g4/g5/g7) came back APPROVE on the first pass, 0 rework anywhere. Full suite green at the final commit: 3729 passed, 44 skipped, 0 failed.
+
+Full detail — evidence, per-template table, triage candidates (4 issue-ready recommendations, none filed — no issue-filing authority found this run), and workflow feedback — is in `.agent-work/w3-promote/RESULT.md`, committed on the PR branch.
+
+**One thing worth flagging directly:** the PR currently conflicts with `main` on exactly one file, `map/INDEX.md` — a generated index, and the same benign conflict class the `w3-door` lane already hit this epic (noted in `ADMIRAL_LOG.md`: regenerate after merge). Not a substantive conflict; standard resolution already exists.
+
+The commander spine is now fully closed (`spine_close` succeeded, work area archived to `.agent-work/archive/2026-08-23-w3-promote`), with 7 episodes captured recording what actually happened this run — including the g4 basis-field near-miss, g5's reviewer git-checkout near-miss (both self-caught), and the finding that the launch order's "pre-commit hook mechanizes map/INDEX.md" claim doesn't hold in this worktree.

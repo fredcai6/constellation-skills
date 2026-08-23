@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "decision": "stop",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 3's exit criteria are met. All four lanes merged; every promoted condition red-proved; the basis tests assert rather than skip and were proved in both directions; the ubuntu-latest job is green and windows-latest is still present and still red as expected; a real dispatched child with spine=None carries neither spine variable; main verified green on the merged tree by the Admiral at 3774 passed, 6 skipped, 0 failed.",
+    "epic_done": "COMPLETE for what this epic set out to do, and honest about what it did not. It shipped mechanism across three waves AND a corrected taxonomy -- the more durable half. It was filed believing in one defect family and closes having measured three. Family C receives no mechanism beyond w3-ci and is deliberately deferred.",
+    "good_enough": "The mandatory quality boundary held and was strengthened. No unwired checker was added. w3-promote added no new mechanism at all. w3-ci restored an existing untrusted signal rather than building a second defence. The basis-field backfill across the 65 was cancelled on measurement (2/19 gain), and the evaluate-the-65 mission was discharged by extrapolation rather than run."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D0",
+      "action": "record_evidence_only",
+      "reason": "Wave 3 was ruled the final wave at the wave-2 checkpoint; all lanes merged and every epic issue is dispositioned, so there is nothing left to plan.",
+      "issue_created": false
+    },
+    {
+      "id": "D1",
+      "action": "record_evidence_only",
+      "reason": "Three CI defects fixed under delegated fix-now triage (#663, #664, #665); recorded rather than replanned.",
+      "issue_created": false
+    },
+    {
+      "id": "D2",
+      "action": "amend_forecast_or_parked",
+      "reason": "Concurrent-lane defect propagation is a real finding with no wave-3 work left to change; parked for the successor epic.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Close the epic on its measured shape: promote the conditions that can become real checks today, make a proof fail when its basis drifts, restore the merge-ref signal that already exists, and stop a crew inheriting its dispatcher's door.",
+    "exit_criteria": [
+      "Every promoted condition in w3-promote is red-proved against the shipped revision, and the number promoted is reported alongside the number assessed per template.",
+      "The three CommanderSpineBasisFields tests ASSERT rather than skip; a planted template edit makes them red, an unrelated commit elsewhere leaves them green.",
+      "The ubuntu-latest CI job is green on the PR that adds it, and windows-latest is still present and still red.",
+      "A real dispatched child with spine=None carries neither SPINE_FILE nor SPINE_SESSION; a child with --spine still gets its own correct pair.",
+      "Main is verified green in a clean detached worktree after all four merges, by the Admiral, on the merged tree.",
+      "Per lane, the pre-declared refresh comparison is recorded: refresh-request count, whether a relaunch actually happened, attempt/total_rework, reviewer verdict and round count, and whether verify-before-merge caught anything the lane missed."
+    ],
+    "issues": [
+      {
+        "id": "w3-promote",
+        "title": "Promote bucket-2 qualitative conditions to real check kinds (family A)",
+        "desired_outcome": "Qualitative `check: null` conditions that a direct check-kind promotion already satisfies become real, failing checks across the shipped spine templates -- using check kinds that already exist, with no new mechanism.",
+        "useful_now": "It is the epic's filed thesis, the highest-yield work identified in the interrogation, and it costs no new machinery: ~9/19 measured in COMMANDER_SPINE, extrapolating to roughly 31 of 65.",
+        "appetite": "One commander, one PR.",
+        "acceptance_or_falsification_evidence": "Each promoted condition is a check that has been red-proved against the shipped revision; the count promoted per template is reported alongside how many were assessed, so a small number is a measured result rather than a shortfall.",
+        "implementation_latitude": "Choose which conditions and which kinds; choose per-template ordering.",
+        "hard_constraints_no_gos": [
+          "Do not add a new check kind -- promotion only, using kinds that already exist.",
+          "Do not roll out the `basis` field across the 65 (decision:no-basis-backfill).",
+          "A promoted check ships blocking only where the adjudication is available at authoring time; otherwise report-only WITH a named promotion trigger in the same PR."
+        ],
+        "local_unknowns": [
+          "Whether templates other than COMMANDER_SPINE partition like the measured 9/19 -- this is the knowingly accepted extrapolation risk and MUST be recorded per condition; a material divergence is a replan trigger, not something to absorb."
+        ],
+        "anchors": [
+          "skills/commander/templates",
+          "skills/admiral/templates",
+          "skills/reviewer/templates",
+          "scripts/checklist_engine.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "w3-basis",
+        "title": "Evidence carries its basis; drift FAILS instead of skipping (family B)",
+        "desired_outcome": "A proof carries the basis it was taken against, and relying on it re-checks that basis. Concretely: CommanderSpineBasisFields is re-pinned to the blob OID of COMMANDER_SPINE.template.json rather than whole-repo HEAD, and drift FAILS with a re-run instruction rather than calling skipTest.",
+        "useful_now": "Family B is one defect with one remedy (human ruling), wave 2 already produced an unprompted prototype of it, and the three tests are inert on main right now.",
+        "appetite": "One commander, one PR.",
+        "acceptance_or_falsification_evidence": "The three tests assert (not skip) against the shipped template; a planted template edit makes them RED with the stale-proof message; an unrelated commit elsewhere in the repo leaves them GREEN -- which is the exact granularity defect being fixed and must be demonstrated both ways.",
+        "implementation_latitude": "Choose the mechanism shape and where the re-verify path lives.",
+        "hard_constraints_no_gos": [
+          "Ship the RE-VERIFY path alongside the guard. A fail-on-drift whose only remedy is an expensive manual re-pin is how a guard becomes something agents route around.",
+          "Do not extend this to the qualitative-condition population -- that is a different population and decision:no-basis-backfill governs it."
+        ],
+        "local_unknowns": [
+          "Whether the re-verify path can be made cheap enough that the guard is not routed around."
+        ],
+        "anchors": [
+          "tests/test_checklist_engine.py",
+          "skills/commander/templates/COMMANDER_SPINE.template.json",
+          "docs/CHECKLIST_SCHEMA.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "w3-ci",
+        "title": "Restore the merge-ref signal: add an ubuntu-latest job to CI (family C)",
+        "desired_outcome": "A red CI means something. `.github/workflows/ci.yml` gains an `ubuntu-latest` job alongside the existing `windows-latest` one, so the merge-ref test that ALREADY RUNS produces a trustworthy verdict.",
+        "useful_now": "The defence against a PR that reds main already exists and already went red on #645; it was ignored because the last 12 runs are 12 failures. Restoring the signal is strictly cheaper than building a second defence.",
+        "appetite": "One small PR.",
+        "acceptance_or_falsification_evidence": "The ubuntu job is green on the PR that adds it; a deliberately broken commit pushed to a scratch branch turns it red. Windows stays red and that is expected, not a failure of this lane.",
+        "implementation_latitude": "Choose the job's Python version and step layout; match the existing job where sensible.",
+        "hard_constraints_no_gos": [
+          "Do NOT attempt to fix the Windows failures -- explicitly out of scope, and the human ruled Windows stays known-red.",
+          "Do not delete or disable the windows-latest job.",
+          "Any CI change beyond adding this one job is SURFACED, not delegated."
+        ],
+        "local_unknowns": [
+          "Whether ubuntu is green first try -- local is 3731 passed on Linux, so it should be, but a CI-only failure is a real finding rather than a blocker."
+        ],
+        "anchors": [
+          ".github/workflows/ci.yml"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "w3-door",
+        "title": "A crew dispatched without --spine gets NO door, not its dispatcher's",
+        "desired_outcome": "`_crew_door_env` explicitly clears SPINE_FILE and SPINE_SESSION when `spine` is None, instead of leaving the dispatching process's ambient pair inherited.",
+        "useful_now": "All 7 cli-backend crews this wave hit the trap and each rediscovered it independently; it is the same defect class as the wave-1 Admiral dispatch error, which cost w1-wiring its independent review.",
+        "appetite": "One small PR.",
+        "acceptance_or_falsification_evidence": "A real dispatched child with no --spine has neither variable in its environment; a child WITH --spine still gets its own correct pair. Must be verified against an ACTUAL dispatched child, not only a unit test of the env dict.",
+        "implementation_latitude": "Choose how the clear is expressed.",
+        "hard_constraints_no_gos": [
+          "The docstrings at run_crew.py:1280 and :1333-1341 currently frame inheritance as the SAFE fallback and MUST be edited in the same change, or the next reader restores the old behaviour as a bug fix.",
+          "This lane edits the launcher it is itself dispatched through -- do not break dispatch for the sibling lanes."
+        ],
+        "local_unknowns": [
+          "Whether any caller legitimately depends on the inherited pair."
+        ],
+        "anchors": [
+          "scripts/run_crew.py",
+          "tests/test_run_crew.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "Closeout: epic episodes, cartographer reconcile, dogfood feedback sweep, collect-then-sweep the nine 569-* worktrees, archive the ADMIRAL_LOG, and present the epic summary for human acceptance",
+      "why_likely": "The stop decision is recorded and every lane is merged",
+      "entry_conditions": [
+        "execute's postconditions met",
+        "this transition verified"
+      ]
+    },
+    {
+      "outcome": "Successor work carried by #666 (family A), #667 (family B), #668 (family C), #669 (authoring) and #671 (perturb-to-test), each deficiency-named with no implementation prescribed",
+      "why_likely": "Human ruled close-and-re-file over annotate, and explicitly asked to leave issues open-ended",
+      "entry_conditions": [
+        "569 closed and accepted"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether the HARD context band's absolute cap is right for large-window models",
+      "affects": "Every commander run: it fired at 17-18% actual fill, one gate into a run",
+      "settle_by": "a calibration measurement against real runs, not a doctrine edit",
+      "current_evidence": "w3-ci episode w3-ci-003.a3: spine_start refused at 'context at 17% is at/over the hard limit', fill driven up mainly by the ~600-word gate imperative echoed back verbatim on nearly every engine tool call",
+      "next_probe": "measure imperative-echo token cost per engine verb across one full commander run"
+    },
+    {
+      "unknown": "Whether concurrent lanes off one base routinely propagate defects a sibling is repairing",
+      "affects": "Wave design: how many lanes may share a base, and what a launch order must disclose about sibling work",
+      "settle_by": "observing the next multi-lane wave with sibling-work disclosure in the orders",
+      "current_evidence": "one instance, wave 3: 35 inert assertions, surfaced only by a manual per-class test count",
+      "next_probe": "name each lane's siblings and their in-flight changes in the launch order, and see whether the copy still happens"
+    }
+  ],
+  "revised_parked": [
+    "The stalled spec-to-template migration: 2 specs against 19 roles, already drifted. Human ruled it out of 569; recorded as episodes/active/569-001.md.",
+    "Imperative bloat across the remaining spine steps.",
+    "Whether record() on a survey should evaluate null-kind postconditions (#422 D-scope).",
+    "ADMIRAL_SPINE.template.json declares no child_checklist on any step although its latitude imperative says to load constellation-interrogator, and rescope cannot add one -- so an Admiral's interrogation survey has no door to descend through. Built-not-wired, in the Admiral's own spine.",
+    "checklist_engine.py append() has no `kind` parameter, so an appended survey question is untyped; verify_interrogation.py validates the HAND-AUTHORED record rather than the engine-driven survey, and nothing binds the two together.",
+    "map_orient verify-frame rejects decision:X under DEGRADED -- never examined this run.",
+    "The Windows CI job's own failures: autocrlf `git apply --cached ... patch does not apply` and a Windows temp-path `git clone --bare`. Explicitly out of w3-ci's scope by human ruling.",
+    "The replan schema has no way to record a fixed-boundary change (intent_and_why, definition_of_done, good_enough, hard_constraints, fixed_decisions) that the human already authorised out-of-band: it forces applicable=false plus a one-boundary escalation packet, which refuses the launch. Hit at the w2-to-w3 boundary.",
+    "Concurrent lanes off one base copy patterns a sibling lane is actively repairing. Wave 3: w3-promote copied w3-basis's pre-repair skip-on-drift into six new classes, citing the very class under repair, producing 35 inert assertions that only a manual count surfaced."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "family-a",
+      "action": "keep",
+      "reason": "Filed as #666 (family A: checks that pass without discriminating). Deficiency-named, no implementation prescribed, superseding #518 #382 #375 #223."
+    },
+    {
+      "id": "family-b",
+      "action": "keep",
+      "reason": "Filed as #667 (family B: evidence that outlives the basis it was taken against), superseding #381 #390 #515 #358."
+    },
+    {
+      "id": "family-c",
+      "action": "keep",
+      "reason": "Filed as #668 (family C: the instrument is unverified), superseding #524 #459. Zero wave-3 coverage beyond w3-ci; the deferral was deliberate and is stated in the epic summary."
+    },
+    {
+      "id": "authoring",
+      "action": "keep",
+      "reason": "Filed as #669 (launch-order and handoff authoring), superseding #221 #388 #376. Records the honest caveat that most of its items were already written down and none fired."
+    },
+    {
+      "id": "perturb-to-test",
+      "action": "keep",
+      "reason": "Filed as #671, split out of #259 which was closed with this half explicitly unresolved by its own final comment."
+    },
+    {
+      "id": "closeout",
+      "action": "keep",
+      "reason": "This transition IS the entry to it."
+    },
+    {
+      "id": "successor-epic",
+      "action": "keep",
+      "reason": "Family C entire, plus the engine-change family-B items and residual family A, now carried by #666-#669 rather than by an epic shell."
+    },
+    {
+      "id": "template-shape-partition",
+      "action": "delete",
+      "reason": "Settled by w3-promote's measurement: bucket-2 density tracks template SHAPE, not identity. 5 of 7 non-baseline templates outside the predicted band, every one low."
+    },
+    {
+      "id": "refresh-load-bearing",
+      "action": "delete",
+      "reason": "Settled earlier and more cheaply than the wave-3-vs-wave-2 comparison was designed to. w3-ci's own episode records spine_start refusing at 'context at 17% is at/over the hard limit' with actual fill at 17-18%, driven by the ~600-word gate imperative echoed back on nearly every engine tool call. The HARD band is an absolute cap, not a share of the window, so on a large-window model it fires one gate into a run. Refresh-requests are not load-bearing because they fire on noise. Carried to #669's neighbourhood as a band-calibration observation."
+    },
+    {
+      "id": "fail-on-drift-affordable",
+      "action": "delete",
+      "reason": "Answered in practice: the guard fired at merge time on a real cross-lane staleness, and re-establishing the basis cost one re-verification of three assertions plus one blob re-pin, with the exact command printed in the failure. Affordable."
+    },
+    {
+      "id": "spec-template-migration",
+      "action": "keep",
+      "reason": "Human ruled it out of 569; recorded at episodes/active/569-001.md."
+    },
+    {
+      "id": "imperative-bloat-remaining-steps",
+      "action": "keep",
+      "reason": "Still parked."
+    },
+    {
+      "id": "survey-record-null-postconditions",
+      "action": "keep",
+      "reason": "Still parked (#422 D-scope)."
+    },
+    {
+      "id": "admiral-spine-no-child-checklist",
+      "action": "keep",
+      "reason": "ADMIRAL_SPINE.template.json declares no child_checklist on any step although its latitude imperative says to load constellation-interrogator, and rescope cannot add one. Built-not-wired, in the Admiral's own spine."
+    },
+    {
+      "id": "append-cannot-set-kind",
+      "action": "keep",
+      "reason": "checklist_engine.py append() has no `kind` parameter, so an appended survey question is untyped; verify_interrogation.py validates the hand-authored record rather than the engine-driven survey, and nothing binds the two."
+    },
+    {
+      "id": "map-orient-degraded",
+      "action": "keep",
+      "reason": "map_orient verify-frame rejects decision:X under DEGRADED; never examined this run."
+    },
+    {
+      "id": "windows-ci-own-failures",
+      "action": "keep",
+      "reason": "The windows-latest job's own failures -- autocrlf `git apply` and Windows temp paths. Now honestly red in `Run full test suite` rather than dying at checkout."
+    },
+    {
+      "id": "replan-fixed-boundary-recording",
+      "action": "keep",
+      "reason": "The replan schema has no way to record a fixed-boundary change the human authorised out-of-band: it forces applicable=false plus a one-boundary escalation packet, which refuses the launch. Hit at w2-to-w3."
+    },
+    {
+      "id": "concurrent-lanes-copy-unrepaired-patterns",
+      "action": "keep",
+      "reason": "NEW, from wave 3. Two lanes off one base, one repairing a pattern and one copying it, neither told about the other. Cost 35 inert assertions that only a manual count surfaced."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "wave_plan",
+      "before": "Wave 3 is four lanes and the epic closes after it.",
+      "after": "Wave 3 is complete and merged; the epic enters closeout. No wave 4.",
+      "reason": "All four lanes merged (#659 #660 #661 #662) with the merge result verified green each time, plus four follow-on fixes (#663 #664 #665 #670) under delegated fix-now triage."
+    },
+    {
+      "surface": "current_wave_scope",
+      "before": "w3-ci adds one ubuntu-latest job to restore the merge-ref signal.",
+      "after": "w3-ci added the job AND, by making anyone look at CI at all, surfaced three defects hidden behind an uninformative red: main un-checkoutable on Windows, the e2e suite having never once run in CI, and the Skip guard step having never run.",
+      "reason": "Directly demonstrates this epic's own thesis on this epic's own infrastructure: a check that always fails carries exactly as much information as a check that cannot fail, and restoring the signal is what makes its content readable."
+    }
+  ],
+  "wave_review_comment": "## Wave review -- wave 3 (final)\n\n**All four lanes merged.** `#660` `w3-ci`, `#659` `w3-basis`, `#661` `w3-door`, `#662` `w3-promote`,\nplus four follow-on fixes. Main green at **3774 passed, 6 skipped, 0 failed**; `test-linux` **GREEN**\nin CI for the first time.\n\n### What the wave delivered\n\n| lane | family | result |\n|---|---|---|\n| `w3-promote` | **A** | 16 of 65 conditions promoted using only existing check kinds; `validate_spine.py` corpus faults **19 -> 5** |\n| `w3-basis` | **B** | blob-OID pin, drift **fails** rather than skips, re-verify path shipped with the guard |\n| `w3-ci` | **C** | one `ubuntu-latest` job -- and three defects behind the old red |\n| `w3-door` | plumbing | `_crew_door_env` clears the spine pair on `spine=None` |\n\n### What the wave refuted\n\n- **The ~31-of-65 extrapolation.** 16, not 31 -- and the guard written to catch a bad extrapolation\n  caught it. Bucket-2 density tracks template **shape**, not identity: rich orchestrator spines land\n  in the predicted band, thin scaffolding lands at or below the floor. **5 of 7** non-baseline\n  templates fell outside, every one low.\n- **\"A lane fixing a defect stops it spreading.\"** `w3-promote` copied `w3-basis`'s pre-repair\n  skip-on-drift into six new classes -- **35 inert assertions** -- citing in its own docstring the\n  very class being repaired three worktrees away.\n- **\"A completion artifact reports the tree it shipped.\"** `w3-basis`'s RESULT said 3 failed; the\n  failures had been repaired two commits earlier and did not reproduce.\n- **\"Refresh-requests are load-bearing.\"** `w3-ci`'s episode records `spine_start` refusing at\n  *\"context at 17% is at/over the hard limit\"* with fill actually at **17-18%**, driven mainly by the\n  ~600-word gate imperative echoed back on nearly every engine tool call. They fire on noise.\n\n### Disposition\n\n**`stop`.** Wave 3 was ruled the final wave; every lane is merged and every epic issue is\ndispositioned. The epic enters closeout.\n",
+  "revised_epic_body": "## Current planning truth -- epic 569 (closing)\n\n**Filed believing in one defect family. Closes having measured three.**\n\n- **A** -- the check that passes without discriminating anything. Vacuous; no re-run helps.\n- **B** -- evidence true when taken, false when relied on. Fails correctly when re-pointed at live state.\n- **C** -- the instrument measures a different thing than the code does. Fails loudly, against the wrong quantity.\n\nA's remedy does not fix C, and neither does B's. The filed title already read\n*\"evidence, review, **instruments**\"*.\n\n### Delivered\n\n| wave | result |\n|---|---|\n| 1 | registration lint + vocabulary rule shipped blocking; census of 26 check-shaped scripts (17 live, 8 unwired, 1 dead); the wedged-verdict gate fixed |\n| 2 | declared `basis` locator at plan time; one append-only engine-written override ledger; `map/INDEX.md` reindex mechanized by a pre-commit hook |\n| 3 | 16 conditions promoted to real checks; proofs pinned to blob OIDs and failing on drift; the CI signal restored; the crew door stopped inheriting its dispatcher's spine |\n\n`validate_spine.py`'s corpus `falsifiable-all-null` faults: **19 -> 5**. `test-linux`: **green**.\n\n### Cancelled on measurement, not on preference\n\n- **The `basis` backfill across the 65** -- measured 2/19 gain.\n- **The evaluate-the-65 mission** -- discharged by extrapolation from three independently converging designs.\n- **Wave 4 / WP5** -- grouped by subject, not mechanism; its members spanned three families.\n- **#558** -- its premise was false; the corpus carries one signature, not two.\n\n### Carried forward\n\n`#666` family A, `#667` family B, `#668` family C, `#669` authoring, `#671` perturb-to-test. Each\nnames a **deficiency** and prescribes no implementation.\n\n**Family C receives no mechanism from this epic beyond `w3-ci`.** That deferral is deliberate and is\nstated rather than left implicit.\n",
+  "escalation": null
+}

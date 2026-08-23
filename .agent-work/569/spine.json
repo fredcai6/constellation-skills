@@ -278,7 +278,8 @@
           "id": "c3",
           "statement": "architecture reconciled for the epic's net change",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c4",
@@ -316,12 +317,12 @@
     "worktree": "/home/tommy/projects/constellation-skills",
     "opened_by": "init_work_area"
   },
-  "refusals": 5,
+  "refusals": 6,
   "engine_session": {
     "session_id": "constellation/569",
     "status": "active",
     "claimed_at": "2026-08-22T12:25:34.730592+00:00",
-    "last_heartbeat": "2026-08-23T19:58:21.353807+00:00",
+    "last_heartbeat": "2026-08-23T20:00:39.799811+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,

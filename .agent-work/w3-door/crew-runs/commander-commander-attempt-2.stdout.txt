@@ -1,0 +1,14 @@
+The spine was successfully closed and archived (the file no longer exists at that path, confirming `spine_close` completed and moved the work area). The run is complete.
+
+## Summary
+
+Delivered the w3-door mission: `_crew_door_env` in `scripts/run_crew.py` now actively clears `SPINE_FILE`/`SPINE_SESSION` together when `spine is None`, instead of inheriting the dispatcher's ambient pair — a spine-less crew gets no door. Both docstrings that asserted inheritance was safe were corrected. All test fallout (renamed dispatch test, new `resume()` test, rewritten `ParentLeaseHeartbeatTests`) landed and passed independent review (APPROVE, one round, zero rework).
+
+This session found the implement/review work already complete from a prior attempt, and drove the remaining spine gates to completion:
+- Discovered and fixed a stale `map/INDEX.md` (no pre-commit hook fired in this worktree) that was blocking the full-suite gate — rebuilt and committed (`16d6f631`)
+- Closed `execute`, `reconcile` (reasoned no-op, no packet map exists), `triage` (no filings needed), and `review`
+- Pushed the branch and opened **PR #661** (`[FINAL]`), full suite green: 3730 passed, 9 skipped
+- Captured 2 feedback episodes (the map-staleness surprise, and a `spine_bind` session-identity quirk hit while closing out)
+- Ran `spine_close`, which archived the work area to `.agent-work/archive/2026-08-23-w3-door` and pushed the final archive commit
+
+Result artifact, evidence, and full workflow feedback are in the archived `RESULT.md`. The PR is open, not merged — the Admiral owns integration.

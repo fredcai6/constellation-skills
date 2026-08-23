@@ -1,0 +1,11 @@
+The repair is complete and verified clean. Summary:
+
+**Fix**: Converted all six `*W3Promote*` classes in `tests/test_checklist_engine.py` from whole-repo `PINNED_HEAD` + `skipTest`-on-drift to per-template `PINNED_BLOB` + `fail()`-on-drift, matching `CommanderSpineBasisFields`'s shipped form (read from `epic-569/w3-basis`, not edited).
+
+**Verified**:
+- 35 assertions, 0 skipped, from committed tree at `767ca585a0420b313cb8f107f20e68b5fcfc38eb`
+- Red direction: planting an edit in a pinned template makes that class FAIL with the stale-proof message + re-verify command
+- Green direction: an unrelated commit elsewhere (moving HEAD) leaves all 35 passing — the actual defect the old form had
+- Full suite after commit: 568 passed, 3 skipped (the 3 skips are `CommanderSpineBasisFields`, explicitly out of scope — `w3-basis`'s own class, unfixed in this branch until that merges)
+
+Result report written to `IMPLEMENTER_RESULT.md` in the crew scratch directory per this repo's Implementer→Commander convention.
