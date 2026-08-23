@@ -647,7 +647,8 @@
             "kind": "command",
             "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py w3-ci --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
         },
         {
           "id": "c2",
@@ -663,7 +664,8 @@
             "kind": "command",
             "command": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/569-w3-ci rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-3"
         },
         {
           "id": "c3",
@@ -705,12 +707,13 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-4"
         },
         {
           "id": "c5",
@@ -730,7 +733,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -740,6 +743,39 @@
           "type": "user-decision",
           "payload": {
             "cite": "LAUNCH_ORDER:Return Shape"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py w3-ci --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(gh pr list --head \"$(git -C /home/tommy/projects/569-w3-ci rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
           },
           "produced_by": "engine",
           "ts": ""
@@ -755,13 +791,14 @@
   "refusals": 7,
   "engine_session": {
     "session_id": "constellation/w3-ci",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-23T00:02:58.415016+00:00",
-    "last_heartbeat": "2026-08-23T00:12:37.824999+00:00",
+    "last_heartbeat": "2026-08-23T00:13:13.634621+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-23T00:13:13.646486+00:00"
   },
   "why_trail": [
     {
@@ -826,6 +863,13 @@
       "why": "Reflected honestly on the run and recorded three distinct episodes (w3-ci-001/002/003): the plan.c6 self-waive engine refusal and its workaround, the stale skip-guard-pin finding this run surfaced, and the context-hard-band trip at only 17-18% fill. Applied via apply_episode_delta.py --store-root episodes and verified via verify_episode_captured.py, phase feedback: 3 episodes recorded.",
       "mechanical": false,
       "ts": "2026-08-23T00:11:36.844604+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "w3-ci delivered: one ubuntu-latest CI job added mirroring the windows-latest job, no trigger/matrix/windows-job changes, local red-proof genuine and independently reproduced, full suite green at the final commit (matches launch order baseline exactly), PR #660 opened for the Admiral to merge. One elevated finding (stale skip-guard pin, unrelated to this diff) recorded as recommend-and-defer for the Admiral's disposition before merge.",
+      "mechanical": false,
+      "ts": "2026-08-23T00:13:13.634605+00:00"
     }
   ],
   "override_ledger": [
