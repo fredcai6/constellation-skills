@@ -718,9 +718,18 @@ class TestCorpusSweepFindings:
         # a checker regression (a fault that stops firing) is visible here --
         # if a template is genuinely fixed, this count drops and the pin
         # should move down in the same edit, never silently.
-        assert by_code.get("falsifiable-all-null", 0) >= 15, (
-            f"expected at least 15 all-null gates across the corpus (measured 21 at "
-            f"authoring time), found {by_code.get('falsifiable-all-null', 0)}: this is "
+        assert by_code.get("falsifiable-all-null", 0) >= 13, (
+            f"expected at least 13 all-null gates across the corpus (measured 13 at "
+            f"authoring time -- epic-569/w3-promote g1 cleared init/reconcile's "
+            f"single-postcondition all-null gates in COMMANDER_SPINE.template.json "
+            f"(19 -> 17), g4 cleared context/spec's single-postcondition all-null "
+            f"gates in EXPLORER_SPINE.template.json (17 -> 15; g3's ADMIRAL_SPINE "
+            f"promotion cleared none), g5 cleared project-templates' single-"
+            f"postcondition all-null gate in CHARTER.template.json (15 -> 14), and g7 "
+            f"cleared report's single-postcondition all-null gate in "
+            f"SCOUT.template.json (14 -> 13; g7's own CARTOGRAPHER.template.json "
+            f"promotion cleared none), "
+            f"found {by_code.get('falsifiable-all-null', 0)}: this is "
             f"the epic's central claim (#518) -- a drop this large means the checker "
             f"stopped finding what it exists to find, not that the corpus improved that "
             f"much between edits"

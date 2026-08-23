@@ -13,7 +13,7 @@
       "preconditions": [],
       "postconditions": [
         {"id": "c1", "statement": "work area scaffolded", "check": {"kind": "command", "command": "python <skill-dir>/scripts/init_work_area.py <work-id>"}, "satisfied": false},
-        {"id": "c2", "statement": "engine session lease claimed for this spine (explorer owns the state)", "check": null, "satisfied": false}
+        {"id": "c2", "statement": "engine session lease claimed for this spine (explorer owns the state)", "check": {"kind": "command", "command": "python3 -c \"import json,sys; d=json.load(open('<repo-root>/.agent-work/<work-id>/spine.json', encoding='utf-8')); sys.exit(0 if d.get('engine_session',{}).get('status')=='active' else 1)\""}, "satisfied": false}
       ],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0, "bookend": true
@@ -23,7 +23,7 @@
       "title": "Load baseline context and seed the ideas board",
       "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md, including the deep-module vocabulary), then the project deltas (docs/agents/ORCHESTRATOR_CONTEXT.md, GLOSSARY.md where they exist) and the current map for the area the idea touches, where architecture artifacts exist. Seed .agent-work/<work-id>/IDEAS_BOARD.md from templates/IDEAS_BOARD.template.md: the living record of shared understanding (the point; current candidates; verdicts with the scope of what was tested; open threads; rejected ideas with reasons; cycle log). Every consolidation updates it; the spec crystallizes from it; a resumed session reads it instead of chat history. Attest c1.",
       "preconditions": [{"id": "p1", "statement": "work area and lease ready", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "doctrine + project deltas + map read where they exist; IDEAS_BOARD.md seeded from template", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "doctrine + project deltas + map read where they exist; IDEAS_BOARD.md seeded from template", "check": {"kind": "command", "command": "test -s \"<repo-root>/.agent-work/<work-id>/IDEAS_BOARD.md\""}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },
@@ -44,7 +44,7 @@
       "title": "Crystallize the design spec from the board",
       "imperative": "Crystallize .agent-work/<work-id>/DESIGN_SPEC.md from the ideas board using templates/DESIGN_SPEC.template.md. It ships with the loud 'UNCONFIRMED — DO NOT CUT' marker and a DRAFT Confirmation block — that is deliberate: verify_spec_confirmed.py refuses it until the confirm gate is genuinely met. Present the design for per-section approval (delta-based after the first pass: present what changed since the last confirmation, not the whole statement again). Spend design-it-twice weight only on irreversible or load-bearing initial commitments (3+ parallel agents each designing the same module's interface under a distinct constraint — minimal-interface / max-flexibility / common-caller-first / ports-and-adapters — compared on depth, locality, seam placement, testability; opinionated recommendation or hybrid); reversible details and forecast possibilities do not earn it. Skip a seemingly load-bearing commitment only with a stated reason. Describe interfaces in deep-module terms. Attest c1.",
       "preconditions": [{"id": "p1", "statement": "the human converged (explore closed)", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "DESIGN_SPEC.md crystallized from the board with per-section approval; load-bearing interfaces designed-it-twice or skipped with a stated reason", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "DESIGN_SPEC.md crystallized from the board with per-section approval; load-bearing interfaces designed-it-twice or skipped with a stated reason", "check": {"kind": "command", "command": "test -s \"<repo-root>/.agent-work/<work-id>/DESIGN_SPEC.md\""}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },

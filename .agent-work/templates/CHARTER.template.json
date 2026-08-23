@@ -99,7 +99,7 @@
       "title": "Seed project templates",
       "imperative": "Seed or update .agent-work/templates/ with project-specific template versions where the project needs them (e.g. project review criteria). Skip with reason if none needed.",
       "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "project-specific templates seeded", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "project-specific templates seeded", "check": {"kind": "artifact", "evidence_type": "project-templates", "match": {"status": ["seeded", "skipped-no-need"]}}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     },

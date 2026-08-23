@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "completed_outcomes": [
+    {
+      "issue_id": "epic-569/w3-promote g0",
+      "outcome": "Corpus-wide bucket survey of the 46 non-COMMANDER_SPINE null conditions across 7 templates, plus a fresh corpus-wide validate_spine.py fault recount (19 falsifiable-all-null, 2 falsifiable-unresolved-placeholder), completed read-only, no file edits.",
+      "evidence": ".agent-work/w3-promote/notes-1.md g0 section; python3 -m pytest tests/test_validate_spine.py -q"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g1",
+      "outcome": "8 of 19 check:null conditions in COMMANDER_SPINE.template.json promoted to real command/artifact checks, each red-proofed with an adversary-chosen mutation; overlay synced; 3 collateral test files fixed; full suite green; reviewed APPROVE with independently-reproduced evidence; committed.",
+      "evidence": "commit ff8e9640; tests/test_checklist_engine.py::CommanderSpineW3PromotePromotions (10/10 pass); python3 -m pytest -q -> 3739 passed, 9 skipped"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g2",
+      "outcome": "EXECUTE_PLAN.template.json assessed fresh: 0 of 4 conditions have a real locator (thin gate-order scaffolding + one literal unfilled template placeholder). Honest zero, no file edit, per the launch order's Honest-Null Clause.",
+      "evidence": ".agent-work/w3-promote/notes-1.md g2-execute-plan section"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g3",
+      "outcome": "3 of 10 check:null conditions in ADMIRAL_SPINE.template.json promoted to real command checks (init.c2, latitude.c1, execute.c2), each red-proofed with an adversary-chosen mutation; closeout.c4 honestly left null (no stable, pinnable archive-path convention -- wall-clock-keyed directory name plus a work_id slash-strip transform the resolver never performs); overlay synced; full suite green; reviewed APPROVE with independently-reproduced evidence including the closeout.c4 disposition; committed.",
+      "evidence": "commit 44180fe0; tests/test_checklist_engine.py::AdmiralSpineW3PromotePromotions; python3 -m pytest -q -> 3735 passed"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g4",
+      "outcome": "3 of 10 check:null conditions in EXPLORER_SPINE.template.json promoted to real command checks (init.c2 full; context.c1/spec.c1 SPLIT existence-only); route.c1 honestly left null (no per-outcome routing artifact exists). A decision:no-basis-backfill violation (implementer added basis fields to the two split conditions, citing an out-of-wave precedent) was caught and corrected by the Commander before review; the reviewer independently re-derived the correction's soundness from the actual pre-ruling text. falsifiable-all-null corpus count dropped 17->15 (2 all-null gates cleared); floor updated in the same commit. Full suite green post-commit; reviewed APPROVE; committed.",
+      "evidence": "commit 442a5826; tests/test_checklist_engine.py::ExplorerSpineW3PromotePromotions; python3 -m pytest -q -> 3736 passed, 25 skipped"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g5",
+      "outcome": "1 of 10 check:null conditions in CHARTER.template.json promoted (project-templates.c1, full artifact enum-match). closeout.c1 and interrogate.c1 both honestly left null (closeout.c1: same wall-clock archive-path defect as g3's closeout.c4; interrogate.c1: a real candidate verifier exists but is not actually wired to the charter role by the install manifest or the cross-skill placeholder resolver -- flagged as a triage candidate rather than promoted). No basis-field violation this time (the g4 mistake was not repeated). Reviewer self-caught and recovered from a near-miss git checkout on the uncommitted file; Commander independently re-verified the restoration byte-identical and the suite still green before accepting. falsifiable-all-null floor updated 15->14.",
+      "evidence": "tests/test_checklist_engine.py::CharterW3PromotePromotions; python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q -> 641 passed, 26 skipped"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g6",
+      "outcome": "IMPLEMENTER_PLAN.template.json fresh-reassessed against the real shipped JSON: 0 of 3 conditions promotable. m0-context.c1 pure judgment; m1.p1 gate-order-guaranteed; m1.c1 is self-declared unpromotable in its own statement text (a TDD-red condition where a real check would refuse the gate exactly when the run is behaving correctly). Reasoning gate, no crew dispatch, no file edit -- matches the earlier hand-assessment exactly, no drift.",
+      "evidence": ".agent-work/w3-promote/notes-1.md g6 section"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g7",
+      "outcome": "1 of the 5 candidate check:null conditions across CARTOGRAPHER.template.json and SCOUT.template.json promoted: SCOUT's report.c1 (existence+nonempty half only), command-kind, shipped REPORT-ONLY (always exits 0) since both files measured zero live check kinds before this gate -- the first report-only promotion this wave, per decision:blocking-where-adjudicated's own default for a first-use file. Named promotion trigger recorded in the report task's map_check_note field (documented, template-only, read-by-no-code, precedented in COMMANDER_SPINE.template.json). CARTOGRAPHER 0/4 promoted: context.c1/map-compliance.c1 pure judgment; packets.c1/index-overlays.c1 declined as locator-ambiguous, independently foreclosed by this run's own DEGRADED-UNPARSEABLE map state. Reviewer independently executed the promoted shell command against missing/empty/populated fixtures (not just read it) to confirm genuine discrimination while never blocking advance. falsifiable-all-null floor updated 14->13. Full suite green post-commit; reviewed APPROVE; committed.",
+      "evidence": "commit 450dca6d; tests/test_checklist_engine.py::ScoutW3PromotePromotions, ::CartographerW3PromoteDeclined; python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q -> 643 passed, 31 skipped"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g8",
+      "outcome": "validate_spine.py wiring decision, reasoning gate, no file edit: fresh post-promotion fault count measured (13 falsifiable-all-null + 2 falsifiable-unresolved-placeholder), matches the floor already kept current gate-by-gate through g1/g4/g5/g7 -- a confirmation, not a new wiring decision. Declined additional zero-tolerance floor tightening this wave (cannot land clean without resolving 2 out-of-scope placeholder faults, a different defect class than check:null); floated as a triage candidate per the decision's own settle clause rather than fixed or absorbed into scope. docs/CHECK_SCRIPT_CENSUS.md's corpus-wide tallies (17 live, 8 unwired, 1 dead) confirmed unchanged -- no script's wiring classification flipped this wave.",
+      "evidence": ".agent-work/w3-promote/notes-1.md g8 section; python3 -m pytest tests/test_validate_spine.py -q -> 103 passed"
+    },
+    {
+      "issue_id": "epic-569/w3-promote g9",
+      "outcome": "Final integrate: committed the gate-progression closeout, rebuilt map/INDEX.md (entity-count drift from this wave's new test classes; no active pre-commit hook is installed in this worktree, tests/test_code_map.py's own freshness assertion caught the staleness), opened PR #662 (server-side-merge, not merged) with the full corpus survey table and per-template assessed-vs-promoted counts in its description, wrote RESULT.md covering all 7 Return Shape items. Full suite green at the true final commit.",
+      "evidence": "commits e70f2df6, f6367f1f, 476d4cc6, 4d92dc45; https://github.com/fredcai6/constellation-skills/pull/662; .agent-work/w3-promote/RESULT.md; python3 -m pytest -q -> 3729 passed, 44 skipped, 1275 subtests passed"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Bucket-2 (locator-expressible, no-new-mechanism) density on COMMANDER_SPINE.template.json is 9/19 (~47%), per the wave-2 N=3 panel measurement the launch order cites.",
+      "expected": "Other templates in the corpus would partition similarly if the extrapolation to ~31/65 corpus-wide held.",
+      "observed": "Final, complete corpus measurement across all 8 templates: COMMANDER_SPINE 8/19 (42%), ADMIRAL_SPINE 3/10 (30%), EXPLORER_SPINE 3/10 (30%), CHARTER 1/10 (10%), IMPLEMENTER_PLAN 0/3 (0%), SCOUT 1/3-of-remaining-candidates (25% of its full 4), CARTOGRAPHER 0/4 (0%), EXECUTE_PLAN 0/4 (0%). 16 of 65 total (~25%), materially below the ~31 extrapolated. 5 of the 7 non-COMMANDER_SPINE templates fall outside the [30%,65%] band, all low-side, correlated cleanly with template shape: rich top-level orchestrator spines (COMMANDER_SPINE, ADMIRAL_SPINE, EXPLORER_SPINE) land in-band; thin gate-order/child-plan/bootstrap-once/report-focused scaffolding (CHARTER, EXECUTE_PLAN, IMPLEMENTER_PLAN, SCOUT, CARTOGRAPHER) lands at or below the low edge, with two clean structural zeros (EXECUTE_PLAN, IMPLEMENTER_PLAN) and a third near-zero (CARTOGRAPHER, foreclosed by this run's own DEGRADED-UNPARSEABLE map state, not by template shape alone).",
+      "source": ".agent-work/w3-promote/RESULT.md section 1 (per-template assessed-vs-promoted table); .agent-work/w3-promote/notes-1.md"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "d1-bucket-2-density-lower-than-extrapolated",
+      "signal": "The launch order's extrapolated ~31/65 corpus-wide bucket-2 estimate assumed the 9/19 (47%) COMMANDER_SPINE rate generalizes uniformly. This run's own fresh, per-condition measurement across the 7 non-COMMANDER_SPINE templates finds a materially lower rate: 5 of 7 fall outside the [30%,65%] band, all low-side, and EXECUTE_PLAN measured a clean, structural 0%.",
+      "classification": "evidence_only",
+      "affects": "epic-569's ~31-condition corpus-wide promotion estimate; no gate in this run's own execute.json",
+      "evidence": ".agent-work/w3-promote/notes-1.md's g0 section and per-template fresh assessments",
+      "reason": "The launch order's own Honest-Null Clause explicitly pre-sanctions 'far fewer than the predicted ~31, honestly measured' as a successful wave outcome, not a stop-and-float trigger -- this is the measured negative that clause anticipated, reported per its own instruction. Not a blocker for this wave's own exit."
+    },
+    {
+      "id": "d2-basis-field-misapplied-across-decision-boundary",
+      "signal": "g4's implementer added a basis field to two promoted conditions, citing a real precedent (COMMANDER_SPINE's own plan.c2/c4/c5) that predates this wave and belongs to a different decision (this wave's own decision:no-basis-backfill forbids the field for this wave's promotions; that mechanism is reserved for a sibling lane, w3-basis). A well-specified handoff (explicit Constraints section naming decision:no-basis-backfill) still did not prevent a plausible-looking precedent from being misapplied across a decision boundary the implementer wasn't tracking. Caught and corrected by the Commander before review; the reviewer then independently re-derived the correction's soundness from the actual pre-ruling text rather than trusting the Commander's read.",
+      "classification": "evidence_only",
+      "affects": "workflow feedback only -- no gate in this run's own execute.json was blocked (caught same-gate, before review)",
+      "evidence": "commit 442a5826 commit message; .agent-work/w3-promote/crew-handoffs/g4-implementer-result.md's Commander Correction section; .agent-work/w3-promote/notes-1.md's g4 per-gate outcome entry",
+      "reason": "Not a blocker -- corrected within the same gate, before review, at zero cost to schedule. Recorded as evidence because it is a genuine finding about handoff design: naming a constraint in a Constraints list is necessary but was not sufficient here; the implementer needed to actively check an out-of-wave precedent against this wave's own pre-rulings rather than pattern-match on file-family similarity. g5's implementer, warned explicitly inline in its dispatch prompt (not just via the handoff's Constraints section), did not repeat the mistake -- suggesting the inline warning was the load-bearing intervention, not the handoff structure alone."
+    }
+  ]
+}

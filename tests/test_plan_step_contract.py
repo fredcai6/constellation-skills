@@ -203,12 +203,29 @@ class HonestAboutNotBeingChecked(unittest.TestCase):
         statement = condition("c4")["statement"].lower()
         self.assertIn("authored first and attested afterwards", statement)
 
-    def test_c4_and_c5_still_carry_no_check(self):
-        """If a check ever lands, these tests must be revisited rather than
-        left asserting a limit that no longer holds."""
-        for cond_id in ("c4", "c5"):
-            with self.subTest(cond=cond_id):
-                self.assertIsNone(condition(cond_id)["check"])
+    def test_c4_and_c5_now_carry_an_existence_only_artifact_check(self):
+        """epic-569/w3-promote g1: a check landed on c4/c5 -- this test is the
+        revisit its own prior docstring called for, not a removal. The check
+        is existence-only (the named artifact files exist and carry the
+        stated status/flag); it does NOT verify the ordering claim c4/c5's
+        own statement text still disclaims (see the two tests above, which
+        remain in force unchanged)."""
+        self.assertEqual(
+            condition("c4")["check"],
+            {
+                "kind": "artifact",
+                "evidence_type": "plan-alternatives",
+                "match": {"converged": True},
+            },
+        )
+        self.assertEqual(
+            condition("c5")["check"],
+            {
+                "kind": "artifact",
+                "evidence_type": "plan-critic",
+                "match": {"triaged": True},
+            },
+        )
 
 
 class GreenAtEveryGateBoundary(unittest.TestCase):

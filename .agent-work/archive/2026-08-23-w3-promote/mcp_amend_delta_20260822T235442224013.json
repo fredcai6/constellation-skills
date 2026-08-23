@@ -1,0 +1,1 @@
+{"ops": [{"op": "retext-check", "id": "plan", "cond": "c6", "which": "postconditions", "command": "python /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root /home/tommy/projects/569-w3-promote --work-id w3-promote --report-only"}]}

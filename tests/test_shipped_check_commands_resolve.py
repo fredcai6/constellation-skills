@@ -99,7 +99,11 @@ ALLOWED_SURVIVOR_SITES = {
 # lease-claim (check: null) since the dispatcher -- the Admiral or the human --
 # stands up the work area before handing the Commander its spine, per
 # skills/_shared/stand-up-work-area.md. One fewer command check to examine.
-EXPECTED_COMMAND_CHECK_COUNT = 11
+# 11 -> 13 (epic-569/w3-promote g1): COMMANDER_SPINE.template.json's `init.c1`
+# (lease-claim, reading spine.json's own engine_session.status) and
+# `archive.c2` (branch-pushed, git rev-parse @ vs @{u}) promoted from
+# check: null to command-kind checks -- two new command checks to examine.
+EXPECTED_COMMAND_CHECK_COUNT = 13
 
 
 def unresolved_offenders(template_name, resolved_commands):

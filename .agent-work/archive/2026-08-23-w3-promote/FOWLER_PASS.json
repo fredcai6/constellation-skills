@@ -1,0 +1,20 @@
+{
+  "work_id": "w3-promote",
+  "diff_ref": "g7-implement: skills/scout/templates/SCOUT.template.json + .agent-work/templates/SCOUT.template.json (report.c1 promotion + map_check_note), tests/test_checklist_engine.py (ScoutW3PromotePromotions, CartographerW3PromoteDeclined), tests/test_validate_spine.py (floor 14->13)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, .agent-work/w3-promote/notes-1.md (w2-basis CommanderSpineBasisFields red-proof idiom), references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "ScoutW3PromotePromotions (206 lines) and CartographerW3PromoteDeclined (71 lines) are smaller than every sibling W3Promote test class already in this file (CommanderSpineW3PromotePromotions 331 lines, ExplorerSpineW3PromotePromotions 288 lines, CharterW3PromotePromotions 240 lines) -- consistent with repo norm, not an outlier.", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "The `_skip_if_head_moved` helper (pin PINNED_HEAD via git rev-parse, skipTest not fail if HEAD moved) is repeated verbatim across all 6 W3Promote test classes in this file, including the 2 new ones.", "override": {"repo_standard": "notes-1.md (implementer's groundwork notes, lines ~321-326): 'Red-proof idiom already proven in this exact file: tests/test_checklist_engine.py's CommanderSpineBasisFields class (w2-basis's own red-proof) is the template to copy: pin PINNED_HEAD ... skipTest ... load the REAL shipped template fresh in each test, assert exact shape + assert no OTHER condition in the file was touched. Use this shape for every per-template promotion's red-proof class this run authors.'", "reason": "This is a deliberate, documented, epic-wide idiom (established at w2-basis, reused identically by g1/g3/g4/g5's own classes before this gate) so each gate's red-proof class stays self-contained and independently skippable/removable as HEAD moves across the epic's own sequence of commits, rather than sharing brittle cross-class state. Extracting a shared mixin would couple classes whose lifecycles (pinned to different HEADs, removed/archived independently once the epic closes) are intentionally decoupled -- the duplication buys isolation the epic's own sequencing needs."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "Check dicts are plain {\"kind\":..., \"command\":...} dicts, matching the engine's own on-disk representation exactly (not a homegrown value type standing in for the engine's own shape).", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "The shipped shell command is a minimal, fixed if/else + exit 0 -- no unused flags, hooks, or parameters built for a hypothetical future need. The map_check_note's described future flip (add override_policy or drop the trailing exit 0) is documentation of a migration path, not code built ahead of need.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The long map_check_note documents WHY the check is shaped and placed as it is (schema-sanctioned use, precedented by COMMANDER_SPINE's context/plan steps) -- it does not excuse or paper over a defect in the shell command itself, which is independently simple and correct.", "override": null}
+  ],
+  "rail_exception": null
+}

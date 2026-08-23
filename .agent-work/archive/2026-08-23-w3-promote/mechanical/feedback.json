@@ -1,0 +1,33 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "w3-promote",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 7,
+    "overrides": {
+      "trip": 3,
+      "force-claim": 0,
+      "force-release": 0,
+      "waive": 0,
+      "waive_authority_mismatch": 0,
+      "ids": [
+        "ov-1",
+        "ov-2",
+        "ov-3"
+      ]
+    },
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3-promote-feedback@296904c6db1d7425d90d8a3a7f866e46d94067bf",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3-promote",
+    "generated_at": "2026-08-23T17:09:41Z"
+  }
+}

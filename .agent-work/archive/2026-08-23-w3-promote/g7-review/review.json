@@ -1,0 +1,59 @@
+{
+  "work_id": "w3-promote",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "note": "No spine bound for this crew (SPINE_SESSION resolves to the dispatching Commander's own bound session, not a reviewer session of this crew's own -- no mcp__spine__* tools were available). Built as a plain, hand-driven survey record per constellation-reviewer's own fallback for the no-spine-bound case, not through the MCP door.",
+  "items": ["r0-context", "r1-handoff", "r2-scope", "r3-evidence", "r4-quality", "r5-reconciliation", "r6-fowler"],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context", "title": "Load baseline context",
+      "status": "complete", "result": "pass",
+      "finding": "Read constellation-reviewer SKILL.md, the g7-reviewer-handoff.md in full, the SCOUT/CARTOGRAPHER diffs, docs/CHECKLIST_SCHEMA.md, and the g7-implementer-result.md.",
+      "evidence": []
+    },
+    "r1-handoff": {
+      "id": "r1-handoff", "title": "Handoff compliance",
+      "status": "complete", "result": "pass",
+      "finding": "Every Close Criterion independently re-derived by execution/grep/diff rather than trusted from prose; see REVIEW_RESULT.md for the full trace. All satisfied.",
+      "evidence": []
+    },
+    "r2-scope": {
+      "id": "r2-scope", "title": "Scope drift",
+      "status": "complete", "result": "pass",
+      "finding": "CARTOGRAPHER + its overlay: empty diff-stat, byte-identical to HEAD. SCOUT + overlay: exactly 2 lines changed (report.c1 check field, new map_check_note), overlay identical to main-template diff. No excluded file touched.",
+      "evidence": []
+    },
+    "r3-evidence": {
+      "id": "r3-evidence", "title": "Required evidence",
+      "status": "complete", "result": "pass",
+      "finding": "Ran promoted shell command against missing/empty/populated SCOUT_REPORT.md scratch dirs: all exit 0, verdict genuinely discriminates (-s boundary, not -f). Dumped HEAD check fields for both files: all null pre-edit. Confirmed map_check_note documented + precedented in COMMANDER_SPINE. Confirmed no basis field anywhere. Confirmed overlay freshness clean (56/56). Confirmed docs/architecture/ genuinely empty (map.json has empty arrays). Re-ran falsifiable-all-null sweep via git stash: 14 pre-edit, 13 post-edit, correctly isolated to the SCOUT file. Confirmed CHECK_SCRIPT_CENSUS unwired scripts untouched. Full suite green: 643 passed, 31 skipped, 148 subtests, 0 failed.",
+      "evidence": []
+    },
+    "r4-quality": {
+      "id": "r4-quality", "title": "Quality vs inherited rules",
+      "status": "complete", "result": "pass",
+      "finding": "decision:no-new-check-kinds honored (command kind only). decision:no-basis-backfill honored (no basis field). decision:blocking-where-adjudicated correctly applied (report-only default given zero pre-existing live checks in SCOUT.template.json, independently confirmed). Compact-format JSON hand-edit discipline honored (2-line surgical diff, not reflowed).",
+      "evidence": []
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation", "title": "Reconciliation check",
+      "status": "complete", "result": "pass",
+      "finding": "No structural baseline concerns. Map DEGRADED-UNPARSEABLE state independently confirmed as pre-existing and repo-wide, not caused by this gate. CARTOGRAPHER decline reasoning (locator-ambiguous git-diff proxy) independently re-derived and holds.",
+      "evidence": []
+    },
+    "r6-fowler": {
+      "id": "r6-fowler", "title": "Refactoring pass (Fowler code smells)",
+      "status": "complete", "result": "pass",
+      "finding": "Record at .agent-work/w3-promote/FOWLER_PASS.json; verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=['duplicated-code']). duplicated-code (_skip_if_head_moved repeated across 6 test classes) overridden with logged standard: notes-1.md's documented epic-wide red-proof idiom copied from w2-basis's CommanderSpineBasisFields, already reused by every prior gate's class. No other smell present.",
+      "evidence": []
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "summary": "All 7 survey items pass. Every Close Criterion independently re-derived by execution, not trusted from the implementer's prose. Full result in .agent-work/w3-promote/crew-handoffs/g7-reviewer-result.md."
+  },
+  "triage_candidates": [
+    "packets.c1/index-overlays.c1 in CARTOGRAPHER.template.json remain re-assessable once docs/architecture/ is restored to a real, parseable map -- already named by the implementer, confirming it reaches Triage/Commander at closeout is Commander's job, not a new finding."
+  ],
+  "blockers": []
+}

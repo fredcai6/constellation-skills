@@ -1,0 +1,50 @@
+{
+  "work_id": "w3-promote",
+  "type": "survey",
+  "note": "Hand-tracked, not engine-driven: this crew is a Task-tool subagent sharing its dispatcher Commander's process/session; it has no mcp__spine__* tools on its surface and was explicitly instructed by the dispatch not to look for one. This file records the same r0-r6 checks the REVIEW_SURVEY.template.json shape names, worked to completion, but was not claimed/advanced through the checklist engine.",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["r0-context", "r1-handoff", "r2-scope", "r3-evidence", "r4-quality", "r5-reconciliation", "r6-fowler"],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context", "title": "Load baseline context",
+      "status": "complete", "result": "pass",
+      "finding": "Read g4-reviewer-handoff.md, g4-implementer-handoff.md, g4-implementer-result.md, MISSION_FRAME.md (Governing Constraints, Decision Anchors, Out of Scope) and notes-1.md's EXPLORER_SPINE section before starting verification. Confirmed no LAUNCH_ORDER-w3-promote.md file exists anywhere in the repo (searched by filename and by 'Pre-Rulings' section header); the actual pre-ruling text for decision:no-basis-backfill lives in MISSION_FRAME.md instead -- read there."
+    },
+    "r1-handoff": {
+      "id": "r1-handoff", "title": "Handoff compliance",
+      "status": "complete", "result": "pass",
+      "finding": "Exactly 3 conditions changed (init.c2, context.c1, spec.c1), each independently reproduced against `git show HEAD:...`. init.c2's command string is byte-identical to COMMANDER_SPINE's init.c1 and ADMIRAL_SPINE's init.c2 (diffed all three directly). context.c1/spec.c1 are existence-only `test -s` command checks, statement text byte-unchanged, NO basis field (grep for 'basis' across the whole EXPLORER_SPINE file returns zero hits). route.c1 independently re-verified left null: no scripts/verify_*.py has a --phase route option, and route's own imperative shows all 3 outcomes (hand-off/issue-file/shelve) are external actions with no differentiating local artifact -- SHAPED_BRIEF.json is created upstream at confirm, identically regardless of route's outcome, confirmed by reading confirm's own imperative text."
+    },
+    "r2-scope": {
+      "id": "r2-scope", "title": "Scope drift",
+      "status": "complete", "result": "pass",
+      "finding": "git diff --stat confirms exactly 6 insertions/6 deletions (3 single-line replacements) in each of the shipped template and its overlay, byte-identical to each other (`diff` empty). tests/test_checklist_engine.py diff is a pure 288-line append at EOF inside the new class only; no pre-existing test touched. tests/test_validate_spine.py diff touches only the floor assertion's message string, numeric floor (15) unchanged. COMMANDER_SPINE.template.json, ADMIRAL_SPINE.template.json, and checklist_engine.py do not appear anywhere in `git diff --name-only` -- exclusions honored. g4-implementer-handoff.md/execute.json/notes-1.md also show as modified but these are the Commander's own pre-dispatch amendment and spine bookkeeping, not implementer scope creep."
+    },
+    "r3-evidence": {
+      "id": "r3-evidence", "title": "Required evidence",
+      "status": "complete", "result": "pass",
+      "finding": "Independently reproduced every claimed command: JSON parse OK; check_template_overlay_freshness.py reports all 56 overlays clean including EXPLORER_SPINE; `python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q` -> 643 passed, 19 skipped, 150 subtests, matching the result doc exactly. Independently re-ran the corpus-wide falsifiable-all-null sweep both at current worktree state (15) and at HEAD via `git stash` (17) -- the 17->15 drop is real and correctly attributed to context.c1/spec.c1 clearing their single-postcondition gates (no other template contributes any all-null fault after this edit). Ran the new class in isolation (`-k ExplorerSpineW3Promote`) and read every method: each of the 3 discrimination tests uses a genuinely adversarial DEFECTIVE mutation (a lease status value the claim()/release() machinery itself never writes; an EXISTING-but-EMPTY file attacking the `-s` boundary specifically, not the easier missing-file case), not a restatement of the check's own text."
+    },
+    "r4-quality": {
+      "id": "r4-quality", "title": "Quality vs inherited rules",
+      "status": "complete", "result": "pass",
+      "finding": "decision:no-new-check-kinds honored (only `command` used, already 5x live in this template before this edit -- init.c1, explore.c2, review.c1, confirm.c2, confirm.c3 -- independently confirmed via `git show HEAD:...`). decision:blocking-where-adjudicated honored (no first-use-in-file promotion; all 3 ship blocking with no report_only/override_policy, matching PLAN_CRITIC.md finding 3's per-template-own-live-kind-set restriction, which the handoff correctly cites). decision:no-basis-backfill: INDEPENDENTLY RE-VERIFIED, see finding below -- the Commander's correction is sound and the underlying premise holds. Compact-format JSON hand-edit discipline honored (diff is exactly 3 single-line replacements per file, no reflow)."
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation", "title": "Reconciliation check",
+      "status": "complete", "result": "pass",
+      "finding": "No architecture-significant structural change beyond reusing the engine's existing command-check machinery, read-only. map/INDEX.md is untouched by this gate's diff (only the earlier, already-committed g1 change touched it). No decision candidate needed beyond the route.c1 triage candidate the implementer already surfaced (future routing tooling, out of scope here). Independently re-derived the underlying decision:no-basis-backfill question the handoff asked me to form my own judgment on: MISSION_FRAME.md's Governing Constraints line reads '`basis` field is `w3-basis`'s population; do not roll it out here' and its Out of Scope section separately lists 'The `basis` field and any `basis` backfill' as two distinct exclusions -- the ruling is not narrowly about backfilling old untouched conditions, it categorically reserves the `basis` field itself for the sibling w3-basis lane regardless of whether the target condition is newly promoted this wave or pre-existing. The implementer's first pass (adding `basis` to newly-split context.c1/spec.c1) was therefore a genuine violation, not a defensible edge case, and the Commander's strip-and-correct is the right fix, independently confirmed rather than taken on the Commander's word."
+    },
+    "r6-fowler": {
+      "id": "r6-fowler", "title": "Refactoring pass (Fowler code smells)",
+      "status": "complete", "result": "pass",
+      "finding": "Recorded to g4-review/FOWLER_PASS.json, scripts/verify_fowler_pass.py exits 0. 10 smells absent, 2 (large-class, duplicated-code) overridden citing the already-landed sibling class AdmiralSpineW3PromotePromotions's own identical per-condition tempdir-test shape (verified directly by reading that class in the same file), which this class matches rather than diverging from."
+    }
+  },
+  "consolidation": {"verdict": "APPROVE", "consolidated_at": "2026-08-23"},
+  "triage_candidates": [
+    "route.c1 remains a genuine null-check candidate should routing tooling ever record a per-outcome artifact (a --phase route verifier or a persisted routing-disposition file); the implementer already surfaced this, independently confirmed real.",
+    "The g4-reviewer-handoff.md cites 'LAUNCH_ORDER-w3-promote.md's Pre-Rulings section' for decision:no-basis-backfill's text, but no file of that name exists anywhere in the repo (searched by exact name and by 'Pre-Rulings' header) -- the actual authoritative text for this run lives in MISSION_FRAME.md's Governing Constraints / Out of Scope sections instead. Not a blocker (the pre-ruling itself is real and was located and re-verified), but worth fixing at the source (whichever upstream template stamps that citation string into Commander-authored reviewer handoffs) so a future reviewer doesn't spend time on a dead file reference."
+  ],
+  "blockers": []
+}

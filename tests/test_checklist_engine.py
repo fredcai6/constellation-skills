@@ -8567,7 +8567,7 @@ class CommanderSpineBasisFields(unittest.TestCase):
     # Captured via `git rev-parse HEAD:<path>` at implementation time (g1 dispatch).
     # Pins the TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere
     # must not perturb this.
-    PINNED_BLOB = "6953ac90f2568890fddbe187ad5fc8dd095041dd"
+    PINNED_BLOB = "50eef2e75712931497515c89af749afbee8f5e10"
 
     EXPECTED_BASIS = {
         "c2": {
@@ -8765,3 +8765,1445 @@ class CommanderSpineBasisFields(unittest.TestCase):
             self.assertIn("3 passed", combined, combined)
         finally:
             shutil.rmtree(scratch, ignore_errors=True)
+
+
+def _gate_with_check(iid, check, status="in-progress"):
+    """A gate whose single postcondition IS `check` -- the shipped shape
+    copied verbatim from the template, never re-typed by hand."""
+    t = gate(iid, status)
+    t["postconditions"] = [
+        {"id": "c1", "statement": "s", "check": check, "satisfied": False}
+    ]
+    return t
+
+
+
+
+class CommanderSpineW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g1: 8 named `check: null` conditions in the shipped
+    COMMANDER_SPINE.template.json promoted to real, mechanically-checked
+    conditions using only the engine's existing check kinds (`command`,
+    `artifact`) per `decision:no-new-check-kinds` -- init.c1, plan.c1/c2/c4/
+    c5, reconcile.c1, archive.c2/c3. Every other condition in the file, and
+    every `basis` object already present on plan.c2/c4/c5 (CommanderSpine
+    BasisFields above), is untouched.
+
+    Modeled directly on CommanderSpineBasisFields above: pin the **blob OID**
+    of COMMANDER_SPINE.template.json (not repo HEAD), so unrelated commits
+    elsewhere never perturb it; if the template's content has drifted from
+    the pinned blob, this test class FAILS loudly rather than silently
+    skipping -- a template shape this test was never written against must be
+    re-verified, not silently trusted.
+
+    Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    never a restatement of the check's own match text -- to prove the check
+    can genuinely discriminate the healthy world from the defective one, per
+    this epic's own thesis: a check with zero discriminating power is worse
+    than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
+    SPINE_REL = "skills/commander/templates/COMMANDER_SPINE.template.json"
+
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g1
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "50eef2e75712931497515c89af749afbee8f5e10"
+
+    EXPECTED_CHECKS = {
+        ("init", "c1"): {
+            "kind": "command",
+            "command": (
+                "python3 -c \"import json,sys; "
+                "d=json.load(open('<repo-root>/.agent-work/<work-id>/spine.json', "
+                "encoding='utf-8')); "
+                "sys.exit(0 if d.get('engine_session',{}).get('status')=='active' else 1)\""
+            ),
+        },
+        ("plan", "c1"): {
+            "kind": "artifact", "evidence_type": "mission-frame",
+            "match": {"status": ["produced", "skipped-as-trivial"]},
+        },
+        ("plan", "c2"): {
+            "kind": "artifact", "evidence_type": "execute-plan",
+            "match": {"exists": True},
+        },
+        ("plan", "c4"): {
+            "kind": "artifact", "evidence_type": "plan-alternatives",
+            "match": {"converged": True},
+        },
+        ("plan", "c5"): {
+            "kind": "artifact", "evidence_type": "plan-critic",
+            "match": {"triaged": True},
+        },
+        ("reconcile", "c1"): {
+            "kind": "artifact", "evidence_type": "file-diff",
+            "match": {"nonempty": True},
+        },
+        ("archive", "c2"): {
+            "kind": "command",
+            "command": (
+                'test "$(git -C <repo-root> rev-parse @)" '
+                '= "$(git -C <repo-root> rev-parse @{u})"'
+            ),
+        },
+        ("archive", "c3"): {"kind": "artifact", "evidence_type": "user-decision"},
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose --
+    # the handoff's "pre-existing 5" undercounts these 13; see this class's
+    # entry in the g1 IMPLEMENTER_RESULT's Workflow Feedback.
+    PRE_EXISTING_NONNULL = {
+        ("context", "c2"), ("understand", "c1"), ("plan", "c3"), ("plan", "c6"),
+        ("execute", "p2"), ("execute", "c2"), ("triage", "c2"), ("review", "c1"),
+        ("feedback", "c1"), ("archive", "c1"), ("archive", "c2b"), ("archive", "c4"),
+        ("archive", "c5"),
+    }
+
+    def _fail_if_template_drifted(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"CommanderSpineW3PromotePromotions' proof is stale: pinned "
+                f"to blob {self.PINNED_BLOB} of {self.SPINE_REL}, current "
+                f"blob is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g1 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_checks_match_shipped_shape(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly the 13 pre-existing non-null checks plus these 8 "
+            "promotions -- and no other condition anywhere in the template "
+            "-- may carry a check; a mismatch means either a missed target "
+            "or drift onto a condition this gate must not touch",
+        )
+
+    # ---- artifact-kind promotions: attest() cross-task reference, exactly ----
+    # the mechanism `docs/CHECKLIST_SCHEMA.md`'s "attest" row documents (verify
+    # exists + evidence_type + match; never asserts an artifact from thin air).
+
+    def _assert_artifact_discriminates(
+        self, cid, wrong_type_evidence, adversary_payload, matching_payload,
+    ):
+        """Shared drive for every artifact-kind promotion below: (1) evidence
+        of the WRONG `type` is refused on the `evidence_type` boundary; (2)
+        evidence of the RIGHT type but an adversary-chosen non-matching
+        payload is refused on the `match` boundary; (3) a genuinely matching
+        payload satisfies it -- proving the check can pass as well as fail."""
+        tid, real_cid = cid.split(".")
+        check = self.EXPECTED_CHECKS[(tid, real_cid)]
+        src = gate("src", "in-progress")
+        target = _gate_with_check("target", check)
+        cl = gated(src=src, target=target)
+
+        # (1) wrong evidence_type -- attacks the TYPE boundary, not the match.
+        E.attach(cl, "src", wrong_type_evidence, {})
+        with self.assertRaisesRegex(
+            E.EngineError,
+            re.escape(f"is type {wrong_type_evidence!r}, not the required {check['evidence_type']!r}"),
+        ):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-1")
+
+        # (2) right type, adversary-chosen non-matching payload -- attacks the
+        # boundary the match does NOT restate; see each caller's own rationale.
+        E.attach(cl, "src", check["evidence_type"], adversary_payload)
+        with self.assertRaisesRegex(E.EngineError, "does not match required"):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-2")
+
+        # (3) positive control: a genuinely matching artifact DOES satisfy it.
+        E.attach(cl, "src", check["evidence_type"], matching_payload)
+        self.assertEqual(
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-3"),
+            "attested target.c1 via e-src-3",
+        )
+
+    def test_plan_c1_mission_frame_status_membership_discriminates(self):
+        self._fail_if_template_drifted()
+        # adversary: a differently-CASED status string -- attacks the
+        # case-sensitivity boundary the match list does not spell out, not a
+        # restatement of "produced" / "skipped-as-trivial" themselves.
+        self._assert_artifact_discriminates(
+            "plan.c1",
+            wrong_type_evidence="user-decision",
+            adversary_payload={"status": "Produced"},
+            matching_payload={"status": "skipped-as-trivial"},
+        )
+
+    def test_plan_c2_execute_plan_existence_only_discriminates(self):
+        self._fail_if_template_drifted()
+        # adversary: an EXPLICIT `exists: false` -- a real "checked for it and
+        # it is NOT there" claim, distinct from simply attaching no evidence
+        # at all (which a different assertion already covers via wrong-type).
+        self._assert_artifact_discriminates(
+            "plan.c2",
+            wrong_type_evidence="mission-frame",
+            adversary_payload={"exists": False},
+            matching_payload={"exists": True},
+        )
+
+    def test_plan_c4_plan_alternatives_converged_discriminates(self):
+        self._fail_if_template_drifted()
+        # adversary: the STRING "true" rather than the boolean True -- attacks
+        # exact-type equality (`_artifact_match_satisfied` uses `==`, so a
+        # truthy-looking string is not a truthy-looking bool), never a
+        # restatement of "converged".
+        self._assert_artifact_discriminates(
+            "plan.c4",
+            wrong_type_evidence="plan-critic",
+            adversary_payload={"converged": "true"},
+            matching_payload={"converged": True},
+        )
+
+    def test_plan_c5_plan_critic_triaged_discriminates(self):
+        self._fail_if_template_drifted()
+        # adversary: an explicit `triaged: false` -- the actual defect this
+        # check exists to catch (critic ran, findings never triaged), not a
+        # restatement of the match's own "triaged" key.
+        self._assert_artifact_discriminates(
+            "plan.c5",
+            wrong_type_evidence="plan-alternatives",
+            adversary_payload={"triaged": False},
+            matching_payload={"triaged": True},
+        )
+
+    def test_reconcile_c1_file_diff_nonempty_discriminates(self):
+        self._fail_if_template_drifted()
+        # adversary: an explicit `nonempty: false` -- "the diff came back
+        # empty", the actual defect (map never touched), not a restatement of
+        # "nonempty" itself.
+        self._assert_artifact_discriminates(
+            "reconcile.c1",
+            wrong_type_evidence="command-output",
+            adversary_payload={"nonempty": False},
+            matching_payload={"nonempty": True},
+        )
+
+    def test_archive_c3_user_decision_type_only_discriminates(self):
+        self._fail_if_template_drifted()
+        # This check carries NO `match` at all (reuses the archive.c5 /
+        # review.c1 / triage.c2 shape exactly), so `match={}` is vacuously
+        # true for ANY payload of the right type -- the ONLY boundary this
+        # check has is `evidence_type` itself. The adversary payload below is
+        # therefore an arbitrary dict; what discriminates is exclusively (1).
+        check = self.EXPECTED_CHECKS[("archive", "c3")]
+        self.assertNotIn("match", check)
+        src = gate("src", "in-progress")
+        target = _gate_with_check("target", check)
+        cl = gated(src=src, target=target)
+        E.attach(cl, "src", "review-result", {"verdict": "APPROVE"})
+        with self.assertRaisesRegex(
+            E.EngineError,
+            re.escape("is type 'review-result', not the required 'user-decision'"),
+        ):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-1")
+        E.attach(cl, "src", "user-decision", {"cite": "spine_close"})
+        self.assertEqual(
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-2"),
+            "attested target.c1 via e-src-2",
+        )
+
+    # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
+
+    def test_init_c1_command_check_discriminates_lease_status(self):
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("init", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            (root / ".agent-work" / work_id).mkdir(parents=True)
+            spine_path = root / ".agent-work" / work_id / "spine.json"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real claim() write -- status == "active".
+            spine_path.write_text(json.dumps({"engine_session": {"status": "active"}}), encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): a status value the lease machinery
+            # itself never legitimately writes -- claim() only ever writes
+            # "active", release() only ever writes "released" -- this is
+            # neither, so it attacks "the check ran and saw a BAD value", not
+            # merely "the key/file was absent" (a different, easier defect).
+            spine_path.write_text(
+                json.dumps({"engine_session": {"status": "quantum-entangled-lease"}}),
+                encoding="utf-8",
+            )
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            # command checks are satisfied by `advance`, never `attest`.
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_archive_c2_command_check_discriminates_unpushed_commits(self):
+        self._fail_if_template_drifted()
+        import shutil
+        import subprocess
+        if shutil.which("git") is None:
+            self.skipTest("git not available")
+
+        check = self.EXPECTED_CHECKS[("archive", "c2")]
+
+        def run(args, cwd):
+            r = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            return r
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            remote = Path(tmp) / "remote.git"
+            repo.mkdir()
+            remote.mkdir()
+            run(["git", "init", "-q", "-b", "main"], repo)
+            run(["git", "config", "user.email", "t@t.example"], repo)
+            run(["git", "config", "user.name", "t"], repo)
+            run(["git", "commit", "-q", "--allow-empty", "-m", "init"], repo)
+            run(["git", "init", "-q", "--bare"], remote)
+            run(["git", "remote", "add", "origin", str(remote)], repo)
+            run(["git", "push", "-q", "-u", "origin", "main"], repo)
+
+            cmd = check["command"].replace("<repo-root>", repo.as_posix())
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: pushed, local HEAD == upstream.
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): a LOCAL commit made AFTER the last
+            # push -- attacks branch-ahead-of-upstream specifically, not "no
+            # upstream configured at all" (a different, less targeted defect
+            # this check would also refuse but which never probes the
+            # boundary the check text actually names -- @ vs @{u}).
+            run(["git", "commit", "-q", "--allow-empty", "-m", "unpushed"], repo)
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+
+class AdmiralSpineW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g3: 3 named `check: null` conditions in the shipped
+    ADMIRAL_SPINE.template.json promoted to real, mechanically-checked
+    conditions using only the engine's existing check kinds (`command`) per
+    `decision:no-new-check-kinds` -- init.c2, latitude.c1, execute.c2. Every
+    other condition in the file is untouched, including closeout.c4
+    ("...ADMIRAL_LOG archived"), left `check: null` on purpose: its archive
+    destination (`scripts/spine_lifecycle.py::archive_name_for`) is
+    `f"{today}-{work_id.replace('/', '-')}"`, keyed on the wall-clock date at
+    CLOSE time (unknown at spine-authoring time, so no fixed path exists to
+    write into a check) AND on a `/` -> `-` transform of `work_id` that the
+    resolver's own `<work-id>` substitution (`resolve_spine`, a blind
+    `str.replace`) never performs -- so even a glob-based check baked in at
+    authoring time would silently mismatch for any work_id containing `/`, a
+    shape the resolver's own docstring treats as legal. Neither half is a
+    "real, stable path convention" a hand-authored check text can pin; per
+    the handoff's own stated fallback this condition stays `check: null`.
+
+    init.c2's promotion mirrors g1's already-landed COMMANDER_SPINE.template.json
+    init.c1 EXACTLY (same seam: both roles' own spine.json lives at the same
+    `.agent-work/<work-id>/spine.json` path) -- `command` is independently
+    justified against THIS template's own pre-existing checks too: init.c1
+    (same gate), execute.p2, execute.c3, and closeout.c2 are all already
+    `command`-kind here, so this is not this template's first use of the
+    kind. latitude.c1 and execute.c2 are new `command` text (not copied from
+    a sibling template) but the same reasoning applies: `command` is this
+    template's dominant pre-existing kind (4 uses spanning lease status,
+    state-note verification, wave-transition verification, and episode
+    capture) versus `artifact`, used here only twice and only ever for
+    `user-decision` (a human-confirmation event genuinely populated by a real
+    interaction) -- introducing a NEW `artifact` evidence_type for a raw file-
+    existence claim would rely on trusting a hand-typed attest payload
+    (`attest()`'s artifact path never touches the filesystem; only `basis`,
+    which is report-only and inert once `check` is non-null, does that), so
+    `command` is the more genuinely mechanical, less decorative choice here.
+
+    Modeled directly on CommanderSpineW3PromotePromotions above: pin the
+    **blob OID** of ADMIRAL_SPINE.template.json (not repo HEAD), so
+    unrelated commits elsewhere never perturb it; if the template's content
+    has drifted from the pinned blob, this test class FAILS loudly rather
+    than silently skipping -- a template shape this test was never written
+    against must be re-verified, not silently trusted.
+
+    Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    never a restatement of the check's own match text -- to prove the check
+    can genuinely discriminate the healthy world from the defective one, per
+    this epic's own thesis: a check with zero discriminating power is worse
+    than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "admiral" / "templates" / "ADMIRAL_SPINE.template.json"
+    SPINE_REL = "skills/admiral/templates/ADMIRAL_SPINE.template.json"
+
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g3
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "9b3ae2b3a0140492fd98e996862f9caf7aa9a8b4"
+
+    EXPECTED_CHECKS = {
+        ("init", "c2"): {
+            "kind": "command",
+            "command": (
+                "python3 -c \"import json,sys; "
+                "d=json.load(open('<repo-root>/.agent-work/<work-id>/spine.json', "
+                "encoding='utf-8')); "
+                "sys.exit(0 if d.get('engine_session',{}).get('status')=='active' else 1)\""
+            ),
+        },
+        ("latitude", "c1"): {
+            "kind": "command",
+            "command": 'test -s "<repo-root>/.agent-work/<work-id>/LATITUDE_CONTRACT.md"',
+        },
+        ("execute", "c2"): {
+            "kind": "command",
+            "command": (
+                'test -s "<repo-root>/.agent-work/<work-id>/ADMIRAL_LOG.md" '
+                '&& grep -qE "^- TRANSITION" "<repo-root>/.agent-work/<work-id>/ADMIRAL_LOG.md"'
+            ),
+        },
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose.
+    PRE_EXISTING_NONNULL = {
+        ("init", "c1"), ("latitude", "c2"), ("execute", "p2"), ("execute", "c3"),
+        ("closeout", "c2"), ("closeout", "c5"),
+    }
+
+    def _fail_if_template_drifted(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"AdmiralSpineW3PromotePromotions' proof is stale: pinned "
+                f"to blob {self.PINNED_BLOB} of {self.SPINE_REL}, current "
+                f"blob is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g3 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_checks_match_shipped_shape(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_closeout_c4_stays_null(self):
+        """closeout.c4 ('branches dispositioned, worktrees swept, ADMIRAL_LOG
+        archived') is the one condition this gate's own handoff named as a
+        candidate and then explicitly declined -- pin that it stays `check:
+        null` rather than silently drifting either way."""
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        by_id = {c["id"]: c for c in cl["tasks"]["closeout"]["postconditions"]}
+        self.assertIsNone(by_id["c4"]["check"])
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly the 6 pre-existing non-null checks plus these 3 "
+            "promotions -- and no other condition anywhere in the template, "
+            "including closeout.c4 -- may carry a check; a mismatch means "
+            "either a missed target or drift onto a condition this gate "
+            "must not touch",
+        )
+
+    # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
+
+    def test_init_c2_command_check_discriminates_lease_status(self):
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("init", "c2")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            (root / ".agent-work" / work_id).mkdir(parents=True)
+            spine_path = root / ".agent-work" / work_id / "spine.json"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real claim() write -- status == "active".
+            spine_path.write_text(json.dumps({"engine_session": {"status": "active"}}), encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): a status value the lease machinery
+            # itself never legitimately writes -- claim() only ever writes
+            # "active", release() only ever writes "released" -- this is
+            # neither, so it attacks "the check ran and saw a BAD value", not
+            # merely "the key/file was absent" (a different, easier defect).
+            spine_path.write_text(
+                json.dumps({"engine_session": {"status": "half-claimed"}}),
+                encoding="utf-8",
+            )
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            # command checks are satisfied by `advance`, never `attest`.
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_latitude_c1_command_check_discriminates_empty_file(self):
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("latitude", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            work_dir = root / ".agent-work" / work_id
+            work_dir.mkdir(parents=True)
+            contract_path = work_dir / "LATITUDE_CONTRACT.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real, filled-in contract.
+            contract_path.write_text("# Latitude Contract\n\ndecision classes: ...\n", encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): the file EXISTS (a bare `test -f`
+            # or `.exists()` claim would pass) but is EMPTY -- attacks the
+            # nonempty boundary `-s` adds over plain existence, not the
+            # easier "file missing entirely" defect.
+            contract_path.write_text("", encoding="utf-8")
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_execute_c2_command_check_discriminates_case_sensitive_grammar(self):
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("execute", "c2")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            work_dir = root / ".agent-work" / work_id
+            work_dir.mkdir(parents=True)
+            log_path = work_dir / "ADMIRAL_LOG.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real TRANSITION line in the documented grammar.
+            log_path.write_text(
+                "# ADMIRAL_LOG\n\n- TRANSITION | boundary=b1 | decision=advance | verified\n",
+                encoding="utf-8",
+            )
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): the file is genuinely nonempty and
+            # even mentions a transition, but NOT in the documented `^- TRANSITION`
+            # grammar (lower-cased) -- attacks the pattern-match boundary
+            # specifically, not the easier "file empty/missing" defect a
+            # different assertion already covers.
+            log_path.write_text(
+                "# ADMIRAL_LOG\n\n- transition | boundary=b1 | decision=advance | verified\n",
+                encoding="utf-8",
+            )
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+
+class ExplorerSpineW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g4: 3 named `check: null` conditions in the shipped
+    EXPLORER_SPINE.template.json promoted to real, mechanically-checked
+    conditions using only the engine's existing check kinds (`command`) per
+    `decision:no-new-check-kinds` -- init.c2, context.c1, spec.c1. Every
+    other condition in the file is untouched, including route.c1
+    ("confirmed spec routed (handed off / shaped-design issue filed /
+    shelved with UNCONFIRMED header); work area archived; engine lease
+    released"), left `check: null` on purpose: the handoff asked for a FULL
+    promotion via an artifact enum-match on the 3 named routing outcomes
+    ONLY IF each outcome has its own real, independently-checkable artifact.
+    No routing tooling exists for any of the three (no `verify_*.py --phase
+    route` script the way `verify_spec_confirmed.py` has a `review` phase,
+    no persisted per-outcome record distinguishing "handed off" from "issue
+    filed" from "shelved" -- SHAPED_BRIEF.json exists identically across all
+    three outcomes, created upstream at `confirm`, so its presence cannot
+    discriminate which routing path was taken). Per the handoff's own stated
+    fallback ("leave the whole condition check: null and say so"), route.c1
+    stays null.
+
+    init.c2's promotion mirrors g1's already-landed COMMANDER_SPINE.template.json
+    init.c1 and g3's already-landed ADMIRAL_SPINE.template.json init.c2
+    EXACTLY (same seam: every role's own spine.json lives at the same
+    `.agent-work/<work-id>/spine.json` path) -- `command` is independently
+    justified against THIS template's own pre-existing checks too: init.c1
+    (same gate), explore.c2, review.c1, and confirm.c2/c3 are all already
+    `command`-kind here, so this is not this template's first use of the
+    kind.
+
+    context.c1 and spec.c1 are SPLIT promotions (mirroring COMMANDER_SPINE's
+    own plan.c2): each condition's prose names two things -- a judgment
+    half (whether doctrine/deltas/map were genuinely read; whether
+    per-section approval and designed-it-twice fidelity were genuinely
+    obtained) and a locatable-artifact half (IDEAS_BOARD.md / DESIGN_SPEC.md
+    existing and nonempty, both real fixed paths named in each task's own
+    imperative text). Only the artifact half is promoted; the `statement`
+    text is left untouched (it still names both halves), and NO `basis`
+    field is added -- `decision:no-basis-backfill` reserves that mechanism
+    for w3-basis's own population; this gate's job is promotion only, and
+    the check's honest existence-only scope is documented here, in this
+    test class, rather than in a new `basis` object on the shipped
+    condition. `command` (`test -s`) is the kind chosen for both, not
+    `artifact`: `artifact` appears in this template
+    only three times (explore.c1, confirm.c1, route.c2) and only ever for
+    `evidence_type: user-decision`, a human-confirmation event genuinely
+    populated by a real interaction -- introducing a NEW `artifact`
+    evidence_type for a raw file-existence claim would rely on trusting a
+    hand-typed attest payload (`attest()`'s artifact path never touches the
+    filesystem; only `basis`, which is report-only, does that), so `command`
+    is the more genuinely mechanical, less decorative choice here -- the
+    same reasoning ADMIRAL_SPINE's own docstring gives for latitude.c1 and
+    execute.c2, and the same check text shape (`test -s "<path>"`) as that
+    template's own latitude.c1.
+
+    Both context and spec each carry exactly ONE postcondition, so promoting
+    either clears an all-null gate per `scripts/validate_spine.py`'s
+    `falsifiable-all-null` fault (postcondition-only, ignores preconditions):
+    the corpus-wide count drops from 17 (measured after g1+g3) to 15;
+    `tests/test_validate_spine.py`'s floor is updated in the same edit as g1's
+    own discipline (message text only -- the `>= 15` threshold itself still
+    holds at exactly 15, so it is left as a live floor rather than lowered
+    with slack, per the same "never move it silently" doctrine that pin
+    already states).
+
+    Modeled directly on CommanderSpineW3PromotePromotions /
+    AdmiralSpineW3PromotePromotions above: pin the **blob OID** of
+    EXPLORER_SPINE.template.json (not repo HEAD), so unrelated commits
+    elsewhere never perturb it; if the template's content has drifted from
+    the pinned blob, this test class FAILS loudly rather than silently
+    skipping -- a template shape this test was never written against must
+    be re-verified, not silently trusted.
+
+    Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    never a restatement of the check's own match text -- to prove the check
+    can genuinely discriminate the healthy world from the defective one, per
+    this epic's own thesis: a check with zero discriminating power is worse
+    than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "explorer" / "templates" / "EXPLORER_SPINE.template.json"
+    SPINE_REL = "skills/explorer/templates/EXPLORER_SPINE.template.json"
+
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g4
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "8a7a0e72c2e12af746807423b290ad24bc626dd2"
+
+    EXPECTED_CHECKS = {
+        ("init", "c2"): {
+            "kind": "command",
+            "command": (
+                "python3 -c \"import json,sys; "
+                "d=json.load(open('<repo-root>/.agent-work/<work-id>/spine.json', "
+                "encoding='utf-8')); "
+                "sys.exit(0 if d.get('engine_session',{}).get('status')=='active' else 1)\""
+            ),
+        },
+        ("context", "c1"): {
+            "kind": "command",
+            "command": 'test -s "<repo-root>/.agent-work/<work-id>/IDEAS_BOARD.md"',
+        },
+        ("spec", "c1"): {
+            "kind": "command",
+            "command": 'test -s "<repo-root>/.agent-work/<work-id>/DESIGN_SPEC.md"',
+        },
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose.
+    PRE_EXISTING_NONNULL = {
+        ("init", "c1"), ("explore", "c1"), ("explore", "c2"), ("review", "c1"),
+        ("confirm", "c1"), ("confirm", "c2"), ("confirm", "c3"), ("route", "c2"),
+    }
+
+    def _fail_if_template_drifted(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"ExplorerSpineW3PromotePromotions' proof is stale: pinned "
+                f"to blob {self.PINNED_BLOB} of {self.SPINE_REL}, current "
+                f"blob is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g4 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_checks_match_shipped_shape(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_route_c1_stays_null(self):
+        """route.c1 ('confirmed spec routed ...; work area archived; engine
+        lease released') is the one condition this gate's own handoff named
+        as a candidate FULL promotion and then explicitly declined for lack
+        of a real per-outcome artifact -- pin that it stays `check: null`
+        rather than silently drifting either way."""
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        by_id = {c["id"]: c for c in cl["tasks"]["route"]["postconditions"]}
+        self.assertIsNone(by_id["c1"]["check"])
+
+    def test_context_c1_and_spec_c1_keep_their_unsplit_statement_and_no_basis(self):
+        """The SPLIT promotions must not let the `statement` text imply the
+        check covers more than the file-existence half it actually checks,
+        and must NOT gain a `basis` field either --
+        `decision:no-basis-backfill` reserves that mechanism for w3-basis's
+        own population, not this gate's promotions. Pin both: statement
+        stays byte-identical, and no `basis` key was introduced."""
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        context_c1 = cl["tasks"]["context"]["postconditions"][0]
+        spec_c1 = cl["tasks"]["spec"]["postconditions"][0]
+        self.assertEqual(
+            context_c1["statement"],
+            "doctrine + project deltas + map read where they exist; "
+            "IDEAS_BOARD.md seeded from template",
+        )
+        self.assertNotIn("basis", context_c1)
+        self.assertEqual(
+            spec_c1["statement"],
+            "DESIGN_SPEC.md crystallized from the board with per-section "
+            "approval; load-bearing interfaces designed-it-twice or skipped "
+            "with a stated reason",
+        )
+        self.assertNotIn("basis", spec_c1)
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly the 8 pre-existing non-null checks plus these 3 "
+            "promotions -- and no other condition anywhere in the template, "
+            "including route.c1 -- may carry a check; a mismatch means "
+            "either a missed target or drift onto a condition this gate "
+            "must not touch",
+        )
+
+    # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
+
+    def test_init_c2_command_check_discriminates_lease_status(self):
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("init", "c2")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            (root / ".agent-work" / work_id).mkdir(parents=True)
+            spine_path = root / ".agent-work" / work_id / "spine.json"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real claim() write -- status == "active".
+            spine_path.write_text(json.dumps({"engine_session": {"status": "active"}}), encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): a status value the lease machinery
+            # itself never legitimately writes -- claim() only ever writes
+            # "active", release() only ever writes "released" -- this is
+            # neither, so it attacks "the check ran and saw a BAD value", not
+            # merely "the key/file was absent" (a different, easier defect).
+            spine_path.write_text(
+                json.dumps({"engine_session": {"status": "stale-explorer-lease"}}),
+                encoding="utf-8",
+            )
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            # command checks are satisfied by `advance`, never `attest`.
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_context_c1_command_check_discriminates_empty_board(self):
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("context", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            work_dir = root / ".agent-work" / work_id
+            work_dir.mkdir(parents=True)
+            board_path = work_dir / "IDEAS_BOARD.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real board seeded from the template.
+            board_path.write_text("# Ideas Board\n\nthe point: ...\n", encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): the file EXISTS (a bare `test -f`
+            # or `.exists()` claim would pass) but is EMPTY -- attacks the
+            # nonempty boundary `-s` adds over plain existence, not the
+            # easier "file missing entirely" defect.
+            board_path.write_text("", encoding="utf-8")
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_spec_c1_command_check_discriminates_empty_spec(self):
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("spec", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            work_dir = root / ".agent-work" / work_id
+            work_dir.mkdir(parents=True)
+            spec_path = work_dir / "DESIGN_SPEC.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real spec crystallized from the board.
+            spec_path.write_text(
+                "# Design Spec\n\nUNCONFIRMED -- DO NOT CUT\n", encoding="utf-8",
+            )
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): the file EXISTS but is EMPTY --
+            # same nonempty boundary as context.c1 above, not the easier
+            # "file missing entirely" defect.
+            spec_path.write_text("", encoding="utf-8")
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+
+class CharterW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g5: 1 named `check: null` condition in the shipped
+    CHARTER.template.json promoted to a real, mechanically-checked condition
+    using only the engine's existing check kinds (`artifact`) per
+    `decision:no-new-check-kinds` -- project-templates.c1. Every other
+    condition in the file is untouched.
+
+    Two of this gate's three candidates, fresh-verified against the real
+    shipped JSON, were declined rather than forced:
+
+    `closeout.c1` ("durable outputs complete; work area archived") was NOT
+    split-promoted. Unlike COMMANDER_SPINE/ADMIRAL_SPINE/EXPLORER_SPINE,
+    CHARTER.template.json carries no `init` task at all -- there is no
+    task-level scaffolding step for a dedicated work area, so "the work
+    area" this condition names can only be the generic `.agent-work/<work-id>/`
+    directory the engine itself stood up at spine-instantiation time. The
+    only archive mechanism this repo has for that directory is the generic
+    `scripts/spine_lifecycle.py::close_work` / `archive_name_for`, and that
+    function's own destination path is `f"{today}-{work_id.replace('/', '-')}"`
+    -- keyed on a wall-clock value read at close time, with no
+    placeholder-family member (`<work-id>`, `<repo-root>`, `<*-skill-dir>`,
+    `<*-session-id>`) able to pin it, plus the same `/`-strip transform
+    `resolve_spine`'s own substitution never performs. This is the EXACT
+    defect g3's own docstring (`AdmiralSpineW3PromotePromotions`) already
+    named for ADMIRAL_SPINE's `closeout.c4` -- no stable locator exists here
+    either, so `closeout.c1` stays `check: null` rather than inventing one.
+
+    `interrogate.c1` ("doctrine resolved to role-operable decisions") was
+    NOT promoted either, despite a real, reusable, already-shipped verifier
+    existing for `interrogation.json`'s companion terminal-state artifact:
+    `scripts/verify_interrogation.py`, invoked today by
+    `INTERROGATION.template.json`'s own `zc-consolidate.c1` against
+    `.agent-work/<work-id>/INTERROGATION_RECORD.json` (a path
+    `tests/test_shipped_check_commands_resolve.py` already pins as
+    resolving from `<work-id>` alone). Wiring that SAME script into
+    CHARTER's own spine turns out not to be a genuine reuse for two
+    independent reasons, either one sufficient alone to decline:
+
+      (1) `scripts/init_work_area.py::resolve_spine` treats every
+          `<ROLE-skill-dir>` token it finds in a template's text as
+          resolving to the SAME single `--skill-dir` value passed for
+          THAT template's own instantiation, regardless of which role name
+          `ROLE` spells (`_resolve_skill_dir_token` is not a per-role
+          lookup). Every shipped template today only ever references its
+          OWN role's `-skill-dir` token (`<commander-skill-dir>` only in
+          COMMANDER_SPINE, `<admiral-skill-dir>` only in ADMIRAL_SPINE,
+          `<reviewer-skill-dir>` only in REVIEW_SURVEY) -- a
+          `<interrogator-skill-dir>` token embedded in CHARTER's OWN spine
+          would be the first cross-skill reference of this shape anywhere
+          in the corpus, and it would resolve WRONG in an installed repo:
+          `scripts/install_constellation.py`'s per-skill bundle list ships
+          `verify_interrogation.py` only with `"interrogator"`
+          (`("checklist_engine.py", "verify_interrogation.py")`), never
+          with `"charter"` (`("checklist_engine.py",)` only) -- so the
+          token would substitute CHARTER's own installed skill directory,
+          which does not carry the script, not interrogator's. It only
+          happens to work by coincidence in this source repo, where an
+          omitted `--skill-dir` falls back to the top-level `scripts/`
+          directory that happens to hold every skill's scripts today.
+          Fixing this for real would mean adding the script to CHARTER's
+          own install manifest -- editing `scripts/install_constellation.py`,
+          outside this gate's Allowed Scope.
+      (2) Even setting (1) aside, CHARTER.template.json carries ZERO
+          `command`-kind checks today (`intent.c1`, `orchestrator-context.c1`,
+          `crew-context.c1`, `glossary.c1`, `agent-guide.c1`, and
+          `engine-config.c1` are its only pre-existing non-null checks, and
+          all six are `artifact`/`user-decision`) -- a `command`-kind
+          promotion here would be this template's FIRST use of that kind,
+          which `decision:blocking-where-adjudicated` says ships blocking
+          only after explicit Commander consultation, not implementer
+          say-so.
+
+    Per this gate's own Close Criteria fallback ("If none exists, leave
+    check: null and say so -- do not invent a new verifier"), `interrogate.c1`
+    stays `check: null`.
+
+    `project-templates.c1` ("project-specific templates seeded") IS promoted,
+    mirroring COMMANDER_SPINE's own already-landed `plan.c1` shape EXACTLY
+    (`artifact`, enum-match on a `status` field): both conditions name a
+    task whose imperative offers the SAME two-way disposition in prose
+    ("Seed or update ... where the project needs them ... Skip with reason
+    if none needed" here; "produced ... or explicitly skipped as trivial"
+    for `plan.c1`), and `artifact` is not a new kind for this file --
+    `intent.c1` / `orchestrator-context.c1` / `crew-context.c1` /
+    `glossary.c1` / `agent-guide.c1` / `engine-config.c1` are all already
+    `artifact`-kind here (each `evidence_type: "user-decision"`), so this
+    is not this template's first use of the KIND, only of a fresh
+    `evidence_type` (`"project-templates"`) -- `decision:no-new-check-kinds`
+    bars a new check KIND, never a new `evidence_type` string, and
+    `decision:blocking-where-adjudicated` only requires consultation on a
+    first-of-KIND use. No `basis` field is added -- `decision:no-basis-backfill`
+    -- and the `statement` text is left byte-identical; this is a full,
+    direct promotion (like `plan.c1` itself, which also carries no `basis`),
+    not a split one, so there is no uncovered judgment half to document.
+
+    Modeled directly on CommanderSpineW3PromotePromotions /
+    AdmiralSpineW3PromotePromotions / ExplorerSpineW3PromotePromotions
+    above: pin the **blob OID** of CHARTER.template.json (not repo HEAD),
+    so unrelated commits elsewhere never perturb it; if the template's
+    content has drifted from the pinned blob, this test class FAILS loudly
+    rather than silently skipping -- a template shape this test was never
+    written against must be re-verified, not silently trusted.
+
+    The promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    never a restatement of the check's own match text -- to prove the check
+    can genuinely discriminate the healthy world from the defective one, per
+    this epic's own thesis: a check with zero discriminating power is worse
+    than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "charter" / "templates" / "CHARTER.template.json"
+    SPINE_REL = "skills/charter/templates/CHARTER.template.json"
+
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g5
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "9df4777a9329e4eaf880fc68a9ff63b0ad9513c1"
+
+    EXPECTED_CHECKS = {
+        ("project-templates", "c1"): {
+            "kind": "artifact", "evidence_type": "project-templates",
+            "match": {"status": ["seeded", "skipped-no-need"]},
+        },
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose.
+    PRE_EXISTING_NONNULL = {
+        ("intent", "c1"), ("orchestrator-context", "c1"), ("crew-context", "c1"),
+        ("glossary", "c1"), ("agent-guide", "c1"), ("engine-config", "c1"),
+    }
+
+    def _fail_if_template_drifted(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"CharterW3PromotePromotions' proof is stale: pinned to "
+                f"blob {self.PINNED_BLOB} of {self.SPINE_REL}, current "
+                f"blob is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g5 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_checks_match_shipped_shape(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_interrogate_c1_and_closeout_c1_stay_null(self):
+        """The two candidates this gate's own handoff named and then
+        explicitly declined -- `interrogate.c1` for lack of a genuinely
+        reusable, reliably-wired verifier, `closeout.c1` for lack of a
+        stable archive-path convention -- pin that both stay `check: null`
+        rather than silently drifting either way."""
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        interrogate_c1 = {c["id"]: c for c in cl["tasks"]["interrogate"]["postconditions"]}["c1"]
+        closeout_c1 = {c["id"]: c for c in cl["tasks"]["closeout"]["postconditions"]}["c1"]
+        self.assertIsNone(interrogate_c1["check"])
+        self.assertIsNone(closeout_c1["check"])
+
+    def test_project_templates_c1_keeps_its_statement_and_no_basis(self):
+        """A full (non-split) promotion: the `statement` text must stay
+        byte-identical and must NOT gain a `basis` field --
+        `decision:no-basis-backfill` reserves that mechanism for w3-basis's
+        own population, not this gate's promotions."""
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        c1 = cl["tasks"]["project-templates"]["postconditions"][0]
+        self.assertEqual(c1["statement"], "project-specific templates seeded")
+        self.assertNotIn("basis", c1)
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly the 6 pre-existing non-null checks plus this 1 "
+            "promotion -- and no other condition anywhere in the template, "
+            "including interrogate.c1 and closeout.c1 -- may carry a check; "
+            "a mismatch means either a missed target or drift onto a "
+            "condition this gate must not touch",
+        )
+
+    # ---- artifact-kind promotion: attest() cross-task reference, exactly ----
+    # the mechanism `docs/CHECKLIST_SCHEMA.md`'s "attest" row documents (verify
+    # exists + evidence_type + match; never asserts an artifact from thin air).
+
+    def test_project_templates_c1_status_membership_discriminates(self):
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("project-templates", "c1")]
+        src = gate("src", "in-progress")
+        target = _gate_with_check("target", check)
+        cl = gated(src=src, target=target)
+
+        # (1) wrong evidence_type -- attacks the TYPE boundary, not the match
+        # (this file's own dominant pre-existing evidence_type is
+        # "user-decision", so that is the realistic wrong-type case here).
+        E.attach(cl, "src", "user-decision", {})
+        with self.assertRaisesRegex(
+            E.EngineError,
+            re.escape("is type 'user-decision', not the required 'project-templates'"),
+        ):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-1")
+
+        # (2) right type, adversary-chosen non-matching payload -- a
+        # differently-CASED status string, attacking the case-sensitivity
+        # boundary the match list does not spell out (mirrors the
+        # already-landed `plan.c1` test's own adversary choice), not a
+        # restatement of "seeded"/"skipped-no-need" themselves.
+        E.attach(cl, "src", "project-templates", {"status": "Seeded"})
+        with self.assertRaisesRegex(E.EngineError, "does not match required"):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-2")
+
+        # (3) positive control: the OTHER enum member (not the first) also
+        # satisfies it -- proves genuine list-membership, not merely a
+        # hardcoded match against "seeded" alone.
+        E.attach(cl, "src", "project-templates", {"status": "skipped-no-need"})
+        self.assertEqual(
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-3"),
+            "attested target.c1 via e-src-3",
+        )
+
+
+class ScoutW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g7: 1 named `check: null` condition in the shipped
+    SCOUT.template.json promoted -- report.c1 -- using only the engine's
+    existing `command` check kind (`decision:no-new-check-kinds`). Every
+    other condition in the file (context.c1, audit.p1, audit.c1) is
+    untouched: all three are pure judgment with no locator, matching this
+    gate's own fresh-verified assessment exactly.
+
+    UNLIKE every prior W3PromotePromotions class this epic (g1/g3/g4/g5, all
+    against templates that already carried at least one live check kind),
+    SCOUT.template.json measured ZERO live check kinds anywhere before this
+    gate -- confirmed directly against `git show HEAD:...` below (see
+    `PRE_EXISTING_NONNULL`, the empty set). Per `decision:blocking-where-
+    adjudicated`'s own default for a first-use-of-any-kind file, this
+    promotion therefore ships REPORT-ONLY rather than blocking: the command
+    always exits 0 (so `advance` can never be refused by it), while still
+    running the real existence+nonempty test against
+    `.agent-work/SCOUT_REPORT.md` and printing which branch fired -- the
+    map_orient.py `--report-only` idiom (gate-vs-report is a flag flip, not
+    a rebuild), reproduced by hand here since this is a plain shell check,
+    not a Python script with its own flag.
+
+    report.c1's statement text ("SCOUT_REPORT written; candidates routed")
+    is left byte-identical and gains no `basis` field
+    (`decision:no-basis-backfill`) -- the check covers only the
+    SCOUT_REPORT.md-written half; "candidates routed" stays an uncovered
+    judgment claim the statement still names, same partial-conversion shape
+    as every prior gate's own split promotions (e.g. g1's COMMANDER_SPINE
+    `plan.c2`).
+
+    Pin the **blob OID** of SCOUT.template.json (not repo HEAD), so
+    unrelated commits elsewhere never perturb it; if the template's content
+    has drifted from the pinned blob, this test class FAILS loudly rather
+    than silently skipping -- a template shape this test was never written
+    against must be re-verified, not silently trusted.
+
+    The promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    an EMPTY file, not merely a MISSING one, attacking the `-s` nonempty
+    boundary rather than the easier absent-path defect -- to prove the
+    underlying probe genuinely discriminates the healthy world from the
+    defective one even though the gate itself never blocks on the result,
+    per this epic's own thesis: a check with zero discriminating power is
+    worse than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "scout" / "templates" / "SCOUT.template.json"
+    SPINE_REL = "skills/scout/templates/SCOUT.template.json"
+
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g7
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "6e07b4df967364e486f110f78a2d7a2af859504e"
+
+    EXPECTED_CHECKS = {
+        ("report", "c1"): {
+            "kind": "command",
+            "command": (
+                'if [ -s "<repo-root>/.agent-work/SCOUT_REPORT.md" ]; then '
+                'echo "PASS: SCOUT_REPORT.md written"; else '
+                'echo "report-only: NOT gating -- SCOUT_REPORT.md missing or empty"; '
+                'fi; exit 0'
+            ),
+        },
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose --
+    # the empty set, since SCOUT.template.json measured zero live check kinds
+    # anywhere prior to this gate.
+    PRE_EXISTING_NONNULL = set()
+
+    def _fail_if_template_drifted(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"ScoutW3PromotePromotions' proof is stale: pinned to blob "
+                f"{self.PINNED_BLOB} of {self.SPINE_REL}, current blob is "
+                f"{blob} -- the template changed since this test's shape "
+                "assumptions were verified (g7 dispatch). Re-verify "
+                "EXPECTED_CHECKS (and the rest of this class) against the "
+                "new template content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_check_matches_shipped_shape(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_report_c1_statement_unchanged_and_no_basis(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        c1 = cl["tasks"]["report"]["postconditions"][0]
+        self.assertEqual(c1["statement"], "SCOUT_REPORT written; candidates routed")
+        self.assertNotIn("basis", c1)
+
+    def test_context_c1_and_audit_c1_stay_null(self):
+        """The other two candidates this gate's own handoff named and
+        declined (pure judgment, no locator) -- pin that both stay
+        `check: null` rather than silently drifting either way."""
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        context_c1 = {c["id"]: c for c in cl["tasks"]["context"]["postconditions"]}["c1"]
+        audit_c1 = {c["id"]: c for c in cl["tasks"]["audit"]["postconditions"]}["c1"]
+        self.assertIsNone(context_c1["check"])
+        self.assertIsNone(audit_c1["check"])
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._fail_if_template_drifted()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly this 1 promotion -- and no other condition anywhere in "
+            "the template -- may carry a check; a mismatch means either a "
+            "missed target or drift onto a condition this gate must not "
+            "touch",
+        )
+
+    # ---- report-only command promotion: never blocks `advance`, but the ----
+    # ---- underlying probe still genuinely discriminates real state       ----
+
+    def test_report_c1_never_blocks_advance_healthy_or_defective(self):
+        """The defining property of a report-only command check: `advance`
+        succeeds unconditionally, whether the real world is healthy or
+        defective -- proving the promotion cannot regress into a silent
+        blocking gate."""
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("report", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".agent-work").mkdir(parents=True)
+            report_path = root / ".agent-work" / "SCOUT_REPORT.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix())
+            resolved = {"kind": "command", "command": cmd}
+
+            # DEFECTIVE (adversary-chosen): the file EXISTS (a bare `test -f`
+            # claim would pass) but is EMPTY -- attacks the nonempty
+            # boundary `-s` adds over plain existence, not the easier "file
+            # missing entirely" defect.
+            report_path.write_text("", encoding="utf-8")
+            cl_defective = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_defective, "g1"), "g1 -> complete")
+
+            # Missing entirely -- also never blocks.
+            report_path.unlink()
+            cl_missing = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_missing, "g1"), "g1 -> complete")
+
+            # HEALTHY: a real, nonempty report -- also never blocks (report-
+            # only is symmetric, not merely "fails open").
+            report_path.write_text("# SCOUT_REPORT\n\ncandidates: ...\n", encoding="utf-8")
+            cl_healthy = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_healthy, "g1"), "g1 -> complete")
+
+            # command checks are satisfied by `advance`, never `attest` --
+            # true regardless of report-only-ness, since the KIND is still
+            # `command`.
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_healthy, "g1", "c1", "postconditions", None)
+
+    def test_report_c1_underlying_probe_still_discriminates_via_stdout(self):
+        """Never-blocking is not the same as never-discriminating: the
+        command must still compute and print the REAL verdict, exactly as
+        the report-only contract this gate cites (map_orient.py's own
+        `--report-only`) requires -- 'the verdict printed is identical
+        either way; only its blocking-ness moves.' Runs the check text
+        through the engine's own `_run_check_command` shell runner directly
+        (the same one `_check_condition` calls), rather than re-implementing
+        shell invocation by hand."""
+        self._fail_if_template_drifted()
+        check = self.EXPECTED_CHECKS[("report", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".agent-work").mkdir(parents=True)
+            report_path = root / ".agent-work" / "SCOUT_REPORT.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix())
+
+            # DEFECTIVE (adversary-chosen): EXISTS but EMPTY, not missing.
+            report_path.write_text("", encoding="utf-8")
+            proc, _marker = E._run_check_command(cmd)
+            self.assertEqual(proc.returncode, 0, "report-only must always exit 0")
+            self.assertIn("report-only: NOT gating", proc.stdout)
+            self.assertNotIn("PASS", proc.stdout)
+
+            # HEALTHY: real, nonempty report -- the OTHER branch must fire.
+            report_path.write_text("# SCOUT_REPORT\n\ncandidates: ...\n", encoding="utf-8")
+            proc, _marker = E._run_check_command(cmd)
+            self.assertEqual(proc.returncode, 0, "report-only must always exit 0")
+            self.assertIn("PASS: SCOUT_REPORT.md written", proc.stdout)
+            self.assertNotIn("report-only: NOT gating", proc.stdout)
+
+
+class CartographerW3PromoteDeclined(unittest.TestCase):
+    """569-w3-promote g7: 0 promotions in the shipped
+    CARTOGRAPHER.template.json -- a full, fresh-verified assessment that
+    genuinely found nothing eligible, not a skipped gate. All 4 of the
+    file's null conditions were assessed and declined:
+
+    `context.c1` ("context and current map loaded") and `map-compliance.c1`
+    ("map compliant; open structural questions recorded") are pure judgment
+    -- no locator exists for either.
+
+    `packets.c1` ("touched packets reflect current code") and
+    `index-overlays.c1` ("index and overlays consistent with packets") are
+    the two WEAK candidates this gate's own handoff named explicitly: a
+    git-diff-based "something under docs/architecture/ changed" proxy would
+    verify motion, not correctness -- it would falsely pass a stale map if
+    something ELSE under that path happened to change in the same commit,
+    which is not a hypothetical boundary case but the exact shape of this
+    run's own map state. This run's own MISSION_FRAME.md records the map as
+    DEGRADED-UNPARSEABLE repo-wide (`docs/architecture/` empty, no citable
+    anchor ids) -- this gate's own CRITICAL constraint bars any promoted
+    check from depending on map state this repo cannot currently produce,
+    which independently forecloses either candidate even setting the
+    locator-ambiguity finding aside. Both stay `check: null`, honestly,
+    rather than shipping a decorative check that cannot discriminate a
+    stale map from a merely-busy one.
+
+    This class exists to PIN the zero-promotion decision against future
+    drift (the same discipline every promoting class in this file applies
+    to its own declined candidates), even though no file edit accompanies
+    it -- `.agent-work/templates/CARTOGRAPHER.template.json` is therefore
+    NOT touched either, per this gate's own Close Criteria ('only sync the
+    ones you actually edit').
+
+    Pin the **blob OID** of CARTOGRAPHER.template.json (not repo HEAD), so
+    unrelated commits elsewhere never perturb it; if the template's content
+    has drifted from the pinned blob, this test class FAILS loudly rather
+    than silently skipping -- a template shape this test was never written
+    against must be re-verified, not silently trusted."""
+
+    SPINE = ROOT / "skills" / "cartographer" / "templates" / "CARTOGRAPHER.template.json"
+    SPINE_REL = "skills/cartographer/templates/CARTOGRAPHER.template.json"
+
+    # Captured via `git rev-parse HEAD:<path>` at implementation time (g7
+    # dispatch, re-verified against the w3-basis merge result). Pins the
+    # TEMPLATE'S BLOB, not repo HEAD -- unrelated commits elsewhere must not
+    # perturb this.
+    PINNED_BLOB = "800d0cd3ecf8c3fe82bf7beabb29cc65af9c0797"
+
+    def _fail_if_template_drifted(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", f"HEAD:{self.SPINE_REL}"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        blob = out.stdout.strip()
+        if blob != self.PINNED_BLOB:
+            self.fail(
+                f"CartographerW3PromoteDeclined's proof is stale: pinned to "
+                f"blob {self.PINNED_BLOB} of {self.SPINE_REL}, current blob "
+                f"is {blob} -- the template changed since this test's "
+                "shape assumptions were verified (g7 dispatch). Re-verify "
+                "the zero-promotion decision against the new template "
+                "content, then re-pin by running:\n"
+                f"    git rev-parse HEAD:{self.SPINE_REL}\n"
+                "and pasting the result into PINNED_BLOB above."
+            )
+
+    def test_every_condition_stays_null(self):
+        self._fail_if_template_drifted()
+        cl = json.loads(self.SPINE.read_text(encoding="utf-8"))
+        nonnull = []
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.append((tid, c["id"]))
+        self.assertEqual(
+            nonnull, [],
+            "CARTOGRAPHER.template.json measured zero eligible promotions "
+            "this gate -- any non-null check here means either an "
+            "unrecorded edit or drift onto a condition this gate declined",
+        )

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "files": [],
+  "repo_rev": {
+    "commit": "4d92dc45b700fc25f8c5d8239181e68daf068a5b"
+  },
+  "run": {
+    "work_id": "w3-promote",
+    "generated_at": "2026-08-23T17:06:50Z",
+    "roots": {
+      "skill": "/home/tommy/projects/569-w3-promote",
+      "repo": "/home/tommy/projects/569-w3-promote",
+      "durable": "/home/tommy/projects/569-w3-promote"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/569-w3-promote"
+    }
+  }
+}

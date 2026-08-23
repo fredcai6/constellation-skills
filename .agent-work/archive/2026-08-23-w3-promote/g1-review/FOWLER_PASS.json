@@ -1,0 +1,43 @@
+{
+  "work_id": "w3-promote",
+  "diff_ref": "uncommitted working tree on epic-569/w3-promote: skills/commander/templates/COMMANDER_SPINE.template.json, .agent-work/templates/COMMANDER_SPINE.template.json, tests/test_checklist_engine.py (new class CommanderSpineW3PromotePromotions appended at EOF), tests/test_validate_spine.py, tests/test_shipped_check_commands_resolve.py, tests/test_plan_step_contract.py, tests/test_install_constellation.py, map/INDEX.md",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, docs/CHECKLIST_SCHEMA.md, the existing sibling class CommanderSpineBasisFields (tests/test_checklist_engine.py) this new class was explicitly modeled on per handoff",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "CommanderSpineW3PromotePromotions is ~340 lines (10 test methods + 2 class-level data dicts + 2 helper methods) -- comparable in size/shape to the immediately-preceding CommanderSpineBasisFields class.",
+      "override": {
+        "repo_standard": "The implementer handoff explicitly required this class be 'modeled directly on the existing CommanderSpineBasisFields class in the same file -- read it first', and that sibling class already establishes the repo's convention of one self-contained class per gate/feature carrying its own pinned-HEAD fixture, expected-shape dict, and per-condition test methods.",
+        "reason": "Size here is the established, sanctioned shape for this exact category of red-proof test (feature-scoped, self-contained, drift-guarded via skipTest-on-moved-HEAD) -- splitting it would scatter one cohesive gate's worth of fixtures/assertions across files for no locality gain, contradicting the pattern the handoff named as the model to follow."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "The 5 artifact-kind promotion tests (plan.c1/c2/c4/c5, reconcile.c1) share one helper, _assert_artifact_discriminates, parameterized by wrong_type_evidence/adversary_payload/matching_payload -- exactly the DRY shape that avoids restating the 3-step wrong-type/wrong-match/matching drive per test.",
+      "override": null
+    },
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "EXPECTED_CHECKS/PRE_EXISTING_NONNULL are structured dicts/sets keyed by (task_id, cond_id) tuples, not stringly-typed primitives standing in for a real shape.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "_assert_artifact_discriminates takes 4 params (cid, wrong_type_evidence, adversary_payload, matching_payload), each independently meaningful; no data clump to collapse.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "init.c1's shell command does d.get('engine_session',{}).get('status') -- a 2-level defensive .get() chain matching the engine's own idiom at scripts/checklist_engine.py:1269/1285/1397/1433/1499, not an excessive chain.", "override": null},
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "All 8 promotions and the 3 collateral test fixes are concrete, driven by the handoff's named list and the actual broken pins; no speculative hook, unused parameter, or abstract-for-a-future-case machinery was added.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "Inline rationale comments on each adversarial mutation (e.g. 'attacks the boundary the match does NOT cover') are explicit, one-line, and were a named handoff requirement ('log each mutation's own one-line rationale as a code comment') -- they document intent behind a genuinely non-obvious test-design choice, not compensate for confusing code.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

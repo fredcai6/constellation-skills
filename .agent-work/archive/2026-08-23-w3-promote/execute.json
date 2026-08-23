@@ -1,0 +1,1514 @@
+{
+  "work_id": "<work-id>",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "g0-corpus-survey",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-execute-plan",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate",
+    "g6-implementer-plan",
+    "g7-implement",
+    "g7-review",
+    "g7-integrate",
+    "g8-validate-spine-wiring-and-docs",
+    "g9-integrate"
+  ],
+  "tasks": {
+    "g0-corpus-survey": {
+      "id": "g0-corpus-survey",
+      "title": "Consolidated bucket survey (7 templates, read-only)",
+      "imperative": "Reasoning gate -- no crew dispatch, this run's own context, per commander-core.md's 'Crew gate vs reasoning gate' (produces a document, not an independently-verifiable code change). Before touching ANY template file, walk every check:null condition across the 7 templates OTHER than COMMANDER_SPINE.template.json (ADMIRAL_SPINE 10, CARTOGRAPHER 5, CHARTER 10, EXECUTE_PLAN 4, EXPLORER_SPINE 10, IMPLEMENTER_PLAN 3, SCOUT 4 -- 46 conditions; COMMANDER_SPINE's own 19 stay g1's sole ownership per PLAN_CRITIC.md finding 5, no duplicate table) and assign each a bucket (1 = no locator; 2 = locator expressible, no new mechanism; 3 = artifact exists but the claim is judgment, basis territory, decision:no-basis-backfill keeps it out of scope). This run's own notes-1.md already carries a first-pass hand assessment for all 7 -- verify each row fresh against the real template JSON at this gate's HEAD rather than trusting the earlier prose, and correct any row that doesn't hold up. Compute each template's actual bucket-2 fraction. Per PLAN_CRITIC.md finding 4, a template whose fraction falls OUTSIDE [30%, 65%] is a material exception under decision:record-the-partition-per-condition -- float-note it now (a user-decision evidence item citing the specific template and fraction), inside the band is ordinary variance, record and proceed without floating. Per PLAN_CRITIC.md finding 2, cite the FRESH re-measured validate_spine.py corpus fault count (not the stale '21' in test_validate_spine.py's own comment) -- run `python3 -m pytest tests/test_validate_spine.py -q` and `python3 -c \"import sys; sys.path.insert(0,'scripts'); import validate_spine as vs; from pathlib import Path; root=Path('.'); ts=vs.discover_checklist_templates(root); results=[vs.validate_file(p, repo_root=root) for p in ts]; from collections import Counter; c=Counter(f.code for r in results for f in r); print(dict(c))\"` and paste both outputs verbatim into notes-1.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved; execute.json authored and driving",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "plan approved (COMMANDER_SPINE spine advanced through plan clean); execute.json authored and now driving"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all 46 conditions (7 templates) carry a fresh-verified bucket with a one-line reason in notes-1.md",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All 46 conditions across ADMIRAL_SPINE(10), CARTOGRAPHER(5), CHARTER(10), EXECUTE_PLAN(4), EXPLORER_SPINE(10), IMPLEMENTER_PLAN(3), SCOUT(4) fresh-verified against real JSON, buckets recorded with reasons in notes-1.md's per-template sections + the g0 formal table"
+        },
+        {
+          "id": "c2",
+          "statement": "each of the 7 templates' bucket-2 fraction stated and compared to the [30%,65%] band; any material exception has a user-decision float-note",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision",
+            "match": {
+              "cite": "decision:record-the-partition-per-condition"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g0-corpus-survey-1",
+          "attested": {
+            "evidence": "e-g0-corpus-survey-1",
+            "note": null
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "fresh validate_spine.py corpus fault count (falsifiable-all-null, falsifiable-unresolved-placeholder) pasted into notes-1.md, replacing any stale '21' citation",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_validate_spine.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g0-corpus-survey-2"
+        }
+      ],
+      "constraints": [
+        "read-only: no skills/*/templates/*.json file is edited in this gate",
+        "no engine code change"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+          "skills/cartographer/templates/CARTOGRAPHER.template.json",
+          "skills/charter/templates/CHARTER.template.json",
+          "skills/commander/templates/EXECUTE_PLAN.template.json",
+          "skills/explorer/templates/EXPLORER_SPINE.template.json",
+          "skills/implementer/templates/IMPLEMENTER_PLAN.template.json",
+          "skills/scout/templates/SCOUT.template.json"
+        ],
+        "capability": [
+          "docs/CHECKLIST_SCHEMA.md Condition/check-kind contract"
+        ],
+        "constraint": [
+          "decision:no-new-check-kinds",
+          "decision:no-basis-backfill",
+          "decision:record-the-partition-per-condition"
+        ],
+        "decision": [
+          "decision:record-the-partition-per-condition -- material divergence is a stop-and-float, not silent absorption @grade: settled/human \u00b7 leans g0-corpus-survey,g1..g7 \u00b7 cites LAUNCH_ORDER pre-rulings"
+        ],
+        "evidence": [
+          "claim:65-null-conditions-corpus-wide (MISSION_FRAME.md)"
+        ],
+        "confidence_flags": [
+          "repo-wide code map is DEGRADED-UNPARSEABLE (MISSION_FRAME.md) -- irrelevant here, these are data-only JSON conditions the map never modeled"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g0-corpus-survey-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "decision:record-the-partition-per-condition",
+            "note": "5 of 7 non-COMMANDER_SPINE templates (CARTOGRAPHER, CHARTER, EXECUTE_PLAN, IMPLEMENTER_PLAN, SCOUT) measure bucket-2 fractions outside [30%,65%], all low-side (0-25%) -- structural pattern (thin gate-order scaffolding vs rich top-level spines), not noise. Disposition: float-noted per this decision's requirement, NOT a blocking halt -- the launch order's own Honest-Null Clause pre-sanctions far-fewer-than-predicted as a successful outcome. See notes-1.md's g0 section."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g0-corpus-survey-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_validate_spine.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "COMMANDER_SPINE: promote + red-proof",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md: task = promote the 8 named conditions in skills/commander/templates/COMMANDER_SPINE.template.json per notes-1.md's g1 table + This run's own notes-1.md already carries a fresh, verified 19-row bucket table for COMMANDER_SPINE.template.json (g1's own ownership, not g0's -- PLAN_CRITIC.md finding 5). Promote exactly the 8 rows marked bucket-2/promote-worthy there: init.c1 (command, reads spine.json's own engine_session.status=='active'), plan.c1 (artifact, mission-frame file+status enum -- reuses w2-basis's exact shape), plan.c4 (artifact, plan-candidate files existence -- reuses w2-basis's exact shape), plan.c5 (artifact, PLAN_CRITIC.md existence -- reuses w2-basis's exact shape), plan.c2 (artifact, execute.json existence ONLY -- do not overclaim the fidelity/coverage half, which stays check:null in the statement's own unmodified wording), reconcile.c1 (artifact, file-diff evidence type, match nonempty), archive.c2 (command, git rev-parse @ == git rev-parse @{u}), archive.c3 (artifact, user-decision citing the authorizing doctrine section -- reuses the corpus's own existing 3x-used user-decision-citation convention). Leave the other 11 conditions check:null exactly as-is (init and reconcile keep bookend:true; do not touch that field). Check-kind live-ness is evaluated against THIS template's own existing (non-null) checks ONLY -- a pattern or seam decision cited from a DIFFERENT template is context for the reasoning, never eligibility for blocking (PLAN_CRITIC.md finding 3). State explicitly, per promoted condition, which of THIS SAME template's existing checks (if any) already use that kind before shipping it blocking; a first use of a kind in this specific template ships report-only with a named promotion trigger, or demotes back to check: null if the kind has no report-only shape (artifact checks have none, per w2-basis's own finding). Compact-format JSON: hand-edit skills/commander/templates/COMMANDER_SPINE.template.json as raw text, surgically -- NEVER round-trip through json.load/json.dump (destroys blame); re-validate with json.load afterward (parse-check only, never reformat). Sync .agent-work/templates/<NAME>.template.json to byte-match the edited skills/ source (copy, do not hand-retype) and confirm with `python3 scripts/check_template_overlay_freshness.py` -- must report 'none stale'. Never touch .agent-work/templates/.baseline/. Red-proof each promoted condition per decision:red-proof-each-promotion, in the style of tests/test_checklist_engine.py's CommanderSpineBasisFields class: pin PINNED_HEAD via `git rev-parse HEAD` at implementation time, skipTest (never fail) if HEAD has since moved, load the real shipped template fresh. For each promoted condition: (a) assert the promoted shape exactly; (b) assert no OTHER condition in the file changed; (c) attack with a mutation an ADVERSARY would choose, not the one the promotion's own match/command text already implies -- e.g. for an artifact check, attach a wrong-type or non-matching evidence item and assert attest() raises EngineError with the exact refusal text from checklist_engine.py (\"is an artifact check; attest it by referencing...\", \"is type ... not the required...\", \"does not match required...\"); for a command check, assert `advance` (never `attest`) refuses under a real-world-shaped negative fixture. Log each mutation's rationale as a one-line comment distinct from the check's own match/command text (PLAN_CRITIC.md finding 7) -- e.g. 'attacks the boundary the match does NOT cover', not a restatement of the match dict. If this gate promotes any condition in a gate that was previously all-null (making at least one of its postconditions non-null), update tests/test_validate_spine.py's TestCorpusSweepFindings.test_measured_finding_totals floor assertions (falsifiable-all-null and, if relevant, falsifiable-unresolved-placeholder) to the freshly re-measured corpus-wide count in THIS SAME commit -- per PLAN_CRITIC.md finding 1, the suite must stay green at every gate boundary, not just at the final wiring gate. Re-run `python3 -m pytest tests/test_validate_spine.py -q` after the edit and confirm green. Map entry point for the dispatched crew: docs/CHECK_SCRIPT_CENSUS.md (already-live check-kind inventory) and docs/CHECKLIST_SCHEMA.md's Condition/check-kind table. Dispatch via constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g0 survey complete (context, not a blocking dependency -- COMMANDER_SPINE is g1's own table)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g0-corpus-survey complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "decision:no-new-check-kinds",
+        "decision:no-basis-backfill",
+        "hand-edit raw text only, never json.load/json.dump the shipped template",
+        "touch no condition outside the named 8",
+        "never touch bookend:true fields"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander/templates/COMMANDER_SPINE.template.json",
+          "scripts/checklist_engine.py attest()/advance() (read-only, reused not edited)"
+        ],
+        "capability": [
+          "docs/CHECKLIST_SCHEMA.md check-kind contract",
+          "docs/CHECK_SCRIPT_CENSUS.md live-check inventory"
+        ],
+        "constraint": [
+          "decision:no-new-check-kinds",
+          "decision:no-basis-backfill"
+        ],
+        "decision": [
+          "decision:blocking-where-adjudicated -- ship blocking where adjudication is in-hand this wave @grade: settled/human \u00b7 leans g1-implement \u00b7 cites LAUNCH_ORDER Prior-Wave Verdicts",
+          "decision pressure: init.c1's command-kind seam (re-opens w2-basis's 'wrong kind' finding) -- this gate settles it, g3/g4 cite rather than re-derive"
+        ],
+        "evidence": [
+          "claim:validate-spine-refuses-commander-spine (MISSION_FRAME.md)",
+          "claim:5-clean-conversions-measured-by-w2-basis (MISSION_FRAME.md)"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "COMMANDER_SPINE: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from g1-implement's IMPLEMENTER_RESULT: verify each of the 8 promotions against notes-1.md's table, verify no other condition changed, verify the overlay is in sync, verify red-proofs are genuinely adversarial (not restating the check's own match text) and pinned to a real HEAD, verify tests/test_validate_spine.py's floor was updated in the SAME diff if an all-null gate cleared. Map entry point: same as g1-implement. Dispatch via constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received (g1-implementer-result.md), complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "COMMANDER_SPINE: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's side-effects against the world yourself (re-run the pasted evidence, confirm the diff, confirm overlay sync) before advancing. BLOCK: return for rework or raise a blocker. Log any out-of-scope finds as triage candidates via spine_capture flag-candidate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (g1-reviewer-result.md), verdict APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_checklist_engine.py and tests/test_validate_spine.py both green; overlay in sync",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "anchors": null,
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-execute-plan": {
+      "id": "g2-execute-plan",
+      "title": "EXECUTE_PLAN.template.json: assess (honest-null expected)",
+      "imperative": "Reasoning gate -- no crew dispatch. Verify fresh against skills/commander/templates/EXECUTE_PLAN.template.json's real JSON: notes-1.md's own analysis measured this template at 0/4 bucket-2 (e0-context.c1 pure judgment; g1-implement.p1 is unfilled template placeholder text, not real content; g1-review.p1/g1-integrate.p1 are gate-order-guaranteed by their own upstream gates' already-artifact-checked postconditions). If this fresh re-check confirms 0/4, record the honest zero in notes-1.md per the Honest-Null Clause (this is a legitimate, pre-sanctioned outcome, not a shortfall) and make NO file edit. If re-verification finds a real locator this run's own hand-assessment missed, promote it via the same hand-edit + overlay-sync + red-proof + floor-update discipline as g1, and note the correction plainly (this run's earlier notes-1.md pass was wrong, say so).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "EXECUTE_PLAN.template.json's 4 conditions each carry a fresh-verified bucket with reason in notes-1.md; assessed-vs-promoted count stated explicitly even if 0 promoted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Re-verified fresh: 4 conditions assessed, 0/4 bucket-2, no file edit. Recorded in notes-1.md's g2-execute-plan section."
+        }
+      ],
+      "constraints": [
+        "decision:no-new-check-kinds",
+        "decision:promote-only-conditions-with-a-real-locator -- do not manufacture a locator to avoid an honest zero"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander/templates/EXECUTE_PLAN.template.json"
+        ],
+        "capability": [],
+        "constraint": [
+          "decision:no-new-check-kinds"
+        ],
+        "decision": [
+          "decision:promote-only-conditions-with-a-real-locator @grade: settled/human \u00b7 leans g2-execute-plan,g6-implementer-plan"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "ADMIRAL_SPINE: promote + red-proof",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md: promote the bucket-2 conditions in skills/admiral/templates/ADMIRAL_SPINE.template.json per notes-1.md's ADMIRAL_SPINE section. notes-1.md's own fresh assessment found ~3-4 bucket-2 candidates of 10: init.c2 (command, same engine_session.status seam as g1's init.c1 -- CITE g1's decision, do not re-derive, but per PLAN_CRITIC.md finding 3 still confirm command-kind is independently justified against ADMIRAL_SPINE's OWN existing checks, not merely because it worked in COMMANDER_SPINE); latitude.c1 (artifact or command, LATITUDE_CONTRACT.md file exists+nonempty -- existence only, the content-quality half stays null); execute.c2 (command, ADMIRAL_LOG.md nonempty AND contains at least one '- TRANSITION' line -- existence+pattern only, 'current through last wave' freshness stays null, no basis field per decision:no-basis-backfill); closeout.c4 (command, existence check for the archived-ADMIRAL_LOG half ONLY if a real archive path convention can be confirmed from scripts/spine_lifecycle.py or the admiral skill's own closeout tooling -- if no stable path exists to check against, leave this one null and say so rather than inventing a path). Check-kind live-ness is evaluated against THIS template's own existing (non-null) checks ONLY -- a pattern or seam decision cited from a DIFFERENT template is context for the reasoning, never eligibility for blocking (PLAN_CRITIC.md finding 3). State explicitly, per promoted condition, which of THIS SAME template's existing checks (if any) already use that kind before shipping it blocking; a first use of a kind in this specific template ships report-only with a named promotion trigger, or demotes back to check: null if the kind has no report-only shape (artifact checks have none, per w2-basis's own finding). Compact-format JSON: hand-edit raw text, surgically, never json.load/json.dump; re-validate with json.load afterward. Sync .agent-work/templates/<NAME>.template.json to byte-match the edited skills/ source (copy, do not hand-retype) and confirm with `python3 scripts/check_template_overlay_freshness.py` -- must report 'none stale'. Never touch .agent-work/templates/.baseline/. Red-proof each promoted condition per decision:red-proof-each-promotion, in the style of tests/test_checklist_engine.py's CommanderSpineBasisFields class: pin PINNED_HEAD via `git rev-parse HEAD` at implementation time, skipTest (never fail) if HEAD has since moved, load the real shipped template fresh. For each promoted condition: (a) assert the promoted shape exactly; (b) assert no OTHER condition in the file changed; (c) attack with a mutation an ADVERSARY would choose, not the one the promotion's own match/command text already implies -- e.g. for an artifact check, attach a wrong-type or non-matching evidence item and assert attest() raises EngineError with the exact refusal text from checklist_engine.py (\"is an artifact check; attest it by referencing...\", \"is type ... not the required...\", \"does not match required...\"); for a command check, assert `advance` (never `attest`) refuses under a real-world-shaped negative fixture. Log each mutation's rationale as a one-line comment distinct from the check's own match/command text (PLAN_CRITIC.md finding 7) -- e.g. 'attacks the boundary the match does NOT cover', not a restatement of the match dict. If this gate promotes any condition in a gate that was previously all-null (making at least one of its postconditions non-null), update tests/test_validate_spine.py's TestCorpusSweepFindings.test_measured_finding_totals floor assertions (falsifiable-all-null and, if relevant, falsifiable-unresolved-placeholder) to the freshly re-measured corpus-wide count in THIS SAME commit -- per PLAN_CRITIC.md finding 1, the suite must stay green at every gate boundary, not just at the final wiring gate. Re-run `python3 -m pytest tests/test_validate_spine.py -q` after the edit and confirm green. Map entry point: docs/CHECK_SCRIPT_CENSUS.md, docs/CHECKLIST_SCHEMA.md. Dispatch via constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 complete; g1's init.c1 seam decision available to cite",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 complete; g1's init.c1 seam decision available (committed)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "decision:no-new-check-kinds",
+        "decision:no-basis-backfill",
+        "hand-edit raw text only",
+        "touch no condition outside the ones named promotable in notes-1.md"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/admiral/templates/ADMIRAL_SPINE.template.json"
+        ],
+        "capability": [
+          "docs/CHECKLIST_SCHEMA.md check-kind contract"
+        ],
+        "constraint": [
+          "decision:no-new-check-kinds",
+          "decision:no-basis-backfill"
+        ],
+        "decision": [
+          "decision:blocking-where-adjudicated @grade: settled/human \u00b7 leans g3-implement",
+          "decision pressure: closeout.c4's archived-log locator -- may resolve to null if no stable path exists"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/w3-promote/crew-handoffs/g3-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "ADMIRAL_SPINE: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md from g3-implement's IMPLEMENTER_RESULT: verify promotions against notes-1.md, verify LIVE_KIND_SCOPE was actually respected (not just cited), verify overlay sync, verify red-proofs, verify floor update if applicable. Dispatch via constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3-implement complete: implementer-result attached (status=complete), 3/4 conditions promoted with command-kind checks, red-proof class added, full suite green (642 passed 13 skipped), overlay byte-identical"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w3-promote/crew-handoffs/g3-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "ADMIRAL_SPINE: integrate",
+      "imperative": "Check verdict. APPROVE: re-verify yourself, then advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3-review complete: verdict APPROVE, independently reproduced by reviewer, no blockers"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_checklist_engine.py and tests/test_validate_spine.py both green; overlay in sync",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": null,
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "44180fe09c0357a7c2ffcefcaeea378b6e9ccecd"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "EXPLORER_SPINE: promote + red-proof",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md: promote the bucket-2 conditions in skills/explorer/templates/EXPLORER_SPINE.template.json per notes-1.md's EXPLORER_SPINE section. notes-1.md's fresh assessment found ~3-4 bucket-2 candidates of 10: init.c2 (command, same engine_session.status seam as g1's init.c1 -- cite, re-confirm against THIS template's own checks per PLAN_CRITIC.md finding 3); context.c1 (artifact or command, existence-only for the 'IDEAS_BOARD.md seeded from template' half; the doctrine/map-read half stays null -- same split shape as COMMANDER_SPINE's own context.c1, which stayed null there too, so do not over-promote here either); spec.c1 (artifact, existence-only for 'DESIGN_SPEC.md crystallized', match on the file existing; per-section-approval and designed-it-twice fidelity stay null -- same split shape as COMMANDER_SPINE's plan.c2); route.c1 (artifact, enum-match on the 3 named outcomes -- handed-off/issue-filed/shelved-UNCONFIRMED -- plus archived+lease-released, ALL are real checkable facts; this is a genuine full promotion candidate, verify each of the 3 outcome shapes has a real independently-checkable artifact before committing to the match enum, do not force a fit if one outcome lacks one). Check-kind live-ness is evaluated against THIS template's own existing (non-null) checks ONLY -- a pattern or seam decision cited from a DIFFERENT template is context for the reasoning, never eligibility for blocking (PLAN_CRITIC.md finding 3). State explicitly, per promoted condition, which of THIS SAME template's existing checks (if any) already use that kind before shipping it blocking; a first use of a kind in this specific template ships report-only with a named promotion trigger, or demotes back to check: null if the kind has no report-only shape (artifact checks have none, per w2-basis's own finding). Compact-format JSON: hand-edit raw text, surgically, never json.load/json.dump; re-validate with json.load afterward. Sync .agent-work/templates/<NAME>.template.json to byte-match the edited skills/ source (copy, do not hand-retype) and confirm with `python3 scripts/check_template_overlay_freshness.py` -- must report 'none stale'. Never touch .agent-work/templates/.baseline/. Red-proof each promoted condition per decision:red-proof-each-promotion, in the style of tests/test_checklist_engine.py's CommanderSpineBasisFields class: pin PINNED_HEAD via `git rev-parse HEAD` at implementation time, skipTest (never fail) if HEAD has since moved, load the real shipped template fresh. For each promoted condition: (a) assert the promoted shape exactly; (b) assert no OTHER condition in the file changed; (c) attack with a mutation an ADVERSARY would choose, not the one the promotion's own match/command text already implies -- e.g. for an artifact check, attach a wrong-type or non-matching evidence item and assert attest() raises EngineError with the exact refusal text from checklist_engine.py (\"is an artifact check; attest it by referencing...\", \"is type ... not the required...\", \"does not match required...\"); for a command check, assert `advance` (never `attest`) refuses under a real-world-shaped negative fixture. Log each mutation's rationale as a one-line comment distinct from the check's own match/command text (PLAN_CRITIC.md finding 7) -- e.g. 'attacks the boundary the match does NOT cover', not a restatement of the match dict. If this gate promotes any condition in a gate that was previously all-null (making at least one of its postconditions non-null), update tests/test_validate_spine.py's TestCorpusSweepFindings.test_measured_finding_totals floor assertions (falsifiable-all-null and, if relevant, falsifiable-unresolved-placeholder) to the freshly re-measured corpus-wide count in THIS SAME commit -- per PLAN_CRITIC.md finding 1, the suite must stay green at every gate boundary, not just at the final wiring gate. Re-run `python3 -m pytest tests/test_validate_spine.py -q` after the edit and confirm green. Map entry point: docs/CHECK_SCRIPT_CENSUS.md (verify_spec_confirmed.py and verify_cycles.py's existing live wiring in THIS file), docs/CHECKLIST_SCHEMA.md. Dispatch via constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 complete and integrated (commit 44180fe0)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "decision:no-new-check-kinds",
+        "decision:no-basis-backfill",
+        "hand-edit raw text only",
+        "touch no condition outside the ones named promotable in notes-1.md"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/explorer/templates/EXPLORER_SPINE.template.json"
+        ],
+        "capability": [
+          "docs/CHECK_SCRIPT_CENSUS.md verify_spec_confirmed.py/verify_cycles.py live-check entries"
+        ],
+        "constraint": [
+          "decision:no-new-check-kinds",
+          "decision:no-basis-backfill"
+        ],
+        "decision": [
+          "decision:blocking-where-adjudicated @grade: settled/human \u00b7 leans g4-implement"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/w3-promote/crew-handoffs/g4-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "EXPLORER_SPINE: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md from g4-implement's IMPLEMENTER_RESULT: verify promotions, verify no over-promotion on the split conditions (context.c1/spec.c1's judgment halves must remain null), verify overlay sync, red-proofs, floor update. Dispatch via constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4-implement complete: 3/4 promoted, route.c1 honestly null, Commander corrected a basis-field policy violation before advancing, suite green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w3-promote/crew-handoffs/g4-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "EXPLORER_SPINE: integrate",
+      "imperative": "Check verdict. APPROVE: re-verify yourself, then advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4-review complete: verdict APPROVE, independently reproduced including basis-field correction re-check"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_checklist_engine.py and tests/test_validate_spine.py both green; overlay in sync",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": null,
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "442a5826e23f3259bdfd3f92d301188c693b1b5e"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "CHARTER: promote + red-proof",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md: promote the bucket-2 conditions in skills/charter/templates/CHARTER.template.json per notes-1.md's CHARTER section. notes-1.md's fresh assessment found ~1-3 bucket-2 candidates of 10: project-templates.c1 (artifact, enum-match on status in {seeded, skipped-no-need} -- same shape as COMMANDER's plan.c1); closeout.c1 (command, existence-only for the archived-work-area half; 'durable outputs complete, no open questions, contradiction pass done' stays null); interrogate.c1 is a WEAK candidate ONLY if a real, reusable verifier for interrogation.json's terminal state exists -- check before committing, and if none exists leave it null rather than inventing one (decision:no-new-check-kinds). Do NOT touch orchestrator-context.c1 or agent-guide.c1 -- both already carry real checks (confirmed: only their PRECONDITIONS are null, which are gate-order-guaranteed and stay null per COMMANDER_SPINE's own established precondition pattern). Check-kind live-ness is evaluated against THIS template's own existing (non-null) checks ONLY -- a pattern or seam decision cited from a DIFFERENT template is context for the reasoning, never eligibility for blocking (PLAN_CRITIC.md finding 3). State explicitly, per promoted condition, which of THIS SAME template's existing checks (if any) already use that kind before shipping it blocking; a first use of a kind in this specific template ships report-only with a named promotion trigger, or demotes back to check: null if the kind has no report-only shape (artifact checks have none, per w2-basis's own finding). Compact-format JSON: hand-edit raw text, surgically, never json.load/json.dump; re-validate with json.load afterward. Sync .agent-work/templates/<NAME>.template.json to byte-match the edited skills/ source (copy, do not hand-retype) and confirm with `python3 scripts/check_template_overlay_freshness.py` -- must report 'none stale'. Never touch .agent-work/templates/.baseline/. Red-proof each promoted condition per decision:red-proof-each-promotion, in the style of tests/test_checklist_engine.py's CommanderSpineBasisFields class: pin PINNED_HEAD via `git rev-parse HEAD` at implementation time, skipTest (never fail) if HEAD has since moved, load the real shipped template fresh. For each promoted condition: (a) assert the promoted shape exactly; (b) assert no OTHER condition in the file changed; (c) attack with a mutation an ADVERSARY would choose, not the one the promotion's own match/command text already implies -- e.g. for an artifact check, attach a wrong-type or non-matching evidence item and assert attest() raises EngineError with the exact refusal text from checklist_engine.py (\"is an artifact check; attest it by referencing...\", \"is type ... not the required...\", \"does not match required...\"); for a command check, assert `advance` (never `attest`) refuses under a real-world-shaped negative fixture. Log each mutation's rationale as a one-line comment distinct from the check's own match/command text (PLAN_CRITIC.md finding 7) -- e.g. 'attacks the boundary the match does NOT cover', not a restatement of the match dict. If this gate promotes any condition in a gate that was previously all-null (making at least one of its postconditions non-null), update tests/test_validate_spine.py's TestCorpusSweepFindings.test_measured_finding_totals floor assertions (falsifiable-all-null and, if relevant, falsifiable-unresolved-placeholder) to the freshly re-measured corpus-wide count in THIS SAME commit -- per PLAN_CRITIC.md finding 1, the suite must stay green at every gate boundary, not just at the final wiring gate. Re-run `python3 -m pytest tests/test_validate_spine.py -q` after the edit and confirm green. CHARTER runs once per repo (bootstrap), not per-issue -- note this frequency difference in notes-1.md since it affects the cost of a false-negative here relative to COMMANDER_SPINE. Map entry point: docs/CHECK_SCRIPT_CENSUS.md, docs/CHECKLIST_SCHEMA.md. Dispatch via constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4 complete and integrated (commit 442a5826)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1"
+        }
+      ],
+      "constraints": [
+        "decision:no-new-check-kinds",
+        "decision:no-basis-backfill",
+        "hand-edit raw text only",
+        "touch no condition outside the ones named promotable in notes-1.md",
+        "never touch orchestrator-context.c1 or agent-guide.c1 -- already real-checked"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/charter/templates/CHARTER.template.json"
+        ],
+        "capability": [],
+        "constraint": [
+          "decision:no-new-check-kinds",
+          "decision:no-basis-backfill"
+        ],
+        "decision": [
+          "decision:blocking-where-adjudicated @grade: settled/human \u00b7 leans g5-implement"
+        ],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/w3-promote/crew-handoffs/g5-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "CHARTER: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md from g5-implement's IMPLEMENTER_RESULT: verify promotions, verify orchestrator-context.c1/agent-guide.c1 untouched, verify overlay sync, red-proofs, floor update. Dispatch via constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g5-implement complete: 1/3 promoted (project-templates.c1), closeout.c1/interrogate.c1 honestly null, floor updated 15->14, suite green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g5-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w3-promote/crew-handoffs/g5-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "CHARTER: integrate",
+      "imperative": "Check verdict. APPROVE: re-verify yourself, then advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g5-review complete: verdict APPROVE, independently reproduced including recovery re-check after a near-miss git checkout"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_checklist_engine.py and tests/test_validate_spine.py both green; overlay in sync",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1",
+          "attested": {
+            "evidence": "e-g5-integrate-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "anchors": null,
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "d73c6b9a"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-implementer-plan": {
+      "id": "g6-implementer-plan",
+      "title": "IMPLEMENTER_PLAN.template.json: assess (honest-null expected)",
+      "imperative": "Reasoning gate -- no crew dispatch. Verify fresh against skills/implementer/templates/IMPLEMENTER_PLAN.template.json's real JSON: notes-1.md measured this template at 0/3 bucket-2 (m0-context.c1 pure judgment; m1.p1 gate-order-guaranteed; m1.c1's OWN statement text explicitly declares itself unpromotable -- 'check MUST be null so the engine does not run the by-design-failing test'). If confirmed, record the honest zero in notes-1.md (Honest-Null Clause, pre-sanctioned outcome) and make NO file edit. If re-verification finds a real locator missed earlier, promote via the same discipline as g1/g3/g4/g5 and note the correction.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g5 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_PLAN.template.json's 3 conditions each carry a fresh-verified bucket with reason in notes-1.md; assessed-vs-promoted count stated explicitly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "decision:no-new-check-kinds",
+        "decision:promote-only-conditions-with-a-real-locator"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/implementer/templates/IMPLEMENTER_PLAN.template.json"
+        ],
+        "capability": [],
+        "constraint": [
+          "decision:no-new-check-kinds"
+        ],
+        "decision": [],
+        "evidence": [],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g7-implement": {
+      "id": "g7-implement",
+      "title": "CARTOGRAPHER + SCOUT: promote (report-only-biased) + red-proof",
+      "imperative": "Fill IMPLEMENTER_HANDOFF.template.md: promote bucket-2 conditions in skills/cartographer/templates/CARTOGRAPHER.template.json AND skills/scout/templates/SCOUT.template.json per notes-1.md's sections for each -- grouped in one gate for priority-ordering only, per-file records stay separate in notes-1.md. notes-1.md's fresh assessment found BOTH CARTOGRAPHER.template.json and SCOUT.template.json have ZERO live check kinds today -- every existing postcondition in both files is check:null outside whatever this gate promotes. Per PLAN_CRITIC.md finding 3: ANY bucket-2 promotion in either file is a FIRST USE of that check kind in that specific template, by construction. Default every promotion here to REPORT-ONLY WITH A NAMED TRIGGER (e.g. 'N clean report-only runs through this gate with zero false-refusals, reviewed at the next Cartographer/Scout-owning wave') unless a specific, stated per-condition reason overrides that default -- a reused pattern cited from a DIFFERENT template (e.g. EXPLORER_SPINE's verify_spec_confirmed.py wiring) is context for the reasoning, never eligibility for shipping blocking here. Candidates: CARTOGRAPHER's packets.c1/index-overlays.c1 (weak, locator-ambiguous -- a git-diff-based 'something under docs/architecture/ changed' proxy verifies motion, not correctness; if the locator can't be made genuinely unambiguous, leave null and say so rather than shipping a decorative check); SCOUT's report.c1 (existence-only for SCOUT_REPORT.md, report-only since first-use; 'candidates routed' judgment stays null). Command-kind checks have a real report-only shape (a script's own --report-only flag, or a shell wrapper that always exits 0 while still printing the real verdict to stdout for the evidence payload -- see constellation-commander/scripts/map_orient.py's own --report-only flag as the model); artifact-kind checks have NO report-only shape (w2-basis's own finding) -- if the honest check kind for a candidate here is artifact, it demotes back to check: null with the reason recorded, it does not ship forced-blocking to dodge this constraint. Check-kind live-ness is evaluated against THIS template's own existing (non-null) checks ONLY -- a pattern or seam decision cited from a DIFFERENT template is context for the reasoning, never eligibility for blocking (PLAN_CRITIC.md finding 3). State explicitly, per promoted condition, which of THIS SAME template's existing checks (if any) already use that kind before shipping it blocking; a first use of a kind in this specific template ships report-only with a named promotion trigger, or demotes back to check: null if the kind has no report-only shape (artifact checks have none, per w2-basis's own finding). Compact-format JSON: hand-edit raw text, surgically, never json.load/json.dump; re-validate with json.load afterward. Sync .agent-work/templates/<NAME>.template.json to byte-match the edited skills/ source (copy, do not hand-retype) and confirm with `python3 scripts/check_template_overlay_freshness.py` -- must report 'none stale'. Never touch .agent-work/templates/.baseline/. Red-proof each promoted condition per decision:red-proof-each-promotion, in the style of tests/test_checklist_engine.py's CommanderSpineBasisFields class: pin PINNED_HEAD via `git rev-parse HEAD` at implementation time, skipTest (never fail) if HEAD has since moved, load the real shipped template fresh. For each promoted condition: (a) assert the promoted shape exactly; (b) assert no OTHER condition in the file changed; (c) attack with a mutation an ADVERSARY would choose, not the one the promotion's own match/command text already implies -- e.g. for an artifact check, attach a wrong-type or non-matching evidence item and assert attest() raises EngineError with the exact refusal text from checklist_engine.py (\"is an artifact check; attest it by referencing...\", \"is type ... not the required...\", \"does not match required...\"); for a command check, assert `advance` (never `attest`) refuses under a real-world-shaped negative fixture. Log each mutation's rationale as a one-line comment distinct from the check's own match/command text (PLAN_CRITIC.md finding 7) -- e.g. 'attacks the boundary the match does NOT cover', not a restatement of the match dict. If this gate promotes any condition in a gate that was previously all-null (making at least one of its postconditions non-null), update tests/test_validate_spine.py's TestCorpusSweepFindings.test_measured_finding_totals floor assertions (falsifiable-all-null and, if relevant, falsifiable-unresolved-placeholder) to the freshly re-measured corpus-wide count in THIS SAME commit -- per PLAN_CRITIC.md finding 1, the suite must stay green at every gate boundary, not just at the final wiring gate. Re-run `python3 -m pytest tests/test_validate_spine.py -q` after the edit and confirm green. This run's own map is DEGRADED-UNPARSEABLE (MISSION_FRAME.md) -- do not let any promoted check depend on map state this repo cannot currently produce. Map entry point: docs/CHECK_SCRIPT_CENSUS.md's unwired-script list (check_role_spine_bookends.py, check_skill_freshness.py -- wiring either live here is a genuine option but not mandatory; if used, note it plainly since it flips docs/CHECK_SCRIPT_CENSUS.md's own live/unwired tallies, which g8 must then update). Dispatch via constellation-implementer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g6 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers (return status complete)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result",
+            "match": {
+              "status": "complete"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-implement-1",
+          "attested": {
+            "evidence": "e-g7-implement-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "decision:no-new-check-kinds",
+        "decision:no-basis-backfill",
+        "hand-edit raw text only",
+        "default report-only-with-trigger given zero live check kinds in either file; blocking requires a stated override reason"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/cartographer/templates/CARTOGRAPHER.template.json",
+          "skills/scout/templates/SCOUT.template.json"
+        ],
+        "capability": [
+          "docs/CHECK_SCRIPT_CENSUS.md unwired-script inventory (check_role_spine_bookends.py, check_skill_freshness.py)"
+        ],
+        "constraint": [
+          "decision:no-new-check-kinds",
+          "decision:no-basis-backfill"
+        ],
+        "decision": [
+          "decision:blocking-where-adjudicated -- report-only branch applies by default here per PLAN_CRITIC.md finding 3 @grade: settled/human \u00b7 leans g7-implement"
+        ],
+        "evidence": [],
+        "confidence_flags": [
+          "map is DEGRADED-UNPARSEABLE -- do not build a promoted check that depends on it"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/w3-promote/crew-handoffs/g7-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g7-review": {
+      "id": "g7-review",
+      "title": "CARTOGRAPHER + SCOUT: review",
+      "imperative": "Fill REVIEWER_HANDOFF.template.md from g7-implement's IMPLEMENTER_RESULT: verify the report-only default was actually honored (or a stated override reason exists for any blocking promotion), verify overlay sync x2, red-proofs, floor update, verify docs/CHECK_SCRIPT_CENSUS.md wasn't silently left stale if a script's wiring status flipped. Dispatch via constellation-reviewer.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-review-1",
+          "attested": {
+            "evidence": "e-g7-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g7-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "450dca6d"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g7-integrate": {
+      "id": "g7-integrate",
+      "title": "CARTOGRAPHER + SCOUT: integrate",
+      "imperative": "Check verdict. APPROVE: re-verify yourself, then advance. BLOCK: rework or blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_checklist_engine.py and tests/test_validate_spine.py both green; both overlays in sync",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-integrate-1",
+          "attested": {
+            "evidence": "e-g7-integrate-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "anchors": null,
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "450dca6d"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g8-validate-spine-wiring-and-docs": {
+      "id": "g8-validate-spine-wiring-and-docs",
+      "title": "validate_spine.py wiring decision + docs reconciliation",
+      "imperative": "Reasoning gate -- no crew dispatch, corpus-wide decision deliberately last (needs the post-promotion fault count from g1-g7). Re-run `python3 -m pytest tests/test_validate_spine.py -q` and the discover_checklist_templates sweep (same command as g0-corpus-survey.c3) for the final post-promotion fault count. Per decision:validate-spine-wiring-is-in-scope's settle clause, decide with the Admiral (attach a user-decision evidence item citing this section): (a) the floor was already kept current gate-by-gate (FLOOR_UPDATE discipline in g1/g3/g4/g5/g7) so this is a confirmation step, not a new wiring decision; (b) whether to additionally tighten TestShapeAcceptsEveryShippedTemplate-style zero-tolerance blocking specifically for the falsifiable-all-null code on the 8 templates this lane owns (mirroring the shape-fault test's already-blocking pattern) -- float rather than fix if any of the 2 falsifiable-unresolved-placeholder faults (EXECUTE_PLAN g1-integrate.c1, IMPLEMENTER_PLAN m1.c2 -- template-authoring bugs, a different defect class than check:null, out of this lane's promotion scope) would block that tightening; file them as a triage candidate instead. Separately: if g7 (or any gate) flipped a script's wiring classification (e.g. check_role_spine_bookends.py or check_skill_freshness.py from unwired to live), update docs/CHECK_SCRIPT_CENSUS.md's corpus-wide tallies (the '17 live... 8 unwired, 1 dead' line and its row for that script) to match -- PLAN_CRITIC.md finding 6. If no script's classification changed, state that explicitly rather than silently skipping the check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g7 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fresh post-promotion validate_spine.py fault count measured and pasted; recorded decision on floor-tightening scope",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision",
+            "match": {
+              "cite": "decision:validate-spine-wiring-is-in-scope"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g8-validate-spine-wiring-and-docs-1",
+          "attested": {
+            "evidence": "e-g8-validate-spine-wiring-and-docs-1",
+            "note": null
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "docs/CHECK_SCRIPT_CENSUS.md's corpus-wide tallies match the post-run state (updated if any script's wiring flipped, explicitly confirmed unchanged if not)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "docs/CHECK_SCRIPT_CENSUS.md 17 live/8 unwired/1 dead confirmed unchanged -- grep for check_role_spine_bookends/check_skill_freshness in all shipped templates returns zero matches, no script's wiring classification flipped this wave"
+        },
+        {
+          "id": "c3",
+          "statement": "any falsifiable-unresolved-placeholder faults outside this lane's promotion scope are filed as a triage candidate, not fixed or suppressed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "2 falsifiable-unresolved-placeholder faults (EXECUTE_PLAN g1-integrate.c1, IMPLEMENTER_PLAN m1.c2) are out of this lane's promotion scope -- filed as triage candidate for RESULT.md, not fixed or suppressed"
+        }
+      ],
+      "constraints": [
+        "decision:validate-spine-wiring-is-in-scope -- do not fix faults outside this lane's 8 templates to force a tightened assertion to pass; float instead"
+      ],
+      "anchors": {
+        "structural": [
+          "tests/test_validate_spine.py",
+          "docs/CHECK_SCRIPT_CENSUS.md"
+        ],
+        "capability": [],
+        "constraint": [
+          "decision:validate-spine-wiring-is-in-scope"
+        ],
+        "decision": [
+          "decision:validate-spine-wiring-is-in-scope @grade: guess/admiral \u00b7 leans g8-validate-spine-wiring-and-docs \u00b7 settle: count faults across all shipped templates first (done in g0.c3), then decide with the Admiral"
+        ],
+        "evidence": [
+          "claim:65-null-conditions-corpus-wide"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g8-validate-spine-wiring-and-docs-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "decision:validate-spine-wiring-is-in-scope",
+            "decision": "floor already current gate-by-gate (13 falsifiable-all-null + 2 falsifiable-unresolved-placeholder measured fresh, matches shipped floor exactly); declined additional zero-tolerance tightening this wave -- floated as triage, not fixed, since it cannot land clean without resolving 2 out-of-scope placeholder faults (EXECUTE_PLAN g1-integrate.c1, IMPLEMENTER_PLAN m1.c2)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g9-integrate": {
+      "id": "g9-integrate",
+      "title": "Commit, suite, PR, RESULT.md",
+      "imperative": "Commit (one commit per template gate as they closed, or one combined commit at the author's latitude -- either way the PR description must reproduce g0's survey table and each template's assessed-vs-promoted counts so the reviewer sees the whole assessment, not just the diff). Run the full suite: `python3 -m pytest -q`. Open the PR server-side-merge per launch order defaults (open_pr=true at spine_close; do NOT merge -- the Admiral owns integration). Write RESULT.md per the launch order's Return Shape in full, including: verdict; evidence (exact commands + real output, every number pinned to the revision measured); the full suite result pasted verbatim, run AFTER the final commit (commit, THEN re-run -- PLAN_CRITIC.md finding 8, the Honest-Null Clause's explicit per-template assessed-vs-promoted counts, not just a total); map impact; triage candidates (including the g8.c3 placeholder-fault filing and any g7 unwired-script decision); workflow feedback (where this launch order was wrong/thin/misleading -- this is graded); and the pre-declared refresh comparison (refresh-request count, whether a relaunch happened, final attempt/total_rework, reviewer verdict and review-round count).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g8 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full python3 -m pytest -q green, pasted verbatim, run after the final commit",
+          "check": {
+            "kind": "command",
+            "command": "python3 -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g9-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "PR opened (server-side-merge), not merged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "PR #662 opened server-side-merge, not merged: https://github.com/fredcai6/constellation-skills/pull/662"
+        },
+        {
+          "id": "c3",
+          "statement": "RESULT.md written at .agent-work/w3-promote/RESULT.md per the launch order's Return Shape (all 7 numbered items)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RESULT.md written at .agent-work/w3-promote/RESULT.md, all 7 numbered Return Shape items covered, committed at 4d92dc45"
+        }
+      ],
+      "constraints": [],
+      "anchors": null,
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g9-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "g0-corpus-survey",
+      "why": "All 46 non-COMMANDER_SPINE conditions bucketed fresh; fresh corpus fault count (19/2) confirmed matching PLAN_CRITIC.md; 5/7 templates float-noted as outside the [30%,65%] band, disposed as informative per the Honest-Null Clause rather than a blocking halt.",
+      "mechanical": false,
+      "ts": "2026-08-22T23:57:52.076506+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer promoted exactly the 8 named conditions in COMMANDER_SPINE.template.json to command/artifact checks, synced overlay, added red-proof test class (10 tests, adversary-chosen mutations, all green), updated the falsifiable-all-null floor from stale 21 to fresh 17. Return status complete, verified via run_crew.py --verify-result.",
+      "mechanical": false,
+      "ts": "2026-08-23T00:15:31.308268+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer independently reproduced every claim (parse-check, overlay freshness, red-proof class 10/10, full corpus sweep confirming falsifiable-all-null=17, full suite 3739 passed, Fowler pass clean with one justified override). Verdict APPROVE, no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-23T00:29:29.301574+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Verified side-effects against the world myself: overlay fresh (56/56), diff matches exactly expected 8 files, review verdict APPROVE with independently-reproduced evidence, full suite green. g1 (COMMANDER_SPINE promotion) fully closed.",
+      "mechanical": false,
+      "ts": "2026-08-23T00:30:03.936931+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-execute-plan",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-23T00:31:01.199486+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g3-implement",
+      "why": "3 of 4 candidate conditions promoted (command-kind, matching this template's own dominant kind); closeout.c4 honestly left null (no stable archive-path convention at authoring time, confirmed against spine_lifecycle.py's archive_name_for using wall-clock date + a slash-strip transform the placeholder resolver doesn't perform); red-proof class AdmiralSpineW3PromotePromotions added with adversary mutations; full suite green (642 passed, 13 skipped); overlay byte-identical; no validate_spine floor change triggered (no all-null gate cleared).",
+      "mechanical": false,
+      "ts": "2026-08-23T14:18:35.403910+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g3-review",
+      "why": "Reviewer independently re-derived every claim: pre-image command-kind eligibility, closeout.c4's left-null reasoning against spine_lifecycle.py/init_work_area.py source, all 6 red-proof tests genuinely adversarial and passing, full suite green, excluded files untouched. Verdict APPROVE, no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:23:13.546538+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-integrate",
+      "why": "Committed 44180fe0: 3 ADMIRAL_SPINE conditions promoted, closeout.c4 honestly left null, red-proof class added, suite green post-commit, overlay in sync, reviewer APPROVE independently reproduced.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:23:58.592797+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g4-implement",
+      "why": "3 of 4 candidate conditions promoted (init.c2 full command-kind, context.c1/spec.c1 existence-only splits); route.c1 honestly left null (no per-outcome routing artifact exists). Commander caught and fixed a decision:no-basis-backfill violation (implementer had added basis objects, out of scope for this wave) before advancing; re-verified green after the fix (643 passed, 19 skipped). Corpus falsifiable-all-null dropped 17->15, floor message updated.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:33:10.034343+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g4-review",
+      "why": "Reviewer independently re-derived every claim including the basis-field correction (confirmed decision:no-basis-backfill bars the field categorically for this wave, not just bulk backfill, by reading MISSION_FRAME.md's Out of Scope section directly). falsifiable-all-null 17->15 drop independently reproduced via git stash. Full suite reproduced green. Verdict APPROVE, no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:39:53.116691+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-integrate",
+      "why": "Committed 442a5826: 3 EXPLORER_SPINE conditions promoted, route.c1 honestly left null, a real decision:no-basis-backfill violation was caught and fixed before review, red-proof class added, full suite green post-commit (3736 passed, 25 skipped), map rebuilt, overlay in sync, reviewer APPROVE independently reproduced including the basis-field correction re-check.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:49:14.019813+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g5-implement",
+      "why": "1 of 3 candidates promoted (project-templates.c1, full artifact enum-match mirroring COMMANDER's plan.c1). closeout.c1 honestly left null (same wall-clock archive-path defect g3 already declined). interrogate.c1 honestly left null (verify_interrogation.py exists but the cross-skill <ROLE-skill-dir> resolver and install manifest don't actually wire it to charter -- would silently break in an installed repo). No basis-field violation this time. floor updated 15->14 (a genuine all-null gate cleared). Full suite green (641 passed, 26 skipped).",
+      "mechanical": false,
+      "ts": "2026-08-23T14:58:10.526462+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g5-review",
+      "why": "Reviewer independently re-derived every claim including both honest-null dispositions by reading the actual source (spine_lifecycle.py, init_work_area.py, install_constellation.py). falsifiable-all-null 15->14 drop independently reproduced via git stash. A near-miss occurred (reviewer's own git checkout -- reverted the uncommitted file to pre-g5 HEAD while testing a mutation) and was self-caught and restored; Commander independently re-verified the restored diff is byte-identical to the pre-review state and the full suite is still green before accepting this result. Verdict APPROVE, no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-23T15:03:27.118815+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g5-integrate",
+      "why": "Suite green post-commit (3734 passed, 32 skipped, 1276 subtests, exit 0), overlay clean (56/56), reviewer verdict APPROVE independently re-derived. commit d73c6b9a.",
+      "mechanical": false,
+      "ts": "2026-08-23T16:25:06.310013+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g6-implementer-plan",
+      "why": "Fresh re-verification against real shipped IMPLEMENTER_PLAN.template.json confirms 0/3 bucket-2 (assessed 3, promoted 0): m0-context.c1 pure judgment (no locator); m1.p1 gate-order-guaranteed against m0-context.c1; m1.c1 self-declares unpromotable in its own statement text (TDD-red condition, a command check would refuse the gate exactly when the run is correct). Matches earlier hand-assessment exactly, no drift. Honest zero recorded in notes-1.md, no file edit made.",
+      "mechanical": false,
+      "ts": "2026-08-23T16:25:31.284562+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g7-implement",
+      "why": "Implementer verified: SCOUT report.c1 promoted to command-kind report-only (always exits 0, first use of any kind in file, named promotion trigger recorded in map_check_note per docs/CHECKLIST_SCHEMA.md precedent). CARTOGRAPHER 0/4 promoted, map DEGRADED-UNPARSEABLE forecloses packets.c1/index-overlays.c1. Independently re-verified: CARTOGRAPHER untouched (empty diff), SCOUT diff exactly 1 postcondition + map_check_note, overlay byte-identical, no basis field, validate_spine.py report gate cleared (14->13), test floor updated to match, PINNED_HEAD in new test classes matches actual HEAD (d73c6b9a), full targeted suite green (643 passed, 31 skipped, 148 subtests).",
+      "mechanical": false,
+      "ts": "2026-08-23T16:35:10.433470+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g7-review",
+      "why": "Independent reviewer verdict APPROVE, re-derived by execution not prose-trust: ran the promoted shell command against missing/empty/populated SCOUT_REPORT.md fixtures, confirmed exit-0-always with genuine -s (nonempty) discrimination; dumped git show HEAD check fields confirming zero live checks pre-edit in both files; confirmed map_check_note documented at CHECKLIST_SCHEMA.md:196 with precedent in COMMANDER_SPINE; confirmed CARTOGRAPHER decline via independent DEGRADED-UNPARSEABLE map read; re-ran falsifiable-all-null sweep via git stash confirming 14->13; full suite 643 passed/31 skipped green. No blockers. commit 450dca6d.",
+      "mechanical": false,
+      "ts": "2026-08-23T16:40:59.370279+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g7-integrate",
+      "why": "Suite green post-commit (636 passed, 38 skipped, 147 subtests, 0 failed; skip-count rise is the pinned-HEAD red-proof tests correctly skipTest-ing now that HEAD moved to 450dca6d, by design), overlay clean (56/56). Reviewer verdict APPROVE independently re-derived by execution. commit 450dca6d.",
+      "mechanical": false,
+      "ts": "2026-08-23T16:41:31.533390+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g8-validate-spine-wiring-and-docs",
+      "why": "Fresh post-promotion sweep: 13 falsifiable-all-null + 2 falsifiable-unresolved-placeholder, matches shipped floor exactly (no drift). Floor was kept current gate-by-gate through g1/g4/g5/g7's FLOOR_UPDATE discipline -- this gate is a confirmation, not a new wiring decision. Declined additional zero-tolerance tightening this wave: cannot land clean without resolving 2 out-of-scope placeholder faults (EXECUTE_PLAN g1-integrate.c1, IMPLEMENTER_PLAN m1.c2, a template-authoring-bug defect class different from check:null); floated as a triage candidate per the settle clause rather than fixed or absorbed into scope. docs/CHECK_SCRIPT_CENSUS.md's 17 live/8 unwired/1 dead tallies confirmed unchanged -- no script's wiring classification flipped this wave (grep for both named unwired scripts across all shipped templates: zero matches).",
+      "mechanical": false,
+      "ts": "2026-08-23T16:43:11.445641+00:00"
+    },
+    {
+      "id": "w-20",
+      "gate": "g9-integrate",
+      "why": "Committed final batch (e70f2df6 gate-progression closeout, f6367f1f map/INDEX.md rebuild, 476d4cc6 RESULT.md, 4d92dc45 final-commit suite pin). python3 -m pytest -q green at true final commit 4d92dc45: 3729 passed, 44 skipped, 1275 subtests, 0 failed. PR #662 opened server-side-merge (not merged) with full corpus survey table and per-template assessed-vs-promoted counts in the description. RESULT.md written covering all 7 Return Shape items: verdict (16/65 promoted), evidence, suite result, map impact (rebuild needed, no active pre-commit hook installed), triage candidates, workflow feedback, refresh comparison (2 refresh-requests both answered via relaunch, attempt-3, total_rework 0, 5/5 reviewer gates APPROVE first-pass).",
+      "mechanical": false,
+      "ts": "2026-08-23T17:03:14.710034+00:00"
+    }
+  ]
+}
