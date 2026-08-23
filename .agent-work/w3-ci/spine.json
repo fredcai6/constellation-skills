@@ -653,7 +653,8 @@
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Committed (de75032f, c673dc70) and pushed: git push -u origin epic-569/w3-ci -> new branch epic-569/w3-ci -> epic-569/w3-ci."
         },
         {
           "id": "c2b",
@@ -668,7 +669,8 @@
           "id": "c3",
           "statement": "spine_close is authorized as the sole final advance-and-release transition for this run",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "spine_close is the sole authorized final transition for this delegated Commander run per commander-core.md's archive doctrine; no manual spine_advance/lease-release/reap will be called."
         },
         {
           "id": "c4",
@@ -717,7 +719,12 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1",
+          "attested": {
+            "evidence": "e-archive-1",
+            "note": "Archived run accepted, citing LAUNCH_ORDER:Return Shape (delegated mode, Admiral ratifies)."
+          }
         }
       ],
       "constraints": [],
@@ -727,7 +734,17 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0,
       "bookend": true
     }
@@ -740,7 +757,7 @@
     "session_id": "constellation/w3-ci",
     "status": "active",
     "claimed_at": "2026-08-23T00:02:58.415016+00:00",
-    "last_heartbeat": "2026-08-23T00:11:48.142962+00:00",
+    "last_heartbeat": "2026-08-23T00:12:37.824999+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
