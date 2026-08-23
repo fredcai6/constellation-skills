@@ -319,11 +319,18 @@ class InstallConstellationTests(unittest.TestCase):
             spine = json.loads(spine_text)
 
             self.assertNotIn("<commander-skill-dir>", spine_text)
-            # init's own postcondition is a lease-claim (check: null, no command) since
-            # issue #610 retired the Commander's init_work_area.py self-scaffolding call;
-            # the absolute-path-rewrite mechanism is still exercised below via context's
-            # map_orient.py check, so this test's subject is unaffected.
-            self.assertIsNone(spine["tasks"]["init"]["postconditions"][0]["check"])
+            # init's own postcondition was a lease-claim (check: null, no command) since
+            # issue #610 retired the Commander's init_work_area.py self-scaffolding call,
+            # until epic-569/w3-promote g1 promoted it to a command check that reads
+            # spine.json's own engine_session.status -- it inlines `python3 -c "..."`
+            # rather than invoking a bundled script, so this test's own subject
+            # (absolute bundled-script-path resolution) does not apply to it; assert
+            # only that it is non-null and carries no unresolved skill-dir placeholder.
+            # The absolute-path-rewrite mechanism itself is still exercised below via
+            # context's map_orient.py check.
+            init_check = spine["tasks"]["init"]["postconditions"][0]["check"]
+            self.assertIsNotNone(init_check)
+            self.assertNotIn("<commander-skill-dir>", init_check["command"])
             self.assertIn(
                 (commander_root / "scripts" / "map_orient.py").as_posix(),
                 spine["tasks"]["context"]["postconditions"][1]["check"]["command"],

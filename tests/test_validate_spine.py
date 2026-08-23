@@ -719,8 +719,10 @@ class TestCorpusSweepFindings:
         # if a template is genuinely fixed, this count drops and the pin
         # should move down in the same edit, never silently.
         assert by_code.get("falsifiable-all-null", 0) >= 15, (
-            f"expected at least 15 all-null gates across the corpus (measured 21 at "
-            f"authoring time), found {by_code.get('falsifiable-all-null', 0)}: this is "
+            f"expected at least 15 all-null gates across the corpus (measured 17 at "
+            f"authoring time -- epic-569/w3-promote g1 cleared init/reconcile's "
+            f"single-postcondition all-null gates in COMMANDER_SPINE.template.json, "
+            f"dropping the prior 19), found {by_code.get('falsifiable-all-null', 0)}: this is "
             f"the epic's central claim (#518) -- a drop this large means the checker "
             f"stopped finding what it exists to find, not that the corpus improved that "
             f"much between edits"

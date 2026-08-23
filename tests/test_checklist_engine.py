@@ -8648,3 +8648,344 @@ class CommanderSpineBasisFields(unittest.TestCase):
             "    basis: file .agent-work/<work-id>/plan-candidate-*.md", out)
         self.assertIn(
             "    basis: file .agent-work/<work-id>/PLAN_CRITIC.md", out)
+
+
+def _gate_with_check(iid, check, status="in-progress"):
+    """A gate whose single postcondition IS `check` -- the shipped shape
+    copied verbatim from the template, never re-typed by hand."""
+    t = gate(iid, status)
+    t["postconditions"] = [
+        {"id": "c1", "statement": "s", "check": check, "satisfied": False}
+    ]
+    return t
+
+
+class CommanderSpineW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g1: 8 named `check: null` conditions in the shipped
+    COMMANDER_SPINE.template.json promoted to real, mechanically-checked
+    conditions using only the engine's existing check kinds (`command`,
+    `artifact`) per `decision:no-new-check-kinds` -- init.c1, plan.c1/c2/c4/
+    c5, reconcile.c1, archive.c2/c3. Every other condition in the file, and
+    every `basis` object already present on plan.c2/c4/c5 (CommanderSpine
+    BasisFields above), is untouched.
+
+    Modeled directly on CommanderSpineBasisFields above: pin PINNED_HEAD via
+    `git rev-parse HEAD` captured at implementation time, `skipTest` (never
+    fail) if HEAD has since moved past it -- this repo's edits are still
+    uncommitted at authoring time, so HEAD is the base commit this gate's
+    edit sits on top of, not a future commit; see that class's own docstring
+    for why a moved HEAD skips rather than asserts against drift.
+
+    Each promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    never a restatement of the check's own match text -- to prove the check
+    can genuinely discriminate the healthy world from the defective one, per
+    this epic's own thesis: a check with zero discriminating power is worse
+    than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
+
+    # Captured via `git rev-parse HEAD` at implementation time (g1 dispatch).
+    PINNED_HEAD = "135c34eb0b0a10bc5cebb0e6e3869b124e63735e"
+
+    EXPECTED_CHECKS = {
+        ("init", "c1"): {
+            "kind": "command",
+            "command": (
+                "python3 -c \"import json,sys; "
+                "d=json.load(open('<repo-root>/.agent-work/<work-id>/spine.json', "
+                "encoding='utf-8')); "
+                "sys.exit(0 if d.get('engine_session',{}).get('status')=='active' else 1)\""
+            ),
+        },
+        ("plan", "c1"): {
+            "kind": "artifact", "evidence_type": "mission-frame",
+            "match": {"status": ["produced", "skipped-as-trivial"]},
+        },
+        ("plan", "c2"): {
+            "kind": "artifact", "evidence_type": "execute-plan",
+            "match": {"exists": True},
+        },
+        ("plan", "c4"): {
+            "kind": "artifact", "evidence_type": "plan-alternatives",
+            "match": {"converged": True},
+        },
+        ("plan", "c5"): {
+            "kind": "artifact", "evidence_type": "plan-critic",
+            "match": {"triaged": True},
+        },
+        ("reconcile", "c1"): {
+            "kind": "artifact", "evidence_type": "file-diff",
+            "match": {"nonempty": True},
+        },
+        ("archive", "c2"): {
+            "kind": "command",
+            "command": (
+                'test "$(git -C <repo-root> rev-parse @)" '
+                '= "$(git -C <repo-root> rev-parse @{u})"'
+            ),
+        },
+        ("archive", "c3"): {"kind": "artifact", "evidence_type": "user-decision"},
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose --
+    # the handoff's "pre-existing 5" undercounts these 13; see this class's
+    # entry in the g1 IMPLEMENTER_RESULT's Workflow Feedback.
+    PRE_EXISTING_NONNULL = {
+        ("context", "c2"), ("understand", "c1"), ("plan", "c3"), ("plan", "c6"),
+        ("execute", "p2"), ("execute", "c2"), ("triage", "c2"), ("review", "c1"),
+        ("feedback", "c1"), ("archive", "c1"), ("archive", "c2b"), ("archive", "c4"),
+        ("archive", "c5"),
+    }
+
+    def _skip_if_head_moved(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        head = out.stdout.strip()
+        if head != self.PINNED_HEAD:
+            self.skipTest(
+                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
+                f"{head} -- this test's assumptions about the template's "
+                "shape need re-verifying against the current HEAD before "
+                "they can be trusted, not silently re-run against drift"
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_checks_match_shipped_shape(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly the 13 pre-existing non-null checks plus these 8 "
+            "promotions -- and no other condition anywhere in the template "
+            "-- may carry a check; a mismatch means either a missed target "
+            "or drift onto a condition this gate must not touch",
+        )
+
+    # ---- artifact-kind promotions: attest() cross-task reference, exactly ----
+    # the mechanism `docs/CHECKLIST_SCHEMA.md`'s "attest" row documents (verify
+    # exists + evidence_type + match; never asserts an artifact from thin air).
+
+    def _assert_artifact_discriminates(
+        self, cid, wrong_type_evidence, adversary_payload, matching_payload,
+    ):
+        """Shared drive for every artifact-kind promotion below: (1) evidence
+        of the WRONG `type` is refused on the `evidence_type` boundary; (2)
+        evidence of the RIGHT type but an adversary-chosen non-matching
+        payload is refused on the `match` boundary; (3) a genuinely matching
+        payload satisfies it -- proving the check can pass as well as fail."""
+        tid, real_cid = cid.split(".")
+        check = self.EXPECTED_CHECKS[(tid, real_cid)]
+        src = gate("src", "in-progress")
+        target = _gate_with_check("target", check)
+        cl = gated(src=src, target=target)
+
+        # (1) wrong evidence_type -- attacks the TYPE boundary, not the match.
+        E.attach(cl, "src", wrong_type_evidence, {})
+        with self.assertRaisesRegex(
+            E.EngineError,
+            re.escape(f"is type {wrong_type_evidence!r}, not the required {check['evidence_type']!r}"),
+        ):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-1")
+
+        # (2) right type, adversary-chosen non-matching payload -- attacks the
+        # boundary the match does NOT restate; see each caller's own rationale.
+        E.attach(cl, "src", check["evidence_type"], adversary_payload)
+        with self.assertRaisesRegex(E.EngineError, "does not match required"):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-2")
+
+        # (3) positive control: a genuinely matching artifact DOES satisfy it.
+        E.attach(cl, "src", check["evidence_type"], matching_payload)
+        self.assertEqual(
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-3"),
+            "attested target.c1 via e-src-3",
+        )
+
+    def test_plan_c1_mission_frame_status_membership_discriminates(self):
+        self._skip_if_head_moved()
+        # adversary: a differently-CASED status string -- attacks the
+        # case-sensitivity boundary the match list does not spell out, not a
+        # restatement of "produced" / "skipped-as-trivial" themselves.
+        self._assert_artifact_discriminates(
+            "plan.c1",
+            wrong_type_evidence="user-decision",
+            adversary_payload={"status": "Produced"},
+            matching_payload={"status": "skipped-as-trivial"},
+        )
+
+    def test_plan_c2_execute_plan_existence_only_discriminates(self):
+        self._skip_if_head_moved()
+        # adversary: an EXPLICIT `exists: false` -- a real "checked for it and
+        # it is NOT there" claim, distinct from simply attaching no evidence
+        # at all (which a different assertion already covers via wrong-type).
+        self._assert_artifact_discriminates(
+            "plan.c2",
+            wrong_type_evidence="mission-frame",
+            adversary_payload={"exists": False},
+            matching_payload={"exists": True},
+        )
+
+    def test_plan_c4_plan_alternatives_converged_discriminates(self):
+        self._skip_if_head_moved()
+        # adversary: the STRING "true" rather than the boolean True -- attacks
+        # exact-type equality (`_artifact_match_satisfied` uses `==`, so a
+        # truthy-looking string is not a truthy-looking bool), never a
+        # restatement of "converged".
+        self._assert_artifact_discriminates(
+            "plan.c4",
+            wrong_type_evidence="plan-critic",
+            adversary_payload={"converged": "true"},
+            matching_payload={"converged": True},
+        )
+
+    def test_plan_c5_plan_critic_triaged_discriminates(self):
+        self._skip_if_head_moved()
+        # adversary: an explicit `triaged: false` -- the actual defect this
+        # check exists to catch (critic ran, findings never triaged), not a
+        # restatement of the match's own "triaged" key.
+        self._assert_artifact_discriminates(
+            "plan.c5",
+            wrong_type_evidence="plan-alternatives",
+            adversary_payload={"triaged": False},
+            matching_payload={"triaged": True},
+        )
+
+    def test_reconcile_c1_file_diff_nonempty_discriminates(self):
+        self._skip_if_head_moved()
+        # adversary: an explicit `nonempty: false` -- "the diff came back
+        # empty", the actual defect (map never touched), not a restatement of
+        # "nonempty" itself.
+        self._assert_artifact_discriminates(
+            "reconcile.c1",
+            wrong_type_evidence="command-output",
+            adversary_payload={"nonempty": False},
+            matching_payload={"nonempty": True},
+        )
+
+    def test_archive_c3_user_decision_type_only_discriminates(self):
+        self._skip_if_head_moved()
+        # This check carries NO `match` at all (reuses the archive.c5 /
+        # review.c1 / triage.c2 shape exactly), so `match={}` is vacuously
+        # true for ANY payload of the right type -- the ONLY boundary this
+        # check has is `evidence_type` itself. The adversary payload below is
+        # therefore an arbitrary dict; what discriminates is exclusively (1).
+        check = self.EXPECTED_CHECKS[("archive", "c3")]
+        self.assertNotIn("match", check)
+        src = gate("src", "in-progress")
+        target = _gate_with_check("target", check)
+        cl = gated(src=src, target=target)
+        E.attach(cl, "src", "review-result", {"verdict": "APPROVE"})
+        with self.assertRaisesRegex(
+            E.EngineError,
+            re.escape("is type 'review-result', not the required 'user-decision'"),
+        ):
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-1")
+        E.attach(cl, "src", "user-decision", {"cite": "spine_close"})
+        self.assertEqual(
+            E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-2"),
+            "attested target.c1 via e-src-2",
+        )
+
+    # ---- command-kind promotions: `advance` runs them; `attest` refuses ----
+
+    def test_init_c1_command_check_discriminates_lease_status(self):
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("init", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work_id = "w1"
+            (root / ".agent-work" / work_id).mkdir(parents=True)
+            spine_path = root / ".agent-work" / work_id / "spine.json"
+            cmd = check["command"].replace("<repo-root>", root.as_posix()).replace("<work-id>", work_id)
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: a real claim() write -- status == "active".
+            spine_path.write_text(json.dumps({"engine_session": {"status": "active"}}), encoding="utf-8")
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): a status value the lease machinery
+            # itself never legitimately writes -- claim() only ever writes
+            # "active", release() only ever writes "released" -- this is
+            # neither, so it attacks "the check ran and saw a BAD value", not
+            # merely "the key/file was absent" (a different, easier defect).
+            spine_path.write_text(
+                json.dumps({"engine_session": {"status": "quantum-entangled-lease"}}),
+                encoding="utf-8",
+            )
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            # command checks are satisfied by `advance`, never `attest`.
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
+
+    def test_archive_c2_command_check_discriminates_unpushed_commits(self):
+        self._skip_if_head_moved()
+        import shutil
+        import subprocess
+        if shutil.which("git") is None:
+            self.skipTest("git not available")
+
+        check = self.EXPECTED_CHECKS[("archive", "c2")]
+
+        def run(args, cwd):
+            r = subprocess.run(args, cwd=str(cwd), capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            return r
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "repo"
+            remote = Path(tmp) / "remote.git"
+            repo.mkdir()
+            remote.mkdir()
+            run(["git", "init", "-q", "-b", "main"], repo)
+            run(["git", "config", "user.email", "t@t.example"], repo)
+            run(["git", "config", "user.name", "t"], repo)
+            run(["git", "commit", "-q", "--allow-empty", "-m", "init"], repo)
+            run(["git", "init", "-q", "--bare"], remote)
+            run(["git", "remote", "add", "origin", str(remote)], repo)
+            run(["git", "push", "-q", "-u", "origin", "main"], repo)
+
+            cmd = check["command"].replace("<repo-root>", repo.as_posix())
+            resolved = {"kind": "command", "command": cmd}
+
+            # HEALTHY: pushed, local HEAD == upstream.
+            cl_ok = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_ok, "g1"), "g1 -> complete")
+
+            # DEFECTIVE (adversary-chosen): a LOCAL commit made AFTER the last
+            # push -- attacks branch-ahead-of-upstream specifically, not "no
+            # upstream configured at all" (a different, less targeted defect
+            # this check would also refuse but which never probes the
+            # boundary the check text actually names -- @ vs @{u}).
+            run(["git", "commit", "-q", "--allow-empty", "-m", "unpushed"], repo)
+            cl_bad = gated(g1=_gate_with_check("g1", resolved))
+            with self.assertRaises(E.EngineError):
+                E.advance(cl_bad, "g1")
+
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_bad, "g1", "c1", "postconditions", None)
