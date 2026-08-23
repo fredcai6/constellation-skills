@@ -36,6 +36,40 @@ from typing import Iterator
 # fields exactly to be allowed through the guard.
 ALLOWED_SKIPS: frozenset[tuple[str, str, str]] = frozenset(
     {
+        # Added 2026-08-23 (epic 569 closeout): the first five skips CI has ever
+        # actually SEEN. The Skip guard step ran on every prior build but the
+        # suite step failed ahead of it, so this guard has been unreached rather
+        # than passing -- a check that never ran reads exactly like a check that
+        # passed. All five are honest conditional skips that predate wave 3.
+        (
+            "tests.test_mcp_adoption.TestTier3CLIOnlyVerbsStayCLI",
+            "test_the_cli_only_rule_itself_is_present",
+            "CLI_ONLY_VERBS is empty -- no CLI-only-verb doctrine sentence is "
+            "required while there is nothing CLI-only to document (issue #559: "
+            "the door reaches all 18 engine verbs). Reactivates the moment "
+            "CLI_ONLY_VERBS is non-empty.",
+        ),
+        (
+            "tests.test_mcp_adoption.TestTier3CLIOnlyVerbsStayCLI",
+            "test_verb_still_documented[NOTSET]",
+            "got empty parameter set for (verb)",
+        ),
+        (
+            "tests.test_spine_lifecycle.TestWorktreePathForRealWorktree",
+            "test_reproduces_this_runs_real_worktree",
+            "this checkout is not directly inside the default worktree root; "
+            "only applies to a worktree following the <wt_root>/<work-slug> convention",
+        ),
+        (
+            "tests.test_verify_spec_confirmed.ConfirmPhaseRegressionOnALiveSpec",
+            "test_live_revised_spec_also_passes_review",
+            "no epic REVISED_SPEC.md under .agent-work/*/spec-revision/",
+        ),
+        (
+            "tests.test_verify_spec_confirmed.ConfirmPhaseRegressionOnALiveSpec",
+            "test_live_revised_spec_still_passes_confirm",
+            "no epic REVISED_SPEC.md under .agent-work/*/spec-revision/",
+        ),
         (
             "tests.test_verify_spec_confirmed.VerifySpecConfirmedTests",
             "test_live_design_spec_passes_default_phase",
