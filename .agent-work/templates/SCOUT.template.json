@@ -26,8 +26,9 @@
       "id": "report",
       "title": "Write SCOUT_REPORT",
       "imperative": "Write SCOUT_REPORT with ranked candidates and evidence. Record each finding's disposition: current-truth fix -> Cartographer, or future work -> Triage. Route future-work candidates to triage; Scout reports candidates only and never edits the map.",
+      "map_check_note": "epic-569/w3-promote g7: c1's check covers only the SCOUT_REPORT.md-written half of the statement (a real fixed-path locator, existence+nonempty); the 'candidates routed' half stays judgment -- no locator exists for whether a routing disposition was genuinely correct. Ships REPORT-ONLY (always exits 0, prints the real verdict to stdout) because this is the FIRST use of any check kind anywhere in this template -- zero live checks existed here before this promotion, so nothing in this file's own history supports shipping blocking (decision:blocking-where-adjudicated's default for a first-use file). Promotion trigger: after N clean report-only runs through this gate with zero false-refusals, reviewed at the next Cartographer/Scout-owning wave, flip to blocking by adding `\"override_policy\"` or dropping the trailing `; exit 0` -- a flag-flip, not a rebuild, same idiom as map_orient.py's own --report-only dial.",
       "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "SCOUT_REPORT written; candidates routed", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "SCOUT_REPORT written; candidates routed", "check": {"kind": "command", "command": "if [ -s \"<repo-root>/.agent-work/SCOUT_REPORT.md\" ]; then echo \"PASS: SCOUT_REPORT.md written\"; else echo \"report-only: NOT gating -- SCOUT_REPORT.md missing or empty\"; fi; exit 0"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     }

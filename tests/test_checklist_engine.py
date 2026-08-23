@@ -9760,3 +9760,282 @@ class CharterW3PromotePromotions(unittest.TestCase):
             E.attest(cl, "target", "c1", "postconditions", None, evidence_id="e-src-3"),
             "attested target.c1 via e-src-3",
         )
+
+
+class ScoutW3PromotePromotions(unittest.TestCase):
+    """569-w3-promote g7: 1 named `check: null` condition in the shipped
+    SCOUT.template.json promoted -- report.c1 -- using only the engine's
+    existing `command` check kind (`decision:no-new-check-kinds`). Every
+    other condition in the file (context.c1, audit.p1, audit.c1) is
+    untouched: all three are pure judgment with no locator, matching this
+    gate's own fresh-verified assessment exactly.
+
+    UNLIKE every prior W3PromotePromotions class this epic (g1/g3/g4/g5, all
+    against templates that already carried at least one live check kind),
+    SCOUT.template.json measured ZERO live check kinds anywhere before this
+    gate -- confirmed directly against `git show HEAD:...` below (see
+    `PRE_EXISTING_NONNULL`, the empty set). Per `decision:blocking-where-
+    adjudicated`'s own default for a first-use-of-any-kind file, this
+    promotion therefore ships REPORT-ONLY rather than blocking: the command
+    always exits 0 (so `advance` can never be refused by it), while still
+    running the real existence+nonempty test against
+    `.agent-work/SCOUT_REPORT.md` and printing which branch fired -- the
+    map_orient.py `--report-only` idiom (gate-vs-report is a flag flip, not
+    a rebuild), reproduced by hand here since this is a plain shell check,
+    not a Python script with its own flag.
+
+    report.c1's statement text ("SCOUT_REPORT written; candidates routed")
+    is left byte-identical and gains no `basis` field
+    (`decision:no-basis-backfill`) -- the check covers only the
+    SCOUT_REPORT.md-written half; "candidates routed" stays an uncovered
+    judgment claim the statement still names, same partial-conversion shape
+    as every prior gate's own split promotions (e.g. g1's COMMANDER_SPINE
+    `plan.c2`).
+
+    Pin PINNED_HEAD via `git rev-parse HEAD` captured at implementation
+    time, `skipTest` (never fail) if HEAD has since moved past it -- this
+    repo's edits are still uncommitted at authoring time, so HEAD is the
+    base commit (g5's own merged promotion) this gate's edit sits on top
+    of, not a future commit.
+
+    The promoted condition is attacked with an ADVERSARY-CHOSEN mutation --
+    an EMPTY file, not merely a MISSING one, attacking the `-s` nonempty
+    boundary rather than the easier absent-path defect -- to prove the
+    underlying probe genuinely discriminates the healthy world from the
+    defective one even though the gate itself never blocks on the result,
+    per this epic's own thesis: a check with zero discriminating power is
+    worse than the honest `check: null` it replaces."""
+
+    SPINE = ROOT / "skills" / "scout" / "templates" / "SCOUT.template.json"
+
+    # Captured via `git rev-parse HEAD` at implementation time (g7 dispatch,
+    # sitting on top of g5's already-merged CHARTER promotion).
+    PINNED_HEAD = "d73c6b9ac42c47140187efc075ac68a4af68b2cf"
+
+    EXPECTED_CHECKS = {
+        ("report", "c1"): {
+            "kind": "command",
+            "command": (
+                'if [ -s "<repo-root>/.agent-work/SCOUT_REPORT.md" ]; then '
+                'echo "PASS: SCOUT_REPORT.md written"; else '
+                'echo "report-only: NOT gating -- SCOUT_REPORT.md missing or empty"; '
+                'fi; exit 0'
+            ),
+        },
+    }
+
+    # Every condition (across pre- and post-conditions) that already carried a
+    # non-null check BEFORE this gate's promotion, measured directly against
+    # `git show HEAD:...` rather than trusted from the handoff's own prose --
+    # the empty set, since SCOUT.template.json measured zero live check kinds
+    # anywhere prior to this gate.
+    PRE_EXISTING_NONNULL = set()
+
+    def _skip_if_head_moved(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        head = out.stdout.strip()
+        if head != self.PINNED_HEAD:
+            self.skipTest(
+                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
+                f"{head} -- this test's assumptions about the template's "
+                "shape need re-verifying against the current HEAD before "
+                "they can be trusted, not silently re-run against drift"
+            )
+
+    def _load_spine(self):
+        return json.loads(self.SPINE.read_text(encoding="utf-8"))
+
+    def test_promoted_check_matches_shipped_shape(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        for (tid, cid), expected in self.EXPECTED_CHECKS.items():
+            with self.subTest(cond=f"{tid}.{cid}"):
+                by_id = {c["id"]: c for c in cl["tasks"][tid]["postconditions"]}
+                self.assertEqual(by_id[cid]["check"], expected)
+
+    def test_report_c1_statement_unchanged_and_no_basis(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        c1 = cl["tasks"]["report"]["postconditions"][0]
+        self.assertEqual(c1["statement"], "SCOUT_REPORT written; candidates routed")
+        self.assertNotIn("basis", c1)
+
+    def test_context_c1_and_audit_c1_stay_null(self):
+        """The other two candidates this gate's own handoff named and
+        declined (pure judgment, no locator) -- pin that both stay
+        `check: null` rather than silently drifting either way."""
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        context_c1 = {c["id"]: c for c in cl["tasks"]["context"]["postconditions"]}["c1"]
+        audit_c1 = {c["id"]: c for c in cl["tasks"]["audit"]["postconditions"]}["c1"]
+        self.assertIsNone(context_c1["check"])
+        self.assertIsNone(audit_c1["check"])
+
+    def test_no_condition_outside_pre_existing_and_promoted_carries_a_check(self):
+        self._skip_if_head_moved()
+        cl = self._load_spine()
+        nonnull = set()
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.add((tid, c["id"]))
+        expected = self.PRE_EXISTING_NONNULL | set(self.EXPECTED_CHECKS)
+        self.assertEqual(
+            nonnull, expected,
+            "exactly this 1 promotion -- and no other condition anywhere in "
+            "the template -- may carry a check; a mismatch means either a "
+            "missed target or drift onto a condition this gate must not "
+            "touch",
+        )
+
+    # ---- report-only command promotion: never blocks `advance`, but the ----
+    # ---- underlying probe still genuinely discriminates real state       ----
+
+    def test_report_c1_never_blocks_advance_healthy_or_defective(self):
+        """The defining property of a report-only command check: `advance`
+        succeeds unconditionally, whether the real world is healthy or
+        defective -- proving the promotion cannot regress into a silent
+        blocking gate."""
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("report", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".agent-work").mkdir(parents=True)
+            report_path = root / ".agent-work" / "SCOUT_REPORT.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix())
+            resolved = {"kind": "command", "command": cmd}
+
+            # DEFECTIVE (adversary-chosen): the file EXISTS (a bare `test -f`
+            # claim would pass) but is EMPTY -- attacks the nonempty
+            # boundary `-s` adds over plain existence, not the easier "file
+            # missing entirely" defect.
+            report_path.write_text("", encoding="utf-8")
+            cl_defective = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_defective, "g1"), "g1 -> complete")
+
+            # Missing entirely -- also never blocks.
+            report_path.unlink()
+            cl_missing = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_missing, "g1"), "g1 -> complete")
+
+            # HEALTHY: a real, nonempty report -- also never blocks (report-
+            # only is symmetric, not merely "fails open").
+            report_path.write_text("# SCOUT_REPORT\n\ncandidates: ...\n", encoding="utf-8")
+            cl_healthy = gated(g1=_gate_with_check("g1", resolved))
+            self.assertEqual(E.advance(cl_healthy, "g1"), "g1 -> complete")
+
+            # command checks are satisfied by `advance`, never `attest` --
+            # true regardless of report-only-ness, since the KIND is still
+            # `command`.
+            with self.assertRaisesRegex(E.EngineError, "engine-checked; cannot attest"):
+                E.attest(cl_healthy, "g1", "c1", "postconditions", None)
+
+    def test_report_c1_underlying_probe_still_discriminates_via_stdout(self):
+        """Never-blocking is not the same as never-discriminating: the
+        command must still compute and print the REAL verdict, exactly as
+        the report-only contract this gate cites (map_orient.py's own
+        `--report-only`) requires -- 'the verdict printed is identical
+        either way; only its blocking-ness moves.' Runs the check text
+        through the engine's own `_run_check_command` shell runner directly
+        (the same one `_check_condition` calls), rather than re-implementing
+        shell invocation by hand."""
+        self._skip_if_head_moved()
+        check = self.EXPECTED_CHECKS[("report", "c1")]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / ".agent-work").mkdir(parents=True)
+            report_path = root / ".agent-work" / "SCOUT_REPORT.md"
+            cmd = check["command"].replace("<repo-root>", root.as_posix())
+
+            # DEFECTIVE (adversary-chosen): EXISTS but EMPTY, not missing.
+            report_path.write_text("", encoding="utf-8")
+            proc, _marker = E._run_check_command(cmd)
+            self.assertEqual(proc.returncode, 0, "report-only must always exit 0")
+            self.assertIn("report-only: NOT gating", proc.stdout)
+            self.assertNotIn("PASS", proc.stdout)
+
+            # HEALTHY: real, nonempty report -- the OTHER branch must fire.
+            report_path.write_text("# SCOUT_REPORT\n\ncandidates: ...\n", encoding="utf-8")
+            proc, _marker = E._run_check_command(cmd)
+            self.assertEqual(proc.returncode, 0, "report-only must always exit 0")
+            self.assertIn("PASS: SCOUT_REPORT.md written", proc.stdout)
+            self.assertNotIn("report-only: NOT gating", proc.stdout)
+
+
+class CartographerW3PromoteDeclined(unittest.TestCase):
+    """569-w3-promote g7: 0 promotions in the shipped
+    CARTOGRAPHER.template.json -- a full, fresh-verified assessment that
+    genuinely found nothing eligible, not a skipped gate. All 4 of the
+    file's null conditions were assessed and declined:
+
+    `context.c1` ("context and current map loaded") and `map-compliance.c1`
+    ("map compliant; open structural questions recorded") are pure judgment
+    -- no locator exists for either.
+
+    `packets.c1` ("touched packets reflect current code") and
+    `index-overlays.c1` ("index and overlays consistent with packets") are
+    the two WEAK candidates this gate's own handoff named explicitly: a
+    git-diff-based "something under docs/architecture/ changed" proxy would
+    verify motion, not correctness -- it would falsely pass a stale map if
+    something ELSE under that path happened to change in the same commit,
+    which is not a hypothetical boundary case but the exact shape of this
+    run's own map state. This run's own MISSION_FRAME.md records the map as
+    DEGRADED-UNPARSEABLE repo-wide (`docs/architecture/` empty, no citable
+    anchor ids) -- this gate's own CRITICAL constraint bars any promoted
+    check from depending on map state this repo cannot currently produce,
+    which independently forecloses either candidate even setting the
+    locator-ambiguity finding aside. Both stay `check: null`, honestly,
+    rather than shipping a decorative check that cannot discriminate a
+    stale map from a merely-busy one.
+
+    This class exists to PIN the zero-promotion decision against future
+    drift (the same discipline every promoting class in this file applies
+    to its own declined candidates), even though no file edit accompanies
+    it -- `.agent-work/templates/CARTOGRAPHER.template.json` is therefore
+    NOT touched either, per this gate's own Close Criteria ('only sync the
+    ones you actually edit').
+
+    Pin PINNED_HEAD via `git rev-parse HEAD` captured at implementation
+    time, `skipTest` (never fail) if HEAD has since moved past it."""
+
+    SPINE = ROOT / "skills" / "cartographer" / "templates" / "CARTOGRAPHER.template.json"
+
+    PINNED_HEAD = "d73c6b9ac42c47140187efc075ac68a4af68b2cf"
+
+    def _skip_if_head_moved(self):
+        import subprocess
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=str(ROOT),
+            capture_output=True, text=True, encoding="utf-8",
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        head = out.stdout.strip()
+        if head != self.PINNED_HEAD:
+            self.skipTest(
+                f"pinned to shipped revision {self.PINNED_HEAD}, HEAD is now "
+                f"{head} -- this test's assumptions about the template's "
+                "shape need re-verifying against the current HEAD before "
+                "they can be trusted, not silently re-run against drift"
+            )
+
+    def test_every_condition_stays_null(self):
+        self._skip_if_head_moved()
+        cl = json.loads(self.SPINE.read_text(encoding="utf-8"))
+        nonnull = []
+        for tid, t in cl["tasks"].items():
+            for which in ("preconditions", "postconditions"):
+                for c in t.get(which) or []:
+                    if c.get("check") is not None:
+                        nonnull.append((tid, c["id"]))
+        self.assertEqual(
+            nonnull, [],
+            "CARTOGRAPHER.template.json measured zero eligible promotions "
+            "this gate -- any non-null check here means either an "
+            "unrecorded edit or drift onto a condition this gate declined",
+        )
