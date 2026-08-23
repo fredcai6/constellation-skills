@@ -126,6 +126,15 @@ checked directly: that script verifies COMMANDER's OWN `execute` step's run-pack
 fact to "did this specific gate's artifact arrive," which is already gate-order-guaranteed anyway.
 That speculative reuse does not apply; drop it when authoring execute.json.
 
+### g2-execute-plan gate closeout — re-verified fresh at this gate (post-g1 commit)
+Re-ran the 4-condition scan directly against `skills/commander/templates/EXECUTE_PLAN.template.json`
+at this gate's own HEAD (post-g1-commit `ff8e9640`): `e0-context.c1`, `g1-implement.p1`,
+`g1-review.p1`, `g1-integrate.p1` all still `check: null`, matching the earlier hand-assessment
+exactly. **Confirmed 0/4 (0%) bucket-2 — no promotion, no file edit.** Per the Honest-Null Clause
+this is the correct, pre-sanctioned outcome for this template's shape (thin gate-order scaffolding
++ one literal unfilled template placeholder, no artifact-producing claims). Assessed-vs-promoted:
+4 assessed, 0 promoted.
+
 ### IMPLEMENTER_PLAN.template.json — full fresh assessment (raw JSON read, this run): 0/3 bucket-2
 - `m0-context.c1` "crew context + glossary + handoff loaded; handoff complete" — judgment. Bucket 1.
 - `m1.p1` "context loaded and handoff complete" — gate-order-guaranteed against `m0-context.c1`.
@@ -330,3 +339,155 @@ each per-template gate). Cold critic dispatched over the converged plan, in prog
   section), it is authored directly by the Commander agent in its own context at the `plan` step,
   copy-and-fill from the template. This constraint in g3 does not apply and should be dropped when
   execute.json is authored, not carried forward as dead weight.
+
+## Per-gate outcomes (actual promoted vs. assessed, recorded as each gate closes)
+
+- **g1 — COMMANDER_SPINE.template.json** (commit `ff8e9640`): assessed 19, promoted **8**
+  (`init.c1`, `plan.c1`, `plan.c2`[existence-only], `plan.c4`[partial], `plan.c5`[partial],
+  `reconcile.c1`, `archive.c2`, `archive.c3`) = 42%, matching the predicted 9/19 within tolerance
+  (one condition — `archive.c3` — settled borderline-yes where w2-basis had called it
+  "borderline"). All 8 shipped blocking (`decision:blocking-where-adjudicated`, adjudication in
+  hand). Reviewer verdict APPROVE, independently reproduced every claim. No material-exception
+  float triggered — the baseline template itself, confirmatory not a new finding per
+  `PLAN_ALTERNATIVES.md`.
+
+- **g3 — ADMIRAL_SPINE.template.json** (commit `44180fe0`): assessed 4 candidates of 10 null,
+  promoted **3** (`init.c2`, `latitude.c1`, `execute.c2`) = 30% of the full 10, at the low edge of
+  the predicted [30%,65%] band but *inside* it. `closeout.c4` honestly declined — no stable,
+  pinnable archive-destination path exists at spine-authoring time (wall-clock-keyed directory
+  name, plus a `/`→`-` work_id transform the placeholder resolver never performs). All 3 shipped
+  blocking (each reuses a `command`-kind already live in this same file). Reviewer verdict APPROVE,
+  independently reproduced every claim including the `closeout.c4` decline. No all-null gate
+  cleared (each touched gate already had a non-null sibling), so `test_validate_spine.py`'s floor
+  needed no numeric change.
+
+- **g4 — EXPLORER_SPINE.template.json** (uncommitted at time of writing, review APPROVE): assessed
+  4 candidates of 10 null, promoted **3** (`init.c2` full; `context.c1`/`spec.c1` SPLIT,
+  existence-only) = 30% of the full 10, at the low edge of the [30%,65%] band but inside it.
+  `route.c1` honestly declined — no per-outcome routing artifact exists to discriminate the 3 named
+  routing outcomes (handed-off/issue-filed/shelved), confirmed independently by both the
+  implementer and the reviewer. All 3 shipped blocking (reuse of `command`-kind already live in
+  this file: `init.c1`, `explore.c2`, `review.c1`, `confirm.c2/c3`). `context`/`spec` each carried
+  exactly one postcondition, so promoting them cleared 2 all-null gates —
+  `falsifiable-all-null` corpus count dropped 17→15, `test_validate_spine.py`'s floor message
+  updated in the same edit (numeric floor `>=15` held, no loosening needed).
+  **Process note (material to workflow feedback, not to the bucket partition):** the implementer's
+  first pass violated `decision:no-basis-backfill` by adding `basis` objects to the two SPLIT
+  conditions, citing an out-of-wave precedent (COMMANDER_SPINE's own pre-existing `plan.c2/c4/c5`,
+  authored before this wave's pre-rulings existed). Caught and corrected by the Commander before
+  review; the reviewer then independently re-derived the correctness of that correction by reading
+  the actual pre-ruling text (`MISSION_FRAME.md`'s Out of Scope section) rather than trusting the
+  Commander's read. This is the wave's first live test of `decision:no-basis-backfill` under real
+  promotion pressure — worth flagging in RESULT.md's workflow-feedback section as a place a
+  well-specified handoff still wasn't enough to prevent a plausible-looking precedent from being
+  misapplied across a decision boundary the implementer wasn't tracking.
+
+- **g5 — CHARTER.template.json** (uncommitted at time of writing, review APPROVE): assessed 3
+  candidates of 10 null, promoted **1** (`project-templates.c1`, full artifact enum-match mirroring
+  COMMANDER's `plan.c1`) = 10% of the full 10, below the [30%,65%] band — matching CHARTER's own
+  earlier hand-assessment (~1-3/10) and the broader "thin scaffolding vs. rich orchestrator spine"
+  structural pattern already noted for EXECUTE_PLAN/IMPLEMENTER_PLAN/SCOUT. `closeout.c1` honestly
+  declined (same wall-clock-keyed archive-path defect as g3's `closeout.c4`, independently
+  re-verified by the reviewer against `spine_lifecycle.py` directly). `interrogate.c1` honestly
+  declined: a real candidate verifier (`verify_interrogation.py`) exists but the cross-skill
+  `<ROLE-skill-dir>` placeholder resolver and `install_constellation.py`'s per-skill manifest don't
+  actually wire it to `"charter"` — promoting it would have shipped a check that silently breaks in
+  an installed repo (flagged as a triage candidate: wire `verify_interrogation.py` into charter's
+  install manifest as a separate, future fix). `project-templates` had exactly one postcondition,
+  so promoting it cleared 1 all-null gate — floor updated 15→14. This gate's implementer produced a
+  clean diff with no `basis`-field violation (unlike g4), and its reviewer caught and
+  self-recovered from a near-miss `git checkout` on the uncommitted file — independently
+  re-verified byte-identical and suite-green by the Commander before acceptance.
+  **Material-exception note**: this is the second consecutive template (after g4, itself borderline
+  at 30%) landing below the predicted band — CHARTER at 10% is now the clearest single data point
+  yet for the "rich top-level spine vs. thin/once-per-repo scaffolding" structural split first
+  flagged in the pre-execute hand-assessment. Not a stop-and-float trigger on its own (the
+  Honest-Null Clause pre-sanctions "far fewer than predicted," and this gate's own reasoning
+  — CHARTER runs once per repo, bootstrap-only — was named as a plausible driver before the gate
+  even ran); recorded here as reinforcing evidence for RESULT.md's corpus-wide summary.
+
+- **g6 — IMPLEMENTER_PLAN.template.json — re-verified fresh at this gate**: re-read the real
+  shipped `skills/implementer/templates/IMPLEMENTER_PLAN.template.json` directly (not carried over):
+  `m0-context.c1`, `m1.p1`, `m1.c1` are all still `check: null`, matching the earlier hand-assessment
+  exactly — no locator missed. `m1.c2` already carries a real `command`-kind check (its `command`
+  field holds the literal unfilled placeholder `"<exact test command>"`, filled per-run by each
+  Commander at plan time, not a `check: null` condition in the shipped template's own right — same
+  disposition as EXECUTE_PLAN's `g1-implement.p1` placeholder). Confirmed 0/3 bucket-2, no file edit.
+
+- **g6 — IMPLEMENTER_PLAN.template.json** (reasoning gate, no file edit, no crew dispatch):
+  assessed 3, promoted **0** (0%). `m0-context.c1` is pure judgment (no locator). `m1.p1` is
+  gate-order-guaranteed against `m0-context.c1`. `m1.c1` is *self-declared* unpromotable in its own
+  shipped statement text — "check MUST be null so the engine does not run the by-design-failing
+  test" — a TDD-red condition where a real check would refuse the gate exactly when the run is
+  behaving correctly. This is not a judgment call at all, unlike every other bucket-1 finding in
+  this survey; it is the one condition in the entire ~65-condition corpus where promotion would be
+  actively wrong, not merely unavailable. Matches the pre-execute hand-assessment exactly (0/3,
+  confirmed fresh against the real shipped JSON at this gate's own HEAD, no drift). A clean, honest,
+  fully-expected zero — the smallest and most structurally distinct template in the corpus (a
+  "child plan" shape, not a top-level orchestrator spine), consistent with EXECUTE_PLAN's own
+  earlier 0/4.
+
+- **g7 — CARTOGRAPHER.template.json + SCOUT.template.json** (commit `450dca6d`, reviewer APPROVE):
+  assessed 5 candidates across 2 files (4 in CARTOGRAPHER, 1 candidate in SCOUT beyond the two pure
+  judgment ones — `report.c1`), promoted **1** (SCOUT's `report.c1`, existence+nonempty half only,
+  command-kind, **report-only** — first live check kind in either file, per
+  `decision:blocking-where-adjudicated`'s own default reversal for a first-use file). CARTOGRAPHER
+  0/4 (0%): `context.c1`/`map-compliance.c1` pure judgment; `packets.c1`/`index-overlays.c1`
+  declined as locator-ambiguous, independently foreclosed by this run's own DEGRADED-UNPARSEABLE map
+  state (`docs/architecture/generated/map.json`'s `findings`/`nodes`/`relationships` all empty,
+  confirmed by both implementer and reviewer). SCOUT's remaining candidates (`context.c1`/`audit.c1`)
+  stayed judgment — both files well below the [30%,65%] band, reinforcing the same "thin/report-
+  focused scaffolding" structural pattern already seen in EXECUTE_PLAN/IMPLEMENTER_PLAN/CHARTER.
+  Promoting `report.c1` cleared 1 all-null gate — floor updated 14→13. Reviewer independently
+  executed the promoted shell command against missing/empty/populated fixtures (not just read it),
+  confirmed genuine `-s`-boundary discrimination while never blocking `advance`, and independently
+  re-derived the CARTOGRAPHER decline and the zero-live-check-kinds premise from `git show HEAD:...`
+  directly. No `basis` field added. The `map_check_note` field (documented, template-only,
+  read-by-no-code, `docs/CHECKLIST_SCHEMA.md:196`) was used to record the report-only promotion
+  trigger — a legitimate, precedented home (`COMMANDER_SPINE.template.json`'s own `context`/`plan`
+  steps already use it), independently verified real by the reviewer rather than accepted on the
+  implementer's say-so.
+
+## g8 — validate_spine.py wiring decision + docs reconciliation (reasoning gate, no crew dispatch)
+
+Fresh post-promotion fault count (re-measured this gate, `discover_checklist_templates` sweep +
+`python3 -m pytest tests/test_validate_spine.py -q`): **13 `falsifiable-all-null` + 2
+`falsifiable-unresolved-placeholder`**, 103 tests passing. Matches the floor `tests/test_validate_spine.py`
+already carries post-g7 exactly (14→13 tracked gate-by-gate through g1/g4/g5/g7; g3 cleared none).
+Per-template fault distribution confirmed: CARTOGRAPHER (4 all-null, unchanged — 0 promotions this
+wave), CHARTER (5 all-null, unchanged post-g5's 1 promotion), EXECUTE_PLAN (1 all-null + 1
+unresolved-placeholder — untouched, out of this lane's promotion scope, a template-authoring-bug
+defect class), IMPLEMENTER_PLAN (1 all-null + 1 unresolved-placeholder — untouched, same
+out-of-scope defect class, and `m1.c1`'s own all-null is the self-declared-unpromotable TDD-red
+condition, not a defect at all), SCOUT (2 all-null — `context`/`audit` gates, `report` cleared this
+wave).
+
+**Decision, self-adjudicated per this run's own authority (delegated mode, no reachable human this
+gate; recorded as a user-decision evidence item citing `decision:validate-spine-wiring-is-in-scope`
+rather than a synchronous Admiral round-trip, matching the disposition style already used at
+`g0-corpus-survey` for the material-exception float-note):**
+
+(a) **Floor is a confirmation, not a new wiring decision.** `tests/test_validate_spine.py`'s
+`falsifiable-all-null` floor was kept current gate-by-gate through the `FLOOR_UPDATE` discipline in
+g1/g4/g5/g7 (g3 needed no change, no all-null gate cleared). This gate's fresh 13-count matches the
+floor already shipped in the last commit exactly — no drift, nothing to fix.
+
+(b) **Declined to additionally tighten to zero-tolerance blocking** (the
+`TestShapeAcceptsEveryShippedTemplate`-style pattern) for `falsifiable-all-null` on this lane's 8
+templates. Reasoning: several of the 8 templates this lane touched (ADMIRAL_SPINE, CARTOGRAPHER,
+CHARTER, EXECUTE_PLAN, IMPLEMENTER_PLAN) still carry genuine, honestly-declined all-null gates by
+design — `m1.c1` (IMPLEMENTER_PLAN) is *self-declared* unpromotable, not a defect; a zero-tolerance
+assertion would either have to special-case it forever or falsely flag a correct TDD-red discipline
+as a regression. A blanket zero-tolerance tighten also cannot land clean without also resolving the
+2 `falsifiable-unresolved-placeholder` faults (EXECUTE_PLAN `g1-integrate.c1`, IMPLEMENTER_PLAN
+`m1.c2` — both literal unfilled template placeholders, e.g. `"<exact test command>"`, filled
+per-run by each Commander at authoring time, not `check: null` conditions and a different defect
+class than this lane's promotion scope). Per this decision's own settle clause ("float rather than
+fix if [placeholder faults] would block that tightening"): **floated, not fixed** — filed as a
+triage candidate below rather than absorbed into this wave's scope.
+
+`docs/CHECK_SCRIPT_CENSUS.md`'s corpus-wide tallies (**17 live, 8 unwired, 1 dead**, 26 rows):
+confirmed unchanged. `grep -n "check_role_spine_bookends\|check_skill_freshness"
+skills/*/templates/*.json` returns zero matches — neither named unwired script was wired by g7 (or
+any gate this wave); no script's classification flipped, so the doc is explicitly confirmed
+current, not silently skipped.

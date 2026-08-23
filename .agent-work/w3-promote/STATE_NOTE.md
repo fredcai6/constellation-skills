@@ -1,25 +1,29 @@
 # Crash-resume state note — w3-promote
 
-- **step:** execute · gate g0-corpus-survey (execute.json's first task, not yet started -- `plan` is complete, `execute` is `pending` with a refresh-request attached)
+- **step:** execute · gate g9-integrate, final step (g0 through g8 all complete; g1/g3/g4/g5/g7
+  committed and integrated — every gate that promotes a check landed, reviewed APPROVE, suite
+  green after each commit; g6 and g8 are reasoning gates, both closed with no file edit; g9 is
+  commit-remaining-notes, final `python3 -m pytest -q`, open PR, write RESULT.md)
 - **slug:** w3-promote · branch epic-569/w3-promote · worktree /home/tommy/projects/569-w3-promote
-- **next command:** call `spine_status` to read `current`, then `spine_start execute` (attest p1 fresh -- context headroom + skill reload -- once real, then satisfy p2 by re-running this note fresh with the new PID), then drive `.agent-work/w3-promote/execute.json` gate by gate per `templates/EXECUTE_PLAN.template.json`'s shape, starting at `g0-corpus-survey` (a reasoning gate, no crew dispatch).
-- **pid:** none — foreground, no detached process was ever launched this run
-- **expected artifact:** `.agent-work/w3-promote/execute.json` (already authored, 20 tasks / 10 conceptual gates) driven to terminal `complete` on every task; then `.agent-work/w3-promote/RESULT.md`
+- **next command:** commit this STATE_NOTE.md + execute.json + notes-1.md + the 3 tracked
+  crew-handoff files together, run `python3 -m pytest -q` fresh after that commit, open the PR
+  (server-side-merge, do not merge), write `.agent-work/w3-promote/RESULT.md` per the launch
+  order's Return Shape, then `advance g9-integrate` to terminal `complete`.
+- **pid:** none — foreground
+- **expected artifact:** `.agent-work/w3-promote/execute.json` driven to terminal `complete` on
+  every task; then `.agent-work/w3-promote/RESULT.md`
 
-_Updated: 2026-08-22 (this run's `plan` gate close)_
+_Updated: 2026-08-23T08:20:00-07:00_
 
 ## Handoff context for the resuming agent
 
-`plan` closed clean. `execute.json` is fully authored (`.agent-work/w3-promote/execute.json`),
-incorporating all 8 `PLAN_CRITIC.md` findings (see its "Commander Triage" section). `notes-1.md`
-already carries a fresh hand-assessment for all 8 templates' bucket splits -- `g0-corpus-survey`'s
-job is to VERIFY that assessment fresh against the real JSON (not re-derive from scratch) for the
-7 non-COMMANDER_SPINE templates; COMMANDER_SPINE's own 19-condition table is `g1`'s sole ownership
-(already drafted in notes-1.md under "g0 survey table — COMMANDER_SPINE", which is really g1's
-table per the critic's finding 5 — the heading is stale, the content is correct).
-
-Two REFRESH REQUESTED trip events fired this run (`plan` and now `execute`), both against the
-engine's context-fill gauge (HARD band), not against any blocker in the work itself — this is
-context exhaustion from a long single-session drive through init→context→understand→plan, not a
-stuck run. Cold-start from `spine_status`'s `current` output alone; this note plus notes-1.md plus
-execute.json carry everything else.
+All promotion gates are closed: g1 (COMMANDER_SPINE, 8/19), g3 (ADMIRAL_SPINE, 3/10), g4
+(EXPLORER_SPINE, 3/10), g5 (CHARTER, 1/10), g6 (IMPLEMENTER_PLAN, 0/3, reasoning-only honest-null),
+g7 (SCOUT 1/3 promoted + CARTOGRAPHER 0/4, first report-only promotion of the wave), g8
+(validate_spine.py wiring — floor confirmed current, no new tightening this wave, floated as
+triage). Two real defects were caught and corrected mid-wave: g4's implementer first pass violated
+`decision:no-basis-backfill` (caught before review); a g5 reviewer's own `git checkout --` near-miss
+reverted the uncommitted file to pre-gate HEAD (self-caught, restored, Commander re-verified
+byte-identical). `notes-1.md` carries the full per-template bucket assessment and per-gate outcomes
+— read it before re-deriving anything. Only g9 remains: commit the tracked `.agent-work/w3-promote/`
+process files, final suite, PR, RESULT.md.

@@ -347,7 +347,8 @@
           "id": "p1",
           "statement": "g1 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1 complete"
         }
       ],
       "postconditions": [
@@ -355,7 +356,8 @@
           "id": "c1",
           "statement": "EXECUTE_PLAN.template.json's 4 conditions each carry a fresh-verified bucket with reason in notes-1.md; assessed-vs-promoted count stated explicitly even if 0 promoted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Re-verified fresh: 4 conditions assessed, 0/4 bucket-2, no file edit. Recorded in notes-1.md's g2-execute-plan section."
         }
       ],
       "constraints": [
@@ -378,7 +380,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -394,7 +396,8 @@
           "id": "p1",
           "statement": "g2 complete; g1's init.c1 seam decision available to cite",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2 complete; g1's init.c1 seam decision available (committed)"
         }
       ],
       "postconditions": [
@@ -408,7 +411,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
         }
       ],
       "constraints": [
@@ -437,11 +441,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/w3-promote/crew-handoffs/g3-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-review": {
@@ -453,7 +468,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3-implement complete: implementer-result attached (status=complete), 3/4 conditions promoted with command-kind checks, red-proof class added, full suite green (642 passed 13 skipped), overlay byte-identical"
         }
       ],
       "postconditions": [
@@ -464,7 +480,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
         }
       ],
       "constraints": [],
@@ -473,11 +490,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w3-promote/crew-handoffs/g3-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -489,7 +517,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3-review complete: verdict APPROVE, independently reproduced by reviewer, no blockers"
         }
       ],
       "postconditions": [
@@ -500,7 +529,8 @@
             "kind": "command",
             "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
         },
         {
           "id": "c2",
@@ -512,18 +542,41 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
         }
       ],
       "constraints": [],
       "anchors": null,
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "44180fe09c0357a7c2ffcefcaeea378b6e9ccecd"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-implement": {
@@ -535,7 +588,8 @@
           "id": "p1",
           "statement": "g3 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3 complete and integrated (commit 44180fe0)"
         }
       ],
       "postconditions": [
@@ -549,7 +603,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
         }
       ],
       "constraints": [
@@ -577,11 +632,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/w3-promote/crew-handoffs/g4-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-review": {
@@ -593,7 +659,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g4-implement complete: 3/4 promoted, route.c1 honestly null, Commander corrected a basis-field policy violation before advancing, suite green"
         }
       ],
       "postconditions": [
@@ -604,7 +671,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
         }
       ],
       "constraints": [],
@@ -613,11 +681,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w3-promote/crew-handoffs/g4-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-integrate": {
@@ -629,7 +708,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g4-review complete: verdict APPROVE, independently reproduced including basis-field correction re-check"
         }
       ],
       "postconditions": [
@@ -640,7 +720,8 @@
             "kind": "command",
             "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
         },
         {
           "id": "c2",
@@ -652,18 +733,41 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
         }
       ],
       "constraints": [],
       "anchors": null,
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "442a5826e23f3259bdfd3f92d301188c693b1b5e"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g5-implement": {
@@ -675,7 +779,8 @@
           "id": "p1",
           "statement": "g4 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g4 complete and integrated (commit 442a5826)"
         }
       ],
       "postconditions": [
@@ -689,7 +794,8 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1"
         }
       ],
       "constraints": [
@@ -716,11 +822,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/w3-promote/crew-handoffs/g5-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g5-review": {
@@ -732,7 +849,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g5-implement complete: 1/3 promoted (project-templates.c1), closeout.c1/interrogate.c1 honestly null, floor updated 15->14, suite green"
         }
       ],
       "postconditions": [
@@ -743,7 +861,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1"
         }
       ],
       "constraints": [],
@@ -752,11 +871,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w3-promote/crew-handoffs/g5-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g5-integrate": {
@@ -768,7 +898,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g5-review complete: verdict APPROVE, independently reproduced including recovery re-check after a near-miss git checkout"
         }
       ],
       "postconditions": [
@@ -779,7 +910,8 @@
             "kind": "command",
             "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-2"
         },
         {
           "id": "c2",
@@ -791,18 +923,45 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1",
+          "attested": {
+            "evidence": "e-g5-integrate-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "anchors": null,
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "d73c6b9a"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g6-implementer-plan": {
@@ -814,7 +973,8 @@
           "id": "p1",
           "statement": "g5 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -822,7 +982,8 @@
           "id": "c1",
           "statement": "IMPLEMENTER_PLAN.template.json's 3 conditions each carry a fresh-verified bucket with reason in notes-1.md; assessed-vs-promoted count stated explicitly",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "constraints": [
@@ -843,7 +1004,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -859,7 +1020,8 @@
           "id": "p1",
           "statement": "g6 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -873,7 +1035,12 @@
               "status": "complete"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g7-implement-1",
+          "attested": {
+            "evidence": "e-g7-implement-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -904,11 +1071,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g7-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "path": ".agent-work/w3-promote/crew-handoffs/g7-implementer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g7-review": {
@@ -920,7 +1098,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -931,7 +1110,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g7-review-1",
+          "attested": {
+            "evidence": "e-g7-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
@@ -940,11 +1124,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g7-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "450dca6d"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g7-integrate": {
@@ -956,7 +1151,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -967,7 +1163,8 @@
             "kind": "command",
             "command": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g7-integrate-2"
         },
         {
           "id": "c2",
@@ -979,18 +1176,45 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g7-integrate-1",
+          "attested": {
+            "evidence": "e-g7-integrate-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "anchors": null,
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g7-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "commit": "450dca6d"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 -m pytest tests/test_checklist_engine.py tests/test_validate_spine.py -q && python3 scripts/check_template_overlay_freshness.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g8-validate-spine-wiring-and-docs": {
@@ -1002,7 +1226,8 @@
           "id": "p1",
           "statement": "g7 complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -1016,19 +1241,26 @@
               "cite": "decision:validate-spine-wiring-is-in-scope"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g8-validate-spine-wiring-and-docs-1",
+          "attested": {
+            "evidence": "e-g8-validate-spine-wiring-and-docs-1",
+            "note": null
+          }
         },
         {
           "id": "c2",
           "statement": "docs/CHECK_SCRIPT_CENSUS.md's corpus-wide tallies match the post-run state (updated if any script's wiring flipped, explicitly confirmed unchanged if not)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "docs/CHECK_SCRIPT_CENSUS.md 17 live/8 unwired/1 dead confirmed unchanged -- grep for check_role_spine_bookends/check_skill_freshness in all shipped templates returns zero matches, no script's wiring classification flipped this wave"
         },
         {
           "id": "c3",
           "statement": "any falsifiable-unresolved-placeholder faults outside this lane's promotion scope are filed as a triage candidate, not fixed or suppressed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "2 falsifiable-unresolved-placeholder faults (EXECUTE_PLAN g1-integrate.c1, IMPLEMENTER_PLAN m1.c2) are out of this lane's promotion scope -- filed as triage candidate for RESULT.md, not fixed or suppressed"
         }
       ],
       "constraints": [
@@ -1053,11 +1285,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g8-validate-spine-wiring-and-docs-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "decision:validate-spine-wiring-is-in-scope",
+            "decision": "floor already current gate-by-gate (13 falsifiable-all-null + 2 falsifiable-unresolved-placeholder measured fresh, matches shipped floor exactly); declined additional zero-tolerance tightening this wave -- floated as triage, not fixed, since it cannot land clean without resolving 2 out-of-scope placeholder faults (EXECUTE_PLAN g1-integrate.c1, IMPLEMENTER_PLAN m1.c2)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g9-integrate": {
@@ -1138,6 +1381,111 @@
       "why": "Verified side-effects against the world myself: overlay fresh (56/56), diff matches exactly expected 8 files, review verdict APPROVE with independently-reproduced evidence, full suite green. g1 (COMMANDER_SPINE promotion) fully closed.",
       "mechanical": false,
       "ts": "2026-08-23T00:30:03.936931+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-execute-plan",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-23T00:31:01.199486+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g3-implement",
+      "why": "3 of 4 candidate conditions promoted (command-kind, matching this template's own dominant kind); closeout.c4 honestly left null (no stable archive-path convention at authoring time, confirmed against spine_lifecycle.py's archive_name_for using wall-clock date + a slash-strip transform the placeholder resolver doesn't perform); red-proof class AdmiralSpineW3PromotePromotions added with adversary mutations; full suite green (642 passed, 13 skipped); overlay byte-identical; no validate_spine floor change triggered (no all-null gate cleared).",
+      "mechanical": false,
+      "ts": "2026-08-23T14:18:35.403910+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g3-review",
+      "why": "Reviewer independently re-derived every claim: pre-image command-kind eligibility, closeout.c4's left-null reasoning against spine_lifecycle.py/init_work_area.py source, all 6 red-proof tests genuinely adversarial and passing, full suite green, excluded files untouched. Verdict APPROVE, no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:23:13.546538+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-integrate",
+      "why": "Committed 44180fe0: 3 ADMIRAL_SPINE conditions promoted, closeout.c4 honestly left null, red-proof class added, suite green post-commit, overlay in sync, reviewer APPROVE independently reproduced.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:23:58.592797+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g4-implement",
+      "why": "3 of 4 candidate conditions promoted (init.c2 full command-kind, context.c1/spec.c1 existence-only splits); route.c1 honestly left null (no per-outcome routing artifact exists). Commander caught and fixed a decision:no-basis-backfill violation (implementer had added basis objects, out of scope for this wave) before advancing; re-verified green after the fix (643 passed, 19 skipped). Corpus falsifiable-all-null dropped 17->15, floor message updated.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:33:10.034343+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g4-review",
+      "why": "Reviewer independently re-derived every claim including the basis-field correction (confirmed decision:no-basis-backfill bars the field categorically for this wave, not just bulk backfill, by reading MISSION_FRAME.md's Out of Scope section directly). falsifiable-all-null 17->15 drop independently reproduced via git stash. Full suite reproduced green. Verdict APPROVE, no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:39:53.116691+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-integrate",
+      "why": "Committed 442a5826: 3 EXPLORER_SPINE conditions promoted, route.c1 honestly left null, a real decision:no-basis-backfill violation was caught and fixed before review, red-proof class added, full suite green post-commit (3736 passed, 25 skipped), map rebuilt, overlay in sync, reviewer APPROVE independently reproduced including the basis-field correction re-check.",
+      "mechanical": false,
+      "ts": "2026-08-23T14:49:14.019813+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g5-implement",
+      "why": "1 of 3 candidates promoted (project-templates.c1, full artifact enum-match mirroring COMMANDER's plan.c1). closeout.c1 honestly left null (same wall-clock archive-path defect g3 already declined). interrogate.c1 honestly left null (verify_interrogation.py exists but the cross-skill <ROLE-skill-dir> resolver and install manifest don't actually wire it to charter -- would silently break in an installed repo). No basis-field violation this time. floor updated 15->14 (a genuine all-null gate cleared). Full suite green (641 passed, 26 skipped).",
+      "mechanical": false,
+      "ts": "2026-08-23T14:58:10.526462+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g5-review",
+      "why": "Reviewer independently re-derived every claim including both honest-null dispositions by reading the actual source (spine_lifecycle.py, init_work_area.py, install_constellation.py). falsifiable-all-null 15->14 drop independently reproduced via git stash. A near-miss occurred (reviewer's own git checkout -- reverted the uncommitted file to pre-g5 HEAD while testing a mutation) and was self-caught and restored; Commander independently re-verified the restored diff is byte-identical to the pre-review state and the full suite is still green before accepting this result. Verdict APPROVE, no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-23T15:03:27.118815+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g5-integrate",
+      "why": "Suite green post-commit (3734 passed, 32 skipped, 1276 subtests, exit 0), overlay clean (56/56), reviewer verdict APPROVE independently re-derived. commit d73c6b9a.",
+      "mechanical": false,
+      "ts": "2026-08-23T16:25:06.310013+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g6-implementer-plan",
+      "why": "Fresh re-verification against real shipped IMPLEMENTER_PLAN.template.json confirms 0/3 bucket-2 (assessed 3, promoted 0): m0-context.c1 pure judgment (no locator); m1.p1 gate-order-guaranteed against m0-context.c1; m1.c1 self-declares unpromotable in its own statement text (TDD-red condition, a command check would refuse the gate exactly when the run is correct). Matches earlier hand-assessment exactly, no drift. Honest zero recorded in notes-1.md, no file edit made.",
+      "mechanical": false,
+      "ts": "2026-08-23T16:25:31.284562+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g7-implement",
+      "why": "Implementer verified: SCOUT report.c1 promoted to command-kind report-only (always exits 0, first use of any kind in file, named promotion trigger recorded in map_check_note per docs/CHECKLIST_SCHEMA.md precedent). CARTOGRAPHER 0/4 promoted, map DEGRADED-UNPARSEABLE forecloses packets.c1/index-overlays.c1. Independently re-verified: CARTOGRAPHER untouched (empty diff), SCOUT diff exactly 1 postcondition + map_check_note, overlay byte-identical, no basis field, validate_spine.py report gate cleared (14->13), test floor updated to match, PINNED_HEAD in new test classes matches actual HEAD (d73c6b9a), full targeted suite green (643 passed, 31 skipped, 148 subtests).",
+      "mechanical": false,
+      "ts": "2026-08-23T16:35:10.433470+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g7-review",
+      "why": "Independent reviewer verdict APPROVE, re-derived by execution not prose-trust: ran the promoted shell command against missing/empty/populated SCOUT_REPORT.md fixtures, confirmed exit-0-always with genuine -s (nonempty) discrimination; dumped git show HEAD check fields confirming zero live checks pre-edit in both files; confirmed map_check_note documented at CHECKLIST_SCHEMA.md:196 with precedent in COMMANDER_SPINE; confirmed CARTOGRAPHER decline via independent DEGRADED-UNPARSEABLE map read; re-ran falsifiable-all-null sweep via git stash confirming 14->13; full suite 643 passed/31 skipped green. No blockers. commit 450dca6d.",
+      "mechanical": false,
+      "ts": "2026-08-23T16:40:59.370279+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g7-integrate",
+      "why": "Suite green post-commit (636 passed, 38 skipped, 147 subtests, 0 failed; skip-count rise is the pinned-HEAD red-proof tests correctly skipTest-ing now that HEAD moved to 450dca6d, by design), overlay clean (56/56). Reviewer verdict APPROVE independently re-derived by execution. commit 450dca6d.",
+      "mechanical": false,
+      "ts": "2026-08-23T16:41:31.533390+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g8-validate-spine-wiring-and-docs",
+      "why": "Fresh post-promotion sweep: 13 falsifiable-all-null + 2 falsifiable-unresolved-placeholder, matches shipped floor exactly (no drift). Floor was kept current gate-by-gate through g1/g4/g5/g7's FLOOR_UPDATE discipline -- this gate is a confirmation, not a new wiring decision. Declined additional zero-tolerance tightening this wave: cannot land clean without resolving 2 out-of-scope placeholder faults (EXECUTE_PLAN g1-integrate.c1, IMPLEMENTER_PLAN m1.c2, a template-authoring-bug defect class different from check:null); floated as a triage candidate per the settle clause rather than fixed or absorbed into scope. docs/CHECK_SCRIPT_CENSUS.md's 17 live/8 unwired/1 dead tallies confirmed unchanged -- no script's wiring classification flipped this wave (grep for both named unwired scripts across all shipped templates: zero matches).",
+      "mechanical": false,
+      "ts": "2026-08-23T16:43:11.445641+00:00"
     }
   ]
 }
