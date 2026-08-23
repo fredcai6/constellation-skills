@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "closeout",
+  "mechanical": {
+    "run": "569",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "refusals": 5,
+    "spine-step": "closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-569-closeout@2017694eaefff20e5eeae3900d1a4a406094fc94",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "569",
+    "generated_at": "2026-08-23T19:56:10Z"
+  }
+}

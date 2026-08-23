@@ -1,0 +1,515 @@
+{
+  "work_id": "569",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/569/INTERROGATION_RECORD.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run epic 569, filed as a single defect family: attestation that cannot fail, a check:null condition satisfied by writing the word 'attested'."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The 15 unlaunched member issues would all be instances of that one family, and the waves would work through them."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Classifying all 14 unlaunched issues from their bodies rather than their titles split them 4 pure family-A, 4 pure family-B, 3 both, 2 family-C, 1 neither. Family B -- evidence true when taken and false when relied on -- was already filed SEVEN times and never named as a family. #376's own title says 'stale by construction'. #381 says 'the evidence was true and was about something else'. #221 bullet 1 pre-describes the Admiral's own wave-1 baseline error verbatim, with a drill attached, and had never been launched."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The epic ran two waves under a framing that named one of the three families it was actually hitting. The re-cut happened at the wave-2 checkpoint, so waves 1 and 2 were planned by work package rather than by defect family."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "A wave-2 checkpoint interrogation, 11 questions, driven through the engine and human-signed, produced the three-family model the epic closed on."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "docs/CHECK_SCRIPT_CENSUS.md",
+          ".agent-work/569/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Record a green baseline for wave 1's launch orders."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The suite figure in the human's own commit message would be an accurate baseline for the wave-1 base commit."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The recorded '3564 passed, green' was taken from a commit message and never run. The base 244665ee was ALREADY RED on map freshness. The false baseline propagated into both wave-1 launch orders and caused the Admiral to wrongly doubt a reviewer's correct verdict."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Two launch orders shipped with a wrong premise, and one reviewer's correct work was doubted on the strength of it. Corrected by measuring in a clean detached worktree and amending the merge gate."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Every subsequent baseline in the epic was measured in a fresh detached worktree at the exact SHA, never carried forward from a report -- including re-measuring main between the wave-2 checkpoint and the wave-3 dispatch when origin/main moved underneath."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/569/crew-handoffs/REVIEWER_HANDOFF-w1-wiring.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Dispatch wave 1's two commanders."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Dispatching through the harness Agent tool would be equivalent to the sanctioned run_crew.py launcher."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It was not. The lane w1-wiring ran with NO independent review at any gate: its plan-alternatives were self-authored, its 'cold' plan critic was itself, and its disposition gate had no reviewer. Every quality claim attached to that work was the author's own assertion about its own work -- and the work in question was a lint whose entire purpose is stopping checks that cannot fail from shipping."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "A dedicated clean-room reviewer pass had to be commissioned after the fact to close the gap, and three separate 'corpus defects' logged during the confusion were later retracted as Admiral error rather than real findings."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Wave 2 onward dispatched exclusively through run_crew.py with an explicit --spine and --parent. The clean-room reviewer verified all 19 allowlist entries individually rather than trusting the reason strings."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/569/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Merge reviewed, green, mergeable PRs to main."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A PR reported MERGEABLE by GitHub, carrying an independent reviewer's APPROVE with zero findings and a commander's correct suite report, would produce a green main."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Three separate times it did not. PR #645 merged clean at exit 0 and turned MapTreeFreshnessTests red. PR #657 carried six end-to-end tests that passed only while the code under test was uncommitted. A wave-3 merge went red on the episode-store guard from a lane whose only production change was 30 lines of CI YAML. In every case the defect existed on NEITHER PARENT."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Three red mains avoided. The cost is one full suite run per merge in a scratch worktree, roughly four minutes each."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Test-merge every PR into a fresh detached worktree at origin/main and run the full suite on the MERGE RESULT before merging -- never on the branch, never on a reported number."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".github/workflows/ci.yml",
+          "tests/test_repo_paths_are_portable.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Add one ubuntu-latest job so a red CI would carry information."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The Linux job would go green, Windows would stay red on known platform bugs, and that would be the whole result."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Looking at CI at all surfaced three defects hidden behind an uninformative red. Main was UN-CHECKOUTABLE on Windows -- 40 files committed under a literal .agent-work/<work-id>/ directory, git refusing < and >, so checkout died before any test ran. The end-to-end suite had NEVER passed in CI, because git rev-parse --git-common-dir returns a relative string in a plain checkout and an absolute path only in a linked worktree, and every developer and dispatched commander here runs from a worktree. The Skip guard step had never RUN, because the suite step failed ahead of it on every prior build."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Three real defects had been sitting behind a job that was red on 12 of 12 recent runs. CI had also already gone red on PR #645 reddening main, and that true verdict was discarded along with the noise."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Four follow-on fixes (#663, #664, #665) landed outside any lane under delegated fix-now triage. test-linux is now green on main, the first green CI job this repository has had."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "tests/test_code_map_precommit_e2e.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Diagnose why CI fails all seven end-to-end cases with rc=128 while they pass locally."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "actions/checkout's default depth-1 shallow clone would be breaking `git clone --bare`."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "That hypothesis was REFUTED by a local test: a --depth 1 clone can still be cloned bare, rc=0 both ways. Reading the actual CI stderr instead found the real cause -- `fatal: repository '.git' does not exist' -- from a relative --git-common-dir resolving against a scratch tmpdir. fetch-depth:0 turned out to be needed too, as a genuine SECOND cause: the fixture's pinned SHA is absent from a depth-1 clone."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Shipping the first hypothesis would have half-fixed the symptom while leaving the real cause in place, and would have attributed the fix to the wrong mechanism in the commit record."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Test the hypothesis locally before writing the fix. Both causes were then proved in CI's actual topology -- a plain full clone -- patched 7 passed, unpatched 7 failed."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "tests/test_checklist_engine.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Run wave 3's four lanes concurrently off one base, one lane repairing a skip-on-drift pattern and another promoting conditions."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The lane repairing skip-on-drift would stop the pattern spreading."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "w3-promote branched from the same base and copied the PRE-REPAIR pattern into six new test classes, citing in its own docstring the very class being repaired three worktrees away. All 35 of its assertions were inert on arrival. Concurrent lanes off one base do not see each other's fixes, and no launch order said so."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "35 assertions shipped dead and were only caught by the Admiral running the suite with -k and reading the skip count. A block-and-repair round trip followed."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Blocked the lane, wrote a repair order pointing it at the sibling branch's corrected form rather than its own worktree's stale copy, and verified both directions of the repaired guard personally rather than accepting the report."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "tests/test_checklist_engine.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Resolve the merge conflict between two lanes that both appended test classes to the same file."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "Stripping the conflict markers and keeping both sides would be a correct resolution for two independent additions."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It was not, twice. The first attempt left one lane's mutation battery trailing at the end of the file, where Python absorbed it into the WRONG CLASS -- so it mutated one template and ran another template's tests, which correctly did not care, and the red-proof asserted a non-zero exit and got 0. The fix for that landed the block INSIDE a module-level helper function, immediately after its return, making both methods unreachable. py_compile passed, the targeted run went green at 38, and two tests had silently stopped being collected."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "A check that disappeared with nothing going red -- the family-A shape, produced by the Admiral at merge time in the epic built to kill it."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Counted collected tests per class with --collect-only rather than reading the pass line. The class showed 3 where it should show 5."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/569/ADMIRAL_LOG.md",
+          "episodes/active/w3-ci-003.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Answer whether refresh-requests are load-bearing, the question deliberately left open at the wave-2 checkpoint to be measured across waves."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A wave-3-versus-wave-2 comparison of lanes that got real relaunches against lanes that worked over-band would settle it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "A single crew episode settled it earlier and more cheaply. w3-ci recorded spine_start refusing with 'context at 17% is at/over the hard limit' while actual fill was 17-18% -- far from exhausted -- driven up mainly by the roughly 600-word gate imperative being echoed back verbatim on nearly every engine tool call. The HARD band is an absolute token cap, not a share of the window, so on a large-window model it fires one gate into a run. Wave 2's eight unanswered refresh-requests were tripping a mis-calibrated gauge, not running out of room."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Wave 2 raised eight refresh-requests and the Admiral answered none, having polled gate counts and commit counts but never the one signal the doctrine says must be recognised. Nothing stranded, because the shipped launch-order text instructs attach-then-start-then-work -- the opposite flow from the reach-up doctrine."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Wave 3 polled for the REFRESH REQUESTED line and performed real relaunches. The band-calibration observation is carried forward rather than acted on inside this epic."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/569/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Judge whether a dispatched commander is alive, dead, or waiting."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The lease heartbeat surfaced by the engine's `current` verb would indicate liveness."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It does not. The spine-lease heartbeat advances only on engine verbs, so a commander doing long work between verbs reads as hours stale. On one occasion `current` reported 2h47m while the lane was committing every three minutes. The launcher registry's own heartbeat was current throughout. This exact instrument had already been identified and pinned as defective during wave 2, and was used anyway three more times."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Nearly killed a live commander mid-archive on that reading. Nothing was lost, because git log and file mtimes were checked before acting -- but the reasoning was wrong and would have destroyed work on a different day."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Judge liveness from the launcher registry heartbeat, git log, and file mtimes. Treat the spine heartbeat as a record of engine activity, which is what it is."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/569/ADMIRAL_LOG.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive the epic to completion without ending a turn while spine steps remain in progress."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The Admiral doctrine's explicit warning against ending a turn mid-execute would be enough to prevent it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It was not. Two consecutive turns ended on a statement of intent with no work behind it -- 'provisioning worktrees and writing the launch orders next' with nothing provisioned, and 'starting with the relaunch' with no relaunch. A lane sat idle 14h16m holding an unanswered refresh-request as a direct result. Both were caught by the human asking, neither by the Admiral noticing."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Roughly 14 hours of wall-clock lost on one lane, and two rounds of the human having to ask whether anything was running."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Act first and report after, rather than reporting a plan and ending the turn. Background watchers were later armed with exit conditions covering process death as well as success, because two of four attempts on one lane ended without producing a result artifact."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/569/transitions/w3-to-closeout/REPLAN_RESULT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Record the epic's measured changes in the wave-boundary replan packets."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The replan schema would be able to record a fixed-boundary change the human had already authorised in conversation."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It cannot. Any material_changes entry on intent_and_why, definition_of_done, good_enough, hard_constraints or fixed_decisions forces applicable=false plus a one-boundary escalation packet -- which REFUSES the launch -- because the schema models such a change as a delegate proposing upward. Four of the wave-2 checkpoint's changes were exactly that shape and had already been ruled on by the human."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The only way to proceed was to omit them from material_changes, which is precisely how a planning record loses the changes that matter most. They were recorded in the latitude contract, the packet's wave_review_comment, and the ADMIRAL_LOG instead."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Recorded the omission explicitly inside the packet's own wave review, so the gap is visible in the artifact rather than only in the log."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "569",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/569/ADMIRAL_LOG.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/569/interrogation.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive the wave-2 checkpoint interrogation through the engine as a child survey of the Admiral spine."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The Admiral spine would declare a child_checklist for the interrogation, so the MCP door could descend into it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "ADMIRAL_SPINE.template.json declares no child_checklist on any step, although its latitude step's imperative instructs the holder to load constellation-interrogator. rescope cannot add one -- it is not in the overwritable tuple and operates only on pending gates. Separately, checklist_engine.py's append() takes no `kind` parameter, so an appended survey question is untyped, while verify_interrogation.py requires a kind and validates the HAND-AUTHORED record rather than the engine-driven survey, with nothing binding the two together."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "The survey ran CLI-driven with an explicit --file rather than through the door. Both questions appended mid-run carry no kind in the survey file. An agent could drive a sloppy survey and transcribe a clean record."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Drove the survey via the CLI and hand-authored the record with kinds supplied, then red-proved the rail before relying on it -- planting an unsigned consolidation and a self-answered decision, both correctly refused at exit 1."
+        }
+      }
+    }
+  ]
+}

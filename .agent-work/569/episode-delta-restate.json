@@ -1,0 +1,19 @@
+{
+  "work_id": "569",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "569-007",
+      "assertion": "a5",
+      "statement": "The shallow-clone hypothesis was checked locally before any fix was written, and that check refuted it (rc=0 both ways). The CI stderr was then read directly, which produced the real cause. Both causes were afterwards proved in CI's actual topology -- a plain full clone -- where the patched file gave 7 passed and the unpatched file gave 7 failed in the same clone.",
+      "history": "Restated from an instruction to a future agent ('Test the hypothesis locally before writing the fix') into a record of what this run did. tests/test_episode_observations.py's imperative detector flagged the clause-leading 'Test' and was correct: an episode is a record, not a rule, and a rule for a future agent belongs in docs/agents/* as a human's call."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "569-011",
+      "assertion": "a5",
+      "statement": "Liveness was ultimately established from the launcher registry heartbeat, git log and file mtimes rather than from the spine heartbeat, and on the one occasion it mattered those sources showed the lane committing every three minutes while the spine heartbeat read 2h47m stale. The spine heartbeat is a record of engine-verb activity, which is what it measured accurately the whole time.",
+      "history": "Restated from advice to a future agent ('Judge liveness from... Treat the spine heartbeat as...') into a record of what this run observed. The imperative detector flagged clause-leading 'file' and 'Treat'; the flag was correct, since both sentences were prescriptions rather than observations."
+    }
+  ]
+}
