@@ -51,6 +51,13 @@ Graph-impact notes carried UP so Cartographer reconcile consumes durable context
 - Passing test observed: `<command/output>`
 - Refactor while green: `<yes/no>`
 
+## Repair responses
+For a repair, reference the latest review index and respond by the targeted finding IDs. Choose the change against the original task and constraints. Keep detailed evidence at its source; a response does not close a finding — the Reviewer records resolution. Omit for an initial implementation.
+
+| Finding ID | Response (addressed / unresolved / disputed) | Change or reason | Verification / counterevidence |
+| --- | --- | --- | --- |
+| `<F1>` | `<response>` | `<path/symbol or reason>` | `<command outcome and evidence pointer>` |
+
 ## Docs/contracts touched
 - `<path or none with reason>`
 

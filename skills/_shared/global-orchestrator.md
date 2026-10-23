@@ -122,7 +122,7 @@ last green run: `git rev-parse HEAD` matches the hash recorded with that green r
 --porcelain` is empty, AND the prior green output is pasted alongside the matched hash. Any tree change — a
 different HEAD or a dirty tree — voids the shortcut and forces a fresh run. This is doctrine and evidence
 shape only; no engine or script change. Tier-specific application (the engine-postcondition boundary at a
-Commander gate, wave-batched re-verify at an Admiral close) rides beside each caller.
+Commander engine-postcondition boundary, wave-batched re-verify at an Admiral close) rides beside each caller.
 
 ## Idle subagent adjudication
 
@@ -131,7 +131,7 @@ An idle subagent (`idle_notification`, `idleReason: available`) that has produce
 the idle signal alone: complete artifacts → integrate as if the verdict had arrived; silence plus
 incomplete or missing artifacts → *stalled*, rework or relaunch. This judges the **verdict**, not liveness:
 an idle/"completed" process may still resurrect, so confirm it dead before you reuse, sweep, or launch a
-continuation into its worktree. "The verdict is in the artifacts" is not "the process is gone."
+continuation into its worktree. "The verdict is in the artifacts" is not "the process is gone." A missing announcement does not invalidate an authored result, but a required result or verdict that is absent is incomplete delivery: recover or return it to its author, never infer technical approval from implementation files or green tests.
 
 **When you do judge liveness, measure it over the whole worktree — never over `.agent-work/<work-id>/`.**
 A commander at `reconcile` writes to the **source tree**, not to its workbench, so a workbench-only mtime

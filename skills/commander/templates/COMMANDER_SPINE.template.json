@@ -83,7 +83,7 @@
     "reconcile": {
       "id": "reconcile",
       "title": "Reconcile the map",
-      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture — this is the default path whenever a packet map exists. Where the run has no packet map (e.g. a skill-source repo with no docs/architecture map), reconcile the structural record directly instead: fold the change into the schema or design doc it actually touches, and where the change touched neither, record a reasoned no-op as compliant rather than blocking on an absent map.",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture — this is the default path whenever a packet map exists. Where the run has no packet map (e.g. a skill-source repo with no docs/architecture map), dispatch any required schema/design reconciliation to the responsible crew and integrate its evidence; if neither is touched, record the crew's reasoned no-op rather than blocking on an absent map.",
       "preconditions": [{"id": "p1", "statement": "execute complete", "check": null, "satisfied": false}],
       "postconditions": [{"id": "c1", "statement": "map reflects the implemented changes", "check": {"kind": "artifact", "evidence_type": "file-diff", "match": {"nonempty": true}}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,

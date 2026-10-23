@@ -103,6 +103,8 @@ Exact commands to run. Write `none — <reason>` if not applicable.
 Stop and return if: allowed scope must be exceeded, a specific exclusion must be touched, required evidence cannot be produced, a decision outside the given authority is needed.
 
 ## Required Inputs
+For a repair, name the latest review index and the targeted finding IDs. Preserve the task's operative scope, constraints and authority; the Implementer chooses the repair and returns responses by ID.
+
 `<optional — only the paths/artifacts the worker should read before work; omit if the handoff is self-sufficient>`
 
 ## Provenance

@@ -8,7 +8,7 @@ Omit optional sections when empty.
 
 A finished review uses Return status `complete`, including a finished BLOCK or COMMENT; `blocked` means the review could not be finished. Use APPROVE when required criteria are met; optional nonblocking suggestions may accompany it. Judge semantic equivalence, not literal repetition of source wording.
 
-> **Concise-authoring guidance:** Reference the implementation result and the task, plan, and source evidence you actually relied on by path rather than restating their content; you need not enumerate or reread every original document, and Provenance is cited only if you opened it. For routine passing checks, one line per check with check name, outcome, and evidence pointer is sufficient. Exception-focused: blockers and COMMENT findings retain trigger, evidence, impact, and repair criteria. Delta-only repairs reference prior findings by artifact path. Mandatory Workflow Feedback must name specific gaps or confirm none after explicitly checking — a bare `none` is rejected.
+> **Concise-authoring guidance:** Reference the implementation result and the task, plan, and source evidence you actually relied on by path rather than restating their content; you need not enumerate or reread every original document, and Provenance is cited only if you opened it. For routine passing checks, one line per check with check name, outcome, and evidence pointer is sufficient. Exception-focused: blockers and COMMENT findings retain trigger, evidence, impact, and repair criteria. Re-reviews reference prior findings by stable ID and original artifact path; carry the current index forward without repeating earlier narratives. Mandatory Workflow Feedback must name specific gaps or confirm none after explicitly checking — a bare `none` is rejected.
 > **No simplification of checks:** do not waive evidence, required fields, or authority verification. Required headings, status values, and Result verdict (APPROVE/BLOCK/COMMENT) are contractual and must not be omitted.
 
 ## Assigned Gate
@@ -43,11 +43,22 @@ BLOCK when graph-impact claims are materially wrong or missing for architecture-
 ## Reconciliation check
 `<docs/contracts/structural baseline concerns?>`
 
+## Finding index
+When findings exist in this or earlier rounds, this result is the current index for the gate. Keep the same IDs; link to each finding's original report/heading and the latest repair response, then record your independent check and disposition. Keep earlier results unchanged. Omit this section when the gate has no finding history.
+
+| ID | Kind (blocker / observation) | State (open / resolved) | Original finding | Repair / evidence | Reviewer check / reason |
+| --- | --- | --- | --- | --- | --- |
+| `<F1>` | `<kind>` | `<state>` | `<path#finding-id>` | `<response and evidence paths, or pending>` | `<independent outcome, limits or nonblocking reason>` |
+
 ## Blockers
-- `<blocker or none>`
+For each new blocker, use its stable ID as the heading and state the failure trigger, evidence location, impact on the intended outcome, and behavior/evidence required for resolution. On later rounds link to the original rather than repeating it. An unresolved or disputed blocker stays open until independently assessed.
+
+- `<ID + finding, or none>`
 
 ## Out-of-scope observations
-- `<finding for Commander or none>`
+Use the same stable IDs and finding fields for observations; explain why each does not block this scope and route it for triage when appropriate.
+
+- `<ID + finding for Commander or none>`
 
 ## Workflow Feedback
 Mandatory section. A `none` answer requires a run-specific reason: `none — confirmed after review: <what you checked>`; a bare `none` is treated as an unfilled field. This is workflow signal, not project signal: you are the only one who saw this friction — if you do not report it here, it is lost.

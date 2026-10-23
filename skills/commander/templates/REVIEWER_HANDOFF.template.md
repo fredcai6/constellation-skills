@@ -29,7 +29,7 @@ Check the handoff's Deliverable Path Check note before flagging an expected arti
 `<conditions required for APPROVE; each becomes a review check>`
 - `<criterion>`
 
-For a **doc-diet or register-rewrite** gate, a structural/JSON test suite does NOT guard prose invariants (pointer-name presence, forbidden-signature absence, meaning preservation). Make each of those an explicit per-gate grep the reviewer runs and the Commander re-runs; never read suite-green as assurance for them.
+For a **doc-diet or register-rewrite** gate, a structural/JSON test suite does NOT guard prose invariants (pointer-name presence, forbidden-signature absence, meaning preservation). Carry the operative invariants and selected source evidence; the Reviewer independently chooses and runs the checks, including required signature checks. Never read suite-green as assurance for meaning preservation.
 
 When the gate carries an expected transient failure set, scope it **by root cause** (the failing mechanism, wherever it surfaces — e.g. "the installer's discovery refusal, in any test whose setUp runs the installer"), never by file name alone, and reproduce the distribution yourself: a failure matching the named root cause outside the listed file is the waiver working, not a blocker; a failure outside the root-cause class is a BLOCK.
 
@@ -38,7 +38,7 @@ When the gate carries an expected transient failure set, scope it **by root caus
 
 ## Specific Exclusions
 `<anything that was off-limits; flag if touched>`
-An exclusion that references a path **outside the reviewer's own worktree** is **Commander-verified, not reviewer-verified** — the reviewer cannot inspect it, so it must NOT be a BLOCK finding on grounds of un-inspectability; note it and move on.
+For an exclusion outside the Reviewer's accessible worktree, supply evidence from an authorized role that can inspect it. The Reviewer records that evidence's provenance and limits; it does not claim direct verification it could not perform. If the exclusion is required and adequate evidence is unavailable, return the gap for routing rather than silently accepting it. The Commander obtains access or dispatches the responsible role; it does not become the technical verifier.
 
 ## Constraints the Implementation Must Respect
 `<rules inherited from the gate plan; each becomes a review check>`
@@ -63,16 +63,18 @@ When a gate requires evidence attached to or referenced by a specific engine pos
 `<simple bounded | stronger — reason: scope/ambiguity/risk>`
 
 ## Stop Conditions
-Stop and return BLOCK if: the diff cannot be accessed, evidence is absent or unverifiable, or a policy decision is required before a verdict is possible.
+Record failed criteria and absent/unverifiable evidence as findings; finish the remaining independent, permitted checks and consolidate BLOCK. Halt and report unfinished coverage when inaccessible context, the engine state or a required policy/authority decision prevents continued review. Never take an excluded action or waive a required check to continue. A finished BLOCK returns status `complete`; use `blocked` when the review itself could not be finished.
 
 ## Required Inputs
+For re-review, include the latest review result (the current finding index), implementation repair responses and the changed revision/diff. The Reviewer owns the full assessment and disposition; Commander leads do not limit the review.
+
 `<optional — selected source evidence paths the reviewer should read to check scope, sufficiency and omissions; omit if none>`
 
 ## Provenance
 `<optional — source artifacts for audit or conflict resolution. Not required reading and not authority; open only for ambiguity, conflict or missing evidence. Omit if none>`
 
 ## Result Artifact
-`<exact project-relative or absolute output path; normally .agent-work/<work-id>/crew-handoffs/<gate>-reviewer-result.md>`
+`<exact project-relative or absolute output path; normally .agent-work/<work-id>/crew-handoffs/<gate>-reviewer-result.md; use a fresh round path for re-review>`
 
 This file is the delivery. Put all task-specific instructions in this handoff or its referenced artifacts; the invocation only names this handoff. Do not send a second prose explanation of the assignment.
 

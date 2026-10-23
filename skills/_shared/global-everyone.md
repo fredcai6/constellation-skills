@@ -136,6 +136,8 @@ leftover). Treat every claim as a pointer to evidence you must independently rep
 reproduce is a defect, not an accepted fact.
 Your judgment rests on what you observed, never on what the report asserted.
 
+For Commander integration, allocate this verification by role: the Reviewer reproduces technical claims at their source and binds evidence to the reviewed revision/diff; the Commander verifies actual delivery, freshness, scope/revision bindings and required dispositions, and routes missing or conflicting technical evidence back to its owner. The Commander still verifies its own coordination claims at their source. This allocation preserves required checks and engine postconditions; it does not add a second Commander technical review.
+
 **The authoring-side twin: enumerate the blast radius of your own change.** The rule above is the
 consumer side — do not trust a claim someone hands you. This is the producer side, and it fails far more
 often: **before you call a change done, enumerate by command — never by memory — every artifact that
