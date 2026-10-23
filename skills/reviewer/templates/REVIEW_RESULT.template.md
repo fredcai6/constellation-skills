@@ -6,7 +6,9 @@ Status values follow `references/status-model.md`.
 
 Omit optional sections when empty.
 
-> **Concise-authoring guidance:** Reference the implementation result, task, and plan artifacts by path rather than restating their content. For routine passing checks, one line per check with check name, outcome, and evidence pointer is sufficient. Exception-focused: blockers and COMMENT findings retain trigger, evidence, impact, and repair criteria. Delta-only repairs reference prior findings by artifact path. Mandatory Workflow Feedback must name specific gaps or confirm none after explicitly checking — a bare `none` is rejected.
+A finished review uses Return status `complete`, including a finished BLOCK or COMMENT; `blocked` means the review could not be finished. Use APPROVE when required criteria are met; optional nonblocking suggestions may accompany it. Judge semantic equivalence, not literal repetition of source wording.
+
+> **Concise-authoring guidance:** Reference the implementation result and the task, plan, and source evidence you actually relied on by path rather than restating their content; you need not enumerate or reread every original document, and Provenance is cited only if you opened it. For routine passing checks, one line per check with check name, outcome, and evidence pointer is sufficient. Exception-focused: blockers and COMMENT findings retain trigger, evidence, impact, and repair criteria. Delta-only repairs reference prior findings by artifact path. Mandatory Workflow Feedback must name specific gaps or confirm none after explicitly checking — a bare `none` is rejected.
 > **No simplification of checks:** do not waive evidence, required fields, or authority verification. Required headings, status values, and Result verdict (APPROVE/BLOCK/COMMENT) are contractual and must not be omitted.
 
 ## Assigned Gate

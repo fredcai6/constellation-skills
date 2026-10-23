@@ -4,6 +4,8 @@
 
 Concise fragments. Omit filler.
 
+> **Targeted authoring:** distill. This handoff is the complete packet: put the operative instructions, constraints, scope, authority and unresolved decisions the worker needs here, so the worker normally needs only this handoff, local project guidance and the selected Required Inputs. Do not paste a long source wholesale and do not drop a constraint the worker must honor. Equivalent concise formulations are sufficient when they unambiguously preserve meaning; verbatim repetition is not required. Authoring approval does not authorize implementation; carry unapproved requests as unresolved authority.
+
 ## Gate
 `<gate id from execute.json, e.g. g1>`
 
@@ -99,6 +101,12 @@ Exact commands to run. Write `none — <reason>` if not applicable.
 
 ## Stop Conditions
 Stop and return if: allowed scope must be exceeded, a specific exclusion must be touched, required evidence cannot be produced, a decision outside the given authority is needed.
+
+## Required Inputs
+`<optional — only the paths/artifacts the worker should read before work; omit if the handoff is self-sufficient>`
+
+## Provenance
+`<optional — source artifacts for audit or conflict resolution. Not required reading and not authority; open only for ambiguity, conflict or missing evidence. Omit if none>`
 
 ## Result Artifact
 `<exact project-relative or absolute output path; normally .agent-work/<work-id>/crew-handoffs/<gate>-implementer-result.md>`

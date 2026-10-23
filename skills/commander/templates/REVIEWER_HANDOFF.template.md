@@ -4,6 +4,8 @@
 
 Concise fragments. Omit filler.
 
+> **Targeted authoring:** distill. This handoff is the complete packet: carry the operative scope, constraints and authority the reviewer must check against. Name the selected source evidence under Required Inputs so the reviewer can check scope, sufficiency and relevant omissions against it, not only against this handoff's own summary. Equivalent concise formulations are sufficient when they unambiguously preserve meaning; verbatim repetition is not required. Authoring approval does not authorize implementation; carry unapproved requests as unresolved authority.
+
 Backtick `<...>` placeholder strings in this handoff are **illustrative**; the **contractual** criteria a verdict rests on are the Close Criteria and the Constraints sections.
 
 ## Gate
@@ -62,6 +64,12 @@ When a gate requires evidence attached to or referenced by a specific engine pos
 
 ## Stop Conditions
 Stop and return BLOCK if: the diff cannot be accessed, evidence is absent or unverifiable, or a policy decision is required before a verdict is possible.
+
+## Required Inputs
+`<optional — selected source evidence paths the reviewer should read to check scope, sufficiency and omissions; omit if none>`
+
+## Provenance
+`<optional — source artifacts for audit or conflict resolution. Not required reading and not authority; open only for ambiguity, conflict or missing evidence. Omit if none>`
 
 ## Result Artifact
 `<exact project-relative or absolute output path; normally .agent-work/<work-id>/crew-handoffs/<gate>-reviewer-result.md>`
