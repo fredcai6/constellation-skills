@@ -20,6 +20,8 @@ A finished review uses Return status `complete`, including a finished BLOCK or C
 ## Handoff compliance
 `<assigned intent, scope, required evidence, stop conditions satisfied?>`
 
+Reference coverage of the handed-off objective and each required criterion: recorded assessment/check, evidence location and disposition, or an explicit not-checked reason. Reuse existing check IDs and survey/result artifacts rather than duplicating the survey. This lets the Commander verify review coverage and traceability while technical validity remains your responsibility.
+
 ## Scope drift
 `<Did implementation change only allowed scope? Any specific exclusions touched?>`
 
