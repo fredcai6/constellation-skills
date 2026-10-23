@@ -4,6 +4,8 @@
 
 Status values follow `references/status-model.md`.
 
+> **Concise-authoring guidance:** Reference existing task, plan, and authority artifacts by path rather than restating their content. For routine passing checks, one line per check with check name, outcome, and evidence pointer is sufficient. Exception-focused: findings, blocks, and partial outcomes retain trigger, evidence, impact, and repair criteria. Omit optional sections when empty. Mandatory Workflow Feedback must name specific gaps or confirm none after explicitly checking — a bare `none` is rejected.
+
 ## Assigned gate
 `<gate id/title>`
 

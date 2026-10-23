@@ -6,6 +6,9 @@ Status values follow `references/status-model.md`.
 
 Omit optional sections when empty.
 
+> **Concise-authoring guidance:** Reference the implementation result, task, and plan artifacts by path rather than restating their content. For routine passing checks, one line per check with check name, outcome, and evidence pointer is sufficient. Exception-focused: blockers and COMMENT findings retain trigger, evidence, impact, and repair criteria. Delta-only repairs reference prior findings by artifact path. Mandatory Workflow Feedback must name specific gaps or confirm none after explicitly checking — a bare `none` is rejected.
+> **No simplification of checks:** do not waive evidence, required fields, or authority verification. Required headings, status values, and Result verdict (APPROVE/BLOCK/COMMENT) are contractual and must not be omitted.
+
 ## Assigned Gate
 `<gate id/title>`
 
