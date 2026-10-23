@@ -76,3 +76,23 @@ python scripts/curate_corpus.py            # corpus health measurement
 python -m scripts.code_map build           # rebuild the code map under map/
 python scripts/build_architecture_map.py --root . --source-root src --check
 ```
+
+## Shared role behavior
+
+Commander, Implementer and Reviewer behavior is maintained in `skills/_shared/role-policy/`.
+`manifest.json` selects each role's full behavior and inherited sources for Pi. Native skill
+entrypoints load those same documents from bundled `references/role-policy/`; the installer
+ships their source bytes. Native workflow/bootstrap instructions are separate `*-native.md`
+references. `global-everyone.md` is now the native pointer to inherited behavior and native
+engine mechanisms. Tier doctrine remains in `_shared/global-crew.md` and
+`_shared/global-orchestrator.md`.
+
+Edit canonical behavior in place; do not copy it into adapter prompts. Pi records immutable
+whole-run contracts and retains historical prompt versions; future source edits reach fresh
+runs and freshly installed native bundles. Pi's four-stage controller does not execute every
+native workflow gate. An adapter capability limit does not waive behavior or authority.
+
+`role-policy/manifest.json` also declares each role's shared execution resources explicitly.
+Pi binds those declarations to source locations and checks they exist. Mentioning a target
+project or example filename in behavior prose never adds a shared dependency. A new required
+shared resource is declared here, without changing Pi behavioral prompts or its prose version.

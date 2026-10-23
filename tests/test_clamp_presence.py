@@ -22,9 +22,9 @@ FOUR_CLAUSE_KEYPHRASES = [
 ]
 
 FULL_CLAUSE_TARGETS = [
-    "skills/implementer/SKILL.md",
-    "skills/reviewer/SKILL.md",
-    "skills/commander/references/commander-core.md",
+    "skills/_shared/role-policy/implementer-native.md",
+    "skills/_shared/role-policy/reviewer-native.md",
+    "skills/_shared/role-policy/commander-native.md",
     "skills/admiral/SKILL.md",
     "skills/interrogator/SKILL.md",
 ]
@@ -77,14 +77,14 @@ def main() -> int:
         if not check_pointer_only(path):
             failures.append(f"{rel}: verbatim pointer-with-force sentence not found")
 
-    global_everyone = REPO / "skills/_shared/global-everyone.md"
+    global_everyone = REPO / "skills/_shared/role-policy/everyone-native.md"
     if not global_everyone.exists():
-        failures.append("skills/_shared/global-everyone.md: FILE NOT FOUND")
+        failures.append("skills/_shared/role-policy/everyone-native.md: FILE NOT FOUND")
     else:
         text = global_everyone.read_text(encoding="utf-8")
         if RAIL_CITATION_MARKER not in text:
             failures.append(
-                "skills/_shared/global-everyone.md: missing rail-canonicality citation"
+                "skills/_shared/role-policy/everyone-native.md: missing rail-canonicality citation"
             )
 
     if failures:

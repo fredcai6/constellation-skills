@@ -78,7 +78,7 @@ other and goes through the writer above.
 
 ## Editing The Skill Corpus
 
-Edit the canonical shared doctrine at `skills/_shared/global-*.md`. **Never** edit the
+Edit the canonical shared doctrine at `skills/_shared/global-*.md` and role behavior at `skills/_shared/role-policy/*.md`. **Never** edit the
 per-role copies under `skills/<role>/references/` — `scripts/install_constellation.py`
 regenerates those, so an edit there is silently reverted at the next install.
 

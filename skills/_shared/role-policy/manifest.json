@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "roles": {
+    "commander": [
+      "role-policy/everyone.md",
+      "global-orchestrator.md",
+      "role-policy/handoff.md",
+      "role-policy/commander.md"
+    ],
+    "implementer": [
+      "role-policy/everyone.md",
+      "global-crew.md",
+      "role-policy/handoff.md",
+      "role-policy/implementer.md"
+    ],
+    "reviewer": [
+      "role-policy/everyone.md",
+      "global-crew.md",
+      "role-policy/handoff.md",
+      "role-policy/reviewer.md"
+    ]
+  },
+  "resources": {
+    "commander": [
+      "../constellation-prototyper/templates/PROTOTYPE_HANDOFF.template.md",
+      "../constellation-prototyper/templates/PROTOTYPE_RESULT.template.md",
+      "../constellation-replan/templates/REPLAN_INPUT.template.json",
+      "../constellation-replan/templates/RUN_EVIDENCE.template.json",
+      "checklist_engine.py",
+      "design-it-twice-brief.md",
+      "global-crew.md",
+      "global-everyone.md",
+      "global-orchestrator.md",
+      "grade_lint.py",
+      "recover_crews.py",
+      "references/crew-dispatch.md",
+      "references/design-it-twice-brief.md",
+      "references/global-everyone.md",
+      "references/global-orchestrator.md",
+      "run_crew.py",
+      "scripts/grade_lint.py",
+      "scripts/run_crew.py",
+      "scripts/verify_iterative_role_artifacts.py",
+      "scripts/verify_spec_confirmed.py",
+      "skills/admiral/references/fleet-doctrine.md",
+      "templates/IMPLEMENTER_HANDOFF.template.md",
+      "templates/MISSION_FRAME.template.md",
+      "templates/REVIEWER_HANDOFF.template.md",
+      "windows.md"
+    ],
+    "implementer": [
+      "checklist_engine.py",
+      "global-everyone.md",
+      "global-orchestrator.md",
+      "grade_lint.py",
+      "references/checklist-engine.md",
+      "scripts/grade_lint.py",
+      "skills/admiral/references/fleet-doctrine.md",
+      "templates/IMPLEMENTER_PLAN.template.json",
+      "templates/IMPLEMENTER_RESULT.template.md",
+      "windows.md"
+    ],
+    "reviewer": [
+      "checklist_engine.py",
+      "global-everyone.md",
+      "global-orchestrator.md",
+      "grade_lint.py",
+      "references/checklist-engine.md",
+      "references/global-everyone.md",
+      "scripts/grade_lint.py",
+      "scripts/verify_fowler_pass.py",
+      "skills/admiral/references/fleet-doctrine.md",
+      "templates/FOWLER_PASS.template.json",
+      "templates/REVIEW_RESULT.template.md",
+      "templates/REVIEW_SURVEY.template.json",
+      "windows.md"
+    ]
+  }
+}

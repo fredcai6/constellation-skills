@@ -870,7 +870,7 @@ class InstallConstellationTests(unittest.TestCase):
             installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
                             "--skills", "explorer"], env={}, out=lambda _: None)
             vocab = (target_root / "constellation-explorer" / "references"
-                     / "global-everyone.md").read_text(encoding="utf-8")
+                     / "role-policy/everyone.md").read_text(encoding="utf-8")
             self.assertIn("Deep-module vocabulary", vocab)
 
     def test_relocated_doctrine_pins_ship_to_installed_destination(self):
@@ -892,7 +892,8 @@ class InstallConstellationTests(unittest.TestCase):
             # EVERYONE moves -> bundled references/global-everyone.md (rides to all
             # tiers; explorer stands in for "any installed skill").
             everyone = (target_root / "constellation-explorer" / "references"
-                        / "global-everyone.md").read_text(encoding="utf-8")
+                        / "role-policy/everyone.md").read_text(encoding="utf-8")
+            everyone += (target_root / "constellation-explorer" / "references" / "role-policy/everyone-native.md").read_text(encoding="utf-8")
             for sig in ("reporting misfit is compliance",              # move 1 boilerplate
                         "checklist-engine.md",                         # move 2 engine pointer
                         "never the idea class",                        # move 4 scoped-nulls

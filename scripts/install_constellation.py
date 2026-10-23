@@ -338,6 +338,21 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     # doctrine (mirrors curator's tier; skill-goodness.md is its own bucket).
     "write-a-skill": _GLOBAL_EVERYONE + ("skill-goodness.md",),
 }
+# Commander intake can choose the confirmation validator instead of a visible marker.
+SKILL_SCRIPT_BUNDLES["commander"] += ("verify_spec_confirmed.py",)
+
+# Canonical behavior is bundled verbatim, alongside the native execution binding.
+# All users of global-everyone.md need its two newly factored reference targets.
+for _name, _references in tuple(SKILL_REFERENCE_BUNDLES.items()):
+    SKILL_REFERENCE_BUNDLES[_name] = _references + (
+        "role-policy/everyone.md", "role-policy/everyone-native.md",
+    )
+for _name, _role in (("commander", "commander"), ("commander-delegated", "commander"),
+                     ("implementer", "implementer"), ("reviewer", "reviewer")):
+    SKILL_REFERENCE_BUNDLES[_name] += (
+        "role-policy/handoff.md", f"role-policy/{_role}.md", f"role-policy/{_role}-native.md",
+    )
+
 REWRITABLE_TEXT_SUFFIXES = {".json", ".md", ".txt"}
 
 

@@ -221,7 +221,7 @@ class DoctrineNamesJobAddressedDelivery(unittest.TestCase):
     job-addressed path)."""
 
     DOCTRINE_FILES = [
-        ROOT / "skills" / "commander" / "references" / "commander-core.md",
+        ROOT / "skills" / "_shared" / "role-policy" / "commander.md",
         ROOT / "skills" / "commander" / "references" / "crew-dispatch.md",
     ]
     TEMPLATE_FILES = [

@@ -18,7 +18,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 EXECUTE_PLAN = ROOT / "skills" / "commander" / "templates" / "EXECUTE_PLAN.template.json"
-COMMANDER_CORE = ROOT / "skills" / "commander" / "references" / "commander-core.md"
+COMMANDER_CORE = ROOT / "skills" / "_shared" / "role-policy" / "commander.md"
 IMPLEMENTER_HANDOFF = ROOT / "skills" / "commander" / "templates" / "IMPLEMENTER_HANDOFF.template.md"
 STATUS_MODEL = ROOT / "skills" / "_shared" / "status-model.md"
 

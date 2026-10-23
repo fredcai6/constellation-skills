@@ -836,7 +836,7 @@ class TestTier1CommanderCoreAttachLine:
     unrelated "has the CLI line moved?" message. A locator keyed to what must be present
     survives the sweep; one keyed to what must be absent cannot."""
 
-    PATH = "skills/commander/references/commander-core.md"
+    PATH = "skills/_shared/role-policy/commander.md"
 
     def _attach_paragraph(self) -> str:
         text = _text(self.PATH)
@@ -996,7 +996,7 @@ class TestTier2SpineAlreadyBoundForDispatchedCrews:
     through the CLI, stops telling it a spine is already bound, or mentions the
     CLI/`checklist_engine.py` at all."""
 
-    PATHS = ["skills/implementer/SKILL.md", "skills/reviewer/SKILL.md"]
+    PATHS = ["skills/_shared/role-policy/implementer-native.md", "skills/_shared/role-policy/reviewer-native.md"]
 
     @pytest.mark.parametrize("path", PATHS)
     def test_file_never_names_the_cli_at_all(self, path):
@@ -1250,7 +1250,8 @@ class TestTier4AuthoringTemplate:
 # --------------------------------------------------------------------------- #
 
 TIER5_UNTOUCHED_FILES = [
-    "skills/_shared/global-everyone.md",
+    "skills/_shared/role-policy/everyone.md",
+    "skills/_shared/role-policy/everyone-native.md",
     "skills/admiral/references/fleet-doctrine.md",
 ]
 
