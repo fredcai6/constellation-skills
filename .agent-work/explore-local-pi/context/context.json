@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [],
+  "repo_rev": {
+    "commit": "3ac7a1ab95cb70fd5740e11eaffced151e998e68"
+  },
+  "run": {
+    "work_id": "explore-local-pi",
+    "generated_at": "2026-10-22T15:28:10Z",
+    "roots": {
+      "skill": "/home/tommy/.codex/worktrees/0432044c-83a2-4238-9d7c-1cf22a5c85ae/constellation-skills",
+      "repo": "/home/tommy/.codex/worktrees/0432044c-83a2-4238-9d7c-1cf22a5c85ae/constellation-skills",
+      "durable": "/home/tommy/projects/constellation-skills"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.13",
+      "cwd": "/home/tommy/.codex/worktrees/0432044c-83a2-4238-9d7c-1cf22a5c85ae/constellation-skills"
+    }
+  }
+}

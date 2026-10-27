@@ -1,0 +1,147 @@
+{
+  "work_id": "ad60af24-75de-4b9c-9ce8-3e80bd24b250",
+  "type": "gated",
+  "config": {},
+  "items": [
+    "plan",
+    "implement",
+    "review",
+    "accept"
+  ],
+  "tasks": {
+    "plan": {
+      "id": "plan",
+      "title": "plan",
+      "imperative": "Propose a bounded plan, then wait for human approval.",
+      "status": "pending",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "evidence",
+          "statement": "Required result or explicit human decision is recorded",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "reason_required": true
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "status_detail": {}
+    },
+    "implement": {
+      "id": "implement",
+      "title": "implement",
+      "imperative": "Dispatch a Pi implementer with the approved plan.",
+      "status": "pending",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "evidence",
+          "statement": "Required result or explicit human decision is recorded",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "crew-result"
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "reason_required": true
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "status_detail": {}
+    },
+    "review": {
+      "id": "review",
+      "title": "review",
+      "imperative": "Dispatch a separate Pi reviewer. A BLOCK requires repair or an explicit override.",
+      "status": "pending",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "evidence",
+          "statement": "Required result or explicit human decision is recorded",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "reason_required": true
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "status_detail": {}
+    },
+    "accept": {
+      "id": "accept",
+      "title": "accept",
+      "imperative": "Present the result and wait for human acceptance.",
+      "status": "pending",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "evidence",
+          "statement": "Required result or explicit human decision is recorded",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "reason_required": true
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "status_detail": {}
+    }
+  },
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "ad60af24-75de-4b9c-9ce8-3e80bd24b250",
+    "status": "active",
+    "claimed_at": "2026-10-22T21:06:31.164135+00:00",
+    "last_heartbeat": "2026-10-22T21:06:31.164135+00:00",
+    "claimed_by": "commander",
+    "worktree": "/home/tommy/.codex/worktrees/0432044c-83a2-4238-9d7c-1cf22a5c85ae/constellation-skills/.agent-work/gpu-manager-first-issue/design-workspace",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
+}

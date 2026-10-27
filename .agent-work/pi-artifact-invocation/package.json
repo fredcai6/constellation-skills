@@ -1,0 +1,20 @@
+{
+  "name": "constellation-pi",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Native Constellation Commander workflow in Pi",
+  "scripts": {
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "start": "node --import tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "1.4.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "@types/node": "^24.0.0"
+  }
+}

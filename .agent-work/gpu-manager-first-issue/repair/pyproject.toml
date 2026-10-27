@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gpu-manager"
+version = "0.1.0"
+description = "Read-only AMD GPU status via sysfs/DRM, stdlib only"
+requires-python = ">=3.11"
+
+[project.scripts]
+gpu = "gpu_manager.cli:main"

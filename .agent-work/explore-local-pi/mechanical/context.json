@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "context",
+  "mechanical": {
+    "run": "explore-local-pi",
+    "project": "constellation-skills",
+    "role": "explorer",
+    "refusals": 1,
+    "spine-step": "context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-explore-local-pi-context@f615edc45e228c5d669aa2c9dd2045cc7b764762",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "explore-local-pi",
+    "generated_at": "2026-10-22T15:28:10Z"
+  }
+}

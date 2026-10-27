@@ -1,0 +1,11 @@
+# Engine adapter result
+
+Implemented a JSON subprocess bridge and TypeScript `Engine` wrapper. The bridge imports `scripts/checklist_engine.py` from the configured Constellation source root. State comes directly from `load` and `state`; actions go through `main(argv)`, preserving checks, leases, persistence, journals, and refusal output. The transport adds no workflow state or engine rules. Existing CLI and MCP code are unchanged.
+
+`Engine({source, python, cwd, file, sessionId})` exposes `state()` and `run(verb, args)`. Engine refusals return `{ok:false, output, state}`; configuration and transport errors throw. Mutations receive the bound file and session ID. Caller arguments cannot replace either binding. The configured Python interpreter is launched directly without a shell. Python stdout is exactly one JSON response, with engine stdout/stderr captured as its output field.
+
+Evidence: `node --import tsx --test test/engine.test.ts` passed four tests against the original engine: exact state projection, unchanged human `current` and read-only state, failed command prevents advance, lease mismatch refusal, owning session completion/release, argument binding checks, and clear invalid source/verb errors. Tests use temporary plans and no model calls. Node subprocess streams require sandbox escalation in this machine's execution environment; local test execution succeeded after approval. The default `python` on PATH has a broken standard library, so validation uses the explicitly configured intact Python interpreter.
+
+Workflow feedback: parent provided a bounded handoff, but no bound spine or Map Anchors. Read the repository guide, implementer skill, map index entry, and relevant engine source/tests. The map index links to an absent generated detail directory. No self-authored process plan was created: engine CLI has no init verb and the handoff restricts edits to the adapter, tests, and this result. This is a workflow integration gap for the parent, not a claim of an engine-driven implementer run.
+
+Map impact: new adapter is a consumer of the existing engine state and CLI boundaries, with no changes to those boundaries. The extraction into its eventual repository needs a portable Constellation source setting and Python interpreter setting; tests accept `CONSTELLATION_SOURCE` and `CONSTELLATION_PYTHON`.
