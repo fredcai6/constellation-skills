@@ -173,6 +173,8 @@ def _behavior_for(entry: dict, state: str) -> str:
     `cli` action keeps the stored-session `run_crew.py --resume` text; an
     `external` entry gets the unrecoverable-by-wrapper guidance instead. The state
     itself (the classification) is unchanged — only the action text differs."""
+    if state == STATE_RESUMABLE and run_crew.entry_backend(entry) == "supervised":
+        return "resume the same supervised job through its recorded host controller; do not launch a CLI provider"
     if state == STATE_RESUMABLE and run_crew.entry_backend(entry) == run_crew.BACKEND_EXTERNAL:
         return _EXTERNAL_RESUME_ACTION
     return _BEHAVIOR.get(state, state)

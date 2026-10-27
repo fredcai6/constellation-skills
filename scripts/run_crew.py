@@ -1666,7 +1666,7 @@ def entry_backend(entry: dict) -> str:
     explicitly; a legacy entry without one is inferred — `dispatch == "external"`
     -> external, else cli (Decision 5, backward compatible)."""
     backend = entry.get("backend")
-    if backend in (BACKEND_CLI, BACKEND_EXTERNAL):
+    if backend in (BACKEND_CLI, BACKEND_EXTERNAL, "supervised"):
         return backend
     return BACKEND_EXTERNAL if entry.get("dispatch") == DISPATCH_EXTERNAL else BACKEND_CLI
 
@@ -2332,6 +2332,8 @@ def resume_crew(
     which raises the standard `cannot resume: no crew recorded` refusal (unchanged).
     `launch` defaults to the module-level `launch_process` resolved at CALL time."""
     entry = find_entry(entries, session)
+    if entry is not None and entry_backend(entry) == "supervised":
+        raise CrewLaunchError("This bound job is supervised by its recorded host; resume it through that controller, never a CLI provider")
     backend: CrewBackend = (
         ExternalBackend()
         if entry is not None and entry_backend(entry) == BACKEND_EXTERNAL

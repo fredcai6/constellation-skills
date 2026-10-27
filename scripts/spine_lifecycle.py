@@ -412,7 +412,7 @@ def _compile_spine(spec: dict, *, repo_root: Path) -> dict:
 
 def open_work(
     work_id: str, spec: dict, *, root: str | os.PathLike[str], base: str, parent: str,
-    wt_root: str | None = None,
+    wt_root: str | None = None, template: str | None = None, skill_dir: str | None = None,
 ) -> dict:
     """One call: validate, refuse an occupied worktree or an already-active
     engine session for this `work_id`, create the worktree and branch, scaffold
@@ -453,7 +453,17 @@ def open_work(
         work_dir = init_work_area.init_work_area(Path(worktree), work_id)
 
         # 6. Compile the spine (generate_spine, imported, never re-implemented).
-        compiled = _compile_spine(spec, repo_root=Path(worktree))
+        if template is None:
+            compiled = _compile_spine(spec, repo_root=Path(worktree))
+        else:
+            if spec:
+                raise SpineLifecycleError("use a canonical template or a spec, not both")
+            text = init_work_area.resolve_spine(Path(template).read_text(encoding="utf-8"), work_id, skill_dir, Path(worktree))
+            init_work_area._assert_no_resolver_placeholders(text)
+            compiled = json.loads(text)
+            faults = validate_spine.validate(compiled, repo_root=Path(worktree))
+            if faults or faults.undecidable:
+                raise SpineLifecycleError(f"canonical template failed validation: {faults}")
 
         # 7. Inject origin, then re-run validate_spine.validate on the result.
         base_sha = _git(["rev-parse", "HEAD"], cwd=Path(worktree))

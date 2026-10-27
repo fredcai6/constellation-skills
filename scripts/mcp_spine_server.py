@@ -252,6 +252,13 @@ def _engine_from_env() -> Path:
 ENGINE = _engine_from_env()
 SPINE: Path | None = _spine_from_env()
 SESSION = os.environ.get("SPINE_SESSION", "")
+# Prior bindings belong to this supervised job, not to a tool caller. Persistable
+# launch context lets a cold-resumed door return to the same still-owned parents.
+try:
+    _BOUND_ANCESTORS = {Path(x["file"]).resolve(): x["session"] for x in json.loads(os.environ.get("SPINE_ANCESTORS", "[]"))}
+except (ValueError, TypeError, KeyError):
+    _BOUND_ANCESTORS = {}
+
 
 sys.path.insert(0, str(ENGINE.parent))
 import checklist_engine  # noqa: E402
@@ -1861,7 +1868,7 @@ def _spine_bind(args: dict) -> dict:
     # respawn MUST reproduce its predecessor's session string, and a genuine
     # respawn follows a DEAD predecessor.
     lease = checklist_engine._active_lease(payload)
-    if lease is not None and lease.get("session_id") == session:
+    if lease is not None and lease.get("session_id") == session and _BOUND_ANCESTORS.get(candidate.resolve()) != session:
         config = checklist_engine.load_config(payload, candidate.parent)
         if not checklist_engine._is_stale(lease, config):
             return _tool_error(
@@ -1898,10 +1905,16 @@ def _spine_bind(args: dict) -> dict:
         if blocked is not None:
             return _tool_error(blocked, tool="spine_bind", rejection_class="lease-held")
 
+    if lineage is not None and parent_before_bind is not None:
+        parent_lease = checklist_engine._active_lease(json.loads(parent_before_bind.read_text(encoding="utf-8")))
+        if parent_lease is not None and parent_lease.get("session_id") == SESSION:
+            _BOUND_ANCESTORS[parent_before_bind.resolve()] = SESSION
+    _BOUND_ANCESTORS.pop(candidate.resolve(), None)
     _bind_process_to(str(candidate), session)
     result = {
         "SPINE_FILE": str(candidate.resolve()), "SPINE_SESSION": session,
         "work_id": work_id, "already_bound": False,
+        "SPINE_ANCESTORS": [{"file": str(p), "session": sid} for p, sid in _BOUND_ANCESTORS.items()],
         "note": "this door now drives that spine; call spine_status to see where it is",
     }
     if lineage is not None:
